@@ -1,0 +1,154 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTextStyle": "white",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark",
+				"backgroundColor": "#FF4D4F"
+			}
+		},
+		{
+			"path": "pages/bills/bills",
+			"style": {
+				"navigationBarTitleText": "账单",
+				"navigationBarBackgroundColor": "#52C41A",
+				"navigationBarTextStyle": "white",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/bills/detail",
+			"style": {
+				"navigationBarTitleText": "账单详情",
+				"navigationBarBackgroundColor": "#52C41A",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/statistics/statistics",
+			"style": {
+				"navigationBarTitleText": "统计",
+				"navigationBarBackgroundColor": "#52C41A",
+				"navigationBarTextStyle": "white",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/reminder/reminder",
+			"style": {
+				"navigationBarTitleText": "记账提醒",
+				"navigationBarBackgroundColor": "#52C41A",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/about/about",
+			"style": {
+				"navigationBarTitleText": "关于我们",
+				"navigationBarBackgroundColor": "#52C41A",
+				"navigationBarTextStyle": "white"
+			}
+		}
+	],
+	"subPackages": [
+		{
+			"root": "subPackages/record",
+			"name": "record",
+			"pages": [
+				{
+					"path": "photo/photo",
+					"style": {
+						"navigationBarTitleText": "拍照记账",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				},
+				{
+					"path": "voice/voice",
+					"style": {
+						"navigationBarTitleText": "语音记账",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				},
+				{
+					"path": "confirm/confirm",
+					"style": {
+						"navigationBarTitleText": "确认账单",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				},
+				{
+					"path": "poster/index",
+					"style": {
+						"navigationBarTitleText": "账单海报",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				}
+			]
+		}
+	],
+	"preloadRule": {
+		"pages/index/index": {
+			"network": "all",
+			"packages": ["record"]
+		}
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "钱哪去了",
+		"navigationBarBackgroundColor": "#52C41A",
+		"backgroundColor": "#F8F9FA",
+		"navigationStyle": "default",
+		"enablePullDownRefresh": false,
+		"disableScroll": false,
+		"backgroundTextStyle": "light"
+	},
+	"tabBar": {
+		"color": "#666666",
+		"selectedColor": "#52C41A",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "white",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页",
+				"iconPath": "static/tabbar/tabbar-home.png",
+				"selectedIconPath": "static/tabbar/tabbar-homeSelected.png"
+			},
+			{
+				"pagePath": "pages/bills/bills",
+				"text": "账单",
+				"iconPath": "static/tabbar/zhangdan.png",
+				"selectedIconPath": "static/tabbar/zhangdan-Selected.png"
+			},
+			{
+				"pagePath": "pages/statistics/statistics",
+				"text": "统计",
+				"iconPath": "static/tabbar/tabbar-statics.png",
+				"selectedIconPath": "static/tabbar/tabbar-staticsSelected.png"
+			},
+			{
+				"pagePath": "pages/profile/profile",
+				"text": "我的",
+				"iconPath": "static/tabbar/my.png",
+				"selectedIconPath": "static/tabbar/mySelected.png"
+			}
+		]
+	},
+	"uniIdRouter": {}
+}

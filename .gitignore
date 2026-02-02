@@ -1,0 +1,30 @@
+# 微信小程序
+unpackage/
+node_modules/
+.DS_Store
+
+# 云函数
+cloudfunctions/**/node_modules/
+cloudfunctions/**/.env
+
+# 敏感信息
+*.key
+*.pem
+config.js
+
+# 编辑器
+.vscode/
+.idea/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 系统文件
+Thumbs.db
+.DS_Store

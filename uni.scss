@@ -1,0 +1,93 @@
+/* 导入全局样式变量 */
+@import "@/styles/variables.scss";
+
+/* 通用样式类 */
+.flex {
+	display: flex;
+}
+
+.flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.flex-between {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.flex-column {
+	display: flex;
+	flex-direction: column;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.text-right {
+	text-align: right;
+}
+
+.text-primary {
+	color: $text-primary;
+}
+
+.text-secondary {
+	color: $text-secondary;
+}
+
+.text-tertiary {
+	color: $text-tertiary;
+}
+
+.bg-white {
+	background-color: $bg-white;
+}
+
+.bg-gray {
+	background-color: $bg-page;
+}
+
+.card {
+	background: $bg-white;
+	border-radius: $radius-lg;
+	padding: $spacing-lg;
+	box-shadow: $shadow-md;
+}
+
+.btn {
+	height: 88rpx;
+	border-radius: $radius-2xl;
+	font-size: $font-size-md;
+	border: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.btn-primary {
+	background: $primary-color;
+	color: $text-white;
+}
+
+.btn-secondary {
+	background: $bg-gray;
+	color: $text-secondary;
+}
+
+.ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ellipsis-2 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
