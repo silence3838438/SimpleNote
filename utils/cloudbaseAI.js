@@ -2,10 +2,9 @@
  * 腾讯云 Cloudbase AI 统一封装
  * 支持微信小程序和APP
  * 
- * 注意：当前AI功能已禁用，因为Cloudbase未配置
- * OCR识别将完全依赖后端正则提取
+ * 注意：改用后端 API 调用方式
  */
-import cloudbase from './cloudbase.js'
+import apiConfig from './apiConfig.js'
 
 // Agent ID
 const AGENT_ID = 'agent-xiaopiaoshi-2end0lcd9c419f'
@@ -20,16 +19,10 @@ class CloudbaseAI {
 		if (this.initialized) return
 		
 		try {
-			console.log('🔐 [AI] 检查登录状态...')
-			const auth = cloudbase.auth()
-			const loginState = await auth.getLoginState()
+			console.log('✅ [AI] 初始化开始（使用 accessKey 匿名访问）')
 			
-			if (!loginState) {
-				console.log('🔐 [AI] 执行匿名登录...')
-				await auth.anonymousAuthProvider().signIn()
-				console.log('✅ [AI] 登录成功')
-			}
-			
+			// 使用 accessKey 时，已经是匿名身份，无需再次登录
+			// 直接标记为已启用
 			this.enabled = true
 			this.initialized = true
 			console.log('✅ [AI] 初始化完成')
@@ -41,91 +34,63 @@ class CloudbaseAI {
 	}
 	
 	/**
-	 * OCR 识别增强（专注语义理解，不做精确提取）
+	 * OCR 识别增强（通过后端API调用）
 	 * @param {String} ocrText - OCR 识别的原始文本
 	 * @param {Object} baseInfo - 后端正则已提取的基础信息（金额、商家、日期等）
 	 * @returns {Promise<Object>} AI增强后的账单信息
 	 */
 	async enhanceOCR(ocrText, baseInfo = {}) {
 		try {
-			console.log('⏱️ [AI增强] 开始 OCR 语义增强')
+			console.log('⏱️ [AI增强] 开始 OCR 语义增强（通过后端API）')
 			console.log('📋 后端已提取:', baseInfo)
 			
-			// 确保已初始化
-			await this.init()
+			// 使用 apiConfig 中的配置
+			const url = `${apiConfig.apiBaseUrl}/ai-enhance/ocr`
 			
-			// 如果AI功能未启用，直接返回后端数据
-			if (!this.enabled) {
-				console.log('⚠️ AI功能未启用，返回后端原始数据')
+			console.log('📤 [AI增强] 请求 URL:', url)
+			
+			// 获取 token
+			const token = uni.getStorageSync('token') || ''
+			const headers = {
+				'Content-Type': 'application/json'
+			}
+			
+			// 添加 Authorization 头
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`
+			}
+			
+			console.log('📤 [AI增强] 是否携带 token:', !!token)
+			
+			// 调用后端 AI 增强接口
+			const response = await uni.request({
+				url,
+				method: 'POST',
+				data: {
+					ocrText,
+					baseInfo
+				},
+				header: headers
+			})
+			
+			console.log('📥 [AI增强] 响应状态:', response.statusCode)
+			console.log('📥 [AI增强] 响应数据:', response.data)
+			
+			if (response.statusCode === 200 && response.data.success) {
+				console.log('✅ AI增强完成:', response.data.data)
+				return response.data.data
+			} else {
+				console.warn('⚠️ AI增强失败，返回后端原始数据')
+				console.warn('⚠️ 失败原因:', response.data.message || '未知')
 				return {
 					...baseInfo,
 					categoryId: this.getCategoryIdByName(baseInfo.categoryName || '其他', baseInfo.type)
 				}
 			}
 			
-			// 构建专注于语义理解的提示词
-			const prompt = `你是一个智能记账助手，擅长从小票/发票文本中提取语义信息。
-
-【OCR原始文本】
-${ocrText}
-
-【后端已提取的信息】
-- 金额: ${baseInfo.amount || '未识别'}元
-- 商家: ${baseInfo.merchant || '未识别'}
-- 日期: ${baseInfo.date || '未识别'}
-- 类型: ${baseInfo.type === 'income' ? '收入' : '支出'}
-
-【你的任务】
-请智能推断以下信息（以JSON格式返回，无需解释）：
-
-1. **备注(remark)** - 这是最重要的字段！
-   - 如果是餐饮：提取菜品名（如"红烧鸡腿、素菜"）
-   - 如果是超市：提取商品名（如"可乐、薯片、面包"，最多3个，用顿号分隔）
-   - 如果是交通：提取行程信息（如"上班通勤"）
-   - 如果是其他：提取关键消费内容
-   - 如果实在没有：留空字符串""
-
-2. **商家优化(merchant)** - 仅在后端识别不准确时优化
-   - 识别知名品牌（星巴克、麦当劳、海底捞、美团、饿了么等）
-   - 保留分店信息（如"星巴克国贸店"）
-   - 如果后端已正确识别，返回原值
-   - 如果识别不出，返回空字符串""
-
-3. **分类优化(categoryName)** - 根据商家和内容智能判断
-   支出分类：餐饮/交通/购物/娱乐/住房/医疗/通讯/服饰/美容/学习/社交/零食/数码/家居/汽车/宠物/其他
-   收入分类：工资/兼职/奖金/红包/退款/报销/投资/礼金/出售/其他
-
-【返回格式】
-{"remark":"","merchant":"","categoryName":""}
-
-注意：
-- remark是核心，必须尽力提取有价值的信息
-- 如果某个字段无法优化，返回空字符串""
-- 不要编造信息，不确定就留空`
-
-			// 调用 AI Agent
-			const response = await this.chat(prompt)
-			
-			// 解析响应
-			const aiResult = this.parseAIEnhancement(response)
-			
-			// 合并后端信息和AI增强信息
-			const finalResult = {
-				...baseInfo,
-				// AI增强的字段（仅在有值时覆盖）
-				remark: aiResult.remark || baseInfo.remark || '',
-				merchant: aiResult.merchant || baseInfo.merchant || '',
-				categoryName: aiResult.categoryName || baseInfo.categoryName || '其他'
-			}
-			
-			// 根据分类名称匹配分类ID
-			finalResult.categoryId = this.getCategoryIdByName(finalResult.categoryName, finalResult.type)
-			
-			console.log('✅ AI增强完成:', finalResult)
-			return finalResult
-			
 		} catch (error) {
-			console.warn('⚠️ AI增强失败，返回后端原始数据:', error.message)
+			console.error('❌ AI增强请求异常:', error)
+			console.error('❌ 错误详情:', error.errMsg || error.message)
 			// AI失败不影响使用，返回后端数据
 			return {
 				...baseInfo,
@@ -231,6 +196,15 @@ ${ocrText}
 	async chat(message) {
 		try {
 			console.log('📤 发送消息到 AI Agent...')
+			
+			// 检查 cloudbase 实例是否有效
+			if (!cloudbase) {
+				throw new Error('Cloudbase 实例未初始化（为 null）')
+			}
+			
+			if (typeof cloudbase.ai !== 'function') {
+				throw new Error('Cloudbase 实例没有 ai() 方法')
+			}
 			
 			const res = await cloudbase.ai().bot.sendMessage({
 				botId: AGENT_ID,

@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "@cloudbase/adapter-uni-app": "^1.0.0-beta.4",
-    "@cloudbase/js-sdk": "^1.8.4"
+    "@cloudbase/js-sdk": "^1.8.4",
+    "@cloudbase/node-sdk": "^3.18.0",
+    "axios": "^1.13.5"
   },
   "author": "",
   "license": "ISC"

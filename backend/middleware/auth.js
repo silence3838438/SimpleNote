@@ -46,20 +46,20 @@ const authMiddleware = (req, res, next) => {
 
 /**
  * 可选的 JWT 认证中间件
- * 如果有 token 则验证，没有 token 则返回需要登录错误
+ * 如果有 token 则验证并提取用户信息，没有 token 则继续执行（允许匿名访问）
  */
 const optionalAuthMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     
+    // 没有 token，允许继续（匿名访问）
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: '请先登录后再使用此功能',
-        needLogin: true
-      });
+      req.userId = null;
+      req.openid = null;
+      return next();
     }
     
+    // 有 token，验证并提取用户信息
     const token = authHeader.replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     req.userId = decoded.userId;
@@ -69,19 +69,10 @@ const optionalAuthMiddleware = (req, res, next) => {
   } catch (error) {
     console.error('Token 验证失败:', error.message);
     
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        message: '认证令牌已过期，请重新登录',
-        needLogin: true
-      });
-    }
-    
-    return res.status(401).json({
-      success: false,
-      message: '无效的认证令牌，请重新登录',
-      needLogin: true
-    });
+    // Token 无效，但允许继续（降级为匿名访问）
+    req.userId = null;
+    req.openid = null;
+    next();
   }
 };
 
