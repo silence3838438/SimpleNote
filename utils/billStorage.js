@@ -1,6 +1,8 @@
 // 账单数据存储管理工具
 // 支持本地存储和云端存储的双向同步
 
+import request from './request.js'
+
 class BillStorage {
   constructor() {
     this.localKey = 'bills'
@@ -16,10 +18,11 @@ class BillStorage {
     try {
       // 1. 先保存到本地
       const localBills = this.getLocalBills()
+      
       const newBill = {
         id: Date.now(),
         ...billData,
-        createTime: new Date().toISOString(),
+        createTime: Date.now(), // 使用时间戳
         synced: false // 标记未同步
       }
       localBills.push(newBill)
@@ -76,6 +79,28 @@ class BillStorage {
     })
     
     return localBills
+  }
+  
+  /**
+   * 直接从API获取账单列表（不使用缓存）
+   * @param {Object} params - 查询参数
+   */
+  async getFromAPI(params = {}) {
+    try {
+      const result = await this.callCloudFunction('list', params)
+      
+      if (result.success && result.data) {
+        // 更新本地缓存
+        uni.setStorageSync(this.localKey, result.data)
+        uni.setStorageSync(this.lastSyncTime, Date.now())
+        return result.data
+      } else {
+        return []
+      }
+    } catch (error) {
+      console.error('从API获取账单失败:', error)
+      throw error
+    }
   }
   
   /**
@@ -176,27 +201,11 @@ class BillStorage {
   }
   
   /**
-   * 调用云函数
+   * 调用云函数或API
    */
   async callCloudFunction(action, data) {
-    return new Promise((resolve, reject) => {
-      // #ifdef MP-WEIXIN
-      wx.cloud.callFunction({
-        name: 'billManager',
-        data: { action, data },
-        success: (res) => {
-          resolve(res.result)
-        },
-        fail: (err) => {
-          reject(err)
-        }
-      })
-      // #endif
-      
-      // #ifndef MP-WEIXIN
-      reject(new Error('非微信小程序环境'))
-      // #endif
-    })
+    // 统一使用HTTP API
+    return request.call('billManager', { action, data })
   }
   
   /**

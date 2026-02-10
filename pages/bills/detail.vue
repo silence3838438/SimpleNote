@@ -37,12 +37,12 @@
 						</view>
 						<text class="info-value">{{ formatDate(data.bill.date) }}</text>
 					</view>
-					<view class="info-item">
+					<view class="info-item" v-if="hasValidTime(data.bill.createTime)">
 						<view class="info-label">
 							<text class="info-icon">🕐</text>
 							<text>时间</text>
 						</view>
-						<text class="info-value">{{ formatTime(data.bill.createTime || data.bill.date) }}</text>
+						<text class="info-value">{{ formatTime(data.bill.createTime) }}</text>
 					</view>
 					<view class="info-item" v-if="data.bill.remark">
 						<view class="info-label">
@@ -116,13 +116,27 @@ const formatDate = (dateStr) => {
 	return `${year}年${month}月${day}日 ${weekday}`
 }
 
-const formatTime = (dateStr) => {
-	if (!dateStr) return '-'
-	const date = new Date(dateStr)
+const formatTime = (timestamp) => {
+	if (!timestamp) return '--:--:--'
+	
+	// 如果是时间戳,直接格式化
+	const date = new Date(timestamp)
+	
+	// 检查日期是否有效
+	if (isNaN(date.getTime())) {
+		return '--:--:--'
+	}
+	
 	const hours = date.getHours().toString().padStart(2, '0')
 	const minutes = date.getMinutes().toString().padStart(2, '0')
 	const seconds = date.getSeconds().toString().padStart(2, '0')
 	return `${hours}:${minutes}:${seconds}`
+}
+
+const hasValidTime = (timestamp) => {
+	if (!timestamp) return false
+	// 时间戳必须是数字
+	return typeof timestamp === 'number' && timestamp > 0
 }
 
 const formatDateTime = (dateStr) => {
@@ -142,7 +156,7 @@ const formatDateTime = (dateStr) => {
 
 const editBill = () => {
 	uni.navigateTo({
-		url: `/subPackages/record/confirm/confirm?editMode=true&billId=${data.bill.id}`
+		url: `/pages/record/confirm/confirm?editMode=true&billId=${data.bill.id}`
 	})
 }
 

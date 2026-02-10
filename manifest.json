@@ -1,12 +1,21 @@
 {
     "name" : "钱哪去了",
-    "appid" : "__UNI__502022E",
-    "description" : "AI智能记账助手 - 语音记账3秒搞定，拍照识别自动提取，AI智能分类餐饮交通购物，可视化统计消费去向，一键生成精美海报。让记账像聊天一样简单！",
+    "appid" : "__UNI__1BF73C1",
+    "description" : "智能记账助手 - 语音记账3秒搞定，拍照识别自动提取，智能分类餐饮交通购物，可视化统计消费去向，一键生成精美海报。让记账像聊天一样简单！",
     "versionName" : "1.0.0",
-    "versionCode" : "100",
+    "versionCode" : 201100,
     "transformPx" : false,
+    // "permission" : {
+    //     "network" : {
+    //         "desc" : "网络访问权限",
+    //         "scope" : [ "internet" ]
+    //     }
+    // },
     /* 5+App特有相关 */
     "app-plus" : {
+        "compatible" : {
+            "ignoreVersion" : true //true表示忽略版本检查提示框，HBuilderX1.9.0及以上版本支持
+        },
         "usingComponents" : true,
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,
@@ -16,74 +25,164 @@
             "autoclose" : true,
             "delay" : 0
         },
+        "safearea" : {
+            "background" : "#fff"
+        },
         /* 模块配置 */
-        "modules" : {},
+        "modules" : {
+            "Share" : {},
+            "Camera" : {},
+            "OAuth" : {},
+            "Speech" : {}
+        },
+        "screenOrientation" : [
+            "portrait-primary",
+            "portrait-secondary",
+            "landscape-primary",
+            "landscape-secondary"
+        ],
         /* 应用发布信息 */
         "distribute" : {
-            /* android打包配置 */
+            /* 重力感应、横竖屏配置，新添加的 */
+            "orientation" : [ "portrait-primary" ],
+            /* 应用发布信息 */
             "android" : {
-                "packagename" : "com.simplenote.app",
+                /* android打包配置 */
+                "packagename" : "com.qiannaqule.money",
                 "permissions" : [
-                    "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
-                    "<uses-permission android:name=\"android.permission.VIBRATE\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_LOGS\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>",
-                    "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
-                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.CAMERA\"/>",
-                    "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
-                    "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
-                    "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
                     "<uses-feature android:name=\"android.hardware.camera\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>",
-                    "<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>"
-                ]
+                    "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
+                    "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+                    "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>"
+                ],
+                "usesCleartextTraffic" : true,
+                "enableOAID" : false,
+                "permissionExternalStorage" : {
+                    "request" : "none",
+                    "prompt" : "应用保存运行状态等信息，需要获取读写手机存储（系统提示为访问设备上的照片、媒体内容和文件）权限，请允许。"
+                },
+                "permissionPhoneState" : {
+                    "request" : "none",
+                    "prompt" : "为保证您正常、安全地使用，需要获取设备识别码（部分手机提示为获取手机号码）使用权限，请允许。"
+                },
+                "minSdkVersion" : 21,
+                "targetSdkVersion" : 30,
+                "abiFilters" : [ "armeabi-v7a", "arm64-v8a" ],
+                "schemes" : "simplenote"
             },
-            /* ios打包配置 */
             "ios" : {
-                "appid" : "",
-                "mobileprovision" : "",
-                "password" : "",
-                "p12" : "",
-                "devices" : "universal",
-                "urltypes" : "",
-                "urlschemewhitelist" : "",
-                "frameworks" : [],
-                "idfa" : false,
                 "dSYMs" : false,
+                "CFBundleIdentifier" : "com.qiannaqule.money",
                 "privacyDescription" : {
                     "NSCameraUsageDescription" : "需要使用相机拍摄小票进行记账",
-                    "NSPhotoLibraryUsageDescription" : "需要访问相册选择小票图片",
-                    "NSPhotoLibraryAddUsageDescription" : "需要保存图片到相册",
+                    "NSPhotoLibraryUsageDescription" : "需要访问相册选择小票进行识别",
+                    "NSPhotoLibraryAddUsageDescription" : "需要保存账单海报到相册",
                     "NSMicrophoneUsageDescription" : "需要使用麦克风进行语音记账"
                 },
-                "CFBundleIdentifier" : "com.simplenote.app"
+                "idfa" : false,
+                "urltypes" : "simplenote"
             },
             /* SDK配置 */
-            "sdkConfigs" : {}
+            "sdkConfigs" : {
+                "share" : {
+                    "weixin" : {
+                        "appid" : "WECHAT_APPID_PLACEHOLDER",
+                        "UniversalLinks" : "https://api.qiannaqule.top/app/"
+                    }
+                },
+                "ad" : {},
+                "payment" : {},
+                "oauth" : {
+                    "weixin" : {
+                        "appid" : "WECHAT_APPID_PLACEHOLDER",
+                        "UniversalLinks" : "https://api.qiannaqule.top/app/"
+                    },
+                    "apple" : {}
+                },
+                "maps" : {},
+                "push" : {
+                    "unipush" : {
+                        "version" : "2",
+                        "offline" : true,
+                        "hms" : {},
+                        "oppo" : {},
+                        "vivo" : {},
+                        "mi" : {}
+                    }
+                },
+                "speech" : {
+                    "baidu" : {
+                        "appid" : "122038038",
+                        "apikey" : "1axGTqvvjeaWZ2q0AO5blLrq",
+                        "secretkey" : "EtvHBDvIqIUm9GKMZuQYMNZh5nM2Dfkj"
+                    }
+                }
+            },
+            "icons" : {
+                "android" : {
+                    "hdpi" : "unpackage/res/icons/72x72.png",
+                    "xhdpi" : "unpackage/res/icons/96x96.png",
+                    "xxhdpi" : "unpackage/res/icons/144x144.png",
+                    "xxxhdpi" : "unpackage/res/icons/192x192.png"
+                },
+                "ios" : {
+                    "appstore" : "unpackage/res/icons/1024x1024.png",
+                    "ipad" : {
+                        "app" : "unpackage/res/icons/76x76.png",
+                        "app@2x" : "unpackage/res/icons/152x152.png",
+                        "notification" : "unpackage/res/icons/20x20.png",
+                        "notification@2x" : "unpackage/res/icons/40x40.png",
+                        "proapp@2x" : "unpackage/res/icons/167x167.png",
+                        "settings" : "unpackage/res/icons/29x29.png",
+                        "settings@2x" : "unpackage/res/icons/58x58.png",
+                        "spotlight" : "unpackage/res/icons/40x40.png",
+                        "spotlight@2x" : "unpackage/res/icons/80x80.png"
+                    },
+                    "iphone" : {
+                        "app@2x" : "unpackage/res/icons/120x120.png",
+                        "app@3x" : "unpackage/res/icons/180x180.png",
+                        "notification@2x" : "unpackage/res/icons/40x40.png",
+                        "notification@3x" : "unpackage/res/icons/60x60.png",
+                        "settings@2x" : "unpackage/res/icons/58x58.png",
+                        "settings@3x" : "unpackage/res/icons/87x87.png",
+                        "spotlight@2x" : "unpackage/res/icons/80x80.png",
+                        "spotlight@3x" : "unpackage/res/icons/120x120.png"
+                    }
+                }
+            },
+            "splashscreen" : {
+                "useOriginalMsgbox" : true
+            }
         }
     },
     /* 快应用特有相关 */
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx30b2db122ecab8ca",
+        "appid" : "wxb0fdb2f215a9c323",
         "setting" : {
-            "urlCheck" : false
+            "urlCheck" : false,
+            "minified" : true,
+            "useMultiFrameRuntime" : false
         },
         "usingComponents" : true,
-        "themeLocation" : "theme.json",
-        "permission" : {
-            "scope.record" : {
-                "desc" : "需要使用麦克风进行语音记账"
-            }
+        "optimization" : {
+            "subPackages" : true
+        },
+        "lazyCodeLoading" : "requiredComponents",
+        "unipush" : {
+            "enable" : true
         }
     },
     "mp-alipay" : {
-        "usingComponents" : true
+        "usingComponents" : true,
+        "appid" : "2021005148679038",
+        "unipush" : {
+            "enable" : true
+        }
     },
     "mp-baidu" : {
         "usingComponents" : true
@@ -94,5 +193,26 @@
     "uniStatistics" : {
         "enable" : false
     },
-    "vueVersion" : "3"
+    "vueVersion" : "3",
+    "fallbackLocale" : "zh-Hans",
+    "h5" : {
+        "sdkConfigs" : {
+            "maps" : {}
+        }
+    },
+    "app-harmony" : {
+        "distribute" : {
+            "bundleName" : "com.qiannaqule.money",
+            "icons" : {
+                "foreground" : "static/logo.png",
+                "background" : "static/logo.png"
+            },
+            "modules" : {
+                "uni-oauth" : {
+                    "huawei" : {}
+                },
+                "uni-push" : {}
+            }
+        }
+    }
 }

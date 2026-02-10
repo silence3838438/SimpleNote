@@ -1,5 +1,6 @@
 // 积分云端同步管理
 import { checkLevelUp } from './memberLevel.js'
+import request from './request.js'
 
 /**
  * 从云端获取积分
@@ -7,15 +8,12 @@ import { checkLevelUp } from './memberLevel.js'
  */
 export const getPointsFromCloud = async () => {
 	try {
-		const res = await wx.cloud.callFunction({
-			name: 'billManager',
-			data: {
-				action: 'getPoints'
-			}
+		const res = await request.call('billManager', {
+			action: 'getPoints'
 		})
 		
-		if (res.result.success) {
-			return res.result.points || 0
+		if (res.success) {
+			return res.points || 0
 		}
 		return 0
 	} catch (error) {
@@ -33,23 +31,20 @@ export const getPointsFromCloud = async () => {
  */
 export const addPointsToCloud = async (points, reason, metadata = {}) => {
 	try {
-		const res = await wx.cloud.callFunction({
-			name: 'billManager',
+		const res = await request.call('billManager', {
+			action: 'addPoints',
 			data: {
-				action: 'addPoints',
-				data: {
-					points,
-					reason,
-					metadata
-				}
+				points,
+				reason,
+				metadata
 			}
 		})
 		
-		if (res.result.success) {
+		if (res.success) {
 			return {
 				success: true,
-				totalPoints: res.result.totalPoints,
-				addedPoints: res.result.addedPoints
+				totalPoints: res.points,
+				addedPoints: res.addedPoints
 			}
 		}
 		return { success: false }
@@ -68,18 +63,15 @@ export const syncPointsToCloud = async () => {
 		const localPoints = uni.getStorageSync('userPoints') || 0
 		const pointsHistory = uni.getStorageSync('pointsHistory') || []
 		
-		const res = await wx.cloud.callFunction({
-			name: 'billManager',
+		const res = await request.call('billManager', {
+			action: 'syncPoints',
 			data: {
-				action: 'syncPoints',
-				data: {
-					totalPoints: localPoints,
-					pointsHistory: pointsHistory
-				}
+				totalPoints: localPoints,
+				pointsHistory: pointsHistory
 			}
 		})
 		
-		return res.result.success
+		return res.success
 	} catch (error) {
 		console.error('同步积分到云端失败:', error)
 		return false
@@ -92,15 +84,12 @@ export const syncPointsToCloud = async () => {
  */
 export const pullPointsFromCloud = async () => {
 	try {
-		const res = await wx.cloud.callFunction({
-			name: 'billManager',
-			data: {
-				action: 'getPoints'
-			}
+		const res = await request.call('billManager', {
+			action: 'getPoints'
 		})
 		
-		if (res.result.success) {
-			const cloudPoints = res.result.points || 0
+		if (res.success) {
+			const cloudPoints = res.points || 0
 			const localPoints = uni.getStorageSync('userPoints') || 0
 			
 			// 使用云端数据（云端为准）
@@ -134,7 +123,7 @@ export const pullPointsFromCloud = async () => {
 			}
 		}
 		
-		console.error('从云端拉取积分失败:', res.result)
+		console.error('从云端拉取积分失败:', res)
 		return { success: false }
 	} catch (error) {
 		console.error('拉取云端积分失败:', error)
@@ -150,16 +139,13 @@ export const pullPointsFromCloud = async () => {
  */
 export const getPointsHistoryFromCloud = async (limit = 50, skip = 0) => {
 	try {
-		const res = await wx.cloud.callFunction({
-			name: 'billManager',
-			data: {
-				action: 'getPointsHistory',
-				data: { limit, skip }
-			}
+		const res = await request.call('billManager', {
+			action: 'getPointsHistory',
+			data: { limit, skip }
 		})
 		
-		if (res.result.success) {
-			return res.result.data || []
+		if (res.success) {
+			return res.data || []
 		}
 		return []
 	} catch (error) {
