@@ -33,7 +33,7 @@
 				
 				<view class="form-item">
 					<view class="input-wrapper">
-						<text class="input-icon">💬</text>
+						<image class="input-icon-img" src="/static/yanzhengma.png" mode="aspectFit"></image>
 						<input 
 							class="form-input" 
 							v-model="data.code" 
@@ -59,27 +59,28 @@
 							placeholder-class="input-placeholder"
 							maxlength="20"
 						/>
-						<text class="eye-icon" @click="togglePassword">
-							{{ data.showPassword ? '👁️' : '👁️‍🗨️' }}
-						</text>
+						<image 
+							class="eye-icon-img" 
+							:src="data.showPassword ? '/static/mingwen.png' : '/static/miwen.png'" 
+							@click="togglePassword" 
+							mode="aspectFit"
+						></image>
 					</view>
 				</view>
 				
-				<view class="form-item">
-					<view class="input-wrapper">
-						<text class="input-icon">✅</text>
-						<input 
-							class="form-input" 
-							v-model="data.confirmPassword" 
-							:password="!data.showConfirmPassword"
-							placeholder="请再次输入密码"
-							placeholder-class="input-placeholder"
-							maxlength="20"
-						/>
-						<text class="eye-icon" @click="toggleConfirmPassword">
-							{{ data.showConfirmPassword ? '👁️' : '👁️‍🗨️' }}
-						</text>
-					</view>
+				<!-- 隐私协议 -->
+				<view class="privacy-section-inline">
+					<checkbox-group @change="onAgreeChange">
+						<label class="checkbox-label-inline">
+							<checkbox :checked="data.agreed" color="#52C41A" class="custom-checkbox-inline" />
+							<view class="privacy-text-inline">
+								<text class="text-normal-inline">注册即表示同意</text>
+								<text class="text-link-inline" @click.stop="openUserAgreement">《用户协议》</text>
+								<text class="text-normal-inline">和</text>
+								<text class="text-link-inline" @click.stop="openPrivacy">《隐私政策》</text>
+							</view>
+						</label>
+					</checkbox-group>
 				</view>
 				
 				<view class="register-btn" @click="handleRegister">
@@ -89,23 +90,6 @@
 				<view class="login-link">
 					<text class="link-text">已有账号？</text>
 					<text class="link-action" @click="goToLogin">立即登录</text>
-				</view>
-			</view>
-			
-			<!-- 隐私协议 -->
-			<view class="privacy-section">
-				<view class="privacy-checkbox">
-					<checkbox-group @change="onAgreeChange">
-						<label class="checkbox-label">
-							<checkbox :checked="data.agreed" color="#52C41A" class="custom-checkbox" />
-						</label>
-					</checkbox-group>
-				</view>
-				<view class="privacy-text">
-					<text class="text-normal">注册即表示同意</text>
-					<text class="text-link" @click="openUserAgreement">用户协议</text>
-					<text class="text-normal">和</text>
-					<text class="text-link" @click="openPrivacy">隐私政策</text>
 				</view>
 			</view>
 		</view>
@@ -120,9 +104,7 @@ const data = reactive({
 	phone: '',
 	code: '',
 	password: '',
-	confirmPassword: '',
 	showPassword: false,
-	showConfirmPassword: false,
 	countdown: 0,
 	agreed: false
 })
@@ -130,10 +112,6 @@ const data = reactive({
 // 切换密码显示
 const togglePassword = () => {
 	data.showPassword = !data.showPassword
-}
-
-const toggleConfirmPassword = () => {
-	data.showConfirmPassword = !data.showConfirmPassword
 }
 
 // 同意协议变化
@@ -207,7 +185,7 @@ const handleRegister = async () => {
 		return
 	}
 	
-	if (!data.phone || !data.code || !data.password || !data.confirmPassword) {
+	if (!data.phone || !data.code || !data.password) {
 		uni.showToast({
 			title: '请填写完整信息',
 			icon: 'none'
@@ -226,14 +204,6 @@ const handleRegister = async () => {
 	if (data.password.length < 6 || data.password.length > 20) {
 		uni.showToast({
 			title: '密码长度为6-20位',
-			icon: 'none'
-		})
-		return
-	}
-	
-	if (data.password !== data.confirmPassword) {
-		uni.showToast({
-			title: '两次密码输入不一致',
 			icon: 'none'
 		})
 		return
@@ -289,12 +259,28 @@ const goToLogin = () => {
 
 // 打开隐私政策
 const openPrivacy = () => {
+	// #ifdef APP-PLUS
 	plus.runtime.openURL('https://api.qiannaqule.top/privacy.html')
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	uni.navigateTo({
+		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/privacy.html')
+	})
+	// #endif
 }
 
 // 打开用户协议
 const openUserAgreement = () => {
+	// #ifdef APP-PLUS
 	plus.runtime.openURL('https://api.qiannaqule.top/user-agreement.html')
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	uni.navigateTo({
+		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/user-agreement.html')
+	})
+	// #endif
 }
 </script>
 
@@ -395,6 +381,41 @@ const openUserAgreement = () => {
 	margin-bottom: 28rpx;
 }
 
+// 表单内隐私协议
+.privacy-section-inline {
+	margin-bottom: 24rpx;
+}
+
+.checkbox-label-inline {
+	display: flex;
+	align-items: flex-start;
+	gap: 12rpx;
+}
+
+.custom-checkbox-inline {
+	flex-shrink: 0;
+	margin-top: 4rpx;
+}
+
+.privacy-text-inline {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4rpx;
+	line-height: 1.6;
+}
+
+.text-normal-inline {
+	font-size: 24rpx;
+	color: #8c8c8c;
+}
+
+.text-link-inline {
+	font-size: 24rpx;
+	color: #52C41A;
+	font-weight: 500;
+}
+
 .input-wrapper {
 	display: flex;
 	align-items: center;
@@ -417,6 +438,13 @@ const openUserAgreement = () => {
 	margin-right: 20rpx;
 }
 
+.input-icon-img {
+	width: 40rpx;
+	height: 40rpx;
+	margin-right: 20rpx;
+	flex-shrink: 0;
+}
+
 .form-input {
 	flex: 1;
 	font-size: 30rpx;
@@ -431,6 +459,13 @@ const openUserAgreement = () => {
 .eye-icon {
 	font-size: 40rpx;
 	padding: 0 8rpx;
+}
+
+.eye-icon-img {
+	width: 40rpx;
+	height: 40rpx;
+	padding: 0 8rpx;
+	cursor: pointer;
 }
 
 .code-btn {

@@ -336,20 +336,9 @@
 	</view>
 	
 	<!-- 悬浮记账按钮 -->
-	<movable-area class="float-btn-area">
-		<movable-view 
-			class="float-add-btn" 
-			direction="all" 
-			:x="data.floatBtnX" 
-			:y="data.floatBtnY"
-			@click="goToManualRecord"
-			:animation="false"
-			damping="20"
-			friction="2"
-		>
-			<text class="add-icon">+</text>
-		</movable-view>
-	</movable-area>
+	<view class="float-add-btn" @click="goToManualRecord">
+		<text class="add-icon">+</text>
+	</view>
 	
 	<!-- 提醒弹框 -->
 	<ReminderModal 
@@ -4159,22 +4148,11 @@ export default {
 		color: $text-tertiary;
 	}
 	
-	/* 悬浮记账按钮区域 */
-	.float-btn-area {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 999;
-	}
-	
 	/* 悬浮记账按钮 */
 	.float-add-btn {
-		position: relative;
+		position: fixed;
+		right: 30rpx;
+		bottom: 150rpx;
 		width: 120rpx;
 		height: 120rpx;
 		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
@@ -4186,7 +4164,7 @@ export default {
 		transition: all $transition-fast;
 		overflow: hidden;
 		border: 3rpx solid rgba(255, 255, 255, 0.5);
-		pointer-events: auto;
+		z-index: 999;
 	}
 	
 	.float-add-btn::before {
