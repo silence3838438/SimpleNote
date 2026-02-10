@@ -674,9 +674,11 @@ function parseOCRResult(ocrResult) {
       const headerMatch = allText.match(/^[\d\s。.]*([^\d\s。.][^\n\r收银员牌号单据号订单编号]{2,20}?)(?:\s|收银员|牌号|单据号|订单|门店|$)/);
       if (headerMatch && headerMatch[1]) {
         const name = headerMatch[1].trim();
-        // 过滤掉一些无效的匹配
+        // 过滤掉一些无效的匹配（包括小票标识）
         if (!name.includes('欢迎') && !name.includes('谢谢') && !name.includes('光临') && 
-            !name.includes('消费') && !name.includes('小票') && name.length >= 2) {
+            !name.includes('消费') && !name.includes('小票') && 
+            !name.includes('顾客联') && !name.includes('商家联') && !name.includes('存根联') &&
+            !name.includes('#') && name.length >= 2) {
           tempMerchant = name;
           console.log('从小票开头提取商家:', tempMerchant);
         }
@@ -1110,17 +1112,49 @@ function parseOCRResult(ocrResult) {
         remark = remarkMatch[1].trim();
         console.log('从备注字段提取交通备注:', remark);
       } else {
-        // 如果没有备注字段，使用关键词
+        // 如果没有备注字段，使用关键词或简化商家名
         const transportKeywords = [
           '打车', '出租车', '网约车', '地铁', '公交', '高铁', '火车', '飞机', 
           '停车', '加油', '过路费', '洗车', '保养'
         ];
         
+        let foundKeyword = false;
         for (const item of transportKeywords) {
           if (allText.includes(item)) {
             remark = item;
+            foundKeyword = true;
             console.log('从交通关键词提取备注:', remark);
             break;
+          }
+        }
+        
+        // 如果没有关键词，尝试简化商家名
+        if (!foundKeyword && merchant) {
+          // 提取打车平台名称
+          if (merchant.includes('享道')) {
+            remark = '享道出行';
+          } else if (merchant.includes('滴滴')) {
+            remark = '滴滴出行';
+          } else if (merchant.includes('曹操')) {
+            remark = '曹操出行';
+          } else if (merchant.includes('T3')) {
+            remark = 'T3出行';
+          } else if (merchant.includes('首汽')) {
+            remark = '首汽约车';
+          } else if (merchant.includes('高德')) {
+            remark = '高德打车';
+          } else if (merchant.includes('美团')) {
+            remark = '美团打车';
+          } else if (merchant.includes('出行') || merchant.includes('交通')) {
+            // 提取公司名称的前几个字
+            const companyMatch = merchant.match(/^([^\(（]{2,8})/);
+            if (companyMatch) {
+              remark = companyMatch[1];
+            }
+          }
+          
+          if (remark) {
+            console.log('从商家名简化提取备注:', remark);
           }
         }
       }

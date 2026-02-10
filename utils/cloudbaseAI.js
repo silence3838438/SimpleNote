@@ -1,6 +1,9 @@
 /**
  * 腾讯云 Cloudbase AI 统一封装
  * 支持微信小程序和APP
+ * 
+ * 注意：当前AI功能已禁用，因为Cloudbase未配置
+ * OCR识别将完全依赖后端正则提取
  */
 import cloudbase from './cloudbase.js'
 
@@ -10,34 +13,30 @@ const AGENT_ID = 'agent-xiaopiaoshi-2end0lcd9c419f'
 class CloudbaseAI {
 	constructor() {
 		this.initialized = false
+		this.enabled = false // AI功能开关
 	}
 	
-	/**
-	 * 初始化 Cloudbase AI（确保已登录）
-	 */
 	async init() {
-		if (this.initialized) {
-			return
-		}
+		if (this.initialized) return
 		
 		try {
-			console.log('🔐 检查 Cloudbase 登录状态...')
+			console.log('🔐 [AI] 检查登录状态...')
+			const auth = cloudbase.auth()
+			const loginState = await auth.getLoginState()
 			
-			// 确保已登录（匿名登录）
-			const loginState = await cloudbase.auth().getLoginState()
 			if (!loginState) {
-				console.log('🔐 执行匿名登录...')
-				await cloudbase.auth().signInAnonymously()
-				console.log('✅ 匿名登录成功')
-			} else {
-				console.log('✅ 已登录')
+				console.log('🔐 [AI] 执行匿名登录...')
+				await auth.anonymousAuthProvider().signIn()
+				console.log('✅ [AI] 登录成功')
 			}
 			
+			this.enabled = true
 			this.initialized = true
-			console.log('✅ Cloudbase AI 初始化成功')
+			console.log('✅ [AI] 初始化完成')
 		} catch (error) {
-			console.error('❌ Cloudbase AI 初始化失败:', error)
-			throw error
+			console.warn('⚠️ [AI] 初始化失败:', error.message)
+			this.enabled = false
+			this.initialized = true
 		}
 	}
 	
@@ -54,6 +53,15 @@ class CloudbaseAI {
 			
 			// 确保已初始化
 			await this.init()
+			
+			// 如果AI功能未启用，直接返回后端数据
+			if (!this.enabled) {
+				console.log('⚠️ AI功能未启用，返回后端原始数据')
+				return {
+					...baseInfo,
+					categoryId: this.getCategoryIdByName(baseInfo.categoryName || '其他', baseInfo.type)
+				}
+			}
 			
 			// 构建专注于语义理解的提示词
 			const prompt = `你是一个智能记账助手，擅长从小票/发票文本中提取语义信息。
@@ -73,7 +81,7 @@ ${ocrText}
 1. **备注(remark)** - 这是最重要的字段！
    - 如果是餐饮：提取菜品名（如"红烧鸡腿、素菜"）
    - 如果是超市：提取商品名（如"可乐、薯片、面包"，最多3个，用顿号分隔）
-   - 如果是交通：提取行程信息（如"加班,产品上线发布"）
+   - 如果是交通：提取行程信息（如"上班通勤"）
    - 如果是其他：提取关键消费内容
    - 如果实在没有：留空字符串""
 
@@ -117,7 +125,7 @@ ${ocrText}
 			return finalResult
 			
 		} catch (error) {
-			console.error('❌ AI增强失败，返回后端原始数据:', error)
+			console.warn('⚠️ AI增强失败，返回后端原始数据:', error.message)
 			// AI失败不影响使用，返回后端数据
 			return {
 				...baseInfo,

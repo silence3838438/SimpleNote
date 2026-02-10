@@ -403,17 +403,21 @@ const handleAIEnhanced = (aiResult) => {
 		}, 600)
 	}
 	
-	// 禁用AI对备注的覆盖，因为后端正则提取的备注更准确
-	// if (aiResult.remark && aiResult.remark !== data.billData.remark) {
-	// 	console.log('📝 更新备注:', data.billData.remark, '->', aiResult.remark)
-	// 	data.billData.remark = aiResult.remark
-	// 	// 触发淡入动画
-	// 	data.remarkUpdated = true
-	// 	setTimeout(() => {
-	// 		data.remarkUpdated = false
-	// 	}, 600)
-	// }
-	console.log('⚠️ AI备注已禁用，保留后端正则提取的备注:', data.billData.remark)
+	// AI备注增强：只有当后端正则提取的备注为空时，才使用AI增强的备注
+	if (aiResult.remark && aiResult.remark !== data.billData.remark) {
+		// 如果后端备注为空，使用AI备注
+		if (!data.billData.remark || data.billData.remark.trim() === '') {
+			console.log('📝 后端备注为空，使用AI备注:', aiResult.remark)
+			data.billData.remark = aiResult.remark
+			// 触发淡入动画
+			data.remarkUpdated = true
+			setTimeout(() => {
+				data.remarkUpdated = false
+			}, 600)
+		} else {
+			console.log('⚠️ 后端已有备注，保留后端正则提取的备注:', data.billData.remark)
+		}
+	}
 	
 	if (aiResult.categoryId && aiResult.categoryId !== data.billData.categoryId) {
 		console.log('📝 更新分类:', data.billData.categoryName, '->', aiResult.categoryName)

@@ -260,7 +260,51 @@ const startRecord = async () => {
 	}
 	
 	try {
-		// 先检查录音权限
+		// 第一步：检查并请求录音权限
+		console.log('🔐 检查录音权限...')
+		
+		// #ifdef APP-PLUS
+		// APP端：检查权限状态
+		const permissionResult = await new Promise((resolve) => {
+			plus.android.requestPermissions(
+				['android.permission.RECORD_AUDIO'],
+				(result) => {
+					console.log('📋 权限请求结果:', result)
+					// result.granted 是已授权的权限数组
+					if (result.granted && result.granted.length > 0) {
+						console.log('✅ 录音权限已授权')
+						resolve(true)
+					} else {
+						console.log('❌ 用户拒绝录音权限')
+						resolve(false)
+					}
+				},
+				(error) => {
+					console.error('❌ 权限请求失败:', error)
+					resolve(false)
+				}
+			)
+		})
+		
+		if (!permissionResult) {
+			uni.showModal({
+				title: '需要录音权限',
+				content: '请在系统设置中开启录音权限',
+				confirmText: '去设置',
+				cancelText: '取消',
+				success: (res) => {
+					if (res.confirm) {
+						// 打开应用设置页面
+						plus.runtime.openURL('app-settings://')
+					}
+				}
+			})
+			return
+		}
+		// #endif
+		
+		// #ifdef MP-WEIXIN
+		// 小程序端：使用getSetting检查权限
 		const settingRes = await uni.getSetting()
 		console.log('📋 当前权限设置:', settingRes)
 		
@@ -270,6 +314,7 @@ const startRecord = async () => {
 				title: '需要录音权限',
 				content: '请在设置中开启录音权限',
 				confirmText: '去设置',
+				cancelText: '取消',
 				success: (res) => {
 					if (res.confirm) {
 						uni.openSetting()
@@ -293,12 +338,15 @@ const startRecord = async () => {
 				return
 			}
 		}
+		// #endif
 		
-		// 确保录音器已初始化
+		console.log('✅ 权限检查通过，开始初始化录音器')
+		
+		// 第二步：初始化录音器
 		if (!data.recorderManager) {
 			data.recorderManager = uni.getRecorderManager()
 			
-			// 重新绑定事件监听
+			// 绑定事件监听
 			data.recorderManager.onStart(() => {
 				console.log('✅ 录音已开始')
 			})
@@ -335,11 +383,10 @@ const startRecord = async () => {
 			})
 		}
 		
-		// 设置录音状态
+		// 第三步：设置录音状态并启动
 		data.isRecording = true
 		data.recordTime = 0
 		
-		// 启动录音
 		try {
 			data.recorderManager.start({
 				duration: 60000,
@@ -373,7 +420,7 @@ const startRecord = async () => {
 			})
 		}
 	} catch (error) {
-		console.error('❌ 录音权限检查失败:', error)
+		console.error('❌ 录音初始化失败:', error)
 		data.isRecording = false
 		uni.showToast({
 			title: '录音初始化失败',
@@ -442,6 +489,7 @@ const handleRecordStop = async (res) => {
 	console.log('⏱️ [语音识别] 开始时间:', new Date().toLocaleTimeString())
 	console.log('录音停止回调，文件路径:', res.tempFilePath)
 	console.log('录音时长:', res.duration, 'ms')
+	console.log('录音文件大小:', res.fileSize, 'bytes')
 	
 	// 确保状态已重置
 	data.isRecording = false
@@ -461,11 +509,23 @@ const handleRecordStop = async (res) => {
 		return
 	}
 	
-	// 检查录音时长是否太短（小于500ms视为无效）
-	if (res.duration < 500) {
+	// 检查录音时长（如果有duration字段且太短，则拒绝）
+	// 注意：APP端可能没有duration字段，所以只在有值时检查
+	if (res.duration !== undefined && res.duration < 500) {
 		console.error('❌ 录音时长太短:', res.duration, 'ms')
 		uni.showToast({
 			title: '录音时间太短，请重新录制',
+			icon: 'none',
+			duration: 2000
+		})
+		return
+	}
+	
+	// 检查文件大小（如果太小，可能是无效录音）
+	if (res.fileSize !== undefined && res.fileSize < 1000) {
+		console.error('❌ 录音文件太小:', res.fileSize, 'bytes')
+		uni.showToast({
+			title: '录音文件无效，请重新录制',
 			icon: 'none',
 			duration: 2000
 		})
@@ -477,13 +537,18 @@ const handleRecordStop = async (res) => {
 	try {
 		// 上传音频文件到服务器
 		const uploadStartTime = Date.now()
-		console.log('开始上传音频文件到服务器')
+		console.log('开始上传音频文件到服务器，路径:', res.tempFilePath)
+		
 		const uploadRes = await request.uploadFile(res.tempFilePath)
 		const uploadEndTime = Date.now()
 		console.log('⏱️ [语音识别] 音频上传耗时:', uploadEndTime - uploadStartTime, 'ms')
 		
-		if (!uploadRes.success) {
-			throw new Error(uploadRes.message || '音频上传失败')
+		if (!uploadRes || !uploadRes.success) {
+			throw new Error(uploadRes?.message || '音频上传失败')
+		}
+		
+		if (!uploadRes.url) {
+			throw new Error('上传成功但未返回文件URL')
 		}
 		
 		console.log('音频文件上传成功，URL:', uploadRes.url)
@@ -521,11 +586,27 @@ const handleRecordStop = async (res) => {
 		enhanceWithAI(result.text, startTime)
 	} catch (error) {
 		console.error('识别失败:', error)
+		console.error('错误详情:', error.message)
 		data.parsing = false
+		
+		// 根据错误类型给出更友好的提示
+		let errorMsg = '识别失败，请重试'
+		
+		if (error.message.includes('没有文件上传') || error.message.includes('上传失败')) {
+			errorMsg = '录音文件上传失败，请检查网络后重试'
+		} else if (error.message.includes('识别结果为空')) {
+			errorMsg = '未识别到内容，请说清楚一些'
+		} else if (error.message.includes('网络')) {
+			errorMsg = '网络连接失败，请检查网络'
+		} else if (error.message) {
+			// 如果有具体错误信息，显示简化版本
+			errorMsg = error.message.length > 20 ? '识别失败，请重试' : error.message
+		}
+		
 		uni.showToast({
-			title: '识别失败：' + (error.message || '请重试'),
+			title: errorMsg,
 			icon: 'none',
-			duration: 3000
+			duration: 2500
 		})
 	}
 }

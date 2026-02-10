@@ -800,13 +800,13 @@ onPullDownRefresh(async () => {
 	}
 	
 	.amount-label {
-		font-size: $font-size-xs;
+		font-size: $font-size-sm;
 		color: rgba(255, 255, 255, 0.8);
 		font-weight: $font-weight-normal;
 	}
 	
 	.amount-value {
-		font-size: 36rpx; /* 美团风格：稍小的字号 */
+		font-size: 36rpx;
 		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 		margin-top: 4rpx;
