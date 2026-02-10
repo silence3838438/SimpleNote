@@ -1082,14 +1082,14 @@ const agreeAndLogin = () => {
 // 打开用户协议
 const openUserAgreementFromModal = () => {
 	uni.navigateTo({
-		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/user-agreement.html')
+		url: '/pages/agreement/agreement'
 	})
 }
 
 // 打开隐私政策
 const openPrivacyFromModal = () => {
 	uni.navigateTo({
-		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/privacy.html')
+		url: '/pages/privacy/privacy'
 	})
 }
 

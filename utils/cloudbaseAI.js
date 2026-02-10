@@ -52,11 +52,23 @@ class CloudbaseAI {
 			})
 			
 			console.log('📥 [AI增强] 响应状态:', response.statusCode)
-			console.log('📥 [AI增强] 响应数据:', response.data)
 			
 			if (response.statusCode === 200 && response.data.success) {
-				console.log('✅ AI增强完成:', response.data.data)
-				return response.data.data
+				const result = response.data.data
+				
+				// 优化商家名称：如果太长，截取主要部分
+				if (result.merchant && result.merchant.length > 15) {
+					// 提取主要商家名（去掉地址等信息）
+					const parts = result.merchant.split(/\s+/)
+					result.merchant = parts[0] // 只保留第一部分
+				}
+				
+				console.log('✅ AI增强完成')
+				console.log(`  商家: ${result.merchant || '(未识别)'}`)
+				console.log(`  分类: ${result.categoryName}`)
+				console.log(`  备注: ${result.remark || '(空)'}`)
+				
+				return result
 			} else {
 				console.warn('⚠️ AI增强失败，返回后端原始数据')
 				console.warn('⚠️ 失败原因:', response.data.message || '未知')
@@ -118,11 +130,23 @@ class CloudbaseAI {
 			})
 			
 			console.log('📥 [AI增强-语音] 响应状态:', response.statusCode)
-			console.log('📥 [AI增强-语音] 响应数据:', response.data)
 			
 			if (response.statusCode === 200 && response.data.success) {
-				console.log('✅ AI增强完成:', response.data.data)
-				return response.data.data
+				const result = response.data.data
+				
+				// 优化商家名称：如果太长，截取主要部分
+				if (result.merchant && result.merchant.length > 15) {
+					// 提取主要商家名（去掉地址等信息）
+					const parts = result.merchant.split(/\s+/)
+					result.merchant = parts[0] // 只保留第一部分
+				}
+				
+				console.log('✅ AI增强完成')
+				console.log(`  商家: ${result.merchant || '(未识别)'}`)
+				console.log(`  分类: ${result.categoryName}`)
+				console.log(`  备注: ${result.remark || '(空)'}`)
+				
+				return result
 			} else {
 				console.warn('⚠️ AI增强失败，返回前端原始数据')
 				console.warn('⚠️ 失败原因:', response.data.message || '未知')

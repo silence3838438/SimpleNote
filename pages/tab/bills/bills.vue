@@ -19,7 +19,7 @@
 			<!-- 统计卡片 -->
 			<view class="summary-card">
 				<view class="summary-header">
-					<picker mode="multiSelector" :value="data.pickerValue" :range="data.pickerColumns" @change="onPickerConfirm" @columnchange="onPickerColumnChange">
+					<picker mode="date" fields="month" :value="data.currentMonth" @change="onMonthChange">
 						<view class="month-selector">
 							<text class="month-text">{{ data.selectedMonth || '全部账单' }}</text>
 							<text class="month-arrow">▼</text>
@@ -135,11 +135,8 @@ const data = reactive({
 	totalIncome: 0,
 	totalExpense: 0,
 	balance: 0,
-	// 原生picker相关
-	pickerValue: [0, 0],
-	pickerColumns: [[], []], // 两列：年份和月份
-	tempYear: '',
-	tempMonth: ''
+	// 日期选择器相关
+	currentMonth: ''
 })
 
 const loadData = async () => {
@@ -154,7 +151,13 @@ const loadData = async () => {
 		data.balance = 0
 		data.billCount = 0
 		data.categories = uni.getStorageSync('categories') || []
-		initYears()
+		
+		// 初始化当前月份
+		const now = new Date()
+		const year = now.getFullYear()
+		const month = (now.getMonth() + 1).toString().padStart(2, '0')
+		data.currentMonth = `${year}-${month}`
+		
 		return
 	}
 	
@@ -164,8 +167,11 @@ const loadData = async () => {
 		data.allBills = bills || []
 		data.categories = uni.getStorageSync('categories') || []
 		
-		// 初始化年份列表
-		initYears()
+		// 初始化当前月份
+		const now = new Date()
+		const year = now.getFullYear()
+		const month = (now.getMonth() + 1).toString().padStart(2, '0')
+		data.currentMonth = `${year}-${month}`
 		
 		// 应用筛选
 		applyFilters()
@@ -187,9 +193,6 @@ const loadDataQuietly = async () => {
 		data.allBills = bills || []
 		data.categories = uni.getStorageSync('categories') || []
 		
-		// 初始化年份列表
-		initYears()
-		
 		// 应用筛选
 		applyFilters()
 	} catch (error) {
@@ -198,26 +201,15 @@ const loadDataQuietly = async () => {
 	}
 }
 
-const initYears = () => {
-	const now = new Date()
-	const currentYear = now.getFullYear()
+// 月份选择器改变事件
+const onMonthChange = (e) => {
+	const selectedMonth = e.detail.value // 格式: YYYY-MM
+	data.currentMonth = selectedMonth
 	
-	// 生成年份列表（添加"全部"选项 + 当前年份前后5年）
-	const years = ['全部']
-	for (let i = currentYear - 5; i <= currentYear + 5; i++) {
-		years.push(String(i))
-	}
+	const [year, month] = selectedMonth.split('-')
+	data.selectedMonth = `${year}年${month}月`
 	
-	// 生成月份列表（包含"全部"）
-	const months = ['全部', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-	
-	// 设置picker的列数据
-	data.pickerColumns = [years, months]
-	
-	// 设置默认选中"全部"
-	data.pickerValue = [0, 0]
-	data.tempYear = '全部'
-	data.tempMonth = '全部'
+	applyFilters()
 }
 
 const applyFilters = () => {
@@ -359,49 +351,6 @@ const clearSearch = () => {
 
 const selectType = (type) => {
 	data.selectedType = type
-	applyFilters()
-}
-
-// 原生picker列改变事件
-const onPickerColumnChange = (e) => {
-	const column = e.detail.column
-	const value = e.detail.value
-	
-	// 如果改变的是年份列
-	if (column === 0) {
-		const selectedYear = data.pickerColumns[0][value]
-		
-		// 如果选择了"全部"年份
-		if (selectedYear === '全部') {
-			// 月份列包含"全部"
-			data.pickerColumns[1] = ['全部', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-			// 自动选中"全部"月份
-			data.pickerValue = [value, 0]
-		} else {
-			// 选择了具体年份，月份列不包含"全部"
-			data.pickerColumns[1] = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-			// 如果当前月份索引超出范围，重置为0
-			const currentMonthIndex = data.pickerValue[1]
-			if (currentMonthIndex >= data.pickerColumns[1].length) {
-				data.pickerValue = [value, 0]
-			}
-		}
-	}
-}
-
-// 原生picker确认事件
-const onPickerConfirm = (e) => {
-	const values = e.detail.value
-	const selectedYear = data.pickerColumns[0][values[0]]
-	const selectedMonth = data.pickerColumns[1][values[1]]
-	
-	// 如果选择了"全部"，清空月份筛选
-	if (selectedYear === '全部' || selectedMonth === '全部') {
-		data.selectedMonth = null
-	} else {
-		data.selectedMonth = `${selectedYear}年${selectedMonth}月`
-	}
-	
 	applyFilters()
 }
 

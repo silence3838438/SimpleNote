@@ -169,6 +169,34 @@
 					}
 				}
 			]
+		},
+		{
+			"root": "pages/privacy",
+			"name": "privacy",
+			"pages": [
+				{
+					"path": "privacy",
+					"style": {
+						"navigationBarTitleText": "隐私政策",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/agreement",
+			"name": "agreement",
+			"pages": [
+				{
+					"path": "agreement",
+					"style": {
+						"navigationBarTitleText": "用户协议",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				}
+			]
 		}
 	],
 	"preloadRule": {
