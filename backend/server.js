@@ -56,10 +56,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/billManager', optionalAuthMiddleware, billRoutes); // 需要登录才能操作
 app.use('/api/ocrRecognize', optionalAuthMiddleware, ocrRoutes); // 需要登录才能使用
-app.use('/api/baiduASR', optionalAuthMiddleware, asrRoutes); // 需要登录才能使用
+app.use('/api/baiduASR', authMiddleware, asrRoutes); // 必须登录才能使用（修复：改用authMiddleware）
 app.use('/api/upload', authMiddleware, uploadRoutes); // 需要登录才能上传
 app.use('/api/app', appRoutes); // 版本检查不需要认证
-app.use('/api/ai-enhance', optionalAuthMiddleware, aiEnhanceRoutes); // AI 增强接口
+app.use('/api/ai-enhance', optionalAuthMiddleware, aiEnhanceRoutes); // AI 增强接口（可选认证）
 
 // 健康检查
 app.get('/health', (req, res) => {
