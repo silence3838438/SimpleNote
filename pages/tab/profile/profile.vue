@@ -174,19 +174,6 @@
 					</view>
 				</button>
 				
-				<!-- 系统设置 -->
-				<view class="function-item" @click="goToSettings">
-					<view class="function-left">
-						<view class="function-icon settings-icon">
-							<text class="icon-text">⚙️</text>
-						</view>
-						<text class="function-title">系统设置</text>
-					</view>
-					<view class="function-right">
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				
 				<!-- 检查更新（仅APP） -->
 				<!-- #ifdef APP-PLUS -->
 				<view class="function-item" @click="checkAppUpdate">
@@ -202,6 +189,19 @@
 					</view>
 				</view>
 				<!-- #endif -->
+				
+				<!-- 系统设置 -->
+				<view class="function-item" @click="goToSettings">
+					<view class="function-left">
+						<view class="function-icon settings-icon">
+							<text class="icon-text">⚙️</text>
+						</view>
+						<text class="function-title">系统设置</text>
+					</view>
+					<view class="function-right">
+						<text class="arrow">›</text>
+					</view>
+				</view>
 			</view>
 			
 		</view>

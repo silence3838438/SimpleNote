@@ -1,10 +1,12 @@
 # 管理后台部署指南
 
 ## 当前状态
-❌ 管理后台未部署到服务器
+✅ 管理后台已部署到服务器
 
 ## 访问地址
-部署后访问：https://api.qiannaqule.top/admin
+https://api.qiannaqule.top/admin/
+
+**注意**：URL 最后必须带斜杠 `/`
 
 ## 快速部署
 

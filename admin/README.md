@@ -37,6 +37,10 @@ npm run dev
 
 访问：http://localhost:5173
 
+### 生产环境
+
+访问：https://api.qiannaqule.top/admin/
+
 ### 生产构建
 
 ```bash
