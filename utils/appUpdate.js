@@ -31,7 +31,9 @@ export const checkUpdate = async () => {
 					packageSize: updateInfo.packageSize || '未知',
 					updateTime: updateInfo.updateTime || '',
 					downloadUrl: updateInfo.downloadUrl || '',
-					isForce: updateInfo.isForce || false // 是否强制更新
+					isForce: updateInfo.isForce || false, // 是否强制更新
+					updateType: updateInfo.updateType || 'server', // server: 服务器下载, market: 应用市场
+					markets: updateInfo.markets || {} // 应用市场链接配置
 				}
 			}
 		}

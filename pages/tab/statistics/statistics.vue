@@ -1122,6 +1122,9 @@ onPullDownRefresh(async () => {
 		padding: $spacing-sm $spacing-md;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
+		/* #ifdef APP-PLUS */
+		padding-top: $spacing-md;
+		/* #endif */
 	}
 	
 	/* 筛选器包装容器 - 美团风格 */
@@ -1129,7 +1132,12 @@ onPullDownRefresh(async () => {
 		background: $bg-white;
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: $spacing-sm;
+		/* #ifdef MP-WEIXIN */
 		margin-top: $spacing-sm;
+		/* #endif */
+		/* #ifdef APP-PLUS */
+		margin-top: $spacing-sm;
+		/* #endif */
 		margin-bottom: $spacing-xl; /* 增大与收支总览的间距 */
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 		border: 2rpx solid rgba(82, 196, 26, 0.08);

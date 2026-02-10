@@ -99,6 +99,14 @@ const props = defineProps({
 	isForce: {
 		type: Boolean,
 		default: false
+	},
+	updateType: {
+		type: String,
+		default: 'server' // server: 服务器下载, market: 应用市场
+	},
+	markets: {
+		type: Object,
+		default: () => ({})
 	}
 })
 
@@ -146,7 +154,14 @@ const handleConfirm = () => {
 	if (isDownloading.value) return
 	
 	// #ifdef APP-PLUS
-	startDownload()
+	// 判断更新方式
+	if (props.updateType === 'market') {
+		// 应用市场更新
+		jumpToMarket()
+	} else {
+		// 服务器下载更新
+		startDownload()
+	}
 	// #endif
 	
 	// #ifndef APP-PLUS
@@ -157,6 +172,58 @@ const handleConfirm = () => {
 	// #endif
 	
 	emit('confirm')
+}
+
+// 跳转到应用市场
+const jumpToMarket = () => {
+	// #ifdef APP-PLUS
+	try {
+		// 获取手机品牌
+		const brand = plus.device.vendor.toLowerCase()
+		console.log('手机品牌:', brand)
+		
+		let marketUrl = ''
+		
+		// 根据品牌选择对应的应用市场链接
+		if (brand.includes('huawei')) {
+			marketUrl = props.markets.huawei || 'appmarket://details?id=com.qiannaqule.money'
+		} else if (brand.includes('xiaomi') || brand.includes('redmi')) {
+			marketUrl = props.markets.xiaomi || 'https://app.mi.com/details?id=com.qiannaqule.money'
+		} else if (brand.includes('vivo')) {
+			marketUrl = props.markets.vivo || 'vivomarket://details?id=com.qiannaqule.money'
+		} else if (brand.includes('oppo') || brand.includes('realme') || brand.includes('oneplus')) {
+			marketUrl = props.markets.oppo || 'market://details?id=com.qiannaqule.money'
+		} else if (brand.includes('honor')) {
+			marketUrl = props.markets.honor || 'market://details?id=com.qiannaqule.money'
+		} else {
+			// 其他品牌使用通用market链接
+			marketUrl = 'market://details?id=com.qiannaqule.money'
+		}
+		
+		console.log('跳转链接:', marketUrl)
+		
+		// 打开应用市场
+		plus.runtime.openURL(marketUrl, (error) => {
+			console.error('打开应用市场失败:', error)
+			uni.showModal({
+				title: '提示',
+				content: '无法打开应用市场，请手动前往应用市场搜索"钱哪去了"进行更新',
+				showCancel: false
+			})
+		})
+		
+		// 如果不是强制更新，关闭弹窗
+		if (!props.isForce) {
+			emit('cancel')
+		}
+	} catch (error) {
+		console.error('跳转应用市场失败:', error)
+		uni.showToast({
+			title: '跳转失败',
+			icon: 'none'
+		})
+	}
+	// #endif
 }
 
 // 开始下载

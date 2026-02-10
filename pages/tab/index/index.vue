@@ -1,5 +1,6 @@
 <template>
 	<view class="page">
+		<!-- #ifdef MP-WEIXIN -->
 		<!-- 自定义导航栏（活动期间显示） -->
 		<view class="custom-navbar" v-if="data.isFestivalActive" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<view class="navbar-content">
@@ -14,14 +15,21 @@
 				</view>
 			</view>
 		</view>
+		<!-- #endif -->
 		
-		<!-- 系统样式导航栏（非活动期间显示） -->
+		<!-- 系统样式导航栏（非活动期间显示或APP） -->
+		<!-- #ifdef MP-WEIXIN -->
 		<view class="system-navbar" v-if="!data.isFestivalActive" :style="{ paddingTop: statusBarHeight + 'px' }">
+		<!-- #endif -->
+		<!-- #ifdef APP-PLUS -->
+		<view class="system-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+		<!-- #endif -->
 			<view class="navbar-content">
 				<text class="navbar-title-text">钱哪去了</text>
 			</view>
 		</view>
 		
+		<!-- #ifdef MP-WEIXIN -->
 		<!-- 春节横幅背景（活动期间显示） -->
 		<view class="festival-bg" v-if="data.isFestivalActive" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
 			<text class="festival-text">🎊 新春快乐 · 马年大吉 🎊</text>
@@ -39,7 +47,9 @@
 				</view>
 			</view>
 		</view>
+		<!-- #endif -->
 		
+		<!-- #ifdef MP-WEIXIN -->
 		<!-- 下拉抢红包提示 -->
 		<view class="pull-hint" :class="{ 'show': data.pullDistance > 50 }">
 			<text class="hint-icon">🧧</text>
@@ -150,8 +160,14 @@
 			canvas-id="fireworksCanvas" 
 			v-if="data.showFireworks"
 		></canvas>
+		<!-- #endif -->
 		
+		<!-- #ifdef MP-WEIXIN -->
 		<view class="container" :style="{ paddingTop: data.isFestivalActive ? (statusBarHeight + 44 + 140) + 'px' : (statusBarHeight + 44) + 'px' }">
+		<!-- #endif -->
+		<!-- #ifdef APP-PLUS -->
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+		<!-- #endif -->
 			<!-- 顶部月份选择器 -->
 			<view class="header">
 				<picker mode="date" fields="month" :value="data.currentMonth" @change="onMonthChange">
@@ -353,6 +369,8 @@
 		:updateTime="data.updateInfo.updateTime"
 		:downloadUrl="data.updateInfo.downloadUrl"
 		:isForce="data.updateInfo.isForce"
+		:updateType="data.updateInfo.updateType"
+		:markets="data.updateInfo.markets"
 		@cancel="closeUpdateModal"
 		@confirm="handleUpdateConfirm"
 		@downloadComplete="handleDownloadComplete"
@@ -402,7 +420,12 @@ const data = reactive({
 	hideIncome: false, // 隐藏收入
 	hideExpense: false, // 隐藏支出
 	hideBalance: false, // 隐藏结余
-	isFestivalActive: true, // 春节活动是否进行中
+	// #ifdef MP-WEIXIN
+	isFestivalActive: true, // 春节活动是否进行中（仅小程序）
+	// #endif
+	// #ifdef APP-PLUS
+	isFestivalActive: false, // APP不显示春节活动
+	// #endif
 	// 春节元素
 	showRedPackets: false, // 显示红包雨（只在红包雨时段显示）
 	showFireworks: false, // 显示烟花
@@ -442,7 +465,9 @@ const data = reactive({
 		packageSize: '',
 		updateTime: '',
 		downloadUrl: '',
-		isForce: false
+		isForce: false,
+		updateType: 'server',
+		markets: {}
 	}
 })
 
@@ -1000,6 +1025,7 @@ const handleDownloadComplete = () => {
 
 // 初始化春节元素
 const initFestivalElements = () => {
+	// #ifdef MP-WEIXIN
 	// 检查红包雨时间
 	checkRedPacketTime()
 	
@@ -1007,6 +1033,12 @@ const initFestivalElements = () => {
 	data.redPacketTimer = setInterval(() => {
 		checkRedPacketTime()
 	}, 1000)
+	// #endif
+	
+	// #ifdef APP-PLUS
+	// APP不显示红包雨功能
+	data.isFestivalActive = false
+	// #endif
 }
 
 // 检查红包雨时间
@@ -1974,6 +2006,9 @@ export default {
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			/* #ifdef APP-PLUS */
+			padding-bottom: 8rpx;
+			/* #endif */
 		}
 		
 		.navbar-title-text {
@@ -2875,8 +2910,15 @@ export default {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		/* #ifdef MP-WEIXIN */
 		margin-bottom: $spacing-lg;
 		padding-top: $spacing-sm;
+		/* #endif */
+		/* #ifdef APP-PLUS */
+		margin-bottom: $spacing-xl;
+		padding-top: $spacing-lg;
+		margin-top: $spacing-md;
+		/* #endif */
 		position: relative;
 		z-index: 100;
 	}
@@ -2888,7 +2930,12 @@ export default {
 		cursor: pointer;
 		display: flex;
 		align-items: center;
+		/* #ifdef MP-WEIXIN */
 		padding: $spacing-md $spacing-lg;
+		/* #endif */
+		/* #ifdef APP-PLUS */
+		padding: $spacing-lg $spacing-xl;
+		/* #endif */
 		background: $bg-white;
 		border-radius: $radius-2xl;
 		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08);

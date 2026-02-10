@@ -217,6 +217,8 @@
 			:updateTime="data.updateInfo.updateTime"
 			:downloadUrl="data.updateInfo.downloadUrl"
 			:isForce="data.updateInfo.isForce"
+			:updateType="data.updateInfo.updateType"
+			:markets="data.updateInfo.markets"
 			@cancel="closeUpdateModal"
 			@confirm="handleUpdate"
 			@downloadComplete="handleDownloadComplete"
@@ -313,7 +315,9 @@ const data = reactive({
 		packageSize: '',
 		updateTime: '',
 		downloadUrl: '',
-		isForce: false
+		isForce: false,
+		updateType: 'server',
+		markets: {}
 	},
 	appVersion: ''
 })

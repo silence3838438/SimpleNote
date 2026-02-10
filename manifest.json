@@ -2,8 +2,8 @@
     "name" : "钱哪去了",
     "appid" : "__UNI__1BF73C1",
     "description" : "智能记账助手 - 语音记账3秒搞定，拍照识别自动提取，智能分类餐饮交通购物，可视化统计消费去向，一键生成精美海报。让记账像聊天一样简单！",
-    "versionName" : "1.0.0",
-    "versionCode" : 201100,
+    "versionName" : "1.0.1",
+    "versionCode" : 201101,
     "transformPx" : false,
     // "permission" : {
     //     "network" : {
@@ -54,7 +54,6 @@
                     "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
                     "<uses-permission android:name=\"android.permission.CAMERA\"/>",
                     "<uses-permission android:name=\"android.permission.INTERNET\"/>",
-                    "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
                     "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>"
                 ],
@@ -63,10 +62,6 @@
                 "permissionExternalStorage" : {
                     "request" : "none",
                     "prompt" : "应用保存运行状态等信息，需要获取读写手机存储（系统提示为访问设备上的照片、媒体内容和文件）权限，请允许。"
-                },
-                "permissionPhoneState" : {
-                    "request" : "none",
-                    "prompt" : "为保证您正常、安全地使用，需要获取设备识别码（部分手机提示为获取手机号码）使用权限，请允许。"
                 },
                 "minSdkVersion" : 21,
                 "targetSdkVersion" : 30,
@@ -93,7 +88,6 @@
                         "UniversalLinks" : "https://api.qiannaqule.top/app/"
                     }
                 },
-                "ad" : {},
                 "payment" : {},
                 "oauth" : {
                     "weixin" : {

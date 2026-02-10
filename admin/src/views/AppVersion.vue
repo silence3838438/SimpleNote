@@ -69,12 +69,68 @@
           <el-input v-model="form.packageSize" placeholder="如: 15.8MB" />
         </el-form-item>
 
-        <el-form-item label="下载地址" prop="downloadUrl" v-if="form.platform === 'Android'">
+        <el-form-item label="更新方式" v-if="form.platform === 'Android'">
+          <el-radio-group v-model="form.updateType">
+            <el-radio label="server">服务器下载</el-radio>
+            <el-radio label="market">应用市场</el-radio>
+          </el-radio-group>
+          <div class="form-tip">
+            服务器下载：用户直接从服务器下载APK安装<br/>
+            应用市场：根据手机品牌跳转到对应应用市场更新
+          </div>
+        </el-form-item>
+
+        <el-form-item label="下载地址" prop="downloadUrl" v-if="form.platform === 'Android' && form.updateType === 'server'">
           <el-input v-model="form.downloadUrl" placeholder="APK下载地址" />
           <div class="form-tip">
             服务器APK文件地址,用户点击更新后会下载此文件
           </div>
         </el-form-item>
+
+        <!-- 应用市场配置 -->
+        <el-card v-if="form.platform === 'Android' && form.updateType === 'market'" class="market-config-card">
+          <template #header>
+            <div class="card-header">
+              <span>应用市场配置</span>
+              <el-tag size="small" type="info">根据手机品牌自动跳转</el-tag>
+            </div>
+          </template>
+          
+          <el-form-item label="华为应用市场">
+            <el-input v-model="form.markets.huawei" placeholder="appmarket://details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="小米应用商店">
+            <el-input v-model="form.markets.xiaomi" placeholder="https://app.mi.com/details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="VIVO应用商店">
+            <el-input v-model="form.markets.vivo" placeholder="vivomarket://details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="OPPO软件商店">
+            <el-input v-model="form.markets.oppo" placeholder="market://details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="荣耀应用市场">
+            <el-input v-model="form.markets.honor" placeholder="market://details?id=com.qiannaqule.money" />
+          </el-form-item>
+
+          <el-alert 
+            title="应用市场链接说明" 
+            type="info" 
+            :closable="false"
+            style="margin-top: 12px"
+          >
+            <ul style="margin: 8px 0; padding-left: 20px; line-height: 1.8;">
+              <li>华为：appmarket://details?id=包名</li>
+              <li>小米：https://app.mi.com/details?id=包名</li>
+              <li>VIVO：vivomarket://details?id=包名</li>
+              <li>OPPO/荣耀：market://details?id=包名</li>
+              <li>当前包名：com.qiannaqule.money</li>
+            </ul>
+          </el-alert>
+        </el-card>
         
         <el-alert 
           v-if="form.platform === 'iOS'" 
@@ -91,7 +147,7 @@
           <div class="form-tip">开启后用户必须更新才能使用APP</div>
         </el-form-item>
 
-        <el-form-item label="上传APK" v-if="form.platform === 'Android'">
+        <el-form-item label="上传APK" v-if="form.platform === 'Android' && form.updateType === 'server'">
           <el-upload
             class="upload-demo"
             :action="uploadUrl"
@@ -144,7 +200,15 @@ const form = reactive({
   updateContent: [],
   packageSize: '',
   downloadUrl: '',
-  isForce: false
+  isForce: false,
+  updateType: 'server', // server: 服务器下载, market: 应用市场
+  markets: {
+    huawei: 'appmarket://details?id=com.qiannaqule.money',
+    xiaomi: 'https://app.mi.com/details?id=com.qiannaqule.money',
+    vivo: 'vivomarket://details?id=com.qiannaqule.money',
+    oppo: 'market://details?id=com.qiannaqule.money',
+    honor: 'market://details?id=com.qiannaqule.money'
+  }
 })
 
 const updateContentText = ref('')
@@ -173,7 +237,7 @@ const rules = {
     { 
       required: true, 
       validator: (rule, value, callback) => {
-        if (form.platform === 'Android' && !value) {
+        if (form.platform === 'Android' && form.updateType === 'server' && !value) {
           callback(new Error('请输入下载地址'))
         } else {
           callback()
@@ -287,6 +351,12 @@ const handleSubmit = async () => {
     if (form.platform === 'iOS') {
       form.downloadUrl = 'https://apps.apple.com'
       form.packageSize = '-'
+      form.updateType = 'market'
+    }
+
+    // Android应用市场模式不需要下载地址
+    if (form.platform === 'Android' && form.updateType === 'market') {
+      form.downloadUrl = 'market'
     }
 
     submitting.value = true
@@ -322,7 +392,15 @@ const resetForm = () => {
     updateContent: [],
     packageSize: '',
     downloadUrl: '',
-    isForce: false
+    isForce: false,
+    updateType: 'server',
+    markets: {
+      huawei: 'appmarket://details?id=com.qiannaqule.money',
+      xiaomi: 'https://app.mi.com/details?id=com.qiannaqule.money',
+      vivo: 'vivomarket://details?id=com.qiannaqule.money',
+      oppo: 'market://details?id=com.qiannaqule.money',
+      honor: 'market://details?id=com.qiannaqule.money'
+    }
   })
   updateContentText.value = ''
   formRef.value?.clearValidate()
@@ -407,5 +485,19 @@ onMounted(() => {
 
 .upload-demo {
   width: 100%;
+}
+
+.market-config-card {
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.market-config-card :deep(.el-card__body) {
+  padding-top: 0;
 }
 </style>
