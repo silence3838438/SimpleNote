@@ -55,7 +55,7 @@ const aiEnhanceRoutes = require('./routes/ai-enhance');
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/billManager', optionalAuthMiddleware, billRoutes); // 需要登录才能操作
-app.use('/api/ocrRecognize', optionalAuthMiddleware, ocrRoutes); // 需要登录才能使用
+app.use('/api/ocrRecognize', authMiddleware, ocrRoutes); // 必须登录才能使用（修复：改用authMiddleware）
 app.use('/api/baiduASR', authMiddleware, asrRoutes); // 必须登录才能使用（修复：改用authMiddleware）
 app.use('/api/upload', authMiddleware, uploadRoutes); // 需要登录才能上传
 app.use('/api/app', appRoutes); // 版本检查不需要认证
