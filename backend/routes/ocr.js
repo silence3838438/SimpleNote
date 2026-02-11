@@ -252,6 +252,19 @@ function parseOCRResult(ocrResult) {
     if (match && match[1]) {
       const parsedAmount = parseFloat(match[1]);
       if (parsedAmount > 0 && parsedAmount < 100000) {
+        // 检查金额前后文，排除无关金额
+        const matchIndex = allText.indexOf(match[0]);
+        const beforeText = allText.substring(Math.max(0, matchIndex - 15), matchIndex);
+        const afterText = allText.substring(matchIndex + match[0].length, Math.min(allText.length, matchIndex + match[0].length + 15));
+        
+        // 排除：门禁密码、放XX元、存XX元等无关金额
+        if (beforeText.includes('门禁') || beforeText.includes('密码') || 
+            beforeText.includes('放') || beforeText.includes('存') ||
+            beforeText.includes('输入') || beforeText.includes('开门')) {
+          console.log('跳过无关金额（门禁/密码相关）:', parsedAmount);
+          continue;
+        }
+        
         if (match[1].includes('.')) {
           amount = parsedAmount;
           foundWithKeyword = true;
@@ -300,31 +313,43 @@ function parseOCRResult(ocrResult) {
       for (const correction of corrections) {
         correctedText = correctedText.replace(correction.original, correction.corrected);
       }
-    }
-    
-    // 格式1：*数量 单价 小计
-    const itemWithSubtotalPattern = /\*(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/g;
-    let subtotals = [];
-    let match;
-    while ((match = itemWithSubtotalPattern.exec(correctedText)) !== null) {
-      const quantity = parseInt(match[1]);
-      const unitPrice = parseFloat(match[2]);
-      const subtotal = parseFloat(match[3]);
       
-      if (subtotal > 0 && subtotal < 10000 && Math.abs(subtotal - quantity * unitPrice) < 0.1) {
-        subtotals.push(subtotal);
-        console.log(`找到商品小计: *${quantity} ${unitPrice} ${subtotal}`);
+      // 如果只有一个商品且修正成功，直接使用修正后的价格
+      if (corrections.length === 1) {
+        amount = corrections[0].price;
+        foundWithKeyword = true;
+        console.log('【优先级2】使用OCR修正后的单商品价格:', amount);
       }
     }
     
-    if (subtotals.length > 0) {
-      amount = subtotals.reduce((sum, val) => sum + val, 0);
-      foundWithKeyword = true;
-      console.log('【优先级2】累加商品小计作为金额:', amount);
-    } else {
-      // 格式2：*数量 单价
+    // 格式1：*数量 单价 小计
+    if (!foundWithKeyword) {
+      const itemWithSubtotalPattern = /\*(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/g;
+      let subtotals = [];
+      let match;
+      while ((match = itemWithSubtotalPattern.exec(correctedText)) !== null) {
+        const quantity = parseInt(match[1]);
+        const unitPrice = parseFloat(match[2]);
+        const subtotal = parseFloat(match[3]);
+        
+        if (subtotal > 0 && subtotal < 10000 && Math.abs(subtotal - quantity * unitPrice) < 0.1) {
+          subtotals.push(subtotal);
+          console.log(`找到商品小计: *${quantity} ${unitPrice} ${subtotal}`);
+        }
+      }
+      
+      if (subtotals.length > 0) {
+        amount = subtotals.reduce((sum, val) => sum + val, 0);
+        foundWithKeyword = true;
+        console.log('【优先级2】累加商品小计作为金额:', amount);
+      }
+    }
+    
+    // 格式2：*数量 单价
+    if (!foundWithKeyword) {
       const itemPattern = /\*(\d+)\s+(\d+\.?\d*)/g;
       let calculatedAmounts = [];
+      let match;
       while ((match = itemPattern.exec(correctedText)) !== null) {
         const quantity = parseInt(match[1]);
         const unitPrice = parseFloat(match[2]);
