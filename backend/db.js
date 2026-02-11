@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 
-// 创建数据库连接池
+// 创建数据库连接池 - 优化配置
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
@@ -8,8 +8,13 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'simplenote',
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 20, // 增加连接数（原10）
+  queueLimit: 0,
+  enableKeepAlive: true, // 保持连接活跃
+  keepAliveInitialDelay: 0,
+  maxIdle: 10, // 最大空闲连接数
+  idleTimeout: 60000, // 空闲连接超时（60秒）
+  connectTimeout: 10000 // 连接超时（10秒）
 });
 
 // 查询方法
@@ -44,13 +49,17 @@ async function initTables() {
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         openid VARCHAR(100) UNIQUE,
+        unionid VARCHAR(100),
         phone VARCHAR(20),
         nickname VARCHAR(100),
-        avatar VARCHAR(500),
+        avatar_url VARCHAR(500),
         session_key VARCHAR(100),
+        apple_id VARCHAR(100),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_login DATETIME,
-        INDEX idx_openid (openid)
+        INDEX idx_openid (openid),
+        INDEX idx_unionid (unionid),
+        INDEX idx_apple_id (apple_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 

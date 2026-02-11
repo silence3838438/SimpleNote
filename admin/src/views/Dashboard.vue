@@ -96,58 +96,152 @@ const stats = ref({
 
 const userChartRef = ref(null)
 const billChartRef = ref(null)
+let userChart = null
+let billChart = null
 
 const fetchStats = async () => {
   try {
     const res = await request.get('/admin/stats')
     if (res.success) {
-      stats.value = res.data
+      const data = res.data
+      stats.value = {
+        totalUsers: data.totalUsers,
+        totalBills: data.totalBills,
+        todayActive: data.todayActive,
+        totalAmount: (parseFloat(data.totalExpense) + parseFloat(data.totalIncome)).toFixed(2)
+      }
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
   }
 }
 
-const initUserChart = () => {
-  const chart = echarts.init(userChartRef.value)
-  chart.setOption({
-    tooltip: { trigger: 'axis' },
+const fetchUserGrowth = async () => {
+  try {
+    const res = await request.get('/admin/stats/trend')
+    if (res.success && res.data) {
+      const { days, counts } = res.data
+      initUserChart(days, counts)
+    }
+  } catch (error) {
+    console.error('获取用户增长趋势失败:', error)
+    // 使用默认数据
+    initUserChart(['周一', '周二', '周三', '周四', '周五', '周六', '周日'], [0, 0, 0, 0, 0, 0, 0])
+  }
+}
+
+const fetchCategoryStats = async () => {
+  try {
+    const res = await request.get('/admin/stats/category')
+    if (res.success && res.data) {
+      const data = res.data.map(item => ({
+        value: parseFloat(item.total),
+        name: item.category_name
+      }))
+      initBillChart(data)
+    }
+  } catch (error) {
+    console.error('获取分类统计失败:', error)
+    // 使用默认数据
+    initBillChart([])
+  }
+}
+
+const initUserChart = (days, counts) => {
+  if (!userChartRef.value) return
+  
+  if (!userChart) {
+    userChart = echarts.init(userChartRef.value)
+  }
+  
+  userChart.setOption({
+    tooltip: { 
+      trigger: 'axis',
+      formatter: '{b}: {c}笔账单'
+    },
     xAxis: {
       type: 'category',
-      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+      data: days
     },
-    yAxis: { type: 'value' },
+    yAxis: { 
+      type: 'value',
+      minInterval: 1
+    },
     series: [{
-      data: [120, 200, 150, 80, 70, 110, 130],
+      data: counts,
       type: 'line',
       smooth: true,
-      itemStyle: { color: '#52c41a' }
+      itemStyle: { color: '#52c41a' },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [{
+            offset: 0, color: 'rgba(82, 196, 26, 0.3)'
+          }, {
+            offset: 1, color: 'rgba(82, 196, 26, 0.05)'
+          }]
+        }
+      }
     }]
   })
 }
 
-const initBillChart = () => {
-  const chart = echarts.init(billChartRef.value)
-  chart.setOption({
-    tooltip: { trigger: 'item' },
+const initBillChart = (data) => {
+  if (!billChartRef.value) return
+  
+  if (!billChart) {
+    billChart = echarts.init(billChartRef.value)
+  }
+  
+  if (data.length === 0) {
+    billChart.setOption({
+      title: {
+        text: '暂无数据',
+        left: 'center',
+        top: 'center',
+        textStyle: {
+          color: '#999',
+          fontSize: 14
+        }
+      }
+    })
+    return
+  }
+  
+  billChart.setOption({
+    tooltip: { 
+      trigger: 'item',
+      formatter: '{b}: ¥{c} ({d}%)'
+    },
+    legend: {
+      orient: 'vertical',
+      right: 10,
+      top: 'center'
+    },
     series: [{
       type: 'pie',
-      radius: '60%',
-      data: [
-        { value: 1048, name: '餐饮' },
-        { value: 735, name: '交通' },
-        { value: 580, name: '购物' },
-        { value: 484, name: '娱乐' },
-        { value: 300, name: '其他' }
-      ]
+      radius: ['40%', '70%'],
+      center: ['40%', '50%'],
+      data: data,
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.5)'
+        }
+      }
     }]
   })
 }
 
 onMounted(() => {
   fetchStats()
-  initUserChart()
-  initBillChart()
+  fetchUserGrowth()
+  fetchCategoryStats()
 })
 </script>
 

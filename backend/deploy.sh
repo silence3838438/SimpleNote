@@ -22,9 +22,11 @@ if [ ! -z "$1" ]; then
     fi
     echo "✅ 文件上传成功"
 else
-    # 否则上传所有routes文件
-    echo "📤 上传所有routes文件..."
+    # 否则上传所有routes文件和middleware
+    echo "📤 上传所有routes文件和middleware..."
     sshpass -p "$PASSWORD" scp -r routes/ "$SERVER:$REMOTE_DIR/"
+    sshpass -p "$PASSWORD" scp -r middleware/ "$SERVER:$REMOTE_DIR/"
+    sshpass -p "$PASSWORD" scp server.js db.js "$SERVER:$REMOTE_DIR/"
     if [ $? -ne 0 ]; then
         echo "❌ 文件上传失败"
         exit 1
@@ -48,13 +50,47 @@ fi
 echo ""
 echo "🔄 重启后端服务..."
 
-# 执行远程重启脚本
-sshpass -p "$PASSWORD" ssh "$SERVER" "/www/backend/restart-backend.sh"
+# 上传PM2配置文件
+sshpass -p "$PASSWORD" scp ecosystem.config.js "$SERVER:$REMOTE_DIR/"
+sshpass -p "$PASSWORD" scp restart-backend-pm2.sh "$SERVER:$REMOTE_DIR/"
+sshpass -p "$PASSWORD" ssh "$SERVER" "chmod +x /www/backend/restart-backend-pm2.sh"
+
+# 安装新依赖（compression和pm2）
+echo "📦 安装依赖..."
+sshpass -p "$PASSWORD" ssh "$SERVER" "cd $REMOTE_DIR && npm install compression pm2 --save"
+
+# 使用PM2重启服务
+sshpass -p "$PASSWORD" ssh "$SERVER" "/www/backend/restart-backend-pm2.sh"
 
 if [ $? -eq 0 ]; then
     echo ""
+    echo "✅ 服务重启成功"
+    
+    # 等待服务启动
+    echo ""
+    echo "⏳ 等待服务启动 (5秒)..."
+    sleep 5
+    
+    # 上传测试脚本到backend目录（使用backend的node_modules）
+    echo ""
+    echo "📤 上传测试脚本..."
+    sshpass -p "$PASSWORD" scp ../test-all-features.js "$SERVER:$REMOTE_DIR/"
+    
+    # 运行自动化测试
+    echo ""
+    echo "🧪 运行自动化测试..."
+    sshpass -p "$PASSWORD" ssh "$SERVER" "cd $REMOTE_DIR && node test-all-features.js"
+    
+    TEST_EXIT_CODE=$?
+    
+    echo ""
     echo "========================================="
-    echo "✅ 部署完成!"
+    if [ $TEST_EXIT_CODE -eq 0 ]; then
+        echo "✅ 部署完成! 所有测试通过"
+    else
+        echo "⚠️  部署完成，但部分测试失败"
+        echo "请查看测试报告: $REMOTE_DIR/test-report.json"
+    fi
     echo "========================================="
 else
     echo ""

@@ -211,14 +211,21 @@ router.post('/wechat-app-login', async (req, res) => {
 
     const { nickname, headimgurl } = userInfoRes.data;
 
-    // 查询或创建用户（优先使用unionid，如果没有则使用openid）
-    const queryField = unionid ? 'unionid' : 'openid';
-    const queryValue = unionid || openid;
-    
-    const users = await db.query(
-      `SELECT * FROM users WHERE ${queryField} = ?`,
-      [queryValue]
-    );
+    // 查询或创建用户
+    let users;
+    if (unionid) {
+      // 优先使用unionid查询（可以关联小程序和APP的同一用户）
+      users = await db.query(
+        'SELECT * FROM users WHERE unionid = ?',
+        [unionid]
+      );
+    } else {
+      // 如果没有unionid，使用openid查询
+      users = await db.query(
+        'SELECT * FROM users WHERE openid = ?',
+        [openid]
+      );
+    }
 
     let userId;
     if (users.length > 0) {

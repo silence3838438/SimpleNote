@@ -1,10 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const compression = require('compression'); // 响应压缩
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// 启用响应压缩 - 减少带宽占用
+app.use(compression());
 
 // 中间件 - 更详细的CORS配置
 app.use(cors({
@@ -35,6 +39,7 @@ db.testConnection().then(success => {
 // 中间件
 const { authMiddleware, optionalAuthMiddleware } = require('./middleware/auth');
 const { securityMiddleware, encryptResponse } = require('./middleware/security');
+const { cacheMiddleware } = require('./middleware/cache');
 
 // 全局启用响应加密中间件
 app.use(encryptResponse);
@@ -61,8 +66,8 @@ app.use('/api/upload', authMiddleware, uploadRoutes); // 需要登录才能上�
 app.use('/api/app', appRoutes); // 版本检查不需要认证
 app.use('/api/ai-enhance', optionalAuthMiddleware, aiEnhanceRoutes); // AI 增强接口（可选认证）
 
-// 健康检查
-app.get('/health', (req, res) => {
+// 健康检查 - 添加缓存
+app.get('/health', cacheMiddleware(30000), (req, res) => {
   res.json({ status: 'ok', message: '服务运行正常' });
 });
 

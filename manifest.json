@@ -84,14 +84,14 @@
             "sdkConfigs" : {
                 "share" : {
                     "weixin" : {
-                        "appid" : "WECHAT_APPID_PLACEHOLDER",
+                        "appid" : "wxdec74d04ee3005f8",
                         "UniversalLinks" : "https://api.qiannaqule.top/app/"
                     }
                 },
                 "payment" : {},
                 "oauth" : {
                     "weixin" : {
-                        "appid" : "WECHAT_APPID_PLACEHOLDER",
+                        "appid" : "wxdec74d04ee3005f8",
                         "UniversalLinks" : "https://api.qiannaqule.top/app/"
                     },
                     "apple" : {}

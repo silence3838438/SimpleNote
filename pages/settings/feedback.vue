@@ -4,7 +4,9 @@
 			<!-- 输入区域 -->
 			<view class="input-section">
 				<view class="section-title">
-					<text class="title-icon">💬</text>
+					<view class="title-icon-wrapper feedback-icon">
+						<text class="title-icon">💬</text>
+					</view>
 					<text class="title-text">您的宝贵意见</text>
 				</view>
 				<textarea 
@@ -186,8 +188,23 @@ const submitFeedback = async () => {
 	margin-bottom: $spacing-lg;
 }
 
+.title-icon-wrapper {
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: $radius-md;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: $shadow-sm;
+	flex-shrink: 0;
+}
+
+.feedback-icon {
+	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+}
+
 .title-icon {
-	font-size: 40rpx;
+	font-size: 32rpx;
 }
 
 .title-icon-img {

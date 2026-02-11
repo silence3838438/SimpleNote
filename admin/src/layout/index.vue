@@ -62,7 +62,6 @@ const routes = [
   { path: '/dashboard', meta: { title: '数据概览', icon: 'DataAnalysis' } },
   { path: '/users', meta: { title: '用户管理', icon: 'User' } },
   { path: '/bills', meta: { title: '账单管理', icon: 'Tickets' } },
-  { path: '/logs', meta: { title: '系统日志', icon: 'Document' } },
   { path: '/feedback', meta: { title: '意见反馈', icon: 'ChatDotRound' } },
   { path: '/app-version', meta: { title: '版本管理', icon: 'Upload' } }
 ]

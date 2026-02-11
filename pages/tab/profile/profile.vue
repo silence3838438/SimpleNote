@@ -162,6 +162,21 @@
 				</view>
 				
 				<!-- 推荐给好友 -->
+				<!-- #ifdef APP-PLUS -->
+				<view class="function-item" @click="showShareModal">
+					<view class="function-left">
+						<view class="function-icon share-icon">
+							<text class="icon-text">📤</text>
+						</view>
+						<text class="function-title">推荐给好友</text>
+					</view>
+					<view class="function-right">
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				<!-- #endif -->
+				
+				<!-- #ifdef MP-WEIXIN -->
 				<button class="function-item share-button" open-type="share">
 					<view class="function-left">
 						<view class="function-icon share-icon">
@@ -173,6 +188,7 @@
 						<text class="arrow">›</text>
 					</view>
 				</button>
+				<!-- #endif -->
 				
 				<!-- 检查更新（仅APP） -->
 				<!-- #ifdef APP-PLUS -->
@@ -306,6 +322,15 @@
 				</view>
 			</view>
 		</view>
+		
+		<!-- #ifdef APP-PLUS -->
+		<!-- 分享弹框 -->
+		<ShareModal 
+			:visible="data.showShareModal"
+			@close="closeShareModal"
+			@share="handleShare"
+		/>
+		<!-- #endif -->
 	</view>
 </template>
 
@@ -318,6 +343,7 @@ import { rewardShareToFriend, rewardShareToTimeline } from '@/utils/pointsRules.
 import { pullPointsFromCloud } from '@/utils/pointsSync.js'
 import request from '@/utils/request.js'
 // #ifdef APP-PLUS
+import ShareModal from '@/components/ShareModal.vue'
 import UpdateModal from '@/components/UpdateModal.vue'
 import { checkUpdate } from '@/utils/appUpdate.js'
 // #endif
@@ -335,6 +361,7 @@ const data = reactive({
 	todayPoints: 0, // 今日获得积分
 	showLevelModal: false, // 是否显示等级详情弹框
 	showPrivacyModal: false, // 是否显示隐私协议弹框
+	showShareModal: false, // 是否显示分享弹框
 	reminderTime: '', // 提醒时间
 	// APP更新相关
 	showUpdateModal: false,
@@ -1093,6 +1120,36 @@ const openPrivacyFromModal = () => {
 	})
 }
 
+// 显示分享弹框
+const showShareModal = () => {
+	data.showShareModal = true
+	// 隐藏底部tabbar
+	uni.hideTabBar()
+}
+
+// 关闭分享弹框
+const closeShareModal = () => {
+	data.showShareModal = false
+	// 显示底部tabbar
+	uni.showTabBar()
+}
+
+// 处理分享
+const handleShare = async (type) => {
+	// type: 'friend' 或 'moments'
+	if (type === 'friend') {
+		const reward = await rewardShareToFriend()
+		if (reward) {
+			// 不显示积分奖励提示
+		}
+	} else if (type === 'moments') {
+		const reward = await rewardShareToTimeline()
+		if (reward) {
+			// 不显示积分奖励提示
+		}
+	}
+}
+
 // 退出登录
 const handleLogout = () => {
 	uni.showModal({
@@ -1291,17 +1348,8 @@ const checkLevelUpStatus = () => {
 
 // 分享配置
 onShareAppMessage(async () => {
-	// 分享给好友奖励
-	const reward = await rewardShareToFriend()
-	if (reward) {
-		setTimeout(() => {
-			uni.showToast({
-				title: `+${reward.addedPoints}积分 ${reward.reason}`,
-				icon: 'none',
-				duration: 2000
-			})
-		}, 500)
-	}
+	// 分享给好友奖励（静默记录，不显示提示）
+	await rewardShareToFriend()
 	
 	return {
 		title: '语音拍照记账，3秒搞定！消费一目了然',
@@ -1311,17 +1359,8 @@ onShareAppMessage(async () => {
 })
 
 onShareTimeline(async () => {
-	// 分享到朋友圈奖励
-	const reward = await rewardShareToTimeline()
-	if (reward) {
-		setTimeout(() => {
-			uni.showToast({
-				title: `+${reward.addedPoints}积分 ${reward.reason}`,
-				icon: 'none',
-				duration: 2000
-			})
-		}, 500)
-	}
+	// 分享到朋友圈奖励（静默记录，不显示提示）
+	await rewardShareToTimeline()
 	
 	return {
 		title: '钱哪去了 - 语音拍照记账，轻松管理每一笔',

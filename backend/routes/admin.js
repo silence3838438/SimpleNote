@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { cacheMiddleware, clearCache } = require('../middleware/cache');
 
 // 管理员登录
 router.post('/login', async (req, res) => {
@@ -36,8 +37,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 获取统计数据
-router.get('/stats', async (req, res) => {
+// 获取统计数据 - 添加缓存（30秒）
+router.get('/stats', cacheMiddleware(30000), async (req, res) => {
   try {
     // 总用户数
     const userCountResult = await db.query('SELECT COUNT(*) as count FROM users');
@@ -743,15 +744,16 @@ router.get('/logs', async (req, res) => {
   try {
     const { page = 1, pageSize = 10 } = req.query;
     const offset = (page - 1) * pageSize;
+    const limit = parseInt(pageSize);
     
     // 检查logs表是否存在
     try {
       const countResult = await db.query('SELECT COUNT(*) as count FROM logs');
       const total = countResult[0]?.count || 0;
       
+      // 注意：MySQL不支持OFFSET使用占位符，需要直接拼接
       const list = await db.query(
-        'SELECT * FROM logs ORDER BY create_time DESC LIMIT ? OFFSET ?',
-        [parseInt(pageSize), offset]
+        `SELECT * FROM logs ORDER BY create_time DESC LIMIT ${limit} OFFSET ${offset}`
       );
       
       res.json({
@@ -763,6 +765,7 @@ router.get('/logs', async (req, res) => {
       });
     } catch (tableError) {
       // 如果logs表不存在，返回空数据
+      console.error('[日志查询] 表查询错误:', tableError.message);
       res.json({
         success: true,
         data: {
@@ -772,7 +775,7 @@ router.get('/logs', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('获取日志失败:', error);
+    console.error('[日志查询] 外层错误:', error);
     res.json({
       success: true,
       data: {

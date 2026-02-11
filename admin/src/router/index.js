@@ -30,12 +30,6 @@ const routes = [
         meta: { title: '账单管理', icon: 'Tickets' }
       },
       {
-        path: 'logs',
-        name: 'Logs',
-        component: () => import('@/views/Logs.vue'),
-        meta: { title: '系统日志', icon: 'Document' }
-      },
-      {
         path: 'feedback',
         name: 'Feedback',
         component: () => import('@/views/Feedback.vue'),

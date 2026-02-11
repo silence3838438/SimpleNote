@@ -377,31 +377,38 @@ const callOCRCloudFunction = async () => {
 		throw new Error(errorMsg)
 	}
 	
-	// 第三步：先返回快速解析结果，AI 增强在后台进行
+	// 第三步：先返回快速解析结果，智能判断是否需要AI增强
 	const ocrText = ocrRes.text || ''
+	const quickResult = ocrRes.data
 	
 	// 如果OCR文本为空，直接使用原始结果
 	if (!ocrText || ocrText.trim() === '') {
 		console.log('OCR识别文本为空，直接使用原始结果')
 		const totalTime = Date.now() - startTime
 		console.log('⏱️ [拍照识别] 总耗时:', totalTime, 'ms (', (totalTime / 1000).toFixed(2), '秒)')
-		return ocrRes.data
+		return quickResult
 	}
 	
-	// 立即返回快速解析结果
-	const quickResult = ocrRes.data
 	const quickTime = Date.now() - startTime
 	console.log('⏱️ [拍照识别] 快速解析完成:', quickTime, 'ms (', (quickTime / 1000).toFixed(2), '秒)')
 	console.log('📦 快速解析结果:', quickResult)
 	
-	// 后台启动 AI 增强（不阻塞返回）
-	enhanceWithAI(ocrText, startTime, quickResult).then(aiResult => {
-		console.log('🎯 AI 增强完成，通知页面更新')
-		// 通过全局事件通知确认页面更新
-		uni.$emit('aiEnhanced', aiResult)
-	}).catch(err => {
-		console.log('⚠️ AI 增强失败，保持快速解析结果:', err.message)
-	})
+	// 智能判断是否需要AI增强（节省token）
+	const needAI = shouldUseAI(quickResult, ocrText)
+	
+	if (needAI) {
+		console.log('🤖 [AI策略] 识别质量较低，启动AI增强')
+		// 后台启动 AI 增强（不阻塞返回）
+		enhanceWithAI(ocrText, startTime, quickResult).then(aiResult => {
+			console.log('🎯 AI 增强完成，通知页面更新')
+			// 通过全局事件通知确认页面更新
+			uni.$emit('aiEnhanced', aiResult)
+		}).catch(err => {
+			console.log('⚠️ AI 增强失败，保持快速解析结果:', err.message)
+		})
+	} else {
+		console.log('✅ [AI策略] 识别质量良好，跳过AI增强（节省token）')
+	}
 	
 	return quickResult
 }
@@ -477,6 +484,74 @@ const enhanceWithAI = async (ocrText, startTime, quickResult) => {
 		// AI失败返回后端原始数据
 		return quickResult
 	}
+}
+
+/**
+ * 智能判断是否需要AI增强（节省token策略）
+ * @param {Object} quickResult - OCR快速解析结果
+ * @param {String} ocrText - OCR原始文本
+ * @returns {Boolean} 是否需要AI增强
+ */
+const shouldUseAI = (quickResult, ocrText) => {
+	// 策略1: 如果金额为0或未识别，需要AI
+	if (!quickResult.amount || quickResult.amount === 0) {
+		console.log('💡 [AI策略] 金额未识别，需要AI')
+		return true
+	}
+	
+	// 策略2: 如果商家为空或太短（可能识别不准），需要AI
+	if (!quickResult.merchant || quickResult.merchant.length < 2) {
+		console.log('💡 [AI策略] 商家未识别，需要AI')
+		return true
+	}
+	
+	// 策略3: 如果分类是"其他"，可能需要AI优化
+	if (quickResult.categoryName === '其他') {
+		console.log('💡 [AI策略] 分类为"其他"，需要AI优化')
+		return true
+	}
+	
+	// 策略4: 检查是否是知名品牌（已经很准确，不需要AI）
+	const knownBrands = [
+		'星巴克', '麦当劳', '肯德基', 'KFC', '必胜客', '海底捞',
+		'美团', '饿了么', '盒马', '永辉', '沃尔玛', '家乐福',
+		'屈臣氏', '万宁', '7-11', '全家', '罗森',
+		'中国移动', '中国联通', '中国电信',
+		'滴滴', '高德', '曹操'
+	]
+	
+	const merchantLower = quickResult.merchant.toLowerCase()
+	const isKnownBrand = knownBrands.some(brand => 
+		merchantLower.includes(brand.toLowerCase()) || 
+		quickResult.merchant.includes(brand)
+	)
+	
+	if (isKnownBrand) {
+		console.log('💡 [AI策略] 识别到知名品牌，跳过AI（节省token）')
+		return false
+	}
+	
+	// 策略5: 如果OCR文本很短（<20字符），可能信息不足，跳过AI
+	if (ocrText.length < 20) {
+		console.log('💡 [AI策略] OCR文本过短，跳过AI')
+		return false
+	}
+	
+	// 策略6: 如果OCR文本很长（>500字符），可能是复杂小票，需要AI
+	if (ocrText.length > 500) {
+		console.log('💡 [AI策略] OCR文本较长，需要AI提取关键信息')
+		return true
+	}
+	
+	// 策略7: 如果备注为空，可能需要AI提取商品信息
+	if (!quickResult.remark || quickResult.remark.trim() === '') {
+		console.log('💡 [AI策略] 备注为空，需要AI提取商品信息')
+		return true
+	}
+	
+	// 默认：识别质量良好，跳过AI（节省token）
+	console.log('💡 [AI策略] 识别质量良好，跳过AI（节省token）')
+	return false
 }
 </script>
 

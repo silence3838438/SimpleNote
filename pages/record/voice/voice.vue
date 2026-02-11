@@ -650,19 +650,45 @@ const parseText = async () => {
 const enhanceWithAI = async (text, startTime) => {
 	try {
 		const aiStartTime = Date.now()
-		console.log('⏱️ [AI增强] 调用后端 AI API...')
+		console.log('⏱️ [AI增强-语音] 调用后端 AI API...')
+		console.log('📋 语音文本:', text)
 		
 		// 先用前端正则提取基础信息
 		const baseInfo = extractBillInfo(text)
 		console.log('📦 前端提取的基础信息:', baseInfo)
+		
+		// 验证基础信息是否完整
+		if (!baseInfo.amount || baseInfo.amount === 0) {
+			console.warn('⚠️ 金额为0，AI增强可能无法改善')
+		}
+		if (!baseInfo.merchant || baseInfo.merchant.length < 2) {
+			console.warn('⚠️ 商家为空或太短，AI增强将尝试提取')
+		}
+		if (!baseInfo.categoryName || baseInfo.categoryName === '其他') {
+			console.warn('⚠️ 分类为空或"其他"，AI增强将尝试优化')
+		}
 		
 		// 调用统一的 Cloudbase AI 工具类（现在使用后端API）
 		const aiResult = await cloudbaseAI.enhanceVoice(text, baseInfo)
 		
 		const aiEndTime = Date.now()
 		const totalTime = Date.now() - startTime
-		console.log('⏱️ [AI增强] AI识别耗时:', aiEndTime - aiStartTime, 'ms')
-		console.log('⏱️ [AI增强] 总耗时:', totalTime, 'ms (', (totalTime / 1000).toFixed(2), '秒)')
+		console.log('⏱️ [AI增强-语音] AI识别耗时:', aiEndTime - aiStartTime, 'ms')
+		console.log('⏱️ [AI增强-语音] 总耗时:', totalTime, 'ms (', (totalTime / 1000).toFixed(2), '秒)')
+		console.log('🎯 AI增强结果:', aiResult)
+		
+		// 验证AI结果
+		if (aiResult) {
+			if (aiResult.merchant && aiResult.merchant !== baseInfo.merchant) {
+				console.log('✅ AI优化了商家:', baseInfo.merchant, '→', aiResult.merchant)
+			}
+			if (aiResult.categoryName && aiResult.categoryName !== baseInfo.categoryName) {
+				console.log('✅ AI优化了分类:', baseInfo.categoryName, '→', aiResult.categoryName)
+			}
+			if (aiResult.remark && aiResult.remark !== baseInfo.remark) {
+				console.log('✅ AI优化了备注:', baseInfo.remark, '→', aiResult.remark)
+			}
+		}
 		
 		// 通知确认页面更新
 		console.log('🎯 AI 增强完成，通知页面更新')
@@ -670,8 +696,10 @@ const enhanceWithAI = async (text, startTime) => {
 		
 	} catch (aiError) {
 		console.error('❌ AI 增强失败:', aiError)
+		console.error('❌ 错误详情:', aiError.message)
+		console.error('❌ 错误堆栈:', aiError.stack)
 		const totalTime = Date.now() - startTime
-		console.log('⏱️ [AI增强] 总耗时(失败):', totalTime, 'ms (', (totalTime / 1000).toFixed(2), '秒)')
+		console.log('⏱️ [AI增强-语音] 总耗时(失败):', totalTime, 'ms (', (totalTime / 1000).toFixed(2), '秒)')
 		// AI 失败不影响用户使用，静默失败
 	}
 }
@@ -934,18 +962,25 @@ const extractBillInfo = (text) => {
 	
 	// 如果还是没有，尝试移除无关词汇后的剩余内容
 	if (!merchant) {
-		merchant = text
+		let cleanedText = text
 			.replace(/\d+\.?\d*\s*元/g, '')  // 移除金额
 			.replace(/\d+\.?\d*\s*块钱/g, '')  // 移除"块钱"
 			.replace(/\d+\.?\d*\s*块/g, '')  // 移除"块"
 			.replace(/今天|昨天|前天/g, '')   // 移除日期词
 			.replace(/花了|支付|消费|买了|吃了|喝了|收到|赚了|挣了|发了/g, '')  // 移除动词
 			.trim()
+		
+		// 如果清理后的文本太长或太短，使用分类名作为商家
+		if (cleanedText.length > 20 || cleanedText.length < 2) {
+			merchant = categoryName || '未知商家'
+		} else {
+			merchant = cleanedText
+		}
 	}
 	
 	// 收入类型的特殊处理：如果商家名为空或太短，使用默认值
 	if (type === 'income') {
-		if (!merchant || merchant.length < 2) {
+		if (!merchant || merchant.length < 2 || merchant === '未知商家') {
 			// 根据分类名推断来源
 			if (categoryName === '工资') {
 				merchant = '公司'
@@ -958,7 +993,7 @@ const extractBillInfo = (text) => {
 						break
 					}
 				}
-				if (!merchant || merchant.length < 2) {
+				if (!merchant || merchant.length < 2 || merchant === '未知商家') {
 					merchant = '兼职平台'
 				}
 			} else if (categoryName === '奖金') {
@@ -978,7 +1013,7 @@ const extractBillInfo = (text) => {
 						break
 					}
 				}
-				if (!merchant || merchant.length < 2) {
+				if (!merchant || merchant.length < 2 || merchant === '未知商家') {
 					merchant = '投资平台'
 				}
 			} else if (categoryName === '礼金') {
@@ -992,7 +1027,7 @@ const extractBillInfo = (text) => {
 						break
 					}
 				}
-				if (!merchant || merchant.length < 2) {
+				if (!merchant || merchant.length < 2 || merchant === '未知商家') {
 					merchant = '买家'
 				}
 			} else {
@@ -1001,9 +1036,9 @@ const extractBillInfo = (text) => {
 			console.log('✅ 收入类型使用默认商家:', merchant)
 		}
 	} else {
-		// 支出类型：如果商家名为空，使用分类名
-		if (!merchant && categoryName) {
-			merchant = categoryName
+		// 支出类型：如果商家名为空或无效，使用分类名
+		if (!merchant || merchant.length < 2 || merchant === '未知商家') {
+			merchant = categoryName || '其他'
 		}
 	}
 	
