@@ -23,12 +23,32 @@
 				
 				<!-- 微信小程序登录 -->
 				<!-- #ifdef MP-WEIXIN -->
+				<!-- 隐私协议 -->
+				<view class="privacy-section-inline">
+					<checkbox-group @change="onAgreeChange">
+						<label class="checkbox-label-inline">
+							<checkbox :checked="data.agreed" color="#52C41A" class="custom-checkbox-inline" />
+							<view class="privacy-text-inline">
+								<text class="text-normal-inline">登录即表示同意</text>
+								<text class="text-link-inline" @click.stop="openUserAgreement">《用户协议》</text>
+								<text class="text-normal-inline">和</text>
+								<text class="text-link-inline" @click.stop="openPrivacy">《隐私政策》</text>
+							</view>
+						</label>
+					</checkbox-group>
+				</view>
+				
 				<view class="login-buttons">
 					<button class="login-btn primary-btn" open-type="getUserProfile" @click="wechatLogin">
 						<view class="btn-content">
 							<text class="btn-text">一键登录</text>
 						</view>
 					</button>
+				</view>
+				
+				<!-- 稍后登录 -->
+				<view class="later-login-section">
+					<text class="later-login-text" @click="laterLogin">稍后登录，先看看</text>
 				</view>
 				<!-- #endif -->
 				
@@ -58,10 +78,38 @@
 								placeholder="请输入密码"
 								placeholder-class="input-placeholder"
 							/>
-							<text class="eye-icon" @click="togglePassword">
-								{{ data.showPassword ? '👁️' : '👁️‍🗨️' }}
-							</text>
+							<image 
+								class="eye-icon-img" 
+								:src="data.showPassword ? '/static/mingwen.png' : '/static/miwen.png'" 
+								@click="togglePassword" 
+								mode="aspectFit"
+							></image>
 						</view>
+					</view>
+					
+					<!-- 记住密码 -->
+					<view class="remember-section">
+						<checkbox-group @change="onRememberChange">
+							<label class="remember-label">
+								<checkbox :checked="data.rememberPassword" color="#52C41A" class="remember-checkbox" />
+								<text class="remember-text">记住密码</text>
+							</label>
+						</checkbox-group>
+					</view>
+					
+					<!-- 隐私协议 -->
+					<view class="privacy-section-inline">
+						<checkbox-group @change="onAgreeChange">
+							<label class="checkbox-label-inline">
+								<checkbox :checked="data.agreed" color="#52C41A" class="custom-checkbox-inline" />
+								<view class="privacy-text-inline">
+									<text class="text-normal-inline">登录即表示同意</text>
+									<text class="text-link-inline" @click.stop="openUserAgreement">《用户协议》</text>
+									<text class="text-normal-inline">和</text>
+									<text class="text-link-inline" @click.stop="openPrivacy">《隐私政策》</text>
+								</view>
+							</label>
+						</checkbox-group>
 					</view>
 					
 					<view class="form-actions">
@@ -84,45 +132,19 @@
 				<!-- 第三方登录 -->
 				<view class="third-party-login">
 					<view class="third-party-btn" @click="wechatAppLogin">
-						<text class="third-party-icon">💬</text>
-						<text class="third-party-text">微信</text>
+						<image class="third-party-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/wechatLogo.png" mode="aspectFit"></image>
 					</view>
 					
 					<view class="third-party-btn" @click="appleLogin" v-if="isIOS">
-						<text class="third-party-icon"></text>
-						<text class="third-party-text">Apple</text>
+						<image class="third-party-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/appleLogo.png" mode="aspectFit"></image>
 					</view>
-				</view>
-				<!-- #endif -->
-				
-				<!-- 分割线 -->
-				<view class="divider">
-					<view class="divider-line"></view>
-					<text class="divider-text">或</text>
-					<view class="divider-line"></view>
 				</view>
 				
 				<!-- 稍后登录 -->
-				<view class="later-login" @click="laterLogin">
-					<text class="later-text">稍后登录，先看看</text>
+				<view class="later-login-section">
+					<text class="later-login-text" @click="laterLogin">稍后登录，先看看</text>
 				</view>
-			</view>
-			
-			<!-- 隐私协议 -->
-			<view class="privacy-section">
-				<view class="privacy-checkbox">
-					<checkbox-group @change="onAgreeChange">
-						<label class="checkbox-label">
-							<checkbox :checked="data.agreed" color="#52C41A" class="custom-checkbox" />
-						</label>
-					</checkbox-group>
-				</view>
-				<view class="privacy-text">
-					<text class="text-normal">登录即表示同意</text>
-					<text class="text-link" @click="openUserAgreement">用户协议</text>
-					<text class="text-normal">和</text>
-					<text class="text-link" @click="openPrivacy">隐私政策</text>
-				</view>
+				<!-- #endif -->
 			</view>
 		</view>
 	</view>
@@ -138,7 +160,8 @@ const data = reactive({
 	isIOS: false,
 	account: '',
 	password: '',
-	showPassword: false
+	showPassword: false,
+	rememberPassword: false
 })
 
 onLoad(() => {
@@ -147,11 +170,27 @@ onLoad(() => {
 	const systemInfo = uni.getSystemInfoSync()
 	data.isIOS = systemInfo.platform === 'ios'
 	// #endif
+	
+	// 读取保存的账号密码
+	const savedAccount = uni.getStorageSync('savedAccount')
+	const savedPassword = uni.getStorageSync('savedPassword')
+	const rememberPassword = uni.getStorageSync('rememberPassword')
+	
+	if (rememberPassword && savedAccount && savedPassword) {
+		data.account = savedAccount
+		data.password = savedPassword
+		data.rememberPassword = true
+	}
 })
 
 // 同意协议变化
 const onAgreeChange = (e) => {
 	data.agreed = e.detail.value.length > 0
+}
+
+// 记住密码变化
+const onRememberChange = (e) => {
+	data.rememberPassword = e.detail.value.length > 0
 }
 
 // 切换密码显示
@@ -195,6 +234,19 @@ const accountLogin = async () => {
 			
 			uni.setStorageSync('userInfo', userInfo)
 			uni.setStorageSync('token', result.token)
+			
+			// 处理记住密码
+			if (data.rememberPassword) {
+				// 保存账号密码
+				uni.setStorageSync('savedAccount', data.account)
+				uni.setStorageSync('savedPassword', data.password)
+				uni.setStorageSync('rememberPassword', true)
+			} else {
+				// 清除保存的账号密码
+				uni.removeStorageSync('savedAccount')
+				uni.removeStorageSync('savedPassword')
+				uni.removeStorageSync('rememberPassword')
+			}
 			
 			uni.hideLoading()
 			uni.showToast({
@@ -610,6 +662,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	margin-top: 80rpx;
 }
 
 // 头部区域
@@ -753,6 +806,61 @@ const isIOS = computed(() => data.isIOS)
 	margin-bottom: 24rpx;
 }
 
+// 表单内隐私协议
+.privacy-section-inline {
+	margin-bottom: 24rpx;
+}
+
+// 记住密码
+.remember-section {
+	margin-bottom: 20rpx;
+}
+
+.remember-label {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+}
+
+.remember-checkbox {
+	transform: scale(0.9);
+}
+
+.remember-text {
+	font-size: 26rpx;
+	color: #666;
+}
+
+.checkbox-label-inline {
+	display: flex;
+	align-items: flex-start;
+	gap: 12rpx;
+}
+
+.custom-checkbox-inline {
+	flex-shrink: 0;
+	margin-top: 4rpx;
+}
+
+.privacy-text-inline {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4rpx;
+	line-height: 1.6;
+}
+
+.text-normal-inline {
+	font-size: 24rpx;
+	color: #8c8c8c;
+}
+
+.text-link-inline {
+	font-size: 24rpx;
+	color: #52C41A;
+	font-weight: 500;
+}
+
 .input-wrapper {
 	display: flex;
 	align-items: center;
@@ -792,6 +900,13 @@ const isIOS = computed(() => data.isIOS)
 	cursor: pointer;
 }
 
+.eye-icon-img {
+	width: 40rpx;
+	height: 40rpx;
+	padding: 0 8rpx;
+	cursor: pointer;
+}
+
 .form-actions {
 	display: flex;
 	justify-content: space-between;
@@ -810,7 +925,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	justify-content: center;
 	gap: 40rpx;
-	margin-bottom: 20rpx;
+	margin-bottom: 24rpx;
 }
 
 .third-party-btn {
@@ -837,9 +952,28 @@ const isIOS = computed(() => data.isIOS)
 	border-radius: 50%;
 }
 
+.third-party-icon-img {
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 50%;
+}
+
 .third-party-text {
 	font-size: 24rpx;
 	color: #666;
+}
+
+// 稍后登录按钮
+.later-login-section {
+	display: flex;
+	justify-content: center;
+	margin-top: 16rpx;
+}
+
+.later-login-text {
+	font-size: 26rpx;
+	color: #8c8c8c;
+	padding: 12rpx 24rpx;
 }
 
 // 分割线
@@ -847,7 +981,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	align-items: center;
 	gap: 24rpx;
-	margin: 40rpx 0;
+	margin: 40rpx 0 20rpx;
 }
 
 .divider-line {
@@ -861,26 +995,39 @@ const isIOS = computed(() => data.isIOS)
 	color: #bfbfbf;
 }
 
-// 稍后登录
-.later-login {
+// 卡片内隐私协议
+.privacy-section-card {
+	margin-bottom: 24rpx;
+	padding: 16rpx 0;
+}
+
+.checkbox-label-card {
+	display: flex;
+	align-items: flex-start;
+	gap: 12rpx;
+}
+
+.custom-checkbox-card {
+	flex-shrink: 0;
+	margin-top: 4rpx;
+}
+
+.privacy-text-card {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	height: 88rpx;
-	background: #fafafa;
-	border-radius: 16rpx;
-	border: 2rpx solid #f0f0f0;
-	transition: all 0.25s ease;
+	flex-wrap: wrap;
+	gap: 4rpx;
+	line-height: 1.6;
 }
 
-.later-login:active {
-	background: #f0f0f0;
-	transform: scale(0.98);
-}
-
-.later-text {
-	font-size: 28rpx;
+.text-normal-card {
+	font-size: 24rpx;
 	color: #8c8c8c;
+}
+
+.text-link-card {
+	font-size: 24rpx;
+	color: #52C41A;
 	font-weight: 500;
 }
 

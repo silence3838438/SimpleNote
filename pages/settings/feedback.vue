@@ -13,7 +13,6 @@
 					placeholder="请输入您的意见或建议，我们会认真对待每一条反馈..."
 					maxlength="500"
 					:auto-height="true"
-					:focus="true"
 				></textarea>
 				<view class="char-count">{{ data.feedbackContent.length }}/500</view>
 			</view>
@@ -189,6 +188,12 @@ const submitFeedback = async () => {
 
 .title-icon {
 	font-size: 40rpx;
+}
+
+.title-icon-img {
+	width: 40rpx;
+	height: 40rpx;
+	margin-right: 12rpx;
 }
 
 .title-text {

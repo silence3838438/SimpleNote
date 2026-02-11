@@ -650,10 +650,14 @@ const parseText = async () => {
 const enhanceWithAI = async (text, startTime) => {
 	try {
 		const aiStartTime = Date.now()
-		console.log('⏱️ [AI增强] 调用 Cloudbase AI...')
+		console.log('⏱️ [AI增强] 调用后端 AI API...')
 		
-		// 调用统一的 Cloudbase AI 工具类
-		const aiResult = await cloudbaseAI.enhanceVoice(text)
+		// 先用前端正则提取基础信息
+		const baseInfo = extractBillInfo(text)
+		console.log('📦 前端提取的基础信息:', baseInfo)
+		
+		// 调用统一的 Cloudbase AI 工具类（现在使用后端API）
+		const aiResult = await cloudbaseAI.enhanceVoice(text, baseInfo)
 		
 		const aiEndTime = Date.now()
 		const totalTime = Date.now() - startTime

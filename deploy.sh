@@ -116,8 +116,8 @@ test_ocr() {
     print_info "开始测试OCR识别功能..."
     
     # 检查测试图片目录
-    if [ ! -d "static/testImages" ]; then
-        print_error "测试图片目录不存在: static/testImages"
+    if [ ! -d "test-data/ocr-samples" ]; then
+        print_error "测试图片目录不存在: test-data/ocr-samples"
         exit 1
     fi
     
@@ -133,7 +133,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('${CURRENT_DIR}/backend/node_modules/axios');
 
-const testImagesDir = '${CURRENT_DIR}/static/testImages';
+const testImagesDir = '${CURRENT_DIR}/test-data/ocr-samples';
 const OCR_API = 'http://8.218.209.109:3000/api/ocrRecognize';
 const TEST_TOKEN = '${TEST_TOKEN}';
 

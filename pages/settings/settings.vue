@@ -344,6 +344,11 @@ onLoad(() => {
 	font-size: 32rpx;
 }
 
+.icon-img {
+	width: 32rpx;
+	height: 32rpx;
+}
+
 .function-title {
 	font-size: $font-size-lg;
 	font-weight: $font-weight-normal;

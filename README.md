@@ -175,9 +175,10 @@ SimpleNote/
 │   │   ├── red-packet-open.mp3  # 开红包音效
 │   │   ├── red-packet-scome.mp3 # 红包来了音效
 │   │   └── red-packet-start.mp3 # 红包雨背景音乐
-│   └── testImages/               # 测试图片
 ├── styles/                        # 全局样式
 │   └── variables.scss            # SCSS变量（美团风格）
+├── test-data/                     # 测试数据（不会打包到小程序）
+│   └── ocr-samples/              # OCR测试图片（小票样本）
 ├── uni_modules/                   # uni-app插件
 │   └── lime-painter/             # 海报生成插件
 ├── website/                       # 官网页面

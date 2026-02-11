@@ -277,6 +277,35 @@
 				</view>
 			</view>
 		</view>
+		
+		<!-- 隐私协议弹框 -->
+		<view class="privacy-modal" v-if="data.showPrivacyModal" @click="closePrivacyModal">
+			<view class="privacy-modal-content" @click.stop>
+				<view class="privacy-header">
+					<text class="privacy-title">用户协议和隐私政策</text>
+				</view>
+				
+				<view class="privacy-body">
+					<text class="privacy-text">欢迎使用钱哪去了！</text>
+					<text class="privacy-text">我们非常重视您的隐私保护和个人信息安全。</text>
+					<text class="privacy-text">请您仔细阅读</text>
+					<text class="privacy-link" @click.stop="openUserAgreementFromModal">《用户协议》</text>
+					<text class="privacy-text">和</text>
+					<text class="privacy-link" @click.stop="openPrivacyFromModal">《隐私政策》</text>
+					<text class="privacy-text">，了解我们如何收集、使用和保护您的个人信息。</text>
+					<text class="privacy-text privacy-highlight">点击"同意并登录"即表示您已阅读并同意上述协议。</text>
+				</view>
+				
+				<view class="privacy-footer">
+					<view class="privacy-btn cancel-btn" @click="closePrivacyModal">
+						<text class="privacy-btn-text">暂不登录</text>
+					</view>
+					<view class="privacy-btn confirm-btn" @click="agreeAndLogin">
+						<text class="privacy-btn-text">同意并登录</text>
+					</view>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -302,9 +331,10 @@ const data = reactive({
 	recordDays: 0,
 	totalBills: 0,
 	userPoints: 0, // 用户积分
-	memberLevel: {}, // 会员等级信息
+	memberLevel: getMemberLevel(0), // 初始化为0积分的等级
 	todayPoints: 0, // 今日获得积分
 	showLevelModal: false, // 是否显示等级详情弹框
+	showPrivacyModal: false, // 是否显示隐私协议弹框
 	reminderTime: '', // 提醒时间
 	// APP更新相关
 	showUpdateModal: false,
@@ -954,9 +984,42 @@ const goToSettings = () => {
 }
 
 // 跳转到登录页面
+let isShowingModal = false // 防止重复弹窗
 const goToLogin = () => {
+	console.log('=== goToLogin 被调用 ===')
+	
+	// 防止重复弹窗
+	if (isShowingModal) {
+		console.log('=== 已有弹窗显示中，忽略 ===')
+		return
+	}
+	
 	// #ifdef MP-WEIXIN
-	// 小程序直接调用一键登录
+	console.log('=== 小程序环境，显示隐私协议弹框 ===')
+	// 显示自定义隐私协议弹框
+	data.showPrivacyModal = true
+	// #endif
+	
+	// #ifdef APP-PLUS
+	console.log('=== APP环境，跳转到登录页面 ===')
+	// APP跳转到登录页面
+	uni.navigateTo({
+		url: '/pages/user/login'
+	})
+	// #endif
+}
+
+// 关闭隐私协议弹框
+const closePrivacyModal = () => {
+	data.showPrivacyModal = false
+}
+
+// 同意隐私协议并登录
+const agreeAndLogin = () => {
+	data.showPrivacyModal = false
+	
+	// #ifdef MP-WEIXIN
+	// 调用一键登录
 	uni.getUserProfile({
 		desc: '用于完善用户资料',
 		success: async (res) => {
@@ -1014,13 +1077,20 @@ const goToLogin = () => {
 		}
 	})
 	// #endif
-	
-	// #ifdef APP-PLUS
-	// APP跳转到登录页面
+}
+
+// 打开用户协议
+const openUserAgreementFromModal = () => {
 	uni.navigateTo({
-		url: '/pages/user/login'
+		url: '/pages/agreement/agreement'
 	})
-	// #endif
+}
+
+// 打开隐私政策
+const openPrivacyFromModal = () => {
+	uni.navigateTo({
+		url: '/pages/privacy/privacy'
+	})
 }
 
 // 退出登录
@@ -2244,6 +2314,116 @@ const handleDownloadComplete = () => {
 .modal-btn-text {
 	font-size: 30rpx;
 	font-weight: bold;
+	color: #FFFFFF;
+}
+
+/* 隐私协议弹框 */
+.privacy-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+	animation: fadeIn 0.3s ease;
+	padding: 80rpx;
+}
+
+.privacy-modal-content {
+	width: 100%;
+	max-width: 560rpx;
+	background: #FFFFFF;
+	border-radius: $radius-xl;
+	overflow: hidden;
+	animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.privacy-header {
+	padding: 48rpx 32rpx 24rpx;
+	text-align: center;
+	background: linear-gradient(180deg, #F0FFF4 0%, #FFFFFF 100%);
+	border-bottom: 2rpx solid #F0F0F0;
+}
+
+.privacy-title {
+	font-size: 32rpx;
+	font-weight: bold;
+	color: #333;
+}
+
+.privacy-body {
+	padding: 32rpx;
+	line-height: 1.8;
+	max-height: 400rpx;
+	overflow-y: auto;
+}
+
+.privacy-text {
+	font-size: 28rpx;
+	color: #666;
+	line-height: 1.8;
+}
+
+.privacy-link {
+	font-size: 28rpx;
+	color: #52C41A;
+	font-weight: bold;
+	text-decoration: underline;
+	line-height: 1.8;
+}
+
+.privacy-highlight {
+	display: block;
+	margin-top: 24rpx;
+	padding: 16rpx;
+	background: #F0FFF4;
+	border-radius: $radius-md;
+	color: #52C41A;
+	font-weight: bold;
+}
+
+.privacy-footer {
+	display: flex;
+	gap: 16rpx;
+	padding: 24rpx 32rpx 32rpx;
+	border-top: 2rpx solid #F0F0F0;
+}
+
+.privacy-btn {
+	flex: 1;
+	padding: 24rpx;
+	border-radius: $radius-lg;
+	text-align: center;
+	transition: all 0.3s ease;
+}
+
+.privacy-btn:active {
+	transform: scale(0.96);
+}
+
+.cancel-btn {
+	background: #F5F5F5;
+}
+
+.confirm-btn {
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
+}
+
+.privacy-btn-text {
+	font-size: 28rpx;
+	font-weight: bold;
+}
+
+.cancel-btn .privacy-btn-text {
+	color: #666;
+}
+
+.confirm-btn .privacy-btn-text {
 	color: #FFFFFF;
 }
 </style>
