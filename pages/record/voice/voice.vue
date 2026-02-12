@@ -132,6 +132,7 @@ const data = reactive({
 	parsing: false,
 	recorderManager: null,
 	recordTimer: null,
+	permissionGranted: false, // 记录权限是否已授权
 	examples: [
 		'"午餐35元"',
 		'"网购衣服268元"',
@@ -173,12 +174,26 @@ onLoad(() => {
 	
 	// 监听录音开始
 	data.recorderManager.onStart(() => {
-		console.log('✅ 录音已开始')
+		console.log('✅ 录音已真正开始，开始计时')
+		// 在录音真正开始时才启动计时器
+		if (data.recordTimer) {
+			clearInterval(data.recordTimer)
+		}
+		data.recordTime = 0
+		data.recordTimer = setInterval(() => {
+			data.recordTime++
+			console.log('⏱️ 录音中...', data.recordTime, '秒')
+			if (data.recordTime >= 60) {
+				stopRecord()
+			}
+		}, 1000)
 	})
 	
 	// 监听录音停止
 	data.recorderManager.onStop((res) => {
-		console.log('✅ 录音已停止，时长:', res.duration, 'ms')
+		console.log('✅ 录音已停止')
+		console.log('API返回时长:', res.duration, 'ms')
+		console.log('计时器记录时长:', data.recordTime, '秒')
 		handleRecordStop(res)
 	})
 	
@@ -260,33 +275,54 @@ const startRecord = async () => {
 	}
 	
 	try {
-		// 第一步：检查并请求录音权限
+		// 检查并请求录音权限
 		console.log('🔐 检查录音权限...')
 		
 		// #ifdef APP-PLUS
-		// APP端：检查权限状态
+		// APP端：先检查权限状态，再决定是否请求
 		const permissionResult = await new Promise((resolve) => {
-			plus.android.requestPermissions(
-				['android.permission.RECORD_AUDIO'],
-				(result) => {
-					console.log('📋 权限请求结果:', result)
-					// result.granted 是已授权的权限数组
-					if (result.granted && result.granted.length > 0) {
-						console.log('✅ 录音权限已授权')
-						resolve(true)
-					} else {
-						console.log('❌ 用户拒绝录音权限')
-						resolve(false)
+			// 如果已经记录过权限授权，直接返回
+			if (data.permissionGranted) {
+				console.log('✅ 权限已记录为已授权')
+				resolve({ hasPermission: true, justGranted: false })
+				return
+			}
+			
+			// 先检查权限状态
+			const permissionStatus = plus.android.checkPermission('android.permission.RECORD_AUDIO')
+			console.log('📋 当前权限状态:', permissionStatus)
+			
+			if (permissionStatus === 'granted') {
+				// 已授权，记录状态并返回
+				console.log('✅ 录音权限已授权')
+				data.permissionGranted = true
+				resolve({ hasPermission: true, justGranted: false })
+			} else {
+				// 未授权，请求权限
+				console.log('⚠️ 录音权限未授权，开始请求...')
+				plus.android.requestPermissions(
+					['android.permission.RECORD_AUDIO'],
+					(result) => {
+						console.log('📋 权限请求结果:', result)
+						if (result.granted && result.granted.length > 0) {
+							console.log('✅ 录音权限授权成功（刚刚授权）')
+							// 记录权限已授权，但这次是刚授权的
+							data.permissionGranted = true
+							resolve({ hasPermission: true, justGranted: true })
+						} else {
+							console.log('❌ 用户拒绝录音权限')
+							resolve({ hasPermission: false, justGranted: false })
+						}
+					},
+					(error) => {
+						console.error('❌ 权限请求失败:', error)
+						resolve({ hasPermission: false, justGranted: false })
 					}
-				},
-				(error) => {
-					console.error('❌ 权限请求失败:', error)
-					resolve(false)
-				}
-			)
+				)
+			}
 		})
 		
-		if (!permissionResult) {
+		if (!permissionResult.hasPermission) {
 			uni.showModal({
 				title: '需要录音权限',
 				content: '请在系统设置中开启录音权限',
@@ -294,21 +330,30 @@ const startRecord = async () => {
 				cancelText: '取消',
 				success: (res) => {
 					if (res.confirm) {
-						// 打开应用设置页面
 						plus.runtime.openURL('app-settings://')
 					}
 				}
 			})
 			return
 		}
+		
+		// 如果是刚刚授权的，提示用户再次按下录音按钮
+		if (permissionResult.justGranted) {
+			console.log('⚠️ 刚刚授权，提示用户再次按下录音按钮')
+			uni.showToast({
+				title: '已授权，请再次按住录音',
+				icon: 'none',
+				duration: 2000
+			})
+			return
+		}
 		// #endif
 		
 		// #ifdef MP-WEIXIN
-		// 小程序端：使用getSetting检查权限
+		// 小程序端：检查录音权限
 		const settingRes = await uni.getSetting()
 		console.log('📋 当前权限设置:', settingRes)
 		
-		// 如果用户之前拒绝过权限
 		if (settingRes.authSetting['scope.record'] === false) {
 			uni.showModal({
 				title: '需要录音权限',
@@ -324,7 +369,6 @@ const startRecord = async () => {
 			return
 		}
 		
-		// 如果还没授权过，请求授权
 		if (settingRes.authSetting['scope.record'] === undefined) {
 			try {
 				await uni.authorize({ scope: 'scope.record' })
@@ -340,90 +384,42 @@ const startRecord = async () => {
 		}
 		// #endif
 		
-		console.log('✅ 权限检查通过，开始初始化录音器')
+		console.log('✅ 权限检查通过，准备开始录音')
 		
-		// 第二步：初始化录音器
-		if (!data.recorderManager) {
-			data.recorderManager = uni.getRecorderManager()
-			
-			// 绑定事件监听
-			data.recorderManager.onStart(() => {
-				console.log('✅ 录音已开始')
-			})
-			
-			data.recorderManager.onStop((res) => {
-				console.log('✅ 录音已停止，时长:', res.duration, 'ms')
-				handleRecordStop(res)
-			})
-			
-			data.recorderManager.onError((err) => {
-				console.error('❌ 录音错误:', err)
-				data.isRecording = false
-				if (data.recordTimer) {
-					clearInterval(data.recordTimer)
-					data.recordTimer = null
-				}
-				
-				let errorMsg = '录音失败'
-				if (err.errMsg) {
-					if (err.errMsg.includes('auth')) {
-						errorMsg = '请授权录音权限'
-					} else if (err.errMsg.includes('busy')) {
-						errorMsg = '录音器忙碌，请稍后重试'
-					} else if (err.errMsg.includes('timeout')) {
-						errorMsg = '录音超时'
-					}
-				}
-				
-				uni.showToast({
-					title: errorMsg,
-					icon: 'none',
-					duration: 2000
-				})
-			})
-		}
-		
-		// 第三步：设置录音状态并启动
+		// 设置录音状态
 		data.isRecording = true
 		data.recordTime = 0
 		
-		try {
-			data.recorderManager.start({
-				duration: 60000,
-				format: 'aac',
-				sampleRate: 16000,
-				numberOfChannels: 1,
-				encodeBitRate: 48000,
-				frameSize: 50
-			})
-			
-			console.log('✅ 录音器已启动，格式: aac, 采样率: 16000')
-			
-			// 清除旧的定时器
-			if (data.recordTimer) {
-				clearInterval(data.recordTimer)
-			}
-			
-			// 启动计时器
-			data.recordTimer = setInterval(() => {
-				data.recordTime++
-				if (data.recordTime >= 60) {
-					stopRecord()
-				}
-			}, 1000)
-		} catch (error) {
-			console.error('❌ 启动录音失败:', error)
-			data.isRecording = false
-			uni.showToast({
-				title: '启动录音失败，请重试',
-				icon: 'none'
-			})
-		}
+		// 启动录音（参考小程序的简单方式）
+		// #ifdef APP-PLUS
+		data.recorderManager.start({
+			duration: 60000,
+			format: 'mp3',
+			sampleRate: 16000,
+			numberOfChannels: 1,
+			encodeBitRate: 128000,
+			frameSize: 50
+		})
+		console.log('✅ APP端录音已启动')
+		// #endif
+		
+		// #ifdef MP-WEIXIN
+		data.recorderManager.start({
+			duration: 60000,
+			format: 'aac',
+			sampleRate: 16000,
+			numberOfChannels: 1,
+			encodeBitRate: 48000,
+			frameSize: 50
+		})
+		console.log('✅ 小程序端录音已启动')
+		// #endif
+		
 	} catch (error) {
-		console.error('❌ 录音初始化失败:', error)
+		console.error('❌ 录音启动失败:', error)
 		data.isRecording = false
 		uni.showToast({
-			title: '录音初始化失败',
+			title: '录音启动失败',
 			icon: 'none'
 		})
 	}
@@ -448,7 +444,7 @@ const stopRecord = () => {
 	// APP端和小程序端都需要停止录音
 	try {
 		data.recorderManager.stop()
-		console.log('✅ 录音器已停止')
+		console.log('✅ 录音器已停止，录音时长:', data.recordTime, '秒')
 	} catch (error) {
 		console.error('❌ 停止录音失败:', error)
 	}
@@ -488,8 +484,9 @@ const handleRecordStop = async (res) => {
 	const startTime = Date.now()
 	console.log('⏱️ [语音识别] 开始时间:', new Date().toLocaleTimeString())
 	console.log('录音停止回调，文件路径:', res.tempFilePath)
-	console.log('录音时长:', res.duration, 'ms')
-	console.log('录音文件大小:', res.fileSize, 'bytes')
+	console.log('API返回的录音时长:', res.duration, 'ms')
+	console.log('API返回的文件大小:', res.fileSize, 'bytes')
+	console.log('实际录音时长（计时器）:', data.recordTime, '秒')
 	
 	// 确保状态已重置
 	data.isRecording = false
@@ -509,10 +506,13 @@ const handleRecordStop = async (res) => {
 		return
 	}
 	
-	// 检查录音时长（如果有duration字段且太短，则拒绝）
-	// 注意：APP端可能没有duration字段，所以只在有值时检查
-	if (res.duration !== undefined && res.duration < 300) {
-		console.error('❌ 录音时长太短:', res.duration, 'ms')
+	// 使用计时器记录的时长，因为APP端res.duration可能为undefined
+	const actualDuration = data.recordTime
+	console.log('✅ 使用实际录音时长:', actualDuration, '秒')
+	
+	// 检查录音时长是否太短（至少1秒）
+	if (actualDuration < 1) {
+		console.warn('⚠️ 录音时间太短:', actualDuration, '秒')
 		uni.showToast({
 			title: '录音时间太短，请重新录制',
 			icon: 'none',
@@ -520,28 +520,34 @@ const handleRecordStop = async (res) => {
 		})
 		return
 	}
-	
-	// 检查文件大小（如果太小，可能是无效录音）
-	if (res.fileSize !== undefined && res.fileSize < 300) {
-		console.error('❌ 录音文件太小:', res.fileSize, 'bytes')
-		uni.showToast({
-			title: '录音文件无效，请重新录制',
-			icon: 'none',
-			duration: 2000
-		})
-		return
-	}
+	console.log('✅ 录音文件有效，准备上传识别')
 	
 	data.parsing = true
 	
 	try {
 		// 上传音频文件到服务器
 		const uploadStartTime = Date.now()
-		console.log('开始上传音频文件到服务器，路径:', res.tempFilePath)
+		console.log('📤 开始上传音频文件')
+		console.log('📁 文件路径:', res.tempFilePath)
+		console.log('⏱️ 录音时长:', res.duration, 'ms')
+		console.log('📦 文件大小:', res.fileSize, 'bytes')
+		
+		// #ifdef APP-PLUS
+		// 获取文件实际大小
+		let actualFileSize = 0
+		try {
+			const fileInfo = await uni.getFileInfo({ filePath: res.tempFilePath })
+			actualFileSize = fileInfo.size
+			console.log('📦 实际文件大小:', actualFileSize, 'bytes')
+		} catch (e) {
+			console.error('获取文件信息失败:', e)
+		}
+		// #endif
 		
 		const uploadRes = await request.uploadFile(res.tempFilePath)
 		const uploadEndTime = Date.now()
 		console.log('⏱️ [语音识别] 音频上传耗时:', uploadEndTime - uploadStartTime, 'ms')
+		console.log('📤 上传响应:', JSON.stringify(uploadRes))
 		
 		if (!uploadRes || !uploadRes.success) {
 			throw new Error(uploadRes?.message || '音频上传失败')
@@ -551,29 +557,42 @@ const handleRecordStop = async (res) => {
 			throw new Error('上传成功但未返回文件URL')
 		}
 		
-		console.log('音频文件上传成功，URL:', uploadRes.url)
+		console.log('✅ 音频文件上传成功，URL:', uploadRes.url)
 		
 		const asrStartTime = Date.now()
-		console.log('开始调用语音识别接口')
+		console.log('🎤 开始调用语音识别接口')
+		console.log('🔗 音频URL:', uploadRes.url)
+		
+		// 确定音频格式（APP端使用mp3，小程序端使用aac）
+		let audioFormat = 'aac'
+		// #ifdef APP-PLUS
+		audioFormat = 'mp3'
+		// #endif
+		
+		console.log('🎵 音频格式:', audioFormat)
 		
 		const result = await request.call('baiduASR', {
-			audioUrl: uploadRes.url
+			audioUrl: uploadRes.url,
+			format: audioFormat  // 传递格式信息给后端
 		})
 		
 		const asrEndTime = Date.now()
 		console.log('⏱️ [语音识别] 语音识别耗时:', asrEndTime - asrStartTime, 'ms')
+		console.log('🎤 识别接口返回:', JSON.stringify(result))
 		console.log('⏱️ [语音识别] 快速解析完成:', Date.now() - startTime, 'ms (', ((Date.now() - startTime) / 1000).toFixed(2), '秒)')
 		
 		if (!result.success || !result.text) {
+			console.error('❌ 识别失败，result:', JSON.stringify(result))
 			throw new Error(result.error || '识别结果为空')
 		}
 		
-		console.log('识别结果:', result.text)
+		console.log('✅ 识别成功！原始文本:', result.text)
+		console.log('📝 文本长度:', result.text.length, '字符')
 		data.recognizedText = result.text
 		
 		// 快速解析：使用本地规则立即返回结果
 		const quickResult = extractBillInfo(result.text)
-		console.log('📦 快速解析结果:', quickResult)
+		console.log('📦 快速解析结果:', JSON.stringify(quickResult, null, 2))
 		
 		// 立即跳转到确认页面
 		data.parsing = false
@@ -720,19 +739,23 @@ const extractBillInfo = (text) => {
 	// 提取金额 - 支持多种表达方式
 	let amount = 0
 	const amountPatterns = [
-		/(\d+\.?\d*)\s*元/,           // 3000元
-		/(\d+\.?\d*)\s*块钱/,         // 3000块钱
-		/(\d+\.?\d*)\s*块/,           // 3000块
-		/(\d+\.?\d*)\s*[¥￥]/,        // 3000¥
-		/[¥￥]\s*(\d+\.?\d*)/,        // ¥3000
-		/(\d+\.?\d*)\s*(?:人民币|rmb)/i  // 3000人民币
+		/花了?\s*(\d+\.?\d*)\s*元/,      // 花了36元、花36元
+		/(\d+\.?\d*)\s*元/,              // 36元
+		/(\d+\.?\d*)\s*块钱/,            // 36块钱
+		/(\d+\.?\d*)\s*块/,              // 36块
+		/(\d+\.?\d*)\s*[¥￥]/,           // 36¥
+		/[¥￥]\s*(\d+\.?\d*)/,           // ¥36
+		/(\d+\.?\d*)\s*(?:人民币|rmb)/i, // 36人民币
+		/花了?\s*(\d+\.?\d*)/            // 花了36、花36
 	]
+	
+	console.log('🔍 开始提取金额，原始文本:', text)
 	
 	for (const pattern of amountPatterns) {
 		const match = text.match(pattern)
 		if (match && match[1]) {
 			amount = parseFloat(match[1])
-			console.log('匹配到金额:', amount, '使用模式:', pattern)
+			console.log('✅ 匹配到金额:', amount, '使用模式:', pattern)
 			break
 		}
 	}
@@ -742,7 +765,9 @@ const extractBillInfo = (text) => {
 		const numberMatch = text.match(/(\d+\.?\d*)/)
 		if (numberMatch) {
 			amount = parseFloat(numberMatch[1])
-			console.log('使用数字作为金额:', amount)
+			console.log('✅ 使用数字作为金额:', amount)
+		} else {
+			console.warn('⚠️ 未能提取到金额')
 		}
 	}
 	

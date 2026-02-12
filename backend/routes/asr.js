@@ -163,10 +163,16 @@ router.post('/', async (req, res) => {
     
     let lastError = null;
     let recognizedText = '';
+    let triedFormats = [];
+    
+    // 音频数据大小
+    const audioSize = Buffer.from(audioBase64, 'base64').length;
+    console.log('📊 音频数据大小:', audioSize, 'bytes');
     
     for (const config of formats) {
       try {
-        console.log(`尝试格式: ${config.format}, 采样率: ${config.rate}`);
+        console.log(`🔄 尝试格式: ${config.format}, 采样率: ${config.rate}`);
+        triedFormats.push(config.format);
         
         // 调用语音识别API
         const asrUrl = `https://vop.baidu.com/server_api`;
@@ -178,7 +184,7 @@ router.post('/', async (req, res) => {
           cuid: 'simplenote',
           token: accessToken,
           speech: audioBase64,
-          len: Buffer.from(audioBase64, 'base64').length
+          len: audioSize
         }, {
           headers: {
             'Content-Type': 'application/json'
@@ -186,20 +192,30 @@ router.post('/', async (req, res) => {
           timeout: 30000
         });
 
-        console.log(`百度ASR返回 (${config.format}):`, asrRes.data);
+        console.log(`📥 百度ASR返回 (${config.format}):`, JSON.stringify(asrRes.data));
 
         if (asrRes.data.err_no === 0 && asrRes.data.result && asrRes.data.result.length > 0) {
           recognizedText = asrRes.data.result[0];
-          console.log('✅ 识别成功，格式:', config.format, '结果:', recognizedText);
+          console.log('✅ 识别成功！');
+          console.log('  格式:', config.format);
+          console.log('  采样率:', config.rate);
+          console.log('  识别结果:', recognizedText);
+          console.log('  结果长度:', recognizedText.length, '字符');
           break;
+        } else {
+          console.log(`❌ 格式${config.format}识别失败`);
+          console.log('  错误码:', asrRes.data.err_no);
+          console.log('  错误信息:', asrRes.data.err_msg);
         }
 
         lastError = new Error(`格式${config.format}识别失败(${asrRes.data.err_no}: ${asrRes.data.err_msg})`);
       } catch (error) {
-        console.log(`格式${config.format}失败:`, error.message);
+        console.log(`❌ 格式${config.format}请求失败:`, error.message);
         lastError = error;
       }
     }
+    
+    console.log('📋 尝试过的格式:', triedFormats.join(', '));
     
     if (!recognizedText) {
       throw lastError || new Error('所有格式都识别失败，请说清楚一些或使用文字输入');

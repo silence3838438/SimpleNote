@@ -1779,37 +1779,37 @@ onPullDownRefresh(async () => {
 	.chart-card {
 		background: $bg-white;
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: $spacing-sm $spacing-md; /* 减小上下内边距，让卡片更紧凑 */
+		padding: $spacing-xs $spacing-md $spacing-sm $spacing-md; /* 减小顶部内边距，让标题更靠上 */
 		margin-bottom: $spacing-md; /* 减小底部间距，让下面的财务分析板块更靠近 */
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 	}
 
 	.card-title {
-		font-size: $font-size-base;
-		font-weight: $font-weight-semibold;
+		font-size: $font-size-base; /* 与收支总览标题字体大小一致 */
+		font-weight: $font-weight-bold; /* 加粗标题 */
 		color: $text-primary;
-		margin-bottom: $spacing-sm; /* 减小间距 */
-		padding-bottom: $spacing-xs; /* 减小间距 */
-		border-bottom: 1rpx solid #F0F0F0;
+		margin-bottom: 4rpx; /* 进一步减小底部间距 */
+		padding-bottom: 0; /* 移除底部内边距 */
+		border-bottom: none; /* 移除分割线 */
 	}
 
-	/* 图表包装器 - 减小高度 */
+	/* 图表包装器 */
 	.chart-wrapper {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 24rpx 0; /* 增加上下内边距 */
-		gap: 16rpx; /* 增加标签间距 */
-		min-height: 320rpx; /* 进一步增加最小高度 */
+		padding: 0 0 32rpx 0; /* 移除顶部内边距 */
+		gap: 12rpx; /* 减小标签间距，让环形图更紧凑 */
+		/* 移除min-height限制，让内容自适应 */
 	}
 	
 	.chart-row {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 40rpx; /* 增大间距，让标签不拥挤 */
+		gap: 48rpx; /* 增大间距，让标签与图表距离更大 */
 		width: 100%;
-		padding: 0 32rpx; /* 增大左右内边距 */
+		padding: 0 20rpx; /* 适中的左右内边距 */
 	}
 	
 	.chart-center {
@@ -1817,46 +1817,44 @@ onPullDownRefresh(async () => {
 	}
 
 	.chart-canvas {
-		width: 120px; /* 减小图表尺寸，更精致 */
-		height: 120px;
+		width: 140px; /* 增大图表尺寸 */
+		height: 140px;
 	}
 	
-	/* 标签样式 */
+	/* 标签样式 - 优化视觉层次 */
 	.label-top,
 	.label-bottom {
 		display: flex;
 		align-items: center;
-		gap: $spacing-xs;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 255, 237, 0.95) 100%);
+		gap: 10rpx;
+		background: #FFFFFF;
 		backdrop-filter: blur(10rpx);
-		padding: $spacing-xs $spacing-sm;
-		border-radius: $radius-md;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
-		border: 2rpx solid rgba(82, 196, 26, 0.15);
+		padding: 12rpx 16rpx;
+		border-radius: 12rpx;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 	
 	.label-left,
 	.label-right {
 		display: flex;
 		align-items: center;
-		gap: $spacing-xs;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 255, 237, 0.95) 100%);
+		gap: 8rpx;
+		background: #FFFFFF;
 		backdrop-filter: blur(10rpx);
-		padding: 12rpx 16rpx; /* 优化内边距 */
-		border-radius: $radius-md;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
-		border: 2rpx solid rgba(82, 196, 26, 0.15);
-		min-width: 100rpx; /* 增大最小宽度 */
-		max-width: 120rpx; /* 增大最大宽度 */
+		padding: 10rpx 14rpx;
+		border-radius: 12rpx;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		flex-shrink: 0;
 	}
 	
 	.label-dot {
-		width: 14rpx; /* 稍微增大尺寸 */
-		height: 14rpx; /* 稍微增大尺寸 */
+		width: 12rpx;
+		height: 12rpx;
 		border-radius: 50%;
 		flex-shrink: 0;
-		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
-		border: 2rpx solid rgba(255, 255, 255, 0.5);
+		box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.15);
 	}
 	
 	.label-info {

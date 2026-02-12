@@ -53,6 +53,8 @@
                     "<uses-feature android:name=\"android.hardware.camera\"/>",
                     "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
                     "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+                    "<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>",
+                    "<uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\"/>",
                     "<uses-permission android:name=\"android.permission.INTERNET\"/>",
                     "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
                     "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>"
@@ -92,6 +94,7 @@
                 "oauth" : {
                     "weixin" : {
                         "appid" : "wxdec74d04ee3005f8",
+                        "appsecret" : "324d0b6d9a0f01eaf8cbeb79ed1ae3d7",
                         "UniversalLinks" : "https://api.qiannaqule.top/app/"
                     },
                     "apple" : {}

@@ -118,17 +118,20 @@
 				</view>
 				
 				<!-- 分割线 -->
+				<!-- #ifndef APP-PLUS -->
 				<view class="divider">
 					<view class="divider-line"></view>
 					<text class="divider-text">其他登录方式</text>
 					<view class="divider-line"></view>
 				</view>
+				<!-- #endif -->
 				
 				<!-- 第三方登录 -->
 				<view class="third-party-login">
-					<view class="third-party-btn" @click="wechatAppLogin">
+					<!-- 暂时隐藏微信登录按钮，等认证通过后再启用 -->
+					<!-- <view class="third-party-btn" @click="wechatAppLogin">
 						<image class="third-party-icon-img" src="/static/weixinhaoyou.png" mode="aspectFit"></image>
-					</view>
+					</view> -->
 					
 					<view class="third-party-btn" @click="appleLogin" v-if="isIOS">
 						<image class="third-party-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/appleLogo.png" mode="aspectFit"></image>
@@ -388,92 +391,125 @@ const wechatAppLogin = () => {
 	// #ifdef APP-PLUS
 	uni.showLoading({ title: '登录中...' })
 	
-	// 调用微信登录
+	// 调用微信登录 - 添加scope参数
 	uni.login({
 		provider: 'weixin',
+		scopes: 'snsapi_userinfo', // 明确指定scope
 		success: async (loginRes) => {
 			console.log('=== APP微信登录流程开始 ===')
 			console.log('1. 获取到微信code:', loginRes.code)
+			console.log('1.1 完整登录响应:', JSON.stringify(loginRes))
 			
-			try {
-				// 调用后端登录接口
-				const result = await request.call('auth/wechat-app-login', {
-					code: loginRes.code
-				})
-				
-				console.log('2. 后端返回结果:', result)
-				
-				if (result.success) {
-					// 保存用户信息
-					const userInfo = {
-						nickName: result.data?.nickName || '微信用户',
-						avatarUrl: result.data?.avatarUrl || 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png',
-						isLogin: true
-					}
-					
-					console.log('3. 保存用户信息:', userInfo)
-					console.log('4. 保存token:', result.token)
-					
-					uni.setStorageSync('userInfo', userInfo)
-					uni.setStorageSync('token', result.token)
-					
-					uni.hideLoading()
-					uni.showToast({
-						title: '登录成功',
-						icon: 'success'
-					})
-					
-					console.log('=== 登录成功 ===')
-					
-					// 返回上一页或首页
-					setTimeout(() => {
-						uni.navigateBack({
-							fail: () => {
-								uni.switchTab({ url: '/pages/tab/index/index' })
-							}
+			// 弹框1：显示获取到的code
+			uni.showModal({
+				title: '调试1: 获取微信code',
+				content: `成功获取code:\n${loginRes.code}`,
+				showCancel: false,
+				success: async () => {
+					try {
+						// 调用后端登录接口
+						console.log('2. 准备调用后端接口: auth/wechat-app-login')
+						console.log('2.1 请求参数:', { code: loginRes.code })
+						
+						const result = await request.call('auth/wechat-app-login', {
+							code: loginRes.code
 						})
-					}, 1000)
-				} else {
-					throw new Error(result.message || '登录失败')
+						
+						console.log('3. 后端返回结果:', JSON.stringify(result))
+						
+						// 弹框2：显示后端返回结果
+						if (result.success) {
+							uni.hideLoading()
+							
+							uni.showModal({
+								title: '调试2: 后端返回成功',
+								content: `success: true\ntoken: ${result.token ? '已获取' : '无'}\nnickName: ${result.data?.nickName || '无'}`,
+								showCancel: false,
+								success: () => {
+									// 保存用户信息
+									const userInfo = {
+										nickName: result.data?.nickName || '微信用户',
+										avatarUrl: result.data?.avatarUrl || 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png',
+										isLogin: true
+									}
+									
+									console.log('4. 保存用户信息:', userInfo)
+									console.log('5. 保存token:', result.token)
+									
+									uni.setStorageSync('userInfo', userInfo)
+									uni.setStorageSync('token', result.token)
+									
+									uni.showToast({
+										title: '登录成功',
+										icon: 'success'
+									})
+									
+									console.log('=== 登录成功 ===')
+									
+									// 返回上一页或首页
+									setTimeout(() => {
+										uni.navigateBack({
+											fail: () => {
+												uni.switchTab({ url: '/pages/tab/index/index' })
+											}
+										})
+									}, 1000)
+								}
+							})
+						} else {
+							uni.hideLoading()
+							console.error('❌ 登录失败: success=false')
+							console.error('❌ 错误消息:', result.message)
+							
+							// 弹框2：显示失败信息
+							uni.showModal({
+								title: '调试2: 后端返回失败',
+								content: `success: false\n错误消息:\n${result.message || '无错误消息'}`,
+								showCancel: false
+							})
+						}
+					} catch (error) {
+						uni.hideLoading()
+						console.error('=== 登录异常 ===')
+						console.error('错误类型:', typeof error)
+						console.error('错误对象:', error)
+						console.error('错误消息:', error.message)
+						
+						// 弹框：显示异常信息
+						uni.showModal({
+							title: '调试: 请求异常',
+							content: `异常类型: ${typeof error}\n错误消息:\n${error.message || '未知错误'}\n\n请截图发给开发者`,
+							showCancel: false
+						})
+					}
 				}
-			} catch (error) {
-				uni.hideLoading()
-				console.error('=== 登录异常 ===')
-				console.error('错误对象:', error)
-				console.error('错误消息:', error.message)
-				
-				// 更友好的错误提示
-				let errorMsg = error.message || '未知错误'
-				if (errorMsg.includes('暂未配置')) {
-					errorMsg = '微信登录功能暂未开放\n请使用账号密码登录'
-				} else if (errorMsg.includes('网络')) {
-					errorMsg = '网络连接失败\n请检查网络后重试'
-				}
-				
-				uni.showModal({
-					title: '登录失败',
-					content: errorMsg,
-					showCancel: false,
-					confirmText: '知道了'
-				})
-			}
+			})
 		},
 		fail: (err) => {
 			uni.hideLoading()
-			console.error('微信登录失败:', err)
+			console.error('=== uni.login调用失败 ===')
+			console.error('错误对象:', err)
+			console.error('错误消息:', err.errMsg)
+			console.error('错误码:', err.errCode)
 			
-			// 判断是否是用户取消
-			if (err.errMsg && err.errMsg.includes('cancel')) {
-				uni.showToast({
-					title: '已取消登录',
-					icon: 'none'
-				})
-			} else {
-				uni.showToast({
-					title: '登录失败，请重试',
-					icon: 'none'
-				})
+			// 根据错误码给出更友好的提示
+			let errorMsg = err.errMsg || '未知错误'
+			let errorDetail = ''
+			
+			if (err.errMsg && err.errMsg.includes('10005')) {
+				errorMsg = '微信登录权限配置错误'
+				errorDetail = '错误码10005：应用未获得该接口权限\n\n可能原因：\n1. 微信开放平台应用未审核通过\n2. AppID配置错误\n3. 应用权限未开通\n\n请联系管理员检查配置'
+			} else if (err.errMsg && err.errMsg.includes('General errors')) {
+				errorMsg = '微信SDK调用失败'
+				errorDetail = '这是微信SDK返回的通用错误\n\n建议：\n1. 检查网络连接\n2. 重新安装APP\n3. 联系管理员'
 			}
+			
+			// 弹框：显示uni.login失败信息
+			uni.showModal({
+				title: errorMsg,
+				content: errorDetail || `错误消息:\n${err.errMsg || '未知错误'}\n\n这是微信SDK返回的错误\n请截图发给开发者`,
+				showCancel: false
+			})
 		}
 	})
 	// #endif

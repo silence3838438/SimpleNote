@@ -291,9 +291,9 @@ const openUserAgreement = () => {
 	position: relative;
 	overflow: hidden;
 	display: flex;
-	align-items: center;
+	align-items: center; /* 改回居中对齐 */
 	justify-content: center;
-	padding: 60rpx 48rpx;
+	padding: 80rpx 64rpx; /* 保持左右内边距 */
 }
 
 // 背景装饰 - 简化设计
@@ -340,11 +340,12 @@ const openUserAgreement = () => {
 	position: relative;
 	z-index: 1;
 	width: 100%;
-	max-width: 640rpx;
+	max-width: 600rpx; /* 保持减小的宽度 */
 	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	margin-top: -50rpx; /* 向上偏移50rpx，实现居中偏上的效果 */
 }
 
 // 头部区域
@@ -389,13 +390,13 @@ const openUserAgreement = () => {
 
 .checkbox-label-inline {
 	display: flex;
-	align-items: flex-start;
+	align-items: center; /* 改为center，确保垂直居中 */
 	gap: 12rpx;
 }
 
 .custom-checkbox-inline {
 	flex-shrink: 0;
-	margin-top: 4rpx;
+	/* 移除margin-top，让checkbox自然居中 */
 }
 
 .privacy-text-inline {

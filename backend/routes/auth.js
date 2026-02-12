@@ -169,18 +169,28 @@ router.post('/wechat-login', async (req, res) => {
 // 微信APP登录（使用微信开放平台）
 router.post('/wechat-app-login', async (req, res) => {
   try {
+    console.log('=== 微信APP登录接口被调用 ===');
+    console.log('请求体:', req.body);
+    
     const { code } = req.body;
     
     if (!code) {
+      console.error('❌ 缺少code参数');
       return res.json({
         success: false,
         message: '缺少code参数'
       });
     }
 
+    console.log('✅ 收到code:', code);
+
     // 检查环境变量配置
+    console.log('检查环境变量配置...');
+    console.log('WX_OPEN_APPID:', process.env.WX_OPEN_APPID ? '已配置' : '未配置');
+    console.log('WX_OPEN_SECRET:', process.env.WX_OPEN_SECRET ? '已配置' : '未配置');
+    
     if (!process.env.WX_OPEN_APPID || !process.env.WX_OPEN_SECRET) {
-      console.error('微信开放平台配置缺失: WX_OPEN_APPID 或 WX_OPEN_SECRET 未配置');
+      console.error('❌ 微信开放平台配置缺失');
       return res.json({
         success: false,
         message: '微信登录功能暂未配置，请联系管理员'
@@ -190,51 +200,63 @@ router.post('/wechat-app-login', async (req, res) => {
     // 调用微信开放平台接口获取access_token
     const wxUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${process.env.WX_OPEN_APPID}&secret=${process.env.WX_OPEN_SECRET}&code=${code}&grant_type=authorization_code`;
     
-    console.log('调用微信开放平台API:', wxUrl.replace(process.env.WX_OPEN_SECRET, '***'));
+    console.log('📡 调用微信开放平台API:', wxUrl.replace(process.env.WX_OPEN_SECRET, '***'));
     
     const wxRes = await axios.get(wxUrl);
     
-    console.log('微信开放平台返回:', wxRes.data);
+    console.log('📡 微信开放平台返回:', JSON.stringify(wxRes.data));
     
     if (wxRes.data.errcode) {
+      console.error('❌ 微信API返回错误:', wxRes.data.errcode, wxRes.data.errmsg);
       return res.json({
         success: false,
-        message: wxRes.data.errmsg || '微信登录失败'
+        message: `微信登录失败: ${wxRes.data.errmsg} (错误码: ${wxRes.data.errcode})`
       });
     }
 
     const { access_token, openid, unionid } = wxRes.data;
+    console.log('✅ 获取到access_token和openid');
+    console.log('openid:', openid);
+    console.log('unionid:', unionid || '无');
 
     // 获取用户信息
     const userInfoUrl = `https://api.weixin.qq.com/sns/userinfo?access_token=${access_token}&openid=${openid}`;
+    console.log('📡 获取用户信息...');
+    
     const userInfoRes = await axios.get(userInfoUrl);
     
-    console.log('获取用户信息:', userInfoRes.data);
+    console.log('📡 用户信息返回:', JSON.stringify(userInfoRes.data));
     
     if (userInfoRes.data.errcode) {
+      console.error('❌ 获取用户信息失败:', userInfoRes.data.errcode, userInfoRes.data.errmsg);
       return res.json({
         success: false,
-        message: userInfoRes.data.errmsg || '获取用户信息失败'
+        message: `获取用户信息失败: ${userInfoRes.data.errmsg}`
       });
     }
 
     const { nickname, headimgurl } = userInfoRes.data;
+    console.log('✅ 用户信息:', { nickname, headimgurl });
 
     // 查询或创建用户
     let users;
     if (unionid) {
+      console.log('🔍 使用unionid查询用户...');
       // 优先使用unionid查询（可以关联小程序和APP的同一用户）
       users = await db.query(
         'SELECT * FROM users WHERE unionid = ?',
         [unionid]
       );
     } else {
+      console.log('🔍 使用app_openid查询用户...');
       // 如果没有unionid，使用app_openid查询
       users = await db.query(
         'SELECT * FROM users WHERE app_openid = ?',
         [openid]
       );
     }
+
+    console.log('🔍 查询结果:', users.length > 0 ? '找到用户' : '新用户');
 
     let userId;
     if (users.length > 0) {
