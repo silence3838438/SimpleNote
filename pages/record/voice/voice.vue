@@ -1045,24 +1045,15 @@ const extractBillInfo = (text) => {
 	// 备注保留用户的完整输入，或智能提取关键信息
 	let remark = ''
 	
-	// 1. 用户明确说"备注XX"
+	// 1. 用户明确说"备注XX"（最高优先级）
 	const remarkMatch = text.match(/备注[：:]\s*(.+?)(?:[，。！？]|$)/)
 	if (remarkMatch && remarkMatch[1]) {
 		remark = remarkMatch[1].trim()
 		console.log('✅ 提取备注:', remark)
 	}
-	// 2. 提取地点信息
-	else if (text.includes('在')) {
-		const locationMatch = text.match(/在(.+?)(?:吃|喝|买|花|消费|支付|玩|看|逛|购|订|充|交|缴|付|办|做|理|剪|洗|修|换|加|停|打|坐|乘|租|住|住宿|入住|预订|预约|报名|学|培训|上课|治疗|检查|体检|挂号|拿药|配药|取药)/)
-		if (locationMatch && locationMatch[1]) {
-			const location = locationMatch[1].trim()
-			// 限制地点长度，避免过长
-			remark = location.length > 20 ? location.substring(0, 20) : location
-			console.log('✅ 提取地点:', remark)
-		}
-	}
-	// 3. 提取商品信息（超市/便利店/零食店）
-	else if (categoryName === '零食' || categoryName === '购物' || merchant.includes('超市') || merchant.includes('便利店')) {
+	// 2. 提取商品信息（超市/便利店/零食店 - 优先于地点）
+	else if ((categoryName === '零食' || categoryName === '购物' || merchant.includes('超市') || merchant.includes('便利店')) && 
+	         (text.includes('买了') || text.includes('购买了') || text.includes('买'))) {
 		// 尝试提取商品名（如"买了可乐和薯片"）
 		const goodsMatch = text.match(/(?:买了|购买了|买)(.+?)(?:[，。！？]|$)/)
 		if (goodsMatch && goodsMatch[1]) {
@@ -1070,6 +1061,16 @@ const extractBillInfo = (text) => {
 			// 限制商品名长度
 			remark = goods.length > 30 ? goods.substring(0, 30) : goods
 			console.log('✅ 提取商品:', remark)
+		}
+	}
+	// 3. 提取地点信息
+	else if (text.includes('在')) {
+		const locationMatch = text.match(/在(.+?)(?:吃|喝|买|花|消费|支付|玩|看|逛|购|订|充|交|缴|付|办|做|理|剪|洗|修|换|加|停|打|坐|乘|租|住|住宿|入住|预订|预约|报名|学|培训|上课|治疗|检查|体检|挂号|拿药|配药|取药)/)
+		if (locationMatch && locationMatch[1]) {
+			const location = locationMatch[1].trim()
+			// 限制地点长度，避免过长
+			remark = location.length > 20 ? location.substring(0, 20) : location
+			console.log('✅ 提取地点:', remark)
 		}
 	}
 	// 4. 提取用途（如"用于XX"）
