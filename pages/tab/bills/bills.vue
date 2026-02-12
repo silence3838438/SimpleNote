@@ -777,15 +777,15 @@ onPullDownRefresh(async () => {
 	
 	/* 筛选标签 - 横向滚动 */
 	.filter-scroll {
-		padding: $spacing-md;
-		margin-bottom: $spacing-lg; /* 增加与列表的间距 */
+		padding: $spacing-lg $spacing-md; /* 增加上下内边距 */
+		margin-bottom: $spacing-xl; /* 增加与列表的间距 */
 		white-space: nowrap;
 		background: $bg-white;
 	}
 	
 	.filter-tags {
 		display: inline-flex;
-		gap: $spacing-sm;
+		gap: $spacing-lg; /* 增加按钮之间的间距，从sm改为lg */
 	}
 	
 	.filter-tag {

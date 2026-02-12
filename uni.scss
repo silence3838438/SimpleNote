@@ -1,6 +1,27 @@
 /* 导入全局样式变量 */
 @import "@/styles/variables.scss";
 
+/* Picker确定按钮颜色 - 全局配置 */
+/* 小程序端 */
+::v-deep .uni-picker-action-confirm {
+	color: $primary-color !important;
+}
+
+::v-deep .uni-picker__action-btn-confirm {
+	color: $primary-color !important;
+}
+
+/* APP端 */
+/* #ifdef APP-PLUS */
+.uni-picker-action-confirm {
+	color: #52C41A !important;
+}
+
+.uni-picker__action-btn-confirm {
+	color: #52C41A !important;
+}
+/* #endif */
+
 /* 通用样式类 */
 .flex {
 	display: flex;

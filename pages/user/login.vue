@@ -45,11 +45,6 @@
 						</view>
 					</button>
 				</view>
-				
-				<!-- 稍后登录 -->
-				<view class="later-login-section">
-					<text class="later-login-text" @click="laterLogin">稍后登录，先看看</text>
-				</view>
 				<!-- #endif -->
 				
 				<!-- APP登录 -->
@@ -132,17 +127,12 @@
 				<!-- 第三方登录 -->
 				<view class="third-party-login">
 					<view class="third-party-btn" @click="wechatAppLogin">
-						<image class="third-party-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/wechatLogo.png" mode="aspectFit"></image>
+						<image class="third-party-icon-img" src="/static/weixinhaoyou.png" mode="aspectFit"></image>
 					</view>
 					
 					<view class="third-party-btn" @click="appleLogin" v-if="isIOS">
 						<image class="third-party-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/appleLogo.png" mode="aspectFit"></image>
 					</view>
-				</view>
-				
-				<!-- 稍后登录 -->
-				<view class="later-login-section">
-					<text class="later-login-text" @click="laterLogin">稍后登录，先看看</text>
 				</view>
 				<!-- #endif -->
 			</view>
@@ -749,11 +739,12 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	flex-direction: column;
 	gap: 20rpx;
+	margin-top: 16rpx; /* 增加顶部间距，让按钮往下移 */
 }
 
 .login-btn {
 	width: 100%;
-	height: 104rpx;
+	height: 92rpx; /* 减小高度，从104rpx改为92rpx */
 	border-radius: 16rpx;
 	display: flex;
 	align-items: center;
@@ -803,17 +794,17 @@ const isIOS = computed(() => data.isIOS)
 }
 
 .form-item {
-	margin-bottom: 24rpx;
+	margin-bottom: 24rpx; /* 恢复原来的间距 */
 }
 
 // 表单内隐私协议
 .privacy-section-inline {
-	margin-bottom: 24rpx;
+	margin-bottom: 24rpx; /* 恢复原来的间距 */
 }
 
 // 记住密码
 .remember-section {
-	margin-bottom: 20rpx;
+	margin-bottom: 20rpx; /* 恢复原来的间距 */
 }
 
 .remember-label {
@@ -833,13 +824,13 @@ const isIOS = computed(() => data.isIOS)
 
 .checkbox-label-inline {
 	display: flex;
-	align-items: flex-start;
+	align-items: center; /* 改为center，让单选框和文字垂直居中对齐 */
 	gap: 12rpx;
 }
 
 .custom-checkbox-inline {
 	flex-shrink: 0;
-	margin-top: 4rpx;
+	transform: scale(0.9); /* 和记住密码的单选框大小一致 */
 }
 
 .privacy-text-inline {
@@ -867,7 +858,7 @@ const isIOS = computed(() => data.isIOS)
 	background: #fafafa;
 	border-radius: 16rpx;
 	padding: 0 28rpx;
-	height: 104rpx;
+	height: 92rpx; /* 减小高度，从104rpx改为92rpx，和登录按钮一致 */
 	border: 2rpx solid #f0f0f0;
 	transition: all 0.25s ease;
 }
@@ -911,7 +902,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 32rpx;
+	margin-bottom: 32rpx; /* 恢复原来的间距 */
 }
 
 .action-link {
@@ -925,7 +916,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	justify-content: center;
 	gap: 40rpx;
-	margin-bottom: 24rpx;
+	margin-bottom: 16rpx; /* 减小间距，从24rpx改为16rpx */
 }
 
 .third-party-btn {
@@ -972,7 +963,7 @@ const isIOS = computed(() => data.isIOS)
 
 .later-login-text {
 	font-size: 26rpx;
-	color: #8c8c8c;
+	color: #999999; /* 改为浅灰色，和其他登录方式文字颜色一样 */
 	padding: 12rpx 24rpx;
 }
 
@@ -981,7 +972,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	align-items: center;
 	gap: 24rpx;
-	margin: 40rpx 0 20rpx;
+	margin: 32rpx 0 24rpx; /* 优化间距，从40rpx 0 20rpx改为32rpx 0 24rpx */
 }
 
 .divider-line {

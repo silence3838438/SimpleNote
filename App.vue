@@ -177,75 +177,66 @@
 </script>
 
 <style lang="scss">
-	@import "@/styles/variables.scss";
-	
-	page {
-		background-color: $bg-page;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-	}
-	
-	/* 修改picker确定按钮颜色 */
-	::v-deep .uni-picker-action-confirm {
-		color: $primary-color !important;
-	}
-	
-	::v-deep .uni-picker__action-btn-confirm {
-		color: $primary-color !important;
-	}
-	
-	/* 隐藏导航栏下边框 */
-	page::before {
-		display: none !important;
-	}
-	
-	/* 隐藏TabBar上边框 */
-	uni-tabbar .uni-tabbar-border {
-		display: none !important;
-		height: 0 !important;
-		background-color: transparent !important;
-	}
-	
-	/* 通用样式类 */
-	.flex {
-		display: flex;
-	}
+@import "@/styles/variables.scss";
 
-	.flex-center {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
+page {
+	background-color: $bg-page;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 
-	.flex-between {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
+/* 隐藏导航栏下边框 */
+page::before {
+	display: none !important;
+}
 
-	.flex-column {
-		display: flex;
-		flex-direction: column;
-	}
+/* 隐藏TabBar上边框 */
+uni-tabbar .uni-tabbar-border {
+	display: none !important;
+	height: 0 !important;
+	background-color: transparent !important;
+}
 
-	.text-center {
-		text-align: center;
-	}
+/* 通用样式类 */
+.flex {
+	display: flex;
+}
 
-	.text-right {
-		text-align: right;
-	}
+.flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
 
-	.ellipsis {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
+.flex-between {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
 
-	.ellipsis-2 {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-	}
+.flex-column {
+	display: flex;
+	flex-direction: column;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.text-right {
+	text-align: right;
+}
+
+.ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ellipsis-2 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
 </style>

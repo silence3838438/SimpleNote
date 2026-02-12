@@ -317,7 +317,7 @@ onLoad((options) => {
 	} else if (options.data) {
 		try {
 			const parsedData = JSON.parse(decodeURIComponent(options.data))
-			console.log('✅ 接收到的OCR数据:', parsedData)
+			console.log('✅ 接收到的语音识别数据:', parsedData)
 			console.log('  - 金额:', parsedData.amount)
 			console.log('  - 商家:', parsedData.merchant)
 			console.log('  - 分类ID:', parsedData.categoryId)
@@ -326,19 +326,31 @@ onLoad((options) => {
 			console.log('  - 类型:', parsedData.type)
 			console.log('  - 备注:', parsedData.remark)
 			
+			// 先根据类型加载分类列表（必须在合并数据之前）
+			const dataType = parsedData.type || billType
+			data.categories = dataType === 'income' ? getIncomeCategories() : getExpenseCategories()
+			console.log('✅ 根据类型加载分类列表:', dataType, '分类数量:', data.categories.length)
+			
+			// 然后合并数据
 			data.billData = {
 				...data.billData,
 				...parsedData,
 				amount: parsedData.amount || 0,
-				type: parsedData.type || billType
+				type: dataType
 			}
 			
-			console.log('✅ 合并后的billData:', data.billData)
-			console.log('  - 合并后的备注:', data.billData.remark)
+			console.log('✅ 合并后的billData:', JSON.stringify(data.billData, null, 2))
 			
-			// 根据类型重新加载分类
-			data.categories = data.billData.type === 'income' ? getIncomeCategories() : getExpenseCategories()
-			console.log('✅ 重新加载的分类数量:', data.categories.length)
+			// 验证关键字段
+			if (!data.billData.merchant) {
+				console.warn('⚠️ 警告：商家字段为空')
+			}
+			if (!data.billData.categoryId) {
+				console.warn('⚠️ 警告：分类ID为空')
+			}
+			if (!data.billData.categoryName) {
+				console.warn('⚠️ 警告：分类名称为空')
+			}
 			
 			// 根据类型设置快捷金额
 			if (data.billData.type === 'income') {
@@ -348,6 +360,8 @@ onLoad((options) => {
 			}
 		} catch (error) {
 			console.error('❌ 解析数据失败:', error)
+			console.error('❌ 错误详情:', error.message)
+			console.error('❌ 原始数据:', options.data)
 		}
 	}
 	
@@ -379,8 +393,23 @@ onLoad((options) => {
 	// 保存原始数据的深拷贝（用于类型切换时恢复）
 	data.originalBillData = JSON.parse(JSON.stringify(data.billData))
 	
-	console.log('更新后的 selectedCategory:', data.selectedCategory)
-	console.log('更新后的 billData:', data.billData)
+	// 最终状态验证和调试输出
+	console.log('📊 页面加载完成，最终状态:')
+	console.log('  - billData:', JSON.stringify(data.billData, null, 2))
+	console.log('  - selectedCategory:', JSON.stringify(data.selectedCategory, null, 2))
+	console.log('  - categories数量:', data.categories.length)
+	console.log('  - 商家显示:', data.billData.merchant || '(空)')
+	console.log('  - 分类显示:', data.selectedCategory.name || '(空)')
+	console.log('  - 备注显示:', data.billData.remark || '(空)')
+	
+	// 如果关键字段为空，输出警告
+	if (!data.billData.merchant) {
+		console.warn('⚠️⚠️⚠️ 商家字段为空！')
+	}
+	if (!data.selectedCategory.name) {
+		console.warn('⚠️⚠️⚠️ 分类未正确设置！')
+	}
+
 })
 
 // 页面卸载时移除事件监听
@@ -489,9 +518,13 @@ const updateSelectedCategory = () => {
 		console.log('  - 通过 ID 找到的分类:', category);
 		
 		if (category) {
-			data.selectedCategory = category
+			// 使用 Vue 的响应式赋值
+			Object.assign(data.selectedCategory, category)
 			data.billData.categoryName = category.name
-			console.log('✅ 分类已更新:', category)
+			console.log('✅ 分类已更新:', JSON.stringify(category))
+			
+			// 强制触发视图更新
+			console.log('✅ 当前 selectedCategory:', JSON.stringify(data.selectedCategory))
 			return
 		} else {
 			console.log('⚠️ 未找到ID为', data.billData.categoryId, '的分类')
@@ -505,9 +538,10 @@ const updateSelectedCategory = () => {
 		console.log('  - 通过名称找到的分类:', categoryByName);
 		
 		if (categoryByName) {
-			data.selectedCategory = categoryByName
+			// 使用 Vue 的响应式赋值
+			Object.assign(data.selectedCategory, categoryByName)
 			data.billData.categoryId = categoryByName.id
-			console.log('✅ 通过名称找到分类并设置 ID:', categoryByName)
+			console.log('✅ 通过名称找到分类并设置 ID:', JSON.stringify(categoryByName))
 			return
 		} else {
 			console.log('⚠️ 未找到名称为', data.billData.categoryName, '的分类')
@@ -515,12 +549,13 @@ const updateSelectedCategory = () => {
 		}
 		
 		// 如果找不到匹配的分类，创建临时对象
-		data.selectedCategory = {
+		const tempCategory = {
 			id: data.billData.categoryId || null,
 			name: data.billData.categoryName,
 			icon: '📦' // 默认图标
 		}
-		console.log('⚠️ 使用现有分类名称创建临时对象:', data.selectedCategory)
+		Object.assign(data.selectedCategory, tempCategory)
+		console.log('⚠️ 使用现有分类名称创建临时对象:', JSON.stringify(data.selectedCategory))
 		return
 	}
 	

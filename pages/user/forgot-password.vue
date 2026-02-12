@@ -33,7 +33,7 @@
 				
 				<view class="form-item">
 					<view class="input-wrapper">
-						<text class="input-icon">💬</text>
+						<image class="input-icon-img" src="/static/yanzhengma.png" mode="aspectFit"></image>
 						<input 
 							class="form-input" 
 							v-model="data.code" 
@@ -59,9 +59,11 @@
 							placeholder-class="input-placeholder"
 							maxlength="20"
 						/>
-						<text class="eye-icon" @click="togglePassword">
-							{{ data.showPassword ? '👁️' : '👁️‍🗨️' }}
-						</text>
+						<image 
+							class="eye-icon-img" 
+							:src="data.showPassword ? '/static/mingwen.png' : '/static/miwen.png'"
+							@click="togglePassword"
+						/>
 					</view>
 				</view>
 				
@@ -76,9 +78,11 @@
 							placeholder-class="input-placeholder"
 							maxlength="20"
 						/>
-						<text class="eye-icon" @click="toggleConfirmPassword">
-							{{ data.showConfirmPassword ? '👁️' : '👁️‍🗨️' }}
-						</text>
+						<image 
+							class="eye-icon-img" 
+							:src="data.showConfirmPassword ? '/static/mingwen.png' : '/static/miwen.png'"
+							@click="toggleConfirmPassword"
+						/>
 					</view>
 				</view>
 				
@@ -149,19 +153,9 @@ const sendCode = async () => {
 		uni.hideLoading()
 		
 		if (result.success) {
-			// 如果返回了验证码，显示给用户
+			// 如果返回了验证码，直接填充到输入框
 			if (result.code) {
-				uni.showModal({
-					title: '验证码',
-					content: `您的验证码是：${result.code}\n\n${result.tip || '请在5分钟内使用'}`,
-					showCancel: false,
-					confirmText: '知道了'
-				})
-			} else {
-				uni.showToast({
-					title: '验证码已发送',
-					icon: 'success'
-				})
+				data.code = result.code
 			}
 			
 			// 开始倒计时
@@ -263,10 +257,7 @@ const goToLogin = () => {
 	background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
 	position: relative;
 	overflow: hidden;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 80rpx 48rpx 60rpx;
+	padding: 60rpx 48rpx 60rpx;
 }
 
 // 背景装饰 - 简化设计
@@ -314,6 +305,7 @@ const goToLogin = () => {
 	z-index: 1;
 	width: 100%;
 	max-width: 640rpx;
+	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -324,7 +316,7 @@ const goToLogin = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 56rpx;
+	margin-bottom: 40rpx;
 }
 
 .page-title {
@@ -376,6 +368,14 @@ const goToLogin = () => {
 	margin-right: 20rpx;
 }
 
+.input-icon-img {
+	width: 40rpx;
+	height: 40rpx;
+	margin-right: 20rpx;
+	flex-shrink: 0;
+	display: block;
+}
+
 .form-input {
 	flex: 1;
 	font-size: 30rpx;
@@ -387,9 +387,11 @@ const goToLogin = () => {
 	color: #bfbfbf;
 }
 
-.eye-icon {
-	font-size: 40rpx;
-	padding: 0 8rpx;
+.eye-icon-img {
+	width: 40rpx;
+	height: 40rpx;
+	display: block;
+	flex-shrink: 0;
 }
 
 .code-btn {

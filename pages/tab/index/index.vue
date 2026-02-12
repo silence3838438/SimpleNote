@@ -4239,8 +4239,31 @@ export default {
 /* 样式穿透修改picker确定按钮颜色 */
 @import "@/styles/variables.scss";
 
-::v-deep .uni-picker-action-confirm,
+/* 日期选择器确定按钮颜色 - 小程序 */
+::v-deep .uni-picker-action-confirm {
+	color: $primary-color !important;
+}
+
 ::v-deep .uni-picker__action-btn-confirm {
 	color: $primary-color !important;
 }
+
+/* 日期选择器确定按钮颜色 - APP端 */
+/* #ifdef APP-PLUS */
+::v-deep .uni-picker-action-confirm {
+	color: #52C41A !important;
+}
+
+::v-deep .uni-picker__action-btn-confirm {
+	color: #52C41A !important;
+}
+
+::v-deep .uni-picker-action .uni-picker-action-confirm {
+	color: #52C41A !important;
+}
+
+::v-deep .uni-picker__action .uni-picker__action-btn-confirm {
+	color: #52C41A !important;
+}
+/* #endif */
 </style>

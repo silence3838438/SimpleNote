@@ -5,11 +5,7 @@
 			<view class="navbar-content">
 				<view class="navbar-left"></view>
 				<view class="navbar-title"></view>
-				<view class="navbar-right">
-					<view class="navbar-icon" @click="showSettings">
-						<text class="icon-dot">⋯</text>
-					</view>
-				</view>
+				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
@@ -395,36 +391,6 @@ const getSystemInfo = () => {
 	statusBarHeight.value = systemInfo.statusBarHeight || 0
 	// 导航栏高度 = 状态栏高度 + 导航栏内容高度(44px)
 	navbarHeight.value = statusBarHeight.value + 44
-}
-
-// 设置按钮
-const showSettings = () => {
-	uni.showActionSheet({
-		itemList: ['清除缓存', '关于我们'],
-		success: (res) => {
-			if (res.tapIndex === 0) {
-				// 清除缓存
-				uni.showModal({
-					title: '提示',
-					content: '确定要清除缓存吗？',
-					success: (modalRes) => {
-						if (modalRes.confirm) {
-							uni.clearStorageSync()
-							uni.showToast({
-								title: '清除成功',
-								icon: 'success'
-							})
-							setTimeout(() => {
-								loadStats()
-							}, 500)
-						}
-					}
-				})
-			} else if (res.tapIndex === 1) {
-				showAbout()
-			}
-		}
-	})
 }
 
 // 获取用户信息
@@ -1459,29 +1425,6 @@ const handleDownloadComplete = () => {
 	justify-content: flex-end;
 }
 
-.navbar-icon {
-	width: 60rpx;
-	height: 60rpx;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: rgba(255, 255, 255, 0.25);
-	border-radius: 50%;
-	transition: all $transition-fast;
-}
-
-.navbar-icon:active {
-	transform: scale(0.9);
-	background: rgba(255, 255, 255, 0.4);
-}
-
-.icon-dot {
-	font-size: 40rpx;
-	font-weight: bold;
-	color: $text-white;
-	line-height: 1;
-}
-
 .container {
 	min-height: 100vh;
 	padding: 0;
@@ -1505,25 +1448,25 @@ const handleDownloadComplete = () => {
 .user-header {
 	display: flex;
 	align-items: center;
-	gap: $spacing-lg;
-	margin-bottom: $spacing-2xl;
-	padding: 0 $spacing-lg;
+	gap: 48rpx;
+	margin-bottom: 48rpx;
+	padding: 0 24rpx;
 	position: relative;
 	z-index: 1;
 }
 
 .avatar-wrapper {
 	position: relative;
-	width: 120rpx;
-	height: 120rpx;
+	width: 140rpx;
+	height: 140rpx;
 }
 
 .avatar {
-	width: 120rpx;
-	height: 120rpx;
+	width: 140rpx;
+	height: 140rpx;
 	border-radius: 50%;
 	border: 4rpx solid rgba(255, 255, 255, 0.3);
-	box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
+	box-shadow: $shadow-md;
 }
 
 .level-badge {
@@ -1563,13 +1506,13 @@ const handleDownloadComplete = () => {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: $spacing-xs;
+	gap: 10rpx;
 }
 
 .nickname-row {
 	display: flex;
 	align-items: center;
-	gap: $spacing-xs;
+	gap: 16rpx;
 }
 
 .nickname {
@@ -1587,9 +1530,9 @@ const handleDownloadComplete = () => {
 .login-hint {
 	font-size: $font-size-sm;
 	color: rgba(255, 255, 255, 0.9);
-	padding: 4rpx 16rpx;
+	padding: 6rpx 20rpx;
 	background: rgba(255, 255, 255, 0.2);
-	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	border-radius: $radius-lg;
 	backdrop-filter: blur(10rpx);
 }
 
@@ -1597,13 +1540,13 @@ const handleDownloadComplete = () => {
 	display: flex;
 	align-items: center;
 	gap: $spacing-xs;
-	padding: 4rpx 16rpx; /* 美团风格：更紧凑 */
+	padding: 6rpx 20rpx;
 	background: rgba(255, 255, 255, 0.95);
-	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	border-radius: $radius-lg;
 	backdrop-filter: blur(10rpx);
 	width: fit-content;
-	margin-top: $spacing-xs;
-	box-shadow: $shadow-sm; /* 美团风格：更轻的阴影 */
+	margin-top: 6rpx;
+	box-shadow: $shadow-sm;
 }
 
 .level-name {
@@ -1622,16 +1565,17 @@ const handleDownloadComplete = () => {
 .user-tip {
 	font-size: $font-size-xs;
 	color: rgba(255, 255, 255, 0.7);
-	margin-top: $spacing-xs;
+	margin-top: 6rpx;
+	line-height: 1.6;
 }
 
 /* 会员等级进度卡片 - 美团风格 */
 .level-progress-card {
 	background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	border-radius: $radius-lg;
 	padding: $spacing-xl;
-	margin: 0 $spacing-lg $spacing-xl;
-	box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+	margin: 32rpx $spacing-lg $spacing-xl;
+	box-shadow: $shadow-card;
 	backdrop-filter: blur(20rpx);
 	border: 2rpx solid rgba(255, 255, 255, 0.5);
 	position: relative;
@@ -1888,10 +1832,10 @@ const handleDownloadComplete = () => {
 /* 功能列表 - 美团风格 */
 .function-list {
 	background: $bg-white;
-	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	border-radius: $radius-lg;
 	padding: $spacing-lg;
-	margin: $spacing-sm $spacing-lg 0;
-	box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+	margin: 16rpx $spacing-lg 0;
+	box-shadow: $shadow-card;
 }
 
 .function-item {
@@ -1965,7 +1909,7 @@ const handleDownloadComplete = () => {
 }
 
 .settings-icon {
-	background: linear-gradient(135deg, #8C8C8C 0%, #BFBFBF 100%);
+	background: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
 }
 
 .update-icon {

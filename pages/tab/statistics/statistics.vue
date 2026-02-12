@@ -1582,7 +1582,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.overview-title {
-		font-size: $font-size-lg;
+		font-size: $font-size-base;
 		font-weight: $font-weight-semibold;
 		color: $text-primary;
 	}
@@ -1768,11 +1768,19 @@ onPullDownRefresh(async () => {
 		font-weight: $font-weight-semibold;
 	}
 
-	.overview-card, .chart-card, .analysis-card {
+	.overview-card, .analysis-card {
 		background: $bg-white;
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: $spacing-md; /* 减小内边距 */
 		margin-bottom: $spacing-xl; /* 增大卡片之间的间距 */
+		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+	}
+	
+	.chart-card {
+		background: $bg-white;
+		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+		padding: $spacing-sm $spacing-md; /* 减小上下内边距，让卡片更紧凑 */
+		margin-bottom: $spacing-md; /* 减小底部间距，让下面的财务分析板块更靠近 */
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 	}
 
@@ -1792,7 +1800,7 @@ onPullDownRefresh(async () => {
 		align-items: center;
 		padding: 0; /* 移除内边距，让图表往上 */
 		gap: $spacing-xs;
-		min-height: 240rpx; /* 减小最小高度，让卡片更紧凑 */
+		min-height: 200rpx; /* 进一步减小最小高度，让卡片更紧凑 */
 	}
 	
 	.chart-row {
@@ -1809,8 +1817,8 @@ onPullDownRefresh(async () => {
 	}
 
 	.chart-canvas {
-		width: 140px; /* 图表尺寸 */
-		height: 140px;
+		width: 120px; /* 减小图表尺寸，更精致 */
+		height: 120px;
 	}
 	
 	/* 标签样式 */

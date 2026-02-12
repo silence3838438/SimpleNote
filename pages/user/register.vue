@@ -290,10 +290,7 @@ const openUserAgreement = () => {
 	background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
 	position: relative;
 	overflow: hidden;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 80rpx 48rpx 60rpx;
+	padding: 60rpx 48rpx 60rpx;
 }
 
 // 背景装饰 - 简化设计
@@ -341,6 +338,7 @@ const openUserAgreement = () => {
 	z-index: 1;
 	width: 100%;
 	max-width: 640rpx;
+	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -351,7 +349,7 @@ const openUserAgreement = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 56rpx;
+	margin-bottom: 40rpx; /* 减小间距，从56rpx改为40rpx */
 }
 
 .page-title {
@@ -436,6 +434,9 @@ const openUserAgreement = () => {
 .input-icon {
 	font-size: 40rpx;
 	margin-right: 20rpx;
+	flex-shrink: 0; /* 防止图标被压缩 */
+	display: flex;
+	align-items: center; /* 确保垂直居中 */
 }
 
 .input-icon-img {
@@ -443,6 +444,7 @@ const openUserAgreement = () => {
 	height: 40rpx;
 	margin-right: 20rpx;
 	flex-shrink: 0;
+	display: block; /* 移除图片底部空隙 */
 }
 
 .form-input {
@@ -450,6 +452,8 @@ const openUserAgreement = () => {
 	font-size: 30rpx;
 	color: #1a1a1a;
 	height: 100%;
+	display: flex;
+	align-items: center; /* 确保输入框内容垂直居中 */
 }
 
 .input-placeholder {
@@ -459,6 +463,9 @@ const openUserAgreement = () => {
 .eye-icon {
 	font-size: 40rpx;
 	padding: 0 8rpx;
+	flex-shrink: 0; /* 防止图标被压缩 */
+	display: flex;
+	align-items: center; /* 确保垂直居中 */
 }
 
 .eye-icon-img {
@@ -466,6 +473,8 @@ const openUserAgreement = () => {
 	height: 40rpx;
 	padding: 0 8rpx;
 	cursor: pointer;
+	flex-shrink: 0; /* 防止图标被压缩 */
+	display: block; /* 移除图片底部空隙 */
 }
 
 .code-btn {

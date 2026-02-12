@@ -522,7 +522,7 @@ const handleRecordStop = async (res) => {
 	}
 	
 	// 检查文件大小（如果太小，可能是无效录音）
-	if (res.fileSize !== undefined && res.fileSize < 1000) {
+	if (res.fileSize !== undefined && res.fileSize < 500) {
 		console.error('❌ 录音文件太小:', res.fileSize, 'bytes')
 		uni.showToast({
 			title: '录音文件无效，请重新录制',
