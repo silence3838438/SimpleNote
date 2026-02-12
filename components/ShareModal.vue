@@ -155,6 +155,8 @@ const shareToWechatMoments = () => {
 	justify-content: center;
 	gap: 80rpx;
 	padding: 80rpx 32rpx 100rpx;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(20rpx);
 }
 
 .share-item {

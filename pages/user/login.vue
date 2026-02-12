@@ -442,10 +442,19 @@ const wechatAppLogin = () => {
 				console.error('错误对象:', error)
 				console.error('错误消息:', error.message)
 				
+				// 更友好的错误提示
+				let errorMsg = error.message || '未知错误'
+				if (errorMsg.includes('暂未配置')) {
+					errorMsg = '微信登录功能暂未开放\n请使用账号密码登录'
+				} else if (errorMsg.includes('网络')) {
+					errorMsg = '网络连接失败\n请检查网络后重试'
+				}
+				
 				uni.showModal({
 					title: '登录失败',
-					content: `错误信息：${error.message || '未知错误'}\n\n请检查网络连接或联系管理员`,
-					showCancel: false
+					content: errorMsg,
+					showCancel: false,
+					confirmText: '知道了'
 				})
 			}
 		},

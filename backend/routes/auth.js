@@ -178,6 +178,15 @@ router.post('/wechat-app-login', async (req, res) => {
       });
     }
 
+    // 检查环境变量配置
+    if (!process.env.WX_OPEN_APPID || !process.env.WX_OPEN_SECRET) {
+      console.error('微信开放平台配置缺失: WX_OPEN_APPID 或 WX_OPEN_SECRET 未配置');
+      return res.json({
+        success: false,
+        message: '微信登录功能暂未配置，请联系管理员'
+      });
+    }
+
     // 调用微信开放平台接口获取access_token
     const wxUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${process.env.WX_OPEN_APPID}&secret=${process.env.WX_OPEN_SECRET}&code=${code}&grant_type=authorization_code`;
     
@@ -220,9 +229,9 @@ router.post('/wechat-app-login', async (req, res) => {
         [unionid]
       );
     } else {
-      // 如果没有unionid，使用openid查询
+      // 如果没有unionid，使用app_openid查询
       users = await db.query(
-        'SELECT * FROM users WHERE openid = ?',
+        'SELECT * FROM users WHERE app_openid = ?',
         [openid]
       );
     }
@@ -232,13 +241,13 @@ router.post('/wechat-app-login', async (req, res) => {
       userId = users[0].id;
       // 更新用户信息和登录时间
       await db.query(
-        'UPDATE users SET openid = ?, unionid = ?, nickname = ?, avatar_url = ?, last_login = NOW() WHERE id = ?',
+        'UPDATE users SET app_openid = ?, unionid = ?, nickname = ?, avatar_url = ?, last_login = NOW() WHERE id = ?',
         [openid, unionid || users[0].unionid, nickname, headimgurl, userId]
       );
     } else {
       // 创建新用户
       const result = await db.query(
-        'INSERT INTO users (openid, unionid, nickname, avatar_url, created_at, last_login) VALUES (?, ?, ?, ?, NOW(), NOW())',
+        'INSERT INTO users (app_openid, unionid, nickname, avatar_url, created_at, last_login) VALUES (?, ?, ?, ?, NOW(), NOW())',
         [openid, unionid || null, nickname, headimgurl]
       );
       userId = result.insertId;

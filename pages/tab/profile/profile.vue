@@ -1448,7 +1448,7 @@ const handleDownloadComplete = () => {
 .user-header {
 	display: flex;
 	align-items: center;
-	gap: 48rpx;
+	gap: 32rpx;
 	margin-bottom: 48rpx;
 	padding: 0 24rpx;
 	position: relative;
@@ -1457,13 +1457,13 @@ const handleDownloadComplete = () => {
 
 .avatar-wrapper {
 	position: relative;
-	width: 140rpx;
-	height: 140rpx;
+	width: 120rpx;
+	height: 120rpx;
 }
 
 .avatar {
-	width: 140rpx;
-	height: 140rpx;
+	width: 120rpx;
+	height: 120rpx;
 	border-radius: 50%;
 	border: 4rpx solid rgba(255, 255, 255, 0.3);
 	box-shadow: $shadow-md;

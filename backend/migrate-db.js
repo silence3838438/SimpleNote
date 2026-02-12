@@ -19,6 +19,24 @@ const migrations = [
       // 如果字段类型不是bigint，则需要执行迁移
       return result.length > 0 && result[0].DATA_TYPE !== 'bigint';
     }
+  },
+  {
+    name: '移除users表openid字段的UNIQUE约束',
+    sql: 'ALTER TABLE users DROP INDEX openid',
+    checkSql: "SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND INDEX_NAME = 'openid'",
+    shouldRun: (result) => {
+      // 如果存在openid的UNIQUE索引，则需要执行迁移
+      return result.length > 0 && result[0].count > 0;
+    }
+  },
+  {
+    name: '添加users表app_openid字段',
+    sql: 'ALTER TABLE users ADD COLUMN app_openid VARCHAR(100) AFTER openid, ADD INDEX idx_app_openid (app_openid)',
+    checkSql: "SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'app_openid'",
+    shouldRun: (result) => {
+      // 如果app_openid字段不存在，则需要执行迁移
+      return result.length === 0 || result[0].count === 0;
+    }
   }
 ];
 

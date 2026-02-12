@@ -511,7 +511,7 @@ const handleRecordStop = async (res) => {
 	
 	// 检查录音时长（如果有duration字段且太短，则拒绝）
 	// 注意：APP端可能没有duration字段，所以只在有值时检查
-	if (res.duration !== undefined && res.duration < 500) {
+	if (res.duration !== undefined && res.duration < 300) {
 		console.error('❌ 录音时长太短:', res.duration, 'ms')
 		uni.showToast({
 			title: '录音时间太短，请重新录制',
@@ -522,7 +522,7 @@ const handleRecordStop = async (res) => {
 	}
 	
 	// 检查文件大小（如果太小，可能是无效录音）
-	if (res.fileSize !== undefined && res.fileSize < 500) {
+	if (res.fileSize !== undefined && res.fileSize < 300) {
 		console.error('❌ 录音文件太小:', res.fileSize, 'bytes')
 		uni.showToast({
 			title: '录音文件无效，请重新录制',

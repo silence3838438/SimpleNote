@@ -1798,18 +1798,18 @@ onPullDownRefresh(async () => {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 0; /* 移除内边距，让图表往上 */
-		gap: $spacing-xs;
-		min-height: 200rpx; /* 进一步减小最小高度，让卡片更紧凑 */
+		padding: 24rpx 0; /* 增加上下内边距 */
+		gap: 16rpx; /* 增加标签间距 */
+		min-height: 320rpx; /* 进一步增加最小高度 */
 	}
 	
 	.chart-row {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 32rpx; /* 增大间距，让标签不拥挤 */
+		gap: 40rpx; /* 增大间距，让标签不拥挤 */
 		width: 100%;
-		padding: 0 24rpx; /* 增大左右内边距 */
+		padding: 0 32rpx; /* 增大左右内边距 */
 	}
 	
 	.chart-center {

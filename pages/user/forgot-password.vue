@@ -257,7 +257,10 @@ const goToLogin = () => {
 	background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
 	position: relative;
 	overflow: hidden;
-	padding: 60rpx 48rpx 60rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 60rpx 48rpx;
 }
 
 // 背景装饰 - 简化设计
