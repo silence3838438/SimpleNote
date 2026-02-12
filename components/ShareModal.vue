@@ -99,7 +99,7 @@ const shareToWechatMoments = () => {
 
 .share-modal-content {
 	width: 100%;
-	background: #FFFFFF;
+	background: transparent;
 	border-radius: 32rpx 32rpx 0 0;
 	padding-bottom: env(safe-area-inset-bottom);
 	animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -108,10 +108,13 @@ const shareToWechatMoments = () => {
 .modal-header {
 	position: relative;
 	padding: 40rpx 32rpx 24rpx;
-	border-bottom: 1rpx solid #F0F0F0;
+	border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(20rpx);
+	border-radius: 32rpx 32rpx 0 0;
 }
 
 .modal-title {
@@ -151,7 +154,7 @@ const shareToWechatMoments = () => {
 	align-items: center;
 	justify-content: center;
 	gap: 80rpx;
-	padding: 100rpx 32rpx 120rpx;
+	padding: 80rpx 32rpx 100rpx;
 }
 
 .share-item {
@@ -180,14 +183,14 @@ const shareToWechatMoments = () => {
 }
 
 .share-icon {
-	width: 120rpx;
-	height: 120rpx;
-	border-radius: 28rpx;
-	box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+	width: 96rpx;
+	height: 96rpx;
+	border-radius: 20rpx;
+	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
 }
 
 .share-label {
-	font-size: 30rpx;
+	font-size: 26rpx;
 	color: #666;
 	font-weight: 500;
 }

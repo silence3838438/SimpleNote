@@ -1799,9 +1799,9 @@ onPullDownRefresh(async () => {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: $spacing-sm; /* 增大间距，让标签不挤 */
+		gap: 32rpx; /* 增大间距，让标签不拥挤 */
 		width: 100%;
-		padding: 0 $spacing-sm; /* 增大左右内边距 */
+		padding: 0 24rpx; /* 增大左右内边距 */
 	}
 	
 	.chart-center {
@@ -1809,7 +1809,7 @@ onPullDownRefresh(async () => {
 	}
 
 	.chart-canvas {
-		width: 140px; /* 增大图表尺寸 */
+		width: 140px; /* 图表尺寸 */
 		height: 140px;
 	}
 	
@@ -1821,9 +1821,9 @@ onPullDownRefresh(async () => {
 		gap: $spacing-xs;
 		background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 255, 237, 0.95) 100%);
 		backdrop-filter: blur(10rpx);
-		padding: $spacing-xs $spacing-sm; /* 减小内边距 */
-		border-radius: $radius-md; /* 减小圆角 */
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08); /* 减小阴影 */
+		padding: $spacing-xs $spacing-sm;
+		border-radius: $radius-md;
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
 		border: 2rpx solid rgba(82, 196, 26, 0.15);
 	}
 	
@@ -1834,12 +1834,12 @@ onPullDownRefresh(async () => {
 		gap: $spacing-xs;
 		background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 255, 237, 0.95) 100%);
 		backdrop-filter: blur(10rpx);
-		padding: $spacing-xs $spacing-sm; /* 稍微增大内边距 */
-		border-radius: $radius-md; /* 减小圆角 */
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08); /* 减小阴影 */
+		padding: 12rpx 16rpx; /* 优化内边距 */
+		border-radius: $radius-md;
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
 		border: 2rpx solid rgba(82, 196, 26, 0.15);
-		min-width: 85rpx; /* 稍微增大宽度 */
-		max-width: 105rpx; /* 稍微增大宽度 */
+		min-width: 100rpx; /* 增大最小宽度 */
+		max-width: 120rpx; /* 增大最大宽度 */
 	}
 	
 	.label-dot {

@@ -1055,7 +1055,9 @@ const extractBillInfo = (text) => {
 	else if (text.includes('在')) {
 		const locationMatch = text.match(/在(.+?)(?:吃|喝|买|花|消费|支付|玩|看|逛|购|订|充|交|缴|付|办|做|理|剪|洗|修|换|加|停|打|坐|乘|租|住|住宿|入住|预订|预约|报名|学|培训|上课|治疗|检查|体检|挂号|拿药|配药|取药)/)
 		if (locationMatch && locationMatch[1]) {
-			remark = `📍${locationMatch[1].trim()}`
+			const location = locationMatch[1].trim()
+			// 限制地点长度，避免过长
+			remark = location.length > 20 ? location.substring(0, 20) : location
 			console.log('✅ 提取地点:', remark)
 		}
 	}
@@ -1065,7 +1067,8 @@ const extractBillInfo = (text) => {
 		const goodsMatch = text.match(/(?:买了|购买了|买)(.+?)(?:[，。！？]|$)/)
 		if (goodsMatch && goodsMatch[1]) {
 			const goods = goodsMatch[1].trim().replace(/和|、/g, '、')
-			remark = goods
+			// 限制商品名长度
+			remark = goods.length > 30 ? goods.substring(0, 30) : goods
 			console.log('✅ 提取商品:', remark)
 		}
 	}
@@ -1073,13 +1076,30 @@ const extractBillInfo = (text) => {
 	else if (text.includes('用于')) {
 		const purposeMatch = text.match(/用于(.+?)(?:[，。！？]|$)/)
 		if (purposeMatch && purposeMatch[1]) {
-			remark = purposeMatch[1].trim()
+			const purpose = purposeMatch[1].trim()
+			// 限制用途长度
+			remark = purpose.length > 30 ? purpose.substring(0, 30) : purpose
 			console.log('✅ 提取用途:', remark)
 		}
 	}
-	// 5. 默认：保留完整输入
+	// 5. 默认：限制长度，避免备注过长
 	else {
-		remark = text
+		// 移除金额、日期等无关信息
+		let cleanText = text
+			.replace(/\d+\.?\d*\s*元/g, '')
+			.replace(/\d+\.?\d*\s*块钱/g, '')
+			.replace(/\d+\.?\d*\s*块/g, '')
+			.replace(/今天|昨天|前天/g, '')
+			.replace(/花了|支付|消费|买了|吃了|喝了|收到|赚了|挣了|发了/g, '')
+			.trim()
+		
+		// 如果清理后的文本合理，使用它；否则留空
+		if (cleanText.length > 2 && cleanText.length <= 50) {
+			remark = cleanText
+		} else if (cleanText.length > 50) {
+			remark = cleanText.substring(0, 50)
+		}
+		// 如果太短或太长，留空，让AI增强来处理
 	}
 	
 	// 提取日期 - 默认为今天

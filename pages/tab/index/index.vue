@@ -336,7 +336,13 @@
 	</view>
 	
 	<!-- 悬浮记账按钮 -->
-	<view class="float-add-btn" @click="goToManualRecord">
+	<view 
+		class="float-add-btn" 
+		:style="{ left: data.floatBtnX + 'px', top: data.floatBtnY + 'px', right: 'auto', bottom: 'auto' }"
+		@touchstart="onFloatBtnTouchStart"
+		@touchmove="onFloatBtnTouchMove"
+		@touchend="onFloatBtnTouchEnd"
+	>
 		<text class="add-icon">+</text>
 	</view>
 	
@@ -940,6 +946,55 @@ const goToManualRecord = () => {
 	uni.navigateTo({
 		url: '/pages/record/confirm/confirm'
 	})
+}
+
+// 悬浮按钮拖动相关
+let floatBtnStartX = 0
+let floatBtnStartY = 0
+let floatBtnTouchStartX = 0
+let floatBtnTouchStartY = 0
+let isDragging = false
+
+const onFloatBtnTouchStart = (e) => {
+	floatBtnStartX = data.floatBtnX
+	floatBtnStartY = data.floatBtnY
+	floatBtnTouchStartX = e.touches[0].clientX
+	floatBtnTouchStartY = e.touches[0].clientY
+	isDragging = false
+}
+
+const onFloatBtnTouchMove = (e) => {
+	const moveX = e.touches[0].clientX - floatBtnTouchStartX
+	const moveY = e.touches[0].clientY - floatBtnTouchStartY
+	
+	// 移动超过5px才认为是拖动
+	if (Math.abs(moveX) > 5 || Math.abs(moveY) > 5) {
+		isDragging = true
+	}
+	
+	if (isDragging) {
+		const systemInfo = uni.getSystemInfoSync()
+		const btnSize = 60 // 按钮半径（120rpx / 2）
+		
+		// 计算新位置
+		let newX = floatBtnStartX + moveX
+		let newY = floatBtnStartY + moveY
+		
+		// 限制在屏幕范围内
+		newX = Math.max(btnSize, Math.min(systemInfo.windowWidth - btnSize, newX))
+		newY = Math.max(btnSize, Math.min(systemInfo.windowHeight - btnSize, newY))
+		
+		data.floatBtnX = newX
+		data.floatBtnY = newY
+	}
+}
+
+const onFloatBtnTouchEnd = () => {
+	// 如果没有拖动，则触发点击事件
+	if (!isDragging) {
+		goToManualRecord()
+	}
+	isDragging = false
 }
 
 // 切换收入显示/隐藏
@@ -4160,51 +4215,15 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 16rpx 40rpx rgba(82, 196, 26, 0.45), 0 4rpx 12rpx rgba(82, 196, 26, 0.25);
+		box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
 		transition: all $transition-fast;
 		overflow: hidden;
-		border: 3rpx solid rgba(255, 255, 255, 0.5);
 		z-index: 999;
 	}
 	
-	.float-add-btn::before {
-		content: '';
-		position: absolute;
-		top: -50%;
-		right: -50%;
-		width: 200%;
-		height: 200%;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
-		animation: shimmer 3s ease-in-out infinite;
-	}
-	
-	@keyframes shimmer {
-		0%, 100% {
-			transform: translate(0, 0);
-			opacity: 0.6;
-		}
-		50% {
-			transform: translate(-20%, -20%);
-			opacity: 0.3;
-		}
-	}
-	
-	.float-add-btn::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		border-radius: 60rpx;
-		padding: 3rpx;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-		-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-		-webkit-mask-composite: xor;
-		mask-composite: exclude;
-		pointer-events: none;
-	}
-	
 	.float-add-btn:active {
-		transform: scale(0.92);
-		box-shadow: 0 12rpx 32rpx rgba(82, 196, 26, 0.4), 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
+		transform: scale(0.95);
+		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.25);
 	}
 	
 	.add-icon {
@@ -4212,7 +4231,6 @@ export default {
 		color: $text-white;
 		font-weight: 200;
 		line-height: 1;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
 		z-index: 1;
 	}
 </style>
