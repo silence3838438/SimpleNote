@@ -1,13 +1,18 @@
 // i18n 辅助函数
-import i18n from '../locale'
+import i18n from '../locale/index.js'
 
 /**
  * 更新 tabBar 文字（解决 uni-app tabBar 不支持动态国际化的问题）
  */
 export const updateTabBarText = () => {
-  const { t } = i18n.global
-  
   try {
+    if (!i18n || !i18n.global) {
+      console.log('i18n 未初始化')
+      return
+    }
+    
+    const { t } = i18n.global
+    
     uni.setTabBarItem({
       index: 0,
       text: t('tabbar.home')
