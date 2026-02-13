@@ -43,6 +43,22 @@
 					</view>
 				</view>
 				
+				<!-- 检查更新（仅APP） -->
+				<!-- #ifdef APP-PLUS -->
+				<view class="function-item" @click="checkAppUpdate">
+					<view class="function-left">
+						<view class="function-icon update-icon">
+							<text class="icon-text">🔄</text>
+						</view>
+						<text class="function-title">检查更新</text>
+					</view>
+					<view class="function-right">
+						<text class="function-desc">v{{ data.appVersion }}</text>
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				<!-- #endif -->
+				
 				<!-- 用户注销（仅登录后显示） -->
 				<view class="function-item danger-item" @click="handleDeleteAccount" v-if="data.isLogin">
 					<view class="function-left">
@@ -72,6 +88,25 @@
 				</view>
 			</view>
 		</view>
+		
+		<!-- 版本更新弹窗 -->
+		<!-- #ifdef APP-PLUS -->
+		<UpdateModal 
+			:visible="data.showUpdateModal"
+			:newVersion="data.updateInfo.newVersion"
+			:currentVersion="data.updateInfo.currentVersion"
+			:updateContent="data.updateInfo.updateContent"
+			:packageSize="data.updateInfo.packageSize"
+			:updateTime="data.updateInfo.updateTime"
+			:downloadUrl="data.updateInfo.downloadUrl"
+			:isForce="data.updateInfo.isForce"
+			:updateType="data.updateInfo.updateType"
+			:markets="data.updateInfo.markets"
+			@cancel="closeUpdateModal"
+			@confirm="handleUpdate"
+			@downloadComplete="handleDownloadComplete"
+		/>
+		<!-- #endif -->
 	</view>
 </template>
 
@@ -81,11 +116,28 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useI18n } from 'vue-i18n'
 import billStorage from '@/utils/billStorage.js'
 import request from '@/utils/request.js'
+// #ifdef APP-PLUS
+import { checkUpdate } from '@/utils/appUpdate.js'
+import UpdateModal from '@/components/UpdateModal.vue'
+// #endif
 
 const { t, locale } = useI18n()
 
 const data = reactive({
-	isLogin: false
+	isLogin: false,
+	appVersion: '',
+	showUpdateModal: false,
+	updateInfo: {
+		newVersion: '',
+		currentVersion: '',
+		updateContent: [],
+		packageSize: '',
+		updateTime: '',
+		downloadUrl: '',
+		isForce: false,
+		updateType: 'server',
+		markets: {}
+	}
 })
 
 // 获取当前语言显示名称
@@ -105,6 +157,60 @@ const checkLogin = () => {
 	const userInfo = uni.getStorageSync('userInfo')
 	data.isLogin = userInfo && userInfo.isLogin
 }
+
+// 获取APP版本号
+const getAppVersion = () => {
+	// #ifdef APP-PLUS
+	const appInfo = plus.runtime
+	data.appVersion = appInfo.version || '1.0.0'
+	// #endif
+}
+
+// 检查APP更新
+// #ifdef APP-PLUS
+const checkAppUpdate = async () => {
+	try {
+		uni.showLoading({ title: '检查中...' })
+		const updateInfo = await checkUpdate()
+		uni.hideLoading()
+		
+		if (updateInfo.hasUpdate) {
+			data.updateInfo = updateInfo
+			data.showUpdateModal = true
+		} else {
+			uni.showToast({
+				title: '已是最新版本',
+				icon: 'success'
+			})
+		}
+	} catch (error) {
+		uni.hideLoading()
+		console.error('检查更新失败:', error)
+		uni.showToast({
+			title: '检查更新失败',
+			icon: 'none'
+		})
+	}
+}
+
+// 关闭更新弹窗
+const closeUpdateModal = () => {
+	if (!data.updateInfo.isForce) {
+		data.showUpdateModal = false
+	}
+}
+
+// 确认更新
+const handleUpdate = () => {
+	console.log('开始更新')
+}
+
+// 下载完成
+const handleDownloadComplete = () => {
+	console.log('下载完成')
+	data.showUpdateModal = false
+}
+// #endif
 
 // 关于我们
 const showAbout = () => {
@@ -260,6 +366,9 @@ const performDeleteAccount = async () => {
 
 onLoad(() => {
 	checkLogin()
+	// #ifdef APP-PLUS
+	getAppVersion()
+	// #endif
 })
 </script>
 
@@ -344,6 +453,10 @@ onLoad(() => {
 	background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
 }
 
+.update-icon {
+	background: linear-gradient(135deg, #FA8C16 0%, #FFA940 100%);
+}
+
 /* 退出登录按钮 */
 .logout-button-wrapper {
 	margin-top: 80rpx;
@@ -401,6 +514,12 @@ onLoad(() => {
 .current-language {
 	font-size: $font-size-base;
 	color: $text-secondary;
+}
+
+.function-desc {
+	font-size: $font-size-base;
+	color: #52C41A;
+	font-weight: $font-weight-medium;
 }
 
 .arrow {

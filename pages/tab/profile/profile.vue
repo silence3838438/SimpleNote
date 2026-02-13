@@ -186,21 +186,18 @@
 				</button>
 				<!-- #endif -->
 				
-				<!-- 检查更新（仅APP） -->
-				<!-- #ifdef APP-PLUS -->
-				<view class="function-item" @click="checkAppUpdate">
+				<!-- AI财务顾问 -->
+				<view class="function-item" @click="goToAIChat">
 					<view class="function-left">
-						<view class="function-icon update-icon">
-							<text class="icon-text">🔄</text>
+						<view class="function-icon ai-icon">
+							<text class="icon-text">🤖</text>
 						</view>
-						<text class="function-title">检查更新</text>
+						<text class="function-title">财务顾问</text>
 					</view>
 					<view class="function-right">
-						<text class="function-desc">v{{ data.appVersion }}</text>
 						<text class="arrow">›</text>
 					</view>
 				</view>
-				<!-- #endif -->
 				
 				<!-- 系统设置 -->
 				<view class="function-item" @click="goToSettings">
@@ -1235,6 +1232,30 @@ const goToReminderSettings = () => {
 	})
 }
 
+// 跳转到财务顾问
+const goToAIChat = () => {
+	// 检查登录
+	const userInfo = uni.getStorageSync('userInfo')
+	if (!userInfo || !userInfo.isLogin) {
+		uni.showModal({
+			title: '需要登录',
+			content: '登录后可以使用财务顾问功能',
+			confirmText: '去登录',
+			cancelText: '稍后',
+			success: (res) => {
+				if (res.confirm) {
+					goToLogin()
+				}
+			}
+		})
+		return
+	}
+	
+	uni.navigateTo({
+		url: '/pages/ai-chat/ai-chat'
+	})
+}
+
 // 加载提醒时间
 const loadReminderTime = () => {
 	// 统一使用 reminderEnabled 字段
@@ -1834,7 +1855,7 @@ const handleDownloadComplete = () => {
 	background: $bg-white;
 	border-radius: $radius-lg;
 	padding: $spacing-lg;
-	margin: 16rpx $spacing-lg 0;
+	margin: -24rpx $spacing-lg 0;
 	box-shadow: $shadow-card;
 }
 
@@ -1890,6 +1911,10 @@ const handleDownloadComplete = () => {
 	justify-content: center;
 	box-shadow: $shadow-sm; /* 美团风格：更轻的阴影 */
 	flex-shrink: 0;
+}
+
+.ai-icon {
+	background: linear-gradient(135deg, #FA8C16 0%, #FFA940 100%);
 }
 
 .share-icon {

@@ -56,6 +56,7 @@ const uploadRoutes = require('./routes/upload');
 const appRoutes = require('./routes/app');
 const adminRoutes = require('./routes/admin');
 const aiEnhanceRoutes = require('./routes/ai-enhance');
+const aiChatRoutes = require('./routes/ai-chat');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
@@ -65,6 +66,7 @@ app.use('/api/baiduASR', authMiddleware, asrRoutes); // 必须登录才能使用
 app.use('/api/upload', authMiddleware, uploadRoutes); // 需要登录才能上传
 app.use('/api/app', appRoutes); // 版本检查不需要认证
 app.use('/api/ai-enhance', optionalAuthMiddleware, aiEnhanceRoutes); // AI 增强接口（可选认证）
+app.use('/api/ai-chat', authMiddleware, aiChatRoutes); // AI 财务助手（需要登录）
 
 // 健康检查 - 添加缓存
 app.get('/health', cacheMiddleware(30000), (req, res) => {

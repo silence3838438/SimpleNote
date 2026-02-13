@@ -205,6 +205,19 @@
 					}
 				}
 			]
+		},
+		{
+			"root": "pages/ai-chat",
+			"name": "ai-chat",
+			"pages": [
+				{
+					"path": "ai-chat",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTextStyle": "white"
+					}
+				}
+			]
 		}
 	],
 	"preloadRule": {

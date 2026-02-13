@@ -1,0 +1,268 @@
+/**
+ * AI 财务助手对话接口
+ * 基于用户真实账单数据提供财务分析和建议
+ */
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+
+// Cloudbase Node SDK
+let cloudbase = null;
+
+// 初始化 Cloudbase
+try {
+  const tcb = require('@cloudbase/node-sdk');
+  const envId = process.env.CLOUDBASE_ENV || "cloud1-8gxevfq393690dfe";
+  
+  cloudbase = tcb.init({
+    env: envId,
+    timeout: 60000
+  });
+  
+  console.log('✅ AI财务助手 - Cloudbase初始化成功');
+} catch (error) {
+  console.warn('⚠️ AI财务助手 - Cloudbase初始化失败:', error.message);
+}
+
+// Agent ID
+const AGENT_ID = 'agent-xiaopiaoshi-2end0lcd9c419f';
+
+/**
+ * POST /api/ai-chat
+ * AI财务助手对话
+ */
+router.post('/', async (req, res) => {
+  try {
+    const { question } = req.body;
+    const userId = req.userId || req.openid;
+    
+    if (!question) {
+      return res.json({
+        success: false,
+        message: '请输入问题'
+      });
+    }
+    
+    if (!userId) {
+      return res.json({
+        success: false,
+        message: '请先登录'
+      });
+    }
+    
+    // 检查今日使用次数（每天限制3次）
+    const today = new Date().toISOString().split('T')[0];
+    const usageCount = await db.query(
+      `SELECT COUNT(*) as count FROM ai_chat_usage 
+       WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+    
+    const todayCount = usageCount[0]?.count || 0;
+    const dailyLimit = 3;
+    
+    if (todayCount >= dailyLimit) {
+      return res.json({
+        success: false,
+        message: `今日咨询次数已用完（${dailyLimit}次），明天再来吧~`,
+        remainingCount: 0
+      });
+    }
+    
+    // 检查 Cloudbase 是否可用
+    if (!cloudbase) {
+      return res.json({
+        success: false,
+        message: 'AI服务暂时不可用'
+      });
+    }
+    
+    console.log('📤 [AI财务助手] 用户问题:', question);
+    
+    // 1. 查询用户最近3个月的账单数据
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const threeMonthsAgoStr = threeMonthsAgo.toISOString().split('T')[0];
+    
+    const bills = await db.query(
+      `SELECT * FROM bills 
+       WHERE user_id = ? AND date >= ? 
+       ORDER BY date DESC`,
+      [userId, threeMonthsAgoStr]
+    );
+    
+    console.log(`📊 查询到 ${bills.length} 笔账单`);
+    
+    // 2. 统计数据
+    const stats = {
+      totalExpense: 0,
+      totalIncome: 0,
+      categoryStats: {},
+      monthlyStats: {},
+      billCount: bills.length
+    };
+    
+    bills.forEach(bill => {
+      const amount = parseFloat(bill.amount);
+      // 将Date对象转换为字符串 YYYY-MM-DD
+      const dateStr = bill.date instanceof Date 
+        ? bill.date.toISOString().split('T')[0] 
+        : bill.date;
+      const month = dateStr.substring(0, 7); // YYYY-MM
+      
+      if (bill.type === 'expense') {
+        stats.totalExpense += amount;
+        
+        // 按分类统计
+        const category = bill.category_name || '其他';
+        stats.categoryStats[category] = (stats.categoryStats[category] || 0) + amount;
+      } else {
+        stats.totalIncome += amount;
+      }
+      
+      // 按月统计
+      if (!stats.monthlyStats[month]) {
+        stats.monthlyStats[month] = { expense: 0, income: 0 };
+      }
+      if (bill.type === 'expense') {
+        stats.monthlyStats[month].expense += amount;
+      } else {
+        stats.monthlyStats[month].income += amount;
+      }
+    });
+    
+    // 找出支出最多的分类（前3名）
+    const topCategories = Object.entries(stats.categoryStats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, amount]) => `${name}(${amount.toFixed(2)}元)`)
+      .join('、');
+    
+    // 计算月均支出
+    const monthCount = Object.keys(stats.monthlyStats).length || 1;
+    const avgMonthlyExpense = (stats.totalExpense / monthCount).toFixed(2);
+    
+    console.log('📊 统计数据:', {
+      totalExpense: stats.totalExpense.toFixed(2),
+      totalIncome: stats.totalIncome.toFixed(2),
+      topCategories,
+      avgMonthlyExpense
+    });
+    
+    // 3. 构建prompt
+    const prompt = `你是一个专业、友好的AI财务顾问助手，名字叫"小财"。
+
+【用户问题】
+${question}
+
+【用户最近3个月的财务数据】
+- 总支出：${stats.totalExpense.toFixed(2)}元
+- 总收入：${stats.totalIncome.toFixed(2)}元
+- 账单笔数：${stats.billCount}笔
+- 月均支出：${avgMonthlyExpense}元
+- 支出最多的分类：${topCategories || '暂无数据'}
+
+【按月统计】
+${Object.entries(stats.monthlyStats).map(([month, data]) => 
+  `${month}: 支出${data.expense.toFixed(2)}元，收入${data.income.toFixed(2)}元`
+).join('\n')}
+
+【你的任务】
+1. 用简洁、友好的语气回答用户的问题
+2. 基于真实数据给出分析和建议
+3. 如果用户问的问题与财务无关，礼貌地引导回财务话题
+4. 回答要具体、实用，避免空洞的建议
+5. 适当使用emoji让回答更生动
+6. 回答控制在200字以内
+
+【回答格式】
+直接回答，不要加"小财："等前缀，不要使用markdown格式。`;
+    
+    // 4. 调用 AI Agent
+    let aiAnswer = '抱歉，我暂时无法回答这个问题。';
+    
+    try {
+      const ai = cloudbase.ai();
+      
+      console.log('📤 [AI财务助手] 调用 bot.sendMessage...');
+      const aiRes = await ai.bot.sendMessage({
+        botId: AGENT_ID,
+        threadId: `chat-${userId}-${Date.now()}`,
+        runId: `run-${Date.now()}`,
+        messages: [
+          {
+            id: `msg-${Date.now()}`,
+            role: 'user',
+            content: prompt
+          }
+        ],
+        tools: [],
+        context: [],
+        state: {},
+        forwardedProps: {}
+      });
+      
+      console.log('✅ [AI财务助手] 调用成功，读取 dataStream...');
+      
+      let fullText = '';
+      for await (const data of aiRes.dataStream) {
+        switch (data.type) {
+          case 'TEXT_MESSAGE_CONTENT':
+            fullText += data.delta;
+            break;
+          case 'RUN_ERROR':
+            console.error('❌ [AI财务助手] 运行出错:', data.message);
+            break;
+          case 'RUN_FINISHED':
+            console.log('✅ [AI财务助手] 运行结束');
+            break;
+        }
+      }
+      
+      console.log('📥 [AI财务助手] AI 响应:', fullText);
+      
+      if (fullText.trim()) {
+        aiAnswer = fullText.trim();
+      } else {
+        console.warn('⚠️ [AI财务助手] AI响应为空');
+        aiAnswer = '抱歉，我现在有点忙，请稍后再试 😅';
+      }
+      
+    } catch (aiError) {
+      console.error('❌ [AI财务助手] 调用失败:', aiError.message);
+      console.error('❌ [AI财务助手] 错误堆栈:', aiError.stack);
+      aiAnswer = '抱歉，我现在有点忙，请稍后再试 😅';
+    }
+    
+    // 记录使用次数
+    try {
+      await db.query(
+        `INSERT INTO ai_chat_usage (user_id, question, created_at) VALUES (?, ?, NOW())`,
+        [userId, question]
+      );
+    } catch (err) {
+      console.error('记录使用次数失败:', err);
+    }
+    
+    res.json({
+      success: true,
+      answer: aiAnswer,
+      stats: {
+        totalExpense: stats.totalExpense.toFixed(2),
+        totalIncome: stats.totalIncome.toFixed(2),
+        billCount: stats.billCount
+      },
+      remainingCount: dailyLimit - todayCount - 1
+    });
+    
+  } catch (error) {
+    console.error('❌ [AI财务助手] 失败:', error);
+    
+    res.json({
+      success: false,
+      message: error.message || '服务异常，请稍后重试'
+    });
+  }
+});
+
+module.exports = router;

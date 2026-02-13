@@ -121,6 +121,17 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='APP版本管理表';
     `);
 
+    // AI对话使用记录表
+    await query(`
+      CREATE TABLE IF NOT EXISTS ai_chat_usage (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(100) NOT NULL COMMENT '用户ID',
+        question TEXT COMMENT '用户问题',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+        INDEX idx_user_date (user_id, created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话使用记录表';
+    `);
+
     console.log('✅ 数据库表初始化成功');
   } catch (error) {
     console.error('❌ 数据库表初始化失败:', error);
