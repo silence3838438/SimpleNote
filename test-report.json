@@ -1,0 +1,157 @@
+{
+  "timestamp": "2026-02-13T04:20:26.302Z",
+  "duration": "56.38",
+  "stats": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "passRate": "100.0"
+  },
+  "results": [
+    {
+      "test": "账号登录",
+      "status": "passed",
+      "token": "eyJhbGciOiJIUzI1NiIs..."
+    },
+    {
+      "test": "获取用户信息",
+      "status": "passed"
+    },
+    {
+      "test": "创建账单",
+      "status": "passed",
+      "billId": 37
+    },
+    {
+      "test": "查询账单列表",
+      "status": "passed",
+      "count": 1
+    },
+    {
+      "test": "更新账单",
+      "status": "passed"
+    },
+    {
+      "test": "删除账单",
+      "status": "passed"
+    },
+    {
+      "test": "OCR识别 - WechatIMG186.jpg",
+      "status": "passed",
+      "amount": 24.22,
+      "merchant": "好想来",
+      "category": "购物"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG186.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "OCR识别 - WechatIMG617.jpg",
+      "status": "passed",
+      "amount": 22,
+      "merchant": "享道出行(上海)科技股份有限公司",
+      "category": "交通"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG617.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "OCR识别 - WechatIMG618.jpg",
+      "status": "passed",
+      "amount": 7.19,
+      "merchant": "淘宝闪购25",
+      "category": "餐饮"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG618.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "OCR识别 - WechatIMG619.jpg",
+      "status": "passed",
+      "amount": 6.98,
+      "merchant": "好想来",
+      "category": "购物"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG619.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "OCR识别 - WechatIMG620.jpg",
+      "status": "passed",
+      "amount": 5.06,
+      "merchant": "好想来",
+      "category": "购物"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG620.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "OCR识别 - WechatIMG621.jpg",
+      "status": "passed",
+      "amount": 15.89,
+      "merchant": "给商家",
+      "category": "餐饮"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG621.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "OCR识别 - WechatIMG622.jpg",
+      "status": "passed",
+      "amount": 5.6,
+      "merchant": "苏果鼓楼便利店",
+      "category": "购物"
+    },
+    {
+      "test": "OCR AI增强 - WechatIMG622.jpg",
+      "status": "passed",
+      "aiEnabled": true
+    },
+    {
+      "test": "ASR AI增强: 今天午餐35元",
+      "status": "passed",
+      "remark": "午餐"
+    },
+    {
+      "test": "ASR AI增强: 滴滴打车24元",
+      "status": "passed",
+      "remark": "滴滴打车"
+    },
+    {
+      "test": "文件上传",
+      "status": "passed",
+      "url": "https://api.qiannaqule.top/uploads/1770956424005-301947513.txt"
+    },
+    {
+      "test": "APP版本检查",
+      "status": "passed",
+      "hasUpdate": false
+    },
+    {
+      "test": "管理员登录",
+      "status": "passed"
+    },
+    {
+      "test": "获取用户列表",
+      "status": "passed",
+      "total": 8
+    },
+    {
+      "test": "获取统计数据",
+      "status": "passed"
+    }
+  ]
+}
