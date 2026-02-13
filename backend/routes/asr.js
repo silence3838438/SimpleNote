@@ -66,7 +66,7 @@ router.post('/', async (req, res) => {
       });
     }
     
-    let { filePath, audioBase64, audioUrl, duration } = req.body;
+    let { filePath, audioBase64, audioUrl } = req.body;
     
     // 如果传的是音频 URL，转换为 base64
     if (audioUrl && !audioBase64) {
@@ -144,13 +144,15 @@ router.post('/', async (req, res) => {
     const tokenRes = await axios.post(tokenUrl);
     const accessToken = tokenRes.data.access_token;
 
-    // 尝试多种音频格式（参考旧项目）
+    // 百度ASR官方支持的格式：pcm, wav, amr
+    // 参考：https://ai.baidu.com/ai-doc/SPEECH/Vk38lxily
     const formats = [
-      { format: 'aac', rate: 16000 },   // 微信小程序默认格式
-      { format: 'm4a', rate: 16000 },
-      { format: 'mp3', rate: 16000 },
-      { format: 'wav', rate: 16000 },
-      { format: 'amr', rate: 8000 }
+      { format: 'amr', rate: 8000 },    // APP端AMR格式（官方支持）
+      { format: 'pcm', rate: 16000 },   // PCM格式（最佳，需ffmpeg转换）
+      { format: 'pcm', rate: 8000 },
+      { format: 'wav', rate: 16000 },   // WAV格式（官方支持）
+      { format: 'wav', rate: 8000 }
+      // 注意：百度ASR不支持mp3/aac/m4a等压缩格式
     ];
     
     // 如果指定了格式，优先尝试该格式
@@ -169,6 +171,9 @@ router.post('/', async (req, res) => {
     const audioSize = Buffer.from(audioBase64, 'base64').length;
     console.log('📊 音频数据大小:', audioSize, 'bytes');
     
+    // 由于服务器内存不足无法安装ffmpeg，直接使用原始mp3格式
+    console.log('⚠️ 跳过PCM转换，直接使用原始格式（服务器内存限制）');
+    
     for (const config of formats) {
       try {
         console.log(`🔄 尝试格式: ${config.format}, 采样率: ${config.rate}`);
@@ -177,7 +182,7 @@ router.post('/', async (req, res) => {
         // 调用语音识别API
         const asrUrl = `https://vop.baidu.com/server_api`;
         
-        const asrRes = await axios.post(asrUrl, {
+        const requestData = {
           format: config.format,
           rate: config.rate,
           channel: 1,
@@ -185,7 +190,17 @@ router.post('/', async (req, res) => {
           token: accessToken,
           speech: audioBase64,
           len: audioSize
-        }, {
+        };
+        
+        console.log('📤 请求参数:', {
+          format: config.format,
+          rate: config.rate,
+          channel: 1,
+          len: audioSize,
+          speechLength: audioBase64.length
+        });
+        
+        const asrRes = await axios.post(asrUrl, requestData, {
           headers: {
             'Content-Type': 'application/json'
           },
@@ -206,6 +221,21 @@ router.post('/', async (req, res) => {
           console.log(`❌ 格式${config.format}识别失败`);
           console.log('  错误码:', asrRes.data.err_no);
           console.log('  错误信息:', asrRes.data.err_msg);
+          
+          // 记录常见错误码
+          if (asrRes.data.err_no === 3300) {
+            console.log('  💡 提示: 输入参数不正确');
+          } else if (asrRes.data.err_no === 3301) {
+            console.log('  💡 提示: 音频质量过差');
+          } else if (asrRes.data.err_no === 3302) {
+            console.log('  💡 提示: 鉴权失败');
+          } else if (asrRes.data.err_no === 3303) {
+            console.log('  💡 提示: 语音服务器后端问题');
+          } else if (asrRes.data.err_no === 3307) {
+            console.log('  💡 提示: 音频过长或过短');
+          } else if (asrRes.data.err_no === 3308) {
+            console.log('  💡 提示: 音频格式不支持');
+          }
         }
 
         lastError = new Error(`格式${config.format}识别失败(${asrRes.data.err_no}: ${asrRes.data.err_msg})`);

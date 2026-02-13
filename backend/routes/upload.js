@@ -17,7 +17,11 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const ext = path.extname(file.originalname);
+    console.log('📁 [上传] 原始文件名:', file.originalname);
+    console.log('📁 [上传] 提取的扩展名:', ext);
+    console.log('📁 [上传] 生成的文件名:', uniqueSuffix + ext);
+    cb(null, uniqueSuffix + ext);
   }
 });
 

@@ -133,6 +133,7 @@ const data = reactive({
 	recorderManager: null,
 	recordTimer: null,
 	permissionGranted: false, // 记录权限是否已授权
+	recorderStarted: false, // 录音器是否已真正启动
 	examples: [
 		'"午餐35元"',
 		'"网购衣服268元"',
@@ -174,15 +175,31 @@ onLoad(() => {
 	
 	// 监听录音开始
 	data.recorderManager.onStart(() => {
-		console.log('✅ 录音已真正开始，开始计时')
+		const startTime = new Date().toLocaleTimeString()
+		console.log('✅ [录音器回调] onStart 触发，时间:', startTime)
+		console.log('✅ [录音器回调] 录音器已真正启动，现在可以说话了！')
+		
+		// 录音器启动后，标记为已启动
+		data.recorderStarted = true
+		
+		// 强烈提示用户：现在可以开始说话了
+		uni.vibrateShort()  // 震动反馈
+		
+		// 播放提示音（如果可以的话）
+		uni.showToast({
+			title: '开始说话',
+			icon: 'none',
+			duration: 500
+		})
+		
 		// 在录音真正开始时才启动计时器
 		if (data.recordTimer) {
 			clearInterval(data.recordTimer)
 		}
 		data.recordTime = 0
+		
 		data.recordTimer = setInterval(() => {
 			data.recordTime++
-			console.log('⏱️ 录音中...', data.recordTime, '秒')
 			if (data.recordTime >= 60) {
 				stopRecord()
 			}
@@ -337,15 +354,10 @@ const startRecord = async () => {
 			return
 		}
 		
-		// 如果是刚刚授权的，提示用户再次按下录音按钮
+		// 如果是刚刚授权的，不提示，直接开始录音
 		if (permissionResult.justGranted) {
-			console.log('⚠️ 刚刚授权，提示用户再次按下录音按钮')
-			uni.showToast({
-				title: '已授权，请再次按住录音',
-				icon: 'none',
-				duration: 2000
-			})
-			return
+			console.log('✅ 刚刚授权，直接开始录音')
+			// 不提示，继续执行录音逻辑
 		}
 		// #endif
 		
@@ -386,21 +398,33 @@ const startRecord = async () => {
 		
 		console.log('✅ 权限检查通过，准备开始录音')
 		
+		// 提示用户：按住按钮，等待震动后再说话
+		uni.showToast({
+			title: '按住不松手，等震动后说话',
+			icon: 'none',
+			duration: 1500
+		})
+		
 		// 设置录音状态
 		data.isRecording = true
 		data.recordTime = 0
+		data.recorderStarted = false  // 重置启动标记
 		
-		// 启动录音（参考小程序的简单方式）
+		// 启动录音 - 立即启动，不要任何延迟
 		// #ifdef APP-PLUS
-		data.recorderManager.start({
+		const recorderOptions = {
 			duration: 60000,
-			format: 'mp3',
-			sampleRate: 16000,
+			format: 'amr',  // 改用AMR格式（百度ASR官方支持：pcm/wav/amr）
+			sampleRate: 8000,  // AMR格式使用8000Hz采样率
 			numberOfChannels: 1,
-			encodeBitRate: 128000,
-			frameSize: 50
-		})
-		console.log('✅ APP端录音已启动')
+			encodeBitRate: 12200  // AMR标准比特率
+			// 注意：APP端不支持 frameSize 参数，不要设置
+		}
+		
+		console.log('🎙️ [录音启动] 立即启动录音器，参数:', recorderOptions)
+		console.log('🎙️ [录音启动] 当前时间:', new Date().toLocaleTimeString())
+		data.recorderManager.start(recorderOptions)
+		console.log('✅ [录音启动] start() 已调用，等待 onStart 回调...')
 		// #endif
 		
 		// #ifdef MP-WEIXIN
@@ -410,7 +434,7 @@ const startRecord = async () => {
 			sampleRate: 16000,
 			numberOfChannels: 1,
 			encodeBitRate: 48000,
-			frameSize: 50
+			frameSize: 50  // 小程序支持 frameSize
 		})
 		console.log('✅ 小程序端录音已启动')
 		// #endif
@@ -426,14 +450,34 @@ const startRecord = async () => {
 }
 
 const stopRecord = () => {
-	console.log('🎙️ 停止录音，当前状态:', data.isRecording)
+	console.log('🎙️ 停止录音，当前状态:', data.isRecording, '录音器已启动:', data.recorderStarted)
 	if (!data.isRecording) {
 		console.log('⚠️ 录音未启动，忽略停止操作')
 		return
 	}
 	
+	// 检查录音器是否已真正启动
+	if (!data.recorderStarted) {
+		console.warn('⚠️ 录音器还未真正启动就被停止了，请长按至少1秒')
+		data.isRecording = false
+		uni.showToast({
+			title: '请长按至少1秒再松手',
+			icon: 'none',
+			duration: 2000
+		})
+		
+		// 尝试停止录音器（防止后台继续录音）
+		try {
+			data.recorderManager.stop()
+		} catch (e) {
+			console.error('停止录音器失败:', e)
+		}
+		return
+	}
+	
 	// 立即设置状态，防止重复触发
 	data.isRecording = false
+	data.recorderStarted = false
 	
 	// 清除定时器
 	if (data.recordTimer) {
@@ -459,6 +503,7 @@ const cancelRecord = () => {
 	
 	// 立即设置状态
 	data.isRecording = false
+	data.recorderStarted = false
 	
 	// 清除定时器
 	if (data.recordTimer) {
@@ -483,10 +528,10 @@ const cancelRecord = () => {
 const handleRecordStop = async (res) => {
 	const startTime = Date.now()
 	console.log('⏱️ [语音识别] 开始时间:', new Date().toLocaleTimeString())
-	console.log('录音停止回调，文件路径:', res.tempFilePath)
-	console.log('API返回的录音时长:', res.duration, 'ms')
-	console.log('API返回的文件大小:', res.fileSize, 'bytes')
-	console.log('实际录音时长（计时器）:', data.recordTime, '秒')
+	console.log('📁 [录音停止] 文件路径:', res.tempFilePath)
+	console.log('⏱️ [录音停止] API返回时长:', res.duration, 'ms (APP端不支持，为undefined)')
+	console.log('📦 [录音停止] API返回文件大小:', res.fileSize, 'bytes (APP端不支持，为undefined)')
+	console.log('⏱️ [录音停止] 计时器记录时长:', data.recordTime, '秒')
 	
 	// 确保状态已重置
 	data.isRecording = false
@@ -506,20 +551,42 @@ const handleRecordStop = async (res) => {
 		return
 	}
 	
-	// 使用计时器记录的时长，因为APP端res.duration可能为undefined
+	// 使用计时器记录的时长
 	const actualDuration = data.recordTime
-	console.log('✅ 使用实际录音时长:', actualDuration, '秒')
+	console.log('✅ 使用计时器记录的时长:', actualDuration, '秒')
 	
-	// 检查录音时长是否太短（至少1秒）
-	if (actualDuration < 1) {
-		console.warn('⚠️ 录音时间太短:', actualDuration, '秒')
-		uni.showToast({
-			title: '录音时间太短，请重新录制',
-			icon: 'none',
-			duration: 2000
-		})
-		return
+	// 获取实际文件信息（APP端必须通过 getFileInfo 获取）
+	let fileSize = 0
+	try {
+		const fileInfo = await uni.getFileInfo({ filePath: res.tempFilePath })
+		fileSize = fileInfo.size
+		console.log('📦 实际文件大小:', fileSize, 'bytes')
+	} catch (e) {
+		console.error('❌ 获取文件信息失败:', e)
 	}
+	
+	// 不限制最短录音时长，用户说多久就多久
+	// if (actualDuration < 1) {
+	// 	console.warn('⚠️ 录音时间太短:', actualDuration, '秒')
+	// 	uni.showToast({
+	// 		title: '录音时间太短，请重新录制',
+	// 		icon: 'none',
+	// 		duration: 2000
+	// 	})
+	// 	return
+	// }
+	
+	// 不限制文件大小，只要有内容就识别
+	// if (fileSize < 5000) {
+	// 	console.warn('⚠️ 录音文件太小:', fileSize, 'bytes')
+	// 	uni.showToast({
+	// 		title: '录音内容太少，请重新录制',
+	// 		icon: 'none',
+	// 		duration: 2000
+	// 	})
+	// 	return
+	// }
+	
 	console.log('✅ 录音文件有效，准备上传识别')
 	
 	data.parsing = true
@@ -529,20 +596,8 @@ const handleRecordStop = async (res) => {
 		const uploadStartTime = Date.now()
 		console.log('📤 开始上传音频文件')
 		console.log('📁 文件路径:', res.tempFilePath)
-		console.log('⏱️ 录音时长:', res.duration, 'ms')
-		console.log('📦 文件大小:', res.fileSize, 'bytes')
-		
-		// #ifdef APP-PLUS
-		// 获取文件实际大小
-		let actualFileSize = 0
-		try {
-			const fileInfo = await uni.getFileInfo({ filePath: res.tempFilePath })
-			actualFileSize = fileInfo.size
-			console.log('📦 实际文件大小:', actualFileSize, 'bytes')
-		} catch (e) {
-			console.error('获取文件信息失败:', e)
-		}
-		// #endif
+		console.log('⏱️ 录音时长:', actualDuration, '秒')
+		console.log('📦 文件大小:', fileSize, 'bytes')
 		
 		const uploadRes = await request.uploadFile(res.tempFilePath)
 		const uploadEndTime = Date.now()
@@ -562,19 +617,36 @@ const handleRecordStop = async (res) => {
 		const asrStartTime = Date.now()
 		console.log('🎤 开始调用语音识别接口')
 		console.log('🔗 音频URL:', uploadRes.url)
+		console.log('📱 平台信息:', {
+			// #ifdef APP-PLUS
+			platform: 'APP',
+			// #endif
+			// #ifdef MP-WEIXIN
+			platform: '小程序',
+			// #endif
+		})
 		
-		// 确定音频格式（APP端使用mp3，小程序端使用aac）
+		// 确定音频格式（APP端使用amr，小程序端使用aac）
 		let audioFormat = 'aac'
 		// #ifdef APP-PLUS
-		audioFormat = 'mp3'
+		audioFormat = 'amr'  // 百度ASR官方支持格式
 		// #endif
 		
 		console.log('🎵 音频格式:', audioFormat)
 		
-		const result = await request.call('baiduASR', {
+		// 计算音频时长（毫秒）
+		// APP端res.duration为undefined，使用计时器记录的时长
+		const audioDuration = actualDuration * 1000  // 转换为毫秒
+		console.log('⏱️ 传递给ASR的时长:', audioDuration, 'ms')
+		
+		const asrParams = {
 			audioUrl: uploadRes.url,
-			format: audioFormat  // 传递格式信息给后端
-		})
+			format: audioFormat,  // 传递格式信息给后端
+			duration: audioDuration  // 传递时长信息
+		}
+		console.log('📋 ASR请求参数:', JSON.stringify(asrParams, null, 2))
+		
+		const result = await request.call('baiduASR', asrParams)
 		
 		const asrEndTime = Date.now()
 		console.log('⏱️ [语音识别] 语音识别耗时:', asrEndTime - asrStartTime, 'ms')
