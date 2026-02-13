@@ -312,7 +312,7 @@ const goToLogin = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-top: -50rpx; /* 向上偏移50rpx，实现居中偏上的效果 */
+	margin-top: -120rpx; /* 向上偏移120rpx，实现居中偏上的效果 */
 }
 
 // 头部区域

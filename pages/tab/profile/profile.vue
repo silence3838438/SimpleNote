@@ -195,6 +195,7 @@
 						<text class="function-title">财务顾问</text>
 					</view>
 					<view class="function-right">
+						<text class="function-desc">智能分析</text>
 						<text class="arrow">›</text>
 					</view>
 				</view>

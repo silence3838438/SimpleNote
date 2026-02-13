@@ -646,7 +646,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 80rpx 48rpx 60rpx;
+	padding: 80rpx 80rpx 60rpx;
 }
 
 // 背景装饰 - 简化设计
@@ -697,7 +697,7 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-top: 80rpx;
+	margin-top: -100rpx;
 }
 
 // 头部区域

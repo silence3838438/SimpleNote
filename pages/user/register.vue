@@ -293,7 +293,7 @@ const openUserAgreement = () => {
 	display: flex;
 	align-items: center; /* 改回居中对齐 */
 	justify-content: center;
-	padding: 80rpx 64rpx; /* 保持左右内边距 */
+	padding: 80rpx 80rpx 60rpx; /* 和登录页面保持一致 */
 }
 
 // 背景装饰 - 简化设计
@@ -345,7 +345,7 @@ const openUserAgreement = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-top: -50rpx; /* 向上偏移50rpx，实现居中偏上的效果 */
+	margin-top: -100rpx; /* 向上偏移100rpx，实现居中偏上的效果 */
 }
 
 // 头部区域

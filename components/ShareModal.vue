@@ -49,7 +49,7 @@ const shareToWechatFriend = () => {
 		type: 0,
 		title: '语音拍照记账，3秒搞定！消费一目了然',
 		summary: '钱哪去了 - 轻松管理每一笔',
-		href: 'https://your-app-link.com',
+		href: 'https://qiannaqule.top',
 		imageUrl: '/static/shareLine.png',
 		success: () => {
 			emit('share', 'friend')
@@ -68,7 +68,7 @@ const shareToWechatMoments = () => {
 		type: 0,
 		title: '钱哪去了 - 语音拍照记账，轻松管理每一笔',
 		summary: '语音拍照记账，3秒搞定！消费一目了然',
-		href: 'https://your-app-link.com',
+		href: 'https://qiannaqule.top',
 		imageUrl: '/static/shareLine.png',
 		success: () => {
 			emit('share', 'moments')
