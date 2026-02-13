@@ -3,13 +3,27 @@
 		<view class="container">
 			<!-- 功能列表 -->
 			<view class="function-list">
+				<!-- 语言设置 -->
+				<view class="function-item" @click="goToLanguage">
+					<view class="function-left">
+						<view class="function-icon language-icon">
+							<text class="icon-text">🌐</text>
+						</view>
+						<text class="function-title">{{ $t('settings.language') }}</text>
+					</view>
+					<view class="function-right">
+						<text class="current-language">{{ currentLanguageLabel }}</text>
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				
 				<!-- 关于我们 -->
 				<view class="function-item" @click="showAbout">
 					<view class="function-left">
 						<view class="function-icon about-icon">
 							<text class="icon-text">ℹ️</text>
 						</view>
-						<text class="function-title">关于我们</text>
+						<text class="function-title">{{ $t('settings.about') }}</text>
 					</view>
 					<view class="function-right">
 						<text class="arrow">›</text>
@@ -22,7 +36,7 @@
 						<view class="function-icon feedback-icon">
 							<text class="icon-text">💬</text>
 						</view>
-						<text class="function-title">意见反馈</text>
+						<text class="function-title">{{ $t('settings.feedback') }}</text>
 					</view>
 					<view class="function-right">
 						<text class="arrow">›</text>
@@ -62,14 +76,29 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useI18n } from 'vue-i18n'
 import billStorage from '@/utils/billStorage.js'
 import request from '@/utils/request.js'
+
+const { t, locale } = useI18n()
 
 const data = reactive({
 	isLogin: false
 })
+
+// 获取当前语言显示名称
+const currentLanguageLabel = computed(() => {
+	return locale.value === 'zh-CN' ? '简体中文' : 'English'
+})
+
+// 跳转到语言设置
+const goToLanguage = () => {
+	uni.navigateTo({
+		url: '/pages/settings/language'
+	})
+}
 
 // 检查登录状态
 const checkLogin = () => {
@@ -295,6 +324,10 @@ onLoad(() => {
 	flex-shrink: 0;
 }
 
+.language-icon {
+	background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
+}
+
 .about-icon {
 	background: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
 }
@@ -363,6 +396,11 @@ onLoad(() => {
 	display: flex;
 	align-items: center;
 	gap: $spacing-sm;
+}
+
+.current-language {
+	font-size: $font-size-base;
+	color: $text-secondary;
 }
 
 .arrow {

@@ -1,5 +1,7 @@
 <script setup>
 	import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
+	import { updateTabBarText } from '@/utils/i18nHelper'
+	
 	const initCategories = () => {
 		const categories = [
 			{ id: 1, name: '餐饮', icon: '🍜', keywords: ['餐厅', '饭店', '食堂', '外卖', '麦当劳', '肯德基', '星巴克', '咖啡'] },
@@ -158,6 +160,11 @@
 		
 		// 初始化分类数据
 		initCategories()
+		
+		// 更新 tabBar 文字（支持国际化）- 延迟执行确保 tabBar 已准备好
+		setTimeout(() => {
+			updateTabBarText()
+		}, 100)
 		
 		// 从云端加载提醒设置（等待加载完成）
 		await loadReminderSettingsFromCloud()

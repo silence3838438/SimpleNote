@@ -11,6 +11,8 @@ cloudfunctions/**/.env
 *.key
 *.pem
 config.js
+开发者账号信息.md
+配置备份/
 
 # 编辑器
 .vscode/

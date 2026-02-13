@@ -131,6 +131,14 @@
 					}
 				},
 				{
+					"path": "language",
+					"style": {
+						"navigationBarTitleText": "语言设置",
+						"navigationBarBackgroundColor": "#52C41A",
+						"navigationBarTextStyle": "white"
+					}
+				},
+				{
 					"path": "reminder",
 					"style": {
 						"navigationBarTitleText": "记账提醒",
