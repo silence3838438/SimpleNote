@@ -170,11 +170,42 @@
 		<!-- #endif -->
 			<!-- 顶部月份选择器 -->
 			<view class="header">
-				<picker mode="date" fields="month" :value="data.currentMonth" @change="onMonthChange">
-					<view class="month-picker">
-						{{ data.currentMonthText }} <text class="arrow">▼</text>
+				<view class="month-picker" @click="showMonthPicker">
+					{{ data.currentMonthText }} <text class="arrow">▼</text>
+				</view>
+			</view>
+			
+			<!-- 自定义月份选择器弹窗 -->
+			<view class="custom-picker-modal" v-if="data.showCustomPicker" @click="closeMonthPicker">
+				<view class="picker-content" @click.stop>
+					<view class="picker-header">
+						<text class="picker-cancel" @click="closeMonthPicker">取消</text>
+						<text class="picker-title">选择月份</text>
+						<text class="picker-confirm" @click="confirmMonthPicker">完成</text>
 					</view>
-				</picker>
+					<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange" indicator-style="height: 50px">
+						<picker-view-column>
+							<view 
+								class="picker-item" 
+								:class="{ 'picker-item-selected': index === data.pickerValue[0] }"
+								v-for="(year, index) in data.years" 
+								:key="year"
+							>
+								{{ year }}年
+							</view>
+						</picker-view-column>
+						<picker-view-column>
+							<view 
+								class="picker-item" 
+								:class="{ 'picker-item-selected': index === data.pickerValue[1] }"
+								v-for="(month, index) in data.months" 
+								:key="month"
+							>
+								{{ month }}月
+							</view>
+						</picker-view-column>
+					</picker-view>
+				</view>
 			</view>
 			
 			<!-- 收支结余卡片（美团风格优化） -->
@@ -463,7 +494,14 @@ const data = reactive({
 		isForce: false,
 		updateType: 'server',
 		markets: {}
-	}
+	},
+	// 自定义月份选择器
+	showCustomPicker: false,
+	years: [],
+	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+	pickerValue: [0, 0],
+	tempYear: 0,
+	tempMonth: 0
 })
 
 const initData = () => {
@@ -473,6 +511,20 @@ const initData = () => {
 	data.currentMonth = `${year}-${month}`
 	data.currentMonthText = `${year}年${month}月`
 	data.categories = uni.getStorageSync('categories') || []
+	
+	// 初始化年份列表（最近10年）
+	const currentYear = now.getFullYear()
+	data.years = []
+	for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+		data.years.push(i)
+	}
+	
+	// 设置当前选中的年月索引
+	const yearIndex = data.years.indexOf(year)
+	const monthIndex = parseInt(month) - 1
+	data.pickerValue = [yearIndex, monthIndex]
+	data.tempYear = year
+	data.tempMonth = parseInt(month)
 	
 	// 读取金额隐藏状态
 	data.hideAmount = uni.getStorageSync('hideAmount') || false
@@ -752,6 +804,71 @@ const formatDate = (dateStr) => {
 	if (diff === 1) return '昨天'
 	if (diff === 2) return '前天'
 	return `${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+// 显示月份选择器
+const showMonthPicker = () => {
+	data.showCustomPicker = true
+	uni.hideTabBar() // 隐藏tabbar
+	// 设置当前选中值
+	const [year, month] = data.currentMonth.split('-')
+	const yearIndex = data.years.indexOf(parseInt(year))
+	const monthIndex = parseInt(month) - 1
+	data.pickerValue = [yearIndex, monthIndex]
+	data.tempYear = parseInt(year)
+	data.tempMonth = parseInt(month)
+}
+
+// 关闭月份选择器
+const closeMonthPicker = () => {
+	data.showCustomPicker = false
+	uni.showTabBar() // 显示tabbar
+}
+
+// picker-view值改变
+const onPickerChange = (e) => {
+	const val = e.detail.value
+	data.pickerValue = val
+	data.tempYear = data.years[val[0]]
+	data.tempMonth = data.months[val[1]]
+}
+
+// 确认选择
+const confirmMonthPicker = async () => {
+	const year = data.tempYear
+	const month = data.tempMonth.toString().padStart(2, '0')
+	const selectedMonth = `${year}-${month}`
+	
+	data.currentMonth = selectedMonth
+	data.currentMonthText = `${year}年${month}月`
+	data.showCustomPicker = false
+	uni.showTabBar() // 显示tabbar
+	
+	// 检查登录状态
+	if (!checkLogin()) {
+		data.allBills = []
+		data.recentBills = []
+		data.totalExpense = 0
+		data.totalIncome = 0
+		data.balance = 0
+		data.budgetPercent = 0
+		return
+	}
+	
+	uni.showLoading({ title: '加载中...' })
+	
+	try {
+		data.allBills = await billStorage.getFromAPI()
+		recalculateData()
+	} catch (error) {
+		console.error('加载数据失败:', error)
+		uni.showToast({
+			title: '加载失败',
+			icon: 'none'
+		})
+	} finally {
+		uni.hideLoading()
+	}
 }
 
 const onMonthChange = async (e) => {
@@ -3011,6 +3128,97 @@ export default {
 		margin-left: $spacing-sm;
 		color: $text-tertiary;
 		opacity: 0.7;
+	}
+	
+	/* 自定义月份选择器弹窗 */
+	.custom-picker-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 9999;
+		display: flex;
+		align-items: flex-end;
+	}
+	
+	.picker-content {
+		width: 100%;
+		background: $bg-white;
+		border-radius: $radius-2xl $radius-2xl 0 0;
+		animation: slideUp 0.3s ease;
+	}
+	
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+	
+	.picker-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: $spacing-xl $spacing-xl;
+		border-bottom: 1rpx solid #F0F0F0;
+	}
+	
+	.picker-cancel {
+		font-size: $font-size-base;
+		color: $text-secondary;
+	}
+	
+	.picker-title {
+		font-size: $font-size-lg;
+		font-weight: $font-weight-bold;
+		color: $text-primary;
+	}
+	
+	.picker-confirm {
+		font-size: $font-size-base;
+		color: #52C41A;
+		font-weight: $font-weight-medium;
+	}
+	
+	.picker-view {
+		height: 400rpx;
+		position: relative;
+	}
+	
+	/* picker-view选中指示器 */
+	.picker-view::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		height: 50px;
+		border-top: 1rpx solid #E8E8E8;
+		border-bottom: 1rpx solid #E8E8E8;
+		pointer-events: none;
+		z-index: 1;
+	}
+	
+	.picker-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: $font-size-xl;
+		color: $text-secondary;
+		height: 50px;
+		transition: color 0.3s ease;
+	}
+	
+	/* 选中项文字颜色为绿色 */
+	.picker-item-selected {
+		color: #52C41A !important;
+		font-weight: $font-weight-bold;
+		font-size: 36rpx;
 	}
 	
 	/* 统计按钮 */

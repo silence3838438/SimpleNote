@@ -19,12 +19,10 @@
 			<!-- 统计卡片 -->
 			<view class="summary-card">
 				<view class="summary-header">
-					<picker mode="date" fields="month" :value="data.currentMonth" @change="onMonthChange">
-						<view class="month-selector">
-							<text class="month-text">{{ data.selectedMonth || '全部账单' }}</text>
-							<text class="month-arrow">▼</text>
-						</view>
-					</picker>
+					<view class="month-selector" @click="showMonthPicker">
+						<text class="month-text">{{ data.selectedMonth || '全部账单' }}</text>
+						<text class="month-arrow">▼</text>
+					</view>
 				</view>
 				<view class="summary-amounts">
 					<view class="amount-item">
@@ -43,6 +41,39 @@
 							{{ data.balance >= 0 ? '+' : '-' }}{{ formatAmount(data.balance) }}
 						</text>
 					</view>
+				</view>
+			</view>
+			
+			<!-- 自定义月份选择器弹窗 -->
+			<view class="custom-picker-modal" v-if="data.showCustomPicker" @click="closeMonthPicker">
+				<view class="picker-content" @click.stop>
+					<view class="picker-header">
+						<text class="picker-cancel" @click="closeMonthPicker">取消</text>
+						<text class="picker-title">选择月份</text>
+						<text class="picker-confirm" @click="confirmMonthPicker">完成</text>
+					</view>
+					<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange" indicator-style="height: 50px">
+						<picker-view-column>
+							<view 
+								class="picker-item" 
+								:class="{ 'picker-item-selected': index === data.pickerValue[0] }"
+								v-for="(year, index) in data.years" 
+								:key="year"
+							>
+								{{ year }}
+							</view>
+						</picker-view-column>
+						<picker-view-column>
+							<view 
+								class="picker-item" 
+								:class="{ 'picker-item-selected': index === data.pickerValue[1] }"
+								v-for="(item, index) in data.availableMonths" 
+								:key="item"
+							>
+								{{ item }}
+							</view>
+						</picker-view-column>
+					</picker-view>
 				</view>
 			</view>
 			
@@ -136,7 +167,16 @@ const data = reactive({
 	totalExpense: 0,
 	balance: 0,
 	// 日期选择器相关
-	currentMonth: ''
+	currentMonth: '',
+	// 自定义月份选择器
+	showCustomPicker: false,
+	years: [],
+	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+	monthsWithAll: ['全部', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+	availableMonths: ['全部'], // 当前可用的月份列表（根据年份动态变化）
+	pickerValue: [0, 0],
+	tempYear: '',
+	tempMonth: 0
 })
 
 const loadData = async () => {
@@ -157,6 +197,13 @@ const loadData = async () => {
 		const year = now.getFullYear()
 		const month = (now.getMonth() + 1).toString().padStart(2, '0')
 		data.currentMonth = `${year}-${month}`
+		data.selectedMonth = `${year}年${month}月` // 默认选中当前年月
+		
+		// 初始化年份列表（第一项为"全部"）
+		data.years = ['全部']
+		for (let i = year - 5; i <= year + 5; i++) {
+			data.years.push(i)
+		}
 		
 		return
 	}
@@ -172,6 +219,13 @@ const loadData = async () => {
 		const year = now.getFullYear()
 		const month = (now.getMonth() + 1).toString().padStart(2, '0')
 		data.currentMonth = `${year}-${month}`
+		data.selectedMonth = `${year}年${month}月` // 默认选中当前年月
+		
+		// 初始化年份列表（第一项为"全部"）
+		data.years = ['全部']
+		for (let i = year - 5; i <= year + 5; i++) {
+			data.years.push(i)
+		}
 		
 		// 应用筛选
 		applyFilters()
@@ -210,6 +264,115 @@ const onMonthChange = (e) => {
 	data.selectedMonth = `${year}年${month}月`
 	
 	applyFilters()
+}
+
+// 显示月份选择器
+const showMonthPicker = () => {
+	data.showCustomPicker = true
+	uni.hideTabBar() // 隐藏tabbar
+	
+	// 设置当前选中值
+	if (data.selectedMonth) {
+		// 如果已选择月份，定位到该月份
+		const [yearStr, monthStr] = data.selectedMonth.replace('年', '-').replace('月', '').split('-')
+		const year = parseInt(yearStr)
+		const month = parseInt(monthStr)
+		const yearIndex = data.years.indexOf(year)
+		
+		// 设置可用月份为1-12月
+		data.availableMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+		const monthIndex = month - 1 // 1月对应索引0
+		
+		data.pickerValue = [yearIndex, monthIndex]
+		data.tempYear = year
+		data.tempMonth = month
+	} else {
+		// 如果未选择（显示全部），定位到"全部"
+		data.availableMonths = ['全部'] // 左边选全部，右边只能选全部
+		data.pickerValue = [0, 0]
+		data.tempYear = '全部'
+		data.tempMonth = '全部'
+	}
+}
+
+// 关闭月份选择器
+const closeMonthPicker = () => {
+	data.showCustomPicker = false
+	uni.showTabBar() // 显示tabbar
+}
+
+// picker-view值改变
+const onPickerChange = (e) => {
+	const val = e.detail.value
+	const yearIndex = val[0]
+	const monthIndex = val[1]
+	
+	data.tempYear = data.years[yearIndex]
+	
+	// 如果左边选择"全部"
+	if (data.tempYear === '全部') {
+		// 右边只能显示"全部"
+		data.availableMonths = ['全部']
+		data.pickerValue = [yearIndex, 0] // 强制右边选中"全部"
+		data.tempMonth = '全部'
+	} else {
+		// 左边选择具体年份，右边显示1-12月
+		data.availableMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+		// 如果之前右边是"全部"，切换到1月
+		if (monthIndex >= data.availableMonths.length) {
+			data.pickerValue = [yearIndex, 0]
+			data.tempMonth = 1
+		} else {
+			data.pickerValue = [yearIndex, monthIndex]
+			const monthItem = data.availableMonths[monthIndex]
+			data.tempMonth = parseInt(monthItem)
+		}
+	}
+}
+
+// 确认选择
+const confirmMonthPicker = async () => {
+	const year = data.tempYear
+	const month = data.tempMonth
+	
+	// 如果选择"全部"
+	if (year === '全部' || month === '全部') {
+		data.selectedMonth = null
+		data.currentMonth = ''
+	} else {
+		const monthStr = month.toString().padStart(2, '0')
+		data.selectedMonth = `${year}年${monthStr}月`
+		data.currentMonth = `${year}-${monthStr}`
+	}
+	
+	data.showCustomPicker = false
+	uni.showTabBar() // 显示tabbar
+	
+	// 检查登录状态
+	if (!checkLogin()) {
+		data.allBills = []
+		data.filteredBills = []
+		data.groupedBills = []
+		data.totalIncome = 0
+		data.totalExpense = 0
+		data.balance = 0
+		return
+	}
+	
+	uni.showLoading({ title: '加载中...' })
+	
+	try {
+		data.allBills = await billStorage.getFromAPI()
+		applyFilters()
+	} catch (error) {
+		console.error('加载数据失败:', error)
+		uni.showToast({
+			title: '加载失败',
+			icon: 'none'
+		})
+	} finally {
+		uni.hideLoading()
+	}
 }
 
 const applyFilters = () => {
@@ -1097,5 +1260,96 @@ onPullDownRefresh(async () => {
 	.empty-tip {
 		font-size: $font-size-sm;
 		color: $text-tertiary;
+	}
+	
+	/* 自定义月份选择器弹窗 */
+	.custom-picker-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 9999;
+		display: flex;
+		align-items: flex-end;
+	}
+	
+	.picker-content {
+		width: 100%;
+		background: $bg-white;
+		border-radius: $radius-2xl $radius-2xl 0 0;
+		animation: slideUp 0.3s ease;
+	}
+	
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+	
+	.picker-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: $spacing-xl $spacing-xl;
+		border-bottom: 1rpx solid #F0F0F0;
+	}
+	
+	.picker-cancel {
+		font-size: $font-size-base;
+		color: $text-secondary;
+	}
+	
+	.picker-title {
+		font-size: $font-size-lg;
+		font-weight: $font-weight-bold;
+		color: $text-primary;
+	}
+	
+	.picker-confirm {
+		font-size: $font-size-base;
+		color: #52C41A;
+		font-weight: $font-weight-medium;
+	}
+	
+	.picker-view {
+		height: 400rpx;
+		position: relative;
+	}
+	
+	/* picker-view选中指示器 */
+	.picker-view::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		height: 50px;
+		border-top: 1rpx solid #E8E8E8;
+		border-bottom: 1rpx solid #E8E8E8;
+		pointer-events: none;
+		z-index: 1;
+	}
+	
+	.picker-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: $font-size-xl;
+		color: $text-secondary;
+		height: 50px;
+		transition: color 0.3s ease;
+	}
+	
+	/* 选中项文字颜色为绿色 */
+	.picker-item-selected {
+		color: #52C41A !important;
+		font-weight: $font-weight-bold;
+		font-size: 36rpx;
 	}
 </style>
