@@ -219,7 +219,20 @@ const rules = {
     { required: true, message: '请输入版本号', trigger: 'blur' },
     { pattern: /^\d+\.\d+\.\d+$/, message: '版本号格式不正确', trigger: 'blur' }
   ],
-  updateContent: [{ required: true, message: '请输入更新内容', trigger: 'blur' }],
+  updateContent: [
+    { 
+      required: true, 
+      validator: (rule, value, callback) => {
+        const content = updateContentText.value.trim()
+        if (!content) {
+          callback(new Error('请输入更新内容'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur' 
+    }
+  ],
   packageSize: [
     { 
       required: true, 
