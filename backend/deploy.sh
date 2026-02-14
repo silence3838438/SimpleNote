@@ -3,6 +3,12 @@
 # 后端自动部署脚本
 # 用法: ./deploy.sh [文件路径]
 # 示例: ./deploy.sh routes/bills.js
+#
+# 重要注意事项:
+# 1. 数据库迁移会自动执行 migrate-db.js，包含所有表结构变更
+# 2. 如果新增了数据库表，需要同时更新 db.js 的 initTables() 和 migrate-db.js
+# 3. 生产环境使用 .env 文件，本地开发使用 .env.local
+# 4. 部署会自动重启 PM2 服务并运行测试
 
 SERVER="root@8.218.209.109"
 PASSWORD="520silenceW"

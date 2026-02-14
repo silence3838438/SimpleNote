@@ -37,6 +37,20 @@ const migrations = [
       // 如果app_openid字段不存在，则需要执行迁移
       return result.length === 0 || result[0].count === 0;
     }
+  },
+  {
+    name: '创建android_qrcode表',
+    sql: `CREATE TABLE android_qrcode (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      qrcode_url VARCHAR(500) NOT NULL COMMENT '二维码URL',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='安卓二维码表'`,
+    checkSql: "SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'android_qrcode'",
+    shouldRun: (result) => {
+      // 如果表不存在，则需要执行迁移
+      return result.length === 0 || result[0].count === 0;
+    }
   }
 ];
 
