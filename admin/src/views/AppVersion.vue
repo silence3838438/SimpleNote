@@ -166,6 +166,31 @@
             </template>
           </el-upload>
         </el-form-item>
+
+        <el-form-item label="安卓二维码" v-if="form.platform === 'Android'">
+          <el-upload
+            class="upload-demo"
+            :action="qrcodeUploadUrl"
+            :headers="uploadHeaders"
+            :on-success="handleQrcodeUploadSuccess"
+            :on-error="handleQrcodeUploadError"
+            :before-upload="beforeQrcodeUpload"
+            accept=".jpg,.jpeg,.png"
+            :limit="1"
+            :show-file-list="false"
+          >
+            <el-button type="success" size="small">上传二维码图片</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                上传安卓应用下载二维码（非必填），支持JPG/PNG，不超过5MB
+              </div>
+            </template>
+          </el-upload>
+          <div v-if="androidQrcodeUrl" class="qrcode-preview">
+            <img :src="androidQrcodeUrl" alt="安卓二维码" />
+            <p>当前二维码（官网显示）</p>
+          </div>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -192,6 +217,7 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
+const androidQrcodeUrl = ref('')
 
 const form = reactive({
   id: null,
@@ -269,6 +295,10 @@ const uploadUrl = computed(() => {
   return 'https://api.qiannaqule.top/api/admin/upload-apk'
 })
 
+const qrcodeUploadUrl = computed(() => {
+  return 'https://api.qiannaqule.top/api/admin/upload-android-qrcode'
+})
+
 const uploadHeaders = computed(() => {
   return {
     'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
@@ -285,6 +315,19 @@ const loadVersions = async () => {
     }
   } catch (error) {
     ElMessage.error('加载版本列表失败')
+  }
+}
+
+// 加载安卓二维码
+const loadAndroidQrcode = async () => {
+  try {
+    const res = await request.get('/admin/android-qrcode')
+    if (res.success && res.data.qrcodeUrl) {
+      androidQrcodeUrl.value = res.data.qrcodeUrl
+    }
+  } catch (error) {
+    // 静默处理错误，表不存在时不显示错误
+    console.log('安卓二维码功能暂未启用')
   }
 }
 
@@ -451,8 +494,40 @@ const handleUploadError = () => {
   ElMessage.error('上传失败，请重试')
 }
 
+// 上传二维码前检查
+const beforeQrcodeUpload = (file) => {
+  const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)
+  const isLt5M = file.size / 1024 / 1024 < 5
+
+  if (!isImage) {
+    ElMessage.error('只能上传JPG或PNG图片!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB!')
+    return false
+  }
+  return true
+}
+
+// 二维码上传成功
+const handleQrcodeUploadSuccess = (response) => {
+  if (response.success) {
+    androidQrcodeUrl.value = response.url
+    ElMessage.success('二维码上传成功')
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+// 二维码上传失败
+const handleQrcodeUploadError = () => {
+  ElMessage.error('二维码上传失败，请重试')
+}
+
 onMounted(() => {
   loadVersions()
+  loadAndroidQrcode()
 })
 </script>
 
@@ -512,5 +587,23 @@ onMounted(() => {
 
 .market-config-card :deep(.el-card__body) {
   padding-top: 0;
+}
+
+.qrcode-preview {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.qrcode-preview img {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  border: 1px solid #dcdfe6;
+}
+
+.qrcode-preview p {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
 }
 </style>

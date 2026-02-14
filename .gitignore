@@ -3,6 +3,11 @@ unpackage/
 node_modules/
 .DS_Store
 
+# 构建产物
+admin/dist/
+admin/dist-cdn/
+admin/dist-simple/
+
 # 云函数
 cloudfunctions/**/node_modules/
 cloudfunctions/**/.env

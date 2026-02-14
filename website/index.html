@@ -278,7 +278,7 @@
             }
             
             .download-container {
-                gap: 30px;
+                gap: 15px;
                 flex-direction: row;
                 flex-wrap: nowrap;
                 justify-content: center;
@@ -352,7 +352,7 @@
             }
             
             .download-container {
-                gap: 18px;
+                gap: 12px;
             }
             
             .download-item {
@@ -365,11 +365,11 @@
             }
             
             .download-text {
-                font-size: 9px;
+                font-size: 8px;
             }
             
             .download-subtext {
-                font-size: 8px;
+                font-size: 7px;
             }
         }
     </style>
@@ -456,7 +456,7 @@
                 <!-- 安卓应用 -->
                 <div class="download-item">
                     <div class="qr-code">
-                        <img src="androidCode.jpg" alt="安卓应用下载二维码" style="width: 100%; height: 100%; border-radius: 10px;">
+                        <img id="androidQrcode" src="androidCode.jpg" alt="安卓应用下载二维码" style="width: 100%; height: 100%; border-radius: 10px;">
                     </div>
                     <p class="download-text">扫码下载安卓应用</p>
                     <p class="download-text download-subtext">支持 Android 5.0+</p>
@@ -483,5 +483,22 @@
             </div>
         </footer>
     </div>
+    
+    <script>
+        // 加载安卓二维码
+        fetch('https://api.qiannaqule.top/api/admin/android-qrcode')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data.qrcodeUrl) {
+                    const androidQrcode = document.getElementById('androidQrcode');
+                    if (androidQrcode) {
+                        androidQrcode.src = data.data.qrcodeUrl;
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('使用默认二维码');
+            });
+    </script>
 </body>
 </html>

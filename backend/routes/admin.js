@@ -1256,4 +1256,131 @@ router.post('/upload-apk', async (req, res) => {
   }
 });
 
+// ========== 安卓二维码管理 ==========
+
+// 上传安卓二维码
+router.post('/upload-android-qrcode', async (req, res) => {
+  try {
+    const multer = require('multer');
+    const path = require('path');
+    const fs = require('fs');
+    
+    // 确保上传目录存在
+    const uploadDir = path.join(__dirname, '../uploads/qrcode');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    // 配置multer
+    const storage = multer.diskStorage({
+      destination: function (req, file, cb) {
+        cb(null, uploadDir);
+      },
+      filename: function (req, file, cb) {
+        const timestamp = Date.now();
+        const ext = path.extname(file.originalname);
+        cb(null, `android-qrcode-${timestamp}${ext}`);
+      }
+    });
+    
+    const upload = multer({
+      storage: storage,
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+      fileFilter: function (req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+          cb(null, true);
+        } else {
+          cb(new Error('只能上传JPG或PNG图片'));
+        }
+      }
+    }).single('file');
+    
+    upload(req, res, async function (err) {
+      if (err) {
+        return res.json({
+          success: false,
+          message: err.message || '上传失败'
+        });
+      }
+      
+      if (!req.file) {
+        return res.json({
+          success: false,
+          message: '没有文件上传'
+        });
+      }
+      
+      const qrcodeUrl = `https://api.qiannaqule.top/uploads/qrcode/${req.file.filename}`;
+      
+      // 保存到数据库
+      try {
+        // 先检查是否已有记录
+        const existing = await db.query('SELECT id FROM android_qrcode LIMIT 1');
+        
+        if (existing.length > 0) {
+          // 更新现有记录
+          await db.query(
+            'UPDATE android_qrcode SET qrcode_url = ?, updated_at = NOW() WHERE id = ?',
+            [qrcodeUrl, existing[0].id]
+          );
+        } else {
+          // 插入新记录
+          await db.query(
+            'INSERT INTO android_qrcode (qrcode_url, created_at, updated_at) VALUES (?, NOW(), NOW())',
+            [qrcodeUrl]
+          );
+        }
+        
+        res.json({
+          success: true,
+          url: qrcodeUrl,
+          message: '上传成功'
+        });
+      } catch (dbError) {
+        console.error('保存二维码URL失败:', dbError);
+        res.json({
+          success: false,
+          message: '保存失败'
+        });
+      }
+    });
+  } catch (error) {
+    console.error('上传安卓二维码失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '上传失败'
+    });
+  }
+});
+
+// 获取安卓二维码
+router.get('/android-qrcode', async (req, res) => {
+  try {
+    const result = await db.query('SELECT qrcode_url as qrcodeUrl FROM android_qrcode ORDER BY updated_at DESC LIMIT 1');
+    
+    if (result.length > 0) {
+      res.json({
+        success: true,
+        data: {
+          qrcodeUrl: result[0].qrcodeUrl
+        }
+      });
+    } else {
+      res.json({
+        success: true,
+        data: {
+          qrcodeUrl: null
+        }
+      });
+    }
+  } catch (error) {
+    console.error('获取安卓二维码失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '获取失败'
+    });
+  }
+});
+
 module.exports = router;
