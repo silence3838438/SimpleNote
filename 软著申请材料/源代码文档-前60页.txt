@@ -1,9 +1,8 @@
-================================================================================
-钱哪去了智能记账系统V1.0    第 1 页
-================================================================================
+// 钱哪去了智能记账系统 V1.0 源代码文档（前60页）
+// 开发者：[你的姓名]
+// 开发完成日期：2026年2月
 
-// ========== 文件: main.js ==========
-
+// ========== main.js - 应用主入口 ==========
 import App from './App'
 
 // #ifndef VUE3
@@ -29,10 +28,7 @@ export function createApp() {
   }
 }
 // #endif
-
-
-// ========== 文件: App.vue ==========
-
+// ========== App.vue - 应用根组件 ==========
 <script setup>
 	import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 	import { updateTabBarText } from '@/utils/i18nHelper'
@@ -51,10 +47,6 @@ export function createApp() {
 			{ id: 10, name: '学习', icon: '📚', keywords: ['书籍', '课程', '培训'] },
 			{ id: 11, name: '社交', icon: '👥', keywords: ['聚餐', '礼物', '红包'] },
 			{ id: 12, name: '其他', icon: '📦', keywords: [] }
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 2 页
-================================================================================
 		]
 		uni.setStorageSync('categories', categories)
 	}
@@ -105,10 +97,6 @@ export function createApp() {
 			if (!reminderTime) {
 				console.log('❌ 未设置提醒时间')
 				return
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 3 页
-================================================================================
 			}
 			
 			// 3. 检查今天是否已经提醒过（每天只提醒一次）
@@ -159,10 +147,6 @@ export function createApp() {
 			
 			// 如果距离上次显示不到30秒，不弹窗（避免频繁切换应用时重复弹窗）
 			if (timeSinceLastShow < 30000) {
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 4 页
-================================================================================
 				console.log('❌ 应用刚显示不久，避免频繁弹窗')
 				return
 			}
@@ -195,117 +179,8 @@ export function createApp() {
 		console.log('App Launch')
 		// 初始化云开发环境
 		// #ifdef MP-WEIXIN
-		if (!wx.cloud) {
-			console.error('请使用 2.2.3 或以上的基础库以使用云能力')
-		} else {
-			wx.cloud.init({
-				env: 'cloud1-8gxevfq393690dfe',
-				traceUser: true
-			})
-		}
-		// #endif
-		
-		// 初始化分类数据
-		initCategories()
-		
-		// 更新 tabBar 文字（支持国际化）- 延迟执行确保 tabBar 已准备好
-		setTimeout(() => {
-			updateTabBarText()
-		}, 100)
-		
 
-================================================================================
-钱哪去了智能记账系统V1.0    第 5 页
-================================================================================
-		// 从云端加载提醒设置（等待加载完成）
-		await loadReminderSettingsFromCloud()
-	})
-	
-	onShow(() => {
-		console.log('App Show')
-		// 延迟检查，确保云端数据已加载
-		setTimeout(() => {
-			checkReminderAndNotify()
-		}, 500)
-	})
-	
-	onHide(() => {
-		console.log('App Hide')
-	})
-</script>
-
-<style lang="scss">
-@import "@/styles/variables.scss";
-
-page {
-	background-color: $bg-page;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-
-/* 隐藏导航栏下边框 */
-page::before {
-	display: none !important;
-}
-
-/* 隐藏TabBar上边框 */
-uni-tabbar .uni-tabbar-border {
-	display: none !important;
-	height: 0 !important;
-	background-color: transparent !important;
-}
-
-/* 通用样式类 */
-.flex {
-	display: flex;
-}
-
-.flex-center {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.flex-between {
-	display: flex;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 6 页
-================================================================================
-	align-items: center;
-	justify-content: space-between;
-}
-
-.flex-column {
-	display: flex;
-	flex-direction: column;
-}
-
-.text-center {
-	text-align: center;
-}
-
-.text-right {
-	text-align: right;
-}
-
-.ellipsis {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.ellipsis-2 {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-}
-</style>
-
-
-// ========== 文件: pages/tab/index/index.vue ==========
-
+// ========== pages/tab/index/index.vue - 首页 ==========
 <template>
 	<view class="page">
 		<!-- #ifdef MP-WEIXIN -->
@@ -321,10 +196,6 @@ uni-tabbar .uni-tabbar-border {
 				<view class="navbar-right">
 					<view class="lantern">🏮</view>
 				</view>
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 7 页
-================================================================================
 			</view>
 		</view>
 		<!-- #endif -->
@@ -375,10 +246,6 @@ uni-tabbar .uni-tabbar-border {
 			<view 
 				class="red-packet" 
 				:class="{ 'red-packet-big': packet.isBig }"
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 8 页
-================================================================================
 				v-for="(packet, index) in data.redPackets" 
 				:key="index"
 				:style="{ left: packet.left + '%', animationDelay: packet.delay + 's', animationDuration: packet.duration + 's' }"
@@ -429,10 +296,6 @@ uni-tabbar .uni-tabbar-border {
 					<view class="guide-btn" @click="closeGuide">我知道了</view>
 				</view>
 			</view>
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 9 页
-================================================================================
 		</view>
 		
 		<!-- 红包雨结算弹窗 -->
@@ -483,10 +346,6 @@ uni-tabbar .uni-tabbar-border {
 		<!-- #endif -->
 		
 		<!-- #ifdef MP-WEIXIN -->
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 10 页
-================================================================================
 		<view class="container" :style="{ paddingTop: data.isFestivalActive ? (statusBarHeight + 44 + 140) + 'px' : (statusBarHeight + 44) + 'px' }">
 		<!-- #endif -->
 		<!-- #ifdef APP-PLUS -->
@@ -494,2747 +353,1001 @@ uni-tabbar .uni-tabbar-border {
 		<!-- #endif -->
 			<!-- 顶部月份选择器 -->
 			<view class="header">
-				<picker mode="date" fields="month" :value="data.currentMonth" @change="onMonthChange">
-					<view class="month-picker">
-						{{ data.currentMonthText }} <text class="arrow">▼</text>
-					</view>
-				</picker>
-			</view>
-			
-			<!-- 收支结余卡片（美团风格优化） -->
-		<view class="finance-summary-card">
-			<!-- 收支数据 -->
-			<view class="finance-data">
-				<view class="finance-item income-item">
-					<view class="finance-label-row">
-						<view class="finance-label">本月收入</view>
-						<image class="eye-icon-img" :src="data.hideIncome ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
-					</view>
-					<view class="finance-amount income-color" v-if="!data.hideIncome">¥{{ formatAmount(data.totalIncome) }}</view>
-					<view class="finance-amount income-color" v-else>****</view>
-				</view>
-				<view class="finance-divider"></view>
-				<view class="finance-item expense-item">
-					<view class="finance-label-row">
-						<view class="finance-label">本月支出</view>
-						<image class="eye-icon-img" :src="data.hideExpense ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
-					</view>
-					<view class="finance-amount expense-color" v-if="!data.hideExpense">-¥{{ formatAmount(data.totalExpense) }}</view>
-					<view class="finance-amount expense-color" v-else>****</view>
+				<view class="month-picker" @click="showMonthPicker">
+					{{ data.currentMonthText }} <text class="arrow">▼</text>
 				</view>
 			</view>
 			
-			<!-- 结余信息 -->
-			<view class="balance-section" :class="{ 'positive': data.balance >= 0, 'negative': data.balance < 0 }">
-				<view class="balance-label-row">
-					<text class="balance-label">本月结余</text>
-					<image class="eye-icon-img balance-eye-icon" :src="data.hideBalance ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
-				</view>
-				<view class="balance-amount" v-if="!data.hideBalance">{{ data.balance >= 0 ? '+' : '-' }}¥{{ formatAmount(Math.abs(data.balance)) }}</view>
-				<view class="balance-amount" v-else>****</view>
-				<view class="balance-tip">{{ data.balance >= 0 ? '收入大于支出，继续保持！' : '支出大于收入，注意控制！' }}</view>
+			<!-- 自定义月份选择器弹窗 -->
+			<view class="custom-picker-modal" v-if="data.showCustomPicker" @click="closeMonthPicker">
+				<view class="picker-content" @click.stop>
+					<view class="picker-header">
+						<text class="picker-cancel" @click="closeMonthPicker">取消</text>
+						<text class="picker-title">选择月份</text>
+						<text class="picker-confirm" @click="confirmMonthPicker">完成</text>
+					</view>
+					<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange" indicator-style="height: 50px">
+						<picker-view-column>
+							<view 
+								class="picker-item" 
+								:class="{ 'picker-item-selected': index === data.pickerValue[0] }"
+								v-for="(year, index) in data.years" 
+								:key="year"
+							>
+								{{ year }}年
+							</view>
+						</picker-view-column>
+						<picker-view-column>
+							<view 
+								class="picker-item" 
+								:class="{ 'picker-item-selected': index === data.pickerValue[1] }"
+
+// ========== pages/record/voice/voice.vue - 语音记账 ==========
+<template>
+	<view class="container">
+		<!-- 顶部标题区域 -->
+		<view class="header-section">
+			<view class="header-icon-wrapper">
+				<text class="header-icon">🎙️</text>
 			</view>
+			<view class="header-title">语音记账</view>
+			<view class="header-subtitle">说出你的消费，自动帮你记下来</view>
 		</view>
-
-		<!-- 记账按钮（紧凑版） -->
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 11 页
-================================================================================
-		<view class="action-buttons-compact">
-			<view class="action-btn-compact photo-btn-compact" @click="goToPhoto">
-				<text class="btn-icon-compact">📸</text>
-				<text class="btn-text-compact">拍照记账</text>
-			</view>
-			<view class="action-btn-compact voice-btn-compact" @click="goToVoice">
-				<text class="btn-icon-compact">🎤</text>
-				<text class="btn-text-compact">语音记账</text>
-			</view>
-		</view>
-
-		<!-- 预算进度（简化版） -->
-		<view class="budget-card-compact" :class="getBudgetCardClass()" @click="toggleBudgetDetail">
-			<view class="budget-header-compact">
-				<view class="budget-title-wrapper">
-					<text class="budget-title-compact">预算使用率</text>
-					<view class="budget-warning-compact" v-if="data.budgetPercent >= 80">
-						<text class="warning-icon-compact">{{ data.budgetPercent >= 100 ? '⚠️' : '⚡' }}</text>
-						<text class="warning-text-compact">{{ getBudgetWarningText() }}</text>
+		
+		<!-- 语音录制区域 -->
+		<view class="voice-card">
+			<view class="voice-area">
+				<view 
+					class="record-btn" 
+					:class="{ 'recording': data.isRecording }"
+					@touchstart="startRecord"
+					@touchend="stopRecord"
+					@touchcancel="cancelRecord"
+				>
+					<view class="record-icon-wrapper">
+						<text class="record-icon">🎤</text>
 					</view>
+					<view class="record-wave" v-if="data.isRecording">
+						<view class="wave wave-1"></view>
+						<view class="wave wave-2"></view>
+						<view class="wave wave-3"></view>
+					</view>
+					<view class="record-glow" v-if="data.isRecording"></view>
 				</view>
-				<text class="budget-percent-compact" :class="getBudgetPercentClass()">{{ data.budgetPercent }}%</text>
-			</view>
-			<view class="budget-bar-compact">
-				<view class="budget-progress-compact" :class="getBudgetProgressClass()" :style="{ width: Math.min(data.budgetPercent, 100) + '%' }"></view>
-			</view>
-			
-			<!-- 详细信息（可展开） -->
-			<view class="budget-detail" v-if="data.showBudgetDetail">
-				<view class="budget-footer-compact">
-					<view class="budget-info-compact">
-						<text class="budget-label-compact">本月预算</text>
-						<text class="budget-amount-compact">¥{{ data.budget.toFixed(0) }}</text>
-					</view>
-					<view class="budget-info-compact">
-						<text class="budget-label-compact">已使用</text>
-						<text class="budget-used-compact" :class="{ 'over-budget': data.budgetPercent >= 100 }">¥{{ data.totalExpense.toFixed(0) }}</text>
-					</view>
-					<view class="budget-info-compact">
-						<text class="budget-label-compact">剩余</text>
-						<text class="budget-remaining-compact" :class="{ 'negative': data.budgetPercent >= 100 }">¥{{ (data.budget - data.totalExpense).toFixed(0) }}</text>
-					</view>
+				
+				<view class="record-status">
+					<text v-if="!data.isRecording" class="status-normal">
+						<text class="status-icon">👆</text>
+						长按开始录音
+					</text>
+					<text v-else class="status-recording">
+						<text class="recording-dot"></text>
+						{{ data.recordTime }}s 正在录音...
+					</text>
 				</view>
-				<text class="budget-edit-compact" @click.stop="openBudgetModal">点击修改预算</text>
-			</view>
-			
-			<!-- 展开/收起提示 -->
-			<view class="budget-toggle-hint">
-				<text class="toggle-text">{{ data.showBudgetDetail ? '收起' : '展开详情' }}</text>
-				<text class="toggle-arrow" :class="{ 'arrow-up': data.showBudgetDetail }">▼</text>
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 12 页
-================================================================================
+				
+				<view class="record-tip">
+					<text class="tip-icon">⏱️</text>
+					最长支持 60 秒录音
+				</view>
 			</view>
 		</view>
 		
-		<!-- 预算设置弹窗 -->
-		<view class="budget-modal" v-if="data.showBudgetModal" @click="closeBudgetModal">
-			<view class="modal-content" @click.stop>
-				<view class="modal-header">
-					<text class="modal-title">设置月预算</text>
-					<text class="modal-close" @click="closeBudgetModal">✕</text>
+		<!-- 分隔线 -->
+		<view class="divider">
+			<view class="divider-line"></view>
+			<view class="divider-text-wrapper">
+				<text class="divider-text">或</text>
+			</view>
+			<view class="divider-line"></view>
+		</view>
+		
+		<!-- 文字输入区域 -->
+		<view class="input-card">
+			<view class="input-header">
+				<view class="input-title-wrapper">
+					<text class="input-icon">✍️</text>
+					<text class="input-title">文字输入</text>
 				</view>
-				<view class="modal-body">
-					<view class="input-group">
-						<text class="input-label">预算金额</text>
-						<view class="input-wrapper">
-							<text class="input-prefix">¥</text>
-							<input 
-								class="budget-input" 
-								type="digit" 
-								v-model="data.tempBudget" 
-								placeholder="请输入预算金额"
-								:focus="data.showBudgetModal"
-							/>
-						</view>
-					</view>
-					<view class="quick-amounts">
-						<view 
-							class="amount-btn" 
-							v-for="amount in data.quickAmounts" 
-							:key="amount"
-							@click="data.tempBudget = amount"
-						>
-							{{ amount }}
-						</view>
-					</view>
+				<text class="input-subtitle">直接输入消费信息</text>
+			</view>
+			<view class="input-wrapper">
+				<input 
+					class="text-input" 
+					v-model="data.inputText"
+					placeholder="例如：今天滴滴打车花了24元"
+					placeholder-class="input-placeholder"
+					@confirm="parseText"
+				/>
+			</view>
+			<button class="parse-btn" @click="parseText" :disabled="!data.inputText">
+				<text class="btn-icon" v-if="!data.parsing">✨</text>
+				<text v-if="!data.parsing">立即解析</text>
+				<text v-else>智能识别中...</text>
+			</button>
+		</view>
+		
+		<!-- 示例区域 -->
+		<view class="examples-card">
+			<view class="examples-header">
+				<text class="examples-icon">💡</text>
+				<view class="examples-title-wrapper">
+					<text class="examples-title">试试这些示例</text>
+					<text class="examples-subtitle">点击快速填入</text>
 				</view>
-				<view class="modal-footer">
-					<view class="modal-btn cancel-btn" @click="closeBudgetModal">取消</view>
-					<view class="modal-btn confirm-btn" @click="confirmBudget">确定</view>
+			</view>
+			<view class="examples-list">
+				<view 
+					class="example-item" 
+					v-for="(example, index) in data.examples" 
+					:key="index" 
+					@click="useExample(example)"
+				>
+					<view class="example-content">
+						<text class="example-number">{{ index + 1 }}</text>
+						<text class="example-text">{{ example }}</text>
+					</view>
+					<text class="example-arrow">→</text>
 				</view>
 			</view>
 		</view>
-
-		<!-- 近期账单 -->
-		<view class="bills-card">
-			<view class="card-title">近期账单</view>
-			<view class="bills-list">
-				<view class="bill-item" v-for="(bill, index) in data.recentBills" :key="bill._id || index" @click="goToBillDetail(bill)">
-					<view class="bill-left">
-						<text class="bill-icon">{{ bill.categoryIcon }}</text>
-						<view class="bill-info">
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 13 页
-================================================================================
-							<text class="bill-merchant">{{ bill.merchant }}</text>
-							<view class="bill-category">
-								<text class="bill-category-dot"></text>
-								<text>{{ bill.categoryName }}</text>
-							</view>
-						</view>
-					</view>
-					<view class="bill-right">
-						<text class="bill-amount" :class="bill.type === 'income' ? 'income' : 'expense'">
-							{{ bill.type === 'expense' ? '-' : '+' }}¥{{ bill.amount.toFixed(2) }}
-						</text>
-						<text class="bill-date">{{ bill.dateText }}</text>
-					</view>
-				</view>
+		
+		<!-- 加载遮罩 -->
+		<view class="loading-mask" v-if="data.parsing">
+			<view class="loading-content">
+				<view class="loading-spinner"></view>
+				<text class="loading-text">智能识别中...</text>
 			</view>
-			<view class="empty-tip" v-if="data.recentBills.length === 0">
-				暂无账单记录，快去记账吧~
-			</view>
-			<view class="view-all" v-if="data.recentBills.length > 0" @click="goToBills">查看全部账单</view>
 		</view>
 	</view>
-	
-	<!-- 悬浮记账按钮 -->
-	<view 
-		class="float-add-btn" 
-		:style="{ left: data.floatBtnX + 'px', top: data.floatBtnY + 'px', right: 'auto', bottom: 'auto' }"
-		@touchstart="onFloatBtnTouchStart"
-		@touchmove="onFloatBtnTouchMove"
-		@touchend="onFloatBtnTouchEnd"
-	>
-		<text class="add-icon">+</text>
-	</view>
-	
-	<!-- 提醒弹框 -->
-	<ReminderModal 
-		ref="reminderModalRef" 
-		@confirm="handleReminderConfirm" 
-		@cancel="handleReminderCancel" 
-	/>
-	
-	<!-- 版本更新弹窗 -->
-	<!-- #ifdef APP-PLUS -->
-	<UpdateModal 
-		:visible="data.showUpdateModal"
-		:newVersion="data.updateInfo.newVersion"
-		:currentVersion="data.updateInfo.currentVersion"
-		:updateContent="data.updateInfo.updateContent"
-		:packageSize="data.updateInfo.packageSize"
-		:updateTime="data.updateInfo.updateTime"
-		:downloadUrl="data.updateInfo.downloadUrl"
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 14 页
-================================================================================
-		:isForce="data.updateInfo.isForce"
-		:updateType="data.updateInfo.updateType"
-		:markets="data.updateInfo.markets"
-		@cancel="closeUpdateModal"
-		@confirm="handleUpdateConfirm"
-		@downloadComplete="handleDownloadComplete"
-	/>
-	<!-- #endif -->
-</view>
 </template>
 
 <script setup>
-import { reactive, nextTick, ref } from 'vue'
-import { onLoad, onShow, onHide, onUnload, onPullDownRefresh } from '@dcloudio/uni-app'
-import billStorage from '@/utils/billStorage.js'
-import { checkUpdate } from '@/utils/appUpdate.js'
-import UpdateModal from '@/components/UpdateModal.vue'
-import { checkLevelUp } from '@/utils/memberLevel.js'
-import { rewardRecord, checkRecordAchievements, checkContinuousAchievements, rewardSetBudget } from '@/utils/pointsRules.js'
-import { addPointsHybrid } from '@/utils/pointsSync.js'
+import { reactive } from 'vue'
+import { onLoad, onUnload, onShow } from '@dcloudio/uni-app'
 import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
-import ReminderModal from '@/components/ReminderModal.vue'
 import request from '@/utils/request.js'
-
-// 获取状态栏高度
-const systemInfo = uni.getWindowInfo()
-const statusBarHeight = systemInfo.statusBarHeight || 0
-
-// 提醒弹框引用
-const reminderModalRef = ref(null)
+import cloudbaseAI from '@/utils/cloudbaseAI.js'
 
 const data = reactive({
-	currentMonth: '',
-	currentMonthText: '',
-	totalExpense: 0,
-	totalIncome: 0,
-	balance: 0,
-	changeRate: 0,
-	budget: 6000,
-	budgetPercent: 0,
-	recentBills: [],
-	categories: [],
-	showBudgetModal: false,
-	tempBudget: '',
-	quickAmounts: [3000, 5000, 8000, 10000, 15000, 20000],
-	allBills: [], // 缓存所有账单数据
-	preventClick: false, // 防止事件穿透的标记
-	showBudgetDetail: false, // 显示预算详情
-	hideAmount: false, // 隐藏金额
-	hideIncome: false, // 隐藏收入
+	isRecording: false,
+	recordTime: 0,
+	inputText: '',
+	recognizedText: '',
+	parsing: false,
+	recorderManager: null,
+	recordTimer: null,
+	permissionGranted: false, // 记录权限是否已授权
+	recorderStarted: false, // 录音器是否已真正启动
+	examples: [
+		'"午餐35元"',
+		'"网购衣服268元"',
+		'"收到工资8000元"',
+		'"滴滴打车24元"'
+	]
+})
 
-================================================================================
-钱哪去了智能记账系统V1.0    第 15 页
-================================================================================
-	hideExpense: false, // 隐藏支出
-	hideBalance: false, // 隐藏结余
-	// #ifdef MP-WEIXIN
-	isFestivalActive: true, // 春节活动是否进行中（仅小程序）
-	// #endif
-	// #ifdef APP-PLUS
-	isFestivalActive: false, // APP不显示春节活动
-	// #endif
-	// 春节元素
-	showRedPackets: false, // 显示红包雨（只在红包雨时段显示）
-	showFireworks: false, // 显示烟花
-	redPackets: [], // 红包数组
-	// 红包雨系统
-	isRedPacketTime: false, // 是否是红包雨时间
-	redPacketEndTime: 0, // 红包雨结束时间
-	nextRedPacketTime: 0, // 下次红包雨时间
-	currentSessionPoints: 0, // 本场红包雨获得的积分
-	currentSessionBlessings: [], // 本场红包雨获得的祝福语
-	redPacketTimer: null, // 倒计时定时器
-	remainingTime: '', // 剩余时间文字
-	showResultModal: false, // 显示结算弹窗
-	bgMusicContext: null, // 背景音乐上下文
-	isPageVisible: true, // 页面是否可见
-	// 下拉抢红包（废弃）
-	startY: 0,
-	pullDistance: 0,
-	isGrabbingRedPacket: false,
-	grabResult: '',
-	lastGrabTime: 0,
-	grabAttemptCount: 0,
-	isGrabbingMode: false,
-	showOpenAnimation: false, // 显示开红包动画
-	canGrabToday: true,
-	morningGrabCount: 0,
-	afternoonGrabCount: 0,
-	showGuide: false, // 显示新手引导
-	floatBtnX: 550, // 悬浮按钮X坐标（初始值，会在onLoad中根据屏幕尺寸调整）
-	floatBtnY: 800, // 悬浮按钮Y坐标（初始值，会在onLoad中根据屏幕尺寸调整）
-	// 版本更新
-	showUpdateModal: false,
-	updateInfo: {
-		newVersion: '',
-		currentVersion: '',
-		updateContent: [],
-		packageSize: '',
-		updateTime: '',
-		downloadUrl: '',
-		isForce: false,
-		updateType: 'server',
-		markets: {}
+onLoad(() => {
+	// 检查登录状态
+	const userInfo = uni.getStorageSync('userInfo')
+	if (!userInfo || !userInfo.isLogin) {
+		uni.showModal({
+			title: '提示',
+			content: '请先登录后再使用语音记账功能',
+			confirmText: '去登录',
+			cancelText: '返回',
+			success: (res) => {
+				if (res.confirm) {
+					// 小程序跳转到个人中心
+					// #ifdef MP-WEIXIN
+					uni.switchTab({ url: '/pages/tab/profile/profile' })
+					// #endif
+					
+					// APP跳转到登录页
+					// #ifdef APP-PLUS
+					uni.navigateTo({ url: '/pages/user/login' })
+					// #endif
+				} else {
+					uni.navigateBack()
+				}
+			}
+		})
+		return
+	}
+	
+	// 初始化录音管理器(小程序和APP都支持)
+	data.recorderManager = uni.getRecorderManager()
+	
+	// 监听录音开始
+	data.recorderManager.onStart(() => {
+		const startTime = new Date().toLocaleTimeString()
+		console.log('✅ [录音器回调] onStart 触发，时间:', startTime)
+		console.log('✅ [录音器回调] 录音器已真正启动，现在可以说话了！')
+		
+		// 录音器启动后，标记为已启动
+		data.recorderStarted = true
+		
+		// 强烈提示用户：现在可以开始说话了
+		uni.vibrateShort()  // 震动反馈
+		
+		// 播放提示音（如果可以的话）
+		uni.showToast({
+			title: '开始说话',
+			icon: 'none',
+			duration: 500
+		})
+		
+		// 在录音真正开始时才启动计时器
+		if (data.recordTimer) {
+			clearInterval(data.recordTimer)
+		}
+		data.recordTime = 0
+		
 
-================================================================================
-钱哪去了智能记账系统V1.0    第 16 页
-================================================================================
+// ========== pages/record/photo/photo.vue - 拍照记账 ==========
+<template>
+	<view class="container">
+		<!-- 相机预览区域 -->
+		<view class="camera-container" v-if="!data.imageUrl">
+			<!-- #ifdef MP-WEIXIN -->
+			<!-- 小程序端使用camera组件 -->
+			<view class="camera-placeholder" v-if="!data.cameraReady">
+				<view class="placeholder-content">
+					<view class="placeholder-icon">📷</view>
+					<text class="placeholder-text">正在启动相机...</text>
+				</view>
+			</view>
+			
+			<camera 
+				v-if="data.cameraReady"
+				device-position="back" 
+				flash="off" 
+				class="camera" 
+				@error="onCameraError"
+			>
+				<!-- 顶部提示区域 -->
+				<view class="top-tips">
+					<view class="tip-card">
+						<text class="tip-icon">💡</text>
+						<view class="tip-content">
+							<text class="tip-title">智能识别小票</text>
+							<text class="tip-desc">长小票可拍摄关键部分（金额和商家名）</text>
+						</view>
+					</view>
+				</view>
+				
+				<!-- 中央扫描框 -->
+				<view class="scan-area">
+					<view class="scan-frame">
+						<view class="corner corner-tl"></view>
+						<view class="corner corner-tr"></view>
+						<view class="corner corner-bl"></view>
+						<view class="corner corner-br"></view>
+						<view class="scan-line"></view>
+					</view>
+				</view>
+				
+				<!-- 底部操作栏 -->
+				<view class="action-bar">
+					<view class="action-item" @click="chooseImage">
+						<view class="action-btn album-btn">
+							<image class="action-icon-img" src="/static/xiangce.png" mode="aspectFit"></image>
+						</view>
+						<text class="action-label">相册</text>
+					</view>
+					
+					<view class="action-item">
+						<view class="capture-btn" @click="takePhoto">
+							<view class="capture-outer">
+								<view class="capture-inner"></view>
+							</view>
+						</view>
+						<text class="action-label main">拍照</text>
+					</view>
+					
+					<view class="action-item action-placeholder"></view>
+				</view>
+			</camera>
+			<!-- #endif -->
+			
+			<!-- #ifdef APP-PLUS -->
+			<!-- APP端使用简化界面，直接调用系统相机 -->
+			<view class="app-camera-placeholder">
+				<view class="placeholder-content">
+					<view class="placeholder-icon">📷</view>
+					<text class="placeholder-title">拍照记账</text>
+					<text class="placeholder-desc">点击下方按钮开始拍照或选择图片</text>
+				</view>
+				
+				<!-- 底部操作栏 -->
+				<view class="action-bar">
+					<view class="action-item" @click="chooseImage">
+						<view class="action-btn album-btn">
+							<image class="action-icon-img" src="/static/xiangce.png" mode="aspectFit"></image>
+						</view>
+						<text class="action-label">相册</text>
+					</view>
+					
+					<view class="action-item">
+						<view class="capture-btn" @click="takePhoto">
+							<view class="capture-outer">
+								<view class="capture-inner"></view>
+							</view>
+						</view>
+						<text class="action-label main">拍照</text>
+					</view>
+					
+					<view class="action-item action-placeholder"></view>
+				</view>
+			</view>
+			<!-- #endif -->
+		</view>
+		
+		<!-- 图片预览区域 -->
+		<view class="preview-container" v-else>
+			<view class="preview-header">
+				<text class="preview-title">确认图片</text>
+				<text class="preview-subtitle">请确认小票清晰可见</text>
+			</view>
+			
+			<view class="preview-image-wrapper">
+				<image :src="data.imageUrl" mode="aspectFit" class="preview-image"></image>
+			</view>
+			
+			<view class="preview-actions">
+				<button class="btn-secondary" @click="retake">
+					<text class="btn-icon">🔄</text>
+					<text>重新拍摄</text>
+				</button>
+				<button class="btn-primary" @click="recognizeImage" :loading="data.recognizing">
+					<text class="btn-icon" v-if="!data.recognizing">✨</text>
+					<text>{{ data.recognizing ? '智能识别中...' : '开始识别' }}</text>
+				</button>
+			</view>
+		</view>
+		
+		<!-- 加载遮罩 -->
+		<view class="loading-mask" v-if="data.recognizing">
+			<view class="loading-card">
+				<view class="loading-spinner">
+					<view class="spinner-ring"></view>
+					<view class="spinner-ring"></view>
+					<view class="spinner-ring"></view>
+				</view>
+				<text class="loading-title">智能识别中</text>
+				<text class="loading-text">正在智能识别小票信息...</text>
+				<view class="loading-progress">
+					<view class="progress-bar"></view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup>
+import { reactive } from 'vue'
+import { onReady, onShow, onLoad } from '@dcloudio/uni-app'
+import request from '@/utils/request.js'
+import cloudbaseAI from '@/utils/cloudbaseAI.js'
+
+const data = reactive({
+	imageUrl: '',
+	recognizing: false,
+	cameraContext: null,
+	lastRecognizeTime: 0,
+	cameraReady: false // 相机是否准备好
+})
+
+// 检查登录状态
+onLoad(() => {
+	const userInfo = uni.getStorageSync('userInfo')
+	if (!userInfo || !userInfo.isLogin) {
+		uni.showModal({
+			title: '提示',
+			content: '请先登录后再使用拍照记账功能',
+			confirmText: '去登录',
+			cancelText: '返回',
+			success: (res) => {
+				if (res.confirm) {
+					// 小程序跳转到个人中心
+					// #ifdef MP-WEIXIN
+					uni.switchTab({ url: '/pages/tab/profile/profile' })
+					// #endif
+					
+					// APP跳转到登录页
+					// #ifdef APP-PLUS
+					uni.navigateTo({ url: '/pages/user/login' })
+					// #endif
+				} else {
+					uni.navigateBack()
+				}
+			}
+		})
+		return
 	}
 })
 
-const initData = () => {
-	const now = new Date()
-	const year = now.getFullYear()
-	const month = (now.getMonth() + 1).toString().padStart(2, '0')
-	data.currentMonth = `${year}-${month}`
-	data.currentMonthText = `${year}年${month}月`
-	data.categories = uni.getStorageSync('categories') || []
+onShow(() => {
+	// #ifdef MP-WEIXIN
+	// 小程序端延迟加载相机，避免阻塞页面渲染
+	setTimeout(() => {
+		data.cameraReady = true
+	}, 100)
+	// #endif
 	
-	// 读取金额隐藏状态
-	data.hideAmount = uni.getStorageSync('hideAmount') || false
-	data.hideIncome = uni.getStorageSync('hideIncome') || false
-	data.hideExpense = uni.getStorageSync('hideExpense') || false
-	data.hideBalance = uni.getStorageSync('hideBalance') || false
-}
+	// #ifdef APP-PLUS
+	// APP端直接准备好
+	data.cameraReady = true
+	// #endif
+})
 
-const loadBudget = async () => {
-	data.budget = await billStorage.getBudget()
-}
+onReady(() => {
+	// #ifdef MP-WEIXIN
+	// 延迟创建相机上下文，等相机组件渲染完成
+	setTimeout(() => {
 
-const loadData = async () => {
-	// 检查登录状态
-	if (!checkLogin()) {
-		// 未登录时显示空状态
-		data.allBills = []
-		data.recentBills = []
-		data.totalExpense = 0
-		data.totalIncome = 0
-		data.balance = 0
-		data.budgetPercent = 0
-		return
+// ========== utils/request.js - 网络请求工具 ==========
+// 统一请求封装 - 统一使用Node.js后端API
+import apiConfig from './apiConfig.js'
+import security from './security.js'
+
+// 是否启用加密（可以通过配置控制）
+const ENABLE_ENCRYPTION = false // 设置为 true 启用加密
+
+class Request {
+	/**
+	 * 调用HTTP API
+	 * @param {String} path - API路径
+	 * @param {Object} data - 请求数据
+	 */
+	async call(path, data = {}) {
+		return this.callHttpApi(path, data)
 	}
 	
-	try {
-		uni.showLoading({ title: '加载中...' })
-		const bills = await billStorage.getFromAPI() // 直接从API获取
-		data.allBills = bills
-		recalculateData()
-	} catch (error) {
-		console.error('加载数据失败:', error)
-		uni.showToast({
-			title: '加载失败',
-			icon: 'none'
-		})
-	} finally {
-		uni.hideLoading()
-	}
-}
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 17 页
-================================================================================
-
-const recalculateData = () => {
-	// 确保 allBills 存在
-	if (!data.allBills || !Array.isArray(data.allBills)) {
-		data.allBills = []
-		data.recentBills = []
-		return
-	}
-	
-	const [year, month] = data.currentMonth.split('-')
-	const yearNum = parseInt(year)
-	const monthNum = parseInt(month)
-	
-	// 一次遍历完成所有计算
-	let totalExpense = 0
-	let totalIncome = 0
-	const monthBills = []
-	
-	for (const bill of data.allBills) {
-		const billDate = new Date(bill.date)
-		if (billDate.getFullYear() === yearNum && billDate.getMonth() + 1 === monthNum) {
-			monthBills.push(bill)
-			const billType = bill.type || 'expense'
-			if (billType === 'expense') {
-				totalExpense += bill.amount
-			} else if (billType === 'income') {
-				totalIncome += bill.amount
-			}
-		}
-	}
-	
-	// 预算预警检查
-	const oldExpense = data.totalExpense
-	const oldPercent = data.budgetPercent
-	
-	data.totalExpense = totalExpense
-	data.totalIncome = totalIncome
-	data.balance = totalIncome - totalExpense
-	data.budgetPercent = Math.min(Math.round((totalExpense / data.budget) * 100), 100)
-	
-	// 预算预警提示（仅在支出增加时）
-	if (oldExpense > 0 && totalExpense > oldExpense) {
-		if (oldPercent < 80 && data.budgetPercent >= 80 && data.budgetPercent < 100) {
-			uni.showToast({ title: '⚡ 预算已使用80%', icon: 'none', duration: 2000 })
-		} else if (oldPercent < 100 && data.budgetPercent >= 100) {
-			uni.showModal({
-				title: '⚠️ 预算超支提醒',
-				content: `本月预算已超支 ¥${(totalExpense - data.budget).toFixed(0)}，建议控制消费哦~`,
-				showCancel: false,
-				confirmText: '知道了',
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 18 页
-================================================================================
-				confirmColor: '#F5222D'
-			})
-		}
-	}
-	
-	calculateChangeRate(data.allBills, yearNum, monthNum)
-	
-	// 优化：按日期排序并取前3条（使用slice避免完整排序）
-	const recentBills = data.allBills
-		.sort((a, b) => new Date(b.date) - new Date(a.date))
-		.slice(0, 3)
-		.map(bill => {
-			const billType = bill.type || 'expense'
-			const categoryList = billType === 'income' ? getIncomeCategories() : getExpenseCategories()
-			const category = categoryList.find(c => c.id === bill.categoryId) || {}
+	/**
+	 * 调用HTTP API
+	 */
+	async callHttpApi(path, data) {
+		return new Promise((resolve, reject) => {
+			const token = uni.getStorageSync('token') || ''
 			
-			return {
-				...bill,
-				categoryIcon: category.icon || '📦',
-				categoryName: category.name || bill.categoryName || '其他',
-				dateText: formatDate(bill.date)
+			const headers = {
+				'Content-Type': 'application/json'
 			}
-		})
-	
-	data.recentBills.splice(0, data.recentBills.length, ...recentBills)
-}
-
-const handleBillSaved = async () => {
-	uni.showLoading({ title: '刷新中...' })
-	try {
-		// 并行执行数据获取和预算加载
-		const [bills] = await Promise.all([
-			billStorage.getFromAPI(), // 直接从API获取
-			loadBudget()
-		])
-		
-		data.allBills = bills
-		recalculateData()
-		await nextTick()
-		
-		// 并行执行奖励检查（静默）
-		Promise.all([
-			rewardRecord(),
-			checkRecordAchievements(bills.length),
-			checkContinuousAchievements(new Set(bills.map(b => new Date(b.date).toDateString())).size)
-		]).catch(err => console.error('奖励检查失败:', err))
-		
-	} catch (error) {
-		console.error('刷新失败:', error)
-	} finally {
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 19 页
-================================================================================
-		uni.hideLoading()
-	}
-}
-
-// 显示记账提醒订阅引导
-const showReminderSubscribeGuide = () => {
-	// 检查是否已经订阅过
-	const hasSubscribed = uni.getStorageSync('hasSubscribedReminder') || false
-	// 检查是否已经拒绝过（今天）
-	const lastRefuseDate = uni.getStorageSync('lastRefuseReminderDate') || ''
-	const today = new Date().toISOString().split('T')[0]
-	
-	// 如果已订阅或今天已拒绝过，不再显示
-	if (hasSubscribed || lastRefuseDate === today) {
-		return
-	}
-	
-	uni.showModal({
-		title: '✅ 记账成功',
-		content: '开启每日提醒，养成记账好习惯？\n每天晚上8点温馨提示',
-		confirmText: '开启提醒',
-		cancelText: '暂不需要',
-		confirmColor: '#52C41A',
-		success: (res) => {
-			if (res.confirm) {
-				// 用户点击开启提醒
-				subscribeReminder()
-			} else {
-				// 用户点击暂不需要，记录今天已拒绝
-				uni.setStorageSync('lastRefuseReminderDate', today)
+			
+			// 只有在有 token 时才添加 Authorization 头
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`
 			}
-		}
-	})
-}
-
-// 订阅记账提醒
-const subscribeReminder = () => {
-	// 请求订阅消息
-	uni.requestSubscribeMessage({
-		tmplIds: ['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'],
-		success: (res) => {
-			console.log('订阅结果:', res)
-			// 检查是否订阅成功
-			if (res['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'] === 'accept') {
-				uni.setStorageSync('hasSubscribedReminder', true)
-				uni.showToast({
-					title: '订阅成功',
-					icon: 'success',
-					duration: 2000
-				})
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 20 页
-================================================================================
-				
-				// 调用云函数保存用户订阅信息
-				saveSubscription()
-			} else {
-				uni.showToast({
-					title: '订阅失败，请稍后重试',
-					icon: 'none',
-					duration: 2000
-				})
+			
+			// 处理加密
+			let requestData = data
+			if (ENABLE_ENCRYPTION) {
+				headers['X-Encrypted'] = 'true'
+				requestData = security.encryptRequest(data)
 			}
-		},
-		fail: (err) => {
-			console.error('订阅失败:', err)
-			uni.showToast({
-				title: '订阅失败',
-				icon: 'none',
-				duration: 2000
+			
+			uni.request({
+				url: `${apiConfig.apiBaseUrl}/${path}`,
+				method: 'POST',
+				data: requestData,
+				header: headers,
+				timeout: 10000, // 10秒超时
+				success: (res) => {
+					console.log(`API请求成功 [${path}]:`, res)
+					if (res.statusCode === 200) {
+						let responseData = res.data
+						
+						// 处理加密响应
+						if (ENABLE_ENCRYPTION && responseData.encrypted) {
+							try {
+								responseData = security.decryptResponse(responseData.data)
+							} catch (error) {
+								console.error('响应解密失败:', error)
+								reject(new Error('响应解密失败'))
+								return
+							}
+						}
+						
+						resolve(responseData)
+					} else {
+						console.error(`API请求失败 [${path}]:`, res)
+						reject(new Error(res.data?.message || '请求失败'))
+					}
+				},
+				fail: (err) => {
+					console.error(`API请求异常 [${path}]:`, err)
+					reject(err)
+				}
 			})
-		}
-	})
-}
-
-// 保存订阅信息到云端
-const saveSubscription = async () => {
-	try {
-		const res = await request.call('billManager', {
-			action: 'saveReminderSubscription',
-			data: {
-				subscribed: true,
-				templateId: 'bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'
-			}
 		})
+	}
+	
+	/**
+	 * 上传文件
+	 */
+	async uploadFile(filePath) {
+		console.log('📤 [上传] 开始上传文件:', filePath)
 		
-		if (res.success) {
-			console.log('订阅信息保存成功')
-		} else {
-			console.error('订阅信息保存失败:', res.message)
+		return new Promise((resolve, reject) => {
+			const token = uni.getStorageSync('token') || ''
+			
+			const headers = {}
+			
+			// 只有在有 token 时才添加 Authorization 头
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`
+			}
+			
+			// APP端需要转换文件路径为绝对路径
+			let uploadPath = filePath
+			
+			// #ifdef APP-PLUS
+			// 如果是相对路径，转换为绝对路径
+			if (!filePath.startsWith('/') && !filePath.startsWith('file://')) {
+				// 获取临时文件目录
+				uploadPath = plus.io.convertLocalFileSystemURL(filePath)
+				console.log('📤 [上传] 转换后的路径:', uploadPath)
+			}
+			// #endif
+			
+			console.log('📤 [上传] 上传配置:', {
+				url: `${apiConfig.apiBaseUrl}/upload`,
+				filePath: uploadPath,
+				name: 'file',
+				hasToken: !!token
+			})
+			
+			uni.uploadFile({
+				url: `${apiConfig.apiBaseUrl}/upload`,
+				filePath: uploadPath,
+				name: 'file',
+				header: headers,
+				success: (res) => {
+					console.log('📤 [上传] 上传成功，响应状态:', res.statusCode)
+					console.log('📤 [上传] 响应数据:', res.data)
+					
+					try {
+						const data = JSON.parse(res.data)
+						console.log('📤 [上传] 解析后的数据:', data)
+						resolve(data)
+					} catch (error) {
+						console.error('📤 [上传] JSON解析失败:', error)
+						reject(new Error('响应数据解析失败'))
+					}
+				},
+				fail: (err) => {
+					console.error('📤 [上传] 上传失败:', err)
+					reject(new Error('文件上传失败：' + (err.errMsg || '网络错误')))
+				}
+			})
+		})
+	}
+}
+
+export default new Request()
+
+// ========== utils/apiConfig.js - API配置 ==========
+// API配置文件 - 统一使用Node.js后端
+const config = {
+	// 统一使用HTTPS API
+	useCloudFunction: false,
+	// 后端API地址
+	// 生产环境使用香港服务器（无需备案）
+	apiBaseUrl: 'https://api.qiannaqule.top/api'
+	// 本地测试环境
+	// apiBaseUrl: 'http://localhost:3000/api'
+}
+
+export default config
+
+// ========== utils/category.js - 分类管理 ==========
+// 分类工具类
+
+// 支出分类（参考主流记账应用优化）
+export const expenseCategories = [
+	{ id: 1, name: '餐饮', icon: '🍜', type: 'expense', keywords: ['餐厅', '饭店', '食堂', '外卖', '麦当劳', '肯德基', '星巴克', '咖啡', '火锅', '烧烤', '美食', '小吃', '茶饮', '奶茶', '快餐', '早餐', '午餐', '晚餐', '宵夜', '饿了么', '美团外卖'] },
+	{ id: 2, name: '交通', icon: '🚗', type: 'expense', keywords: ['滴滴', '出租', '地铁', '公交', '加油', '停车', '打车', '运输', '客运', '旅客', '票务', '车费', '出行', '享道', '曹操', '高德', '高铁', '飞机', '火车', '动车', '汽车', '船票', '哈啰', '青桔', '美团单车'] },
+	{ id: 3, name: '购物', icon: '🛒', type: 'expense', keywords: ['超市', '商场', '淘宝', '京东', '拼多多', '便利店', '电商', '网购', '商务', '百货', '购物中心', '沃尔玛', '家乐福', '大润发', '永辉', '华润', '7-11', '全家', '罗森', '买', '购', '盒马', '叮咚买菜'] },
+	{ id: 4, name: '娱乐', icon: '🎮', type: 'expense', keywords: ['电影', '游戏', 'KTV', '健身', '娱乐', '影院', '网吧', '台球', '保龄球', '旅游', '景点', '唱歌', '玩', '看电影', '运动', '球类', '乐刻', '超级猩猩', 'Keep'] },
+	{ id: 5, name: '住房', icon: '🏠', type: 'expense', keywords: ['房租', '物业', '水电', '燃气', '水费', '电费', '宽带', '房贷', '租房', '房屋', '维修', '装修'] },
+	{ id: 6, name: '医疗', icon: '💊', type: 'expense', keywords: ['医院', '药店', '体检', '诊所', '卫生院', '医疗', '门诊', '挂号', '药房', '医药', '就诊', '治疗', '检查', '化验', '看病', '买药', '配药', '平安好医生', '微医', '丁香医生', '美年大健康', '爱康国宾'] },
+	{ id: 7, name: '通讯', icon: '📱', type: 'expense', keywords: ['话费', '流量', '宽带', '手机', '移动', '联通', '电信', '充值', '套餐', '网费'] },
+	{ id: 8, name: '服饰', icon: '👔', type: 'expense', keywords: ['衣服', '鞋子', '包包', '服装', '配饰', '优衣库', 'ZARA', 'H&M', '裤子', '裙子', '外套', '内衣', '袜子', '帽子', '围巾', '手表', '眼镜', 'GAP', 'UR', '海澜之家', '太平鸟'] },
+	{ id: 9, name: '美容', icon: '💄', type: 'expense', keywords: ['美发', '美甲', '化妆品', '护肤', '理发', '美容院', '美容', '化妆', '洗头', '染发', '烫发', '面膜', '口红', '香水', '屈臣氏', '丝芙兰', '娇兰佳人', '快剪', '文峰', '永琪'] },
+	{ id: 10, name: '学习', icon: '📚', type: 'expense', keywords: ['书籍', '课程', '培训', '教育', '学费', '书店', '文具', '学习', '考试', '报名', '辅导', '补习', '网课', '教材', '学而思', '猿辅导', '作业帮', '新东方', '英孚', '达内'] },
+	{ id: 11, name: '社交', icon: '👥', type: 'expense', keywords: ['聚餐', '礼物', '红包', '请客', '送礼', '份子钱', '婚礼', '生日', '聚会', '宴请'] },
+	{ id: 13, name: '零食', icon: '🍿', type: 'expense', keywords: ['零食', '饮料', '水果', '小食', '坚果', '薯片', '饼干', '糖果', '巧克力', '果汁', '可乐', '雪碧', '矿泉水', '苹果', '香蕉', '橙子', '葡萄', '西瓜', '草莓'] },
+	{ id: 14, name: '数码', icon: '💻', type: 'expense', keywords: ['手机', '电脑', '平板', '相机', '耳机', '音箱', '键盘', '鼠标', '充电器', '数据线', '移动硬盘', 'U盘', '苹果', 'iPhone', 'iPad', 'Mac', '华为', '小米', '戴尔', '联想'] },
+	{ id: 15, name: '家居', icon: '🛋️', type: 'expense', keywords: ['家具', '家电', '日用品', '厨具', '床上用品', '沙发', '桌椅', '冰箱', '洗衣机', '空调', '电视', '微波炉', '电饭煲', '宜家', '无印良品', 'MUJI', '名创优品'] },
+	{ id: 16, name: '汽车', icon: '🚙', type: 'expense', keywords: ['车贷', '保养', '维修', '保险', '洗车', '年检', '违章', '车险', '4S店', '汽修', '换油', '轮胎', '中石油', '中石化', '壳牌'] },
+	{ id: 17, name: '宠物', icon: '🐾', type: 'expense', keywords: ['宠物', '猫粮', '狗粮', '宠物医院', '宠物店', '宠物美容', '猫砂', '宠物用品', '疫苗', '驱虫', '绝育', '瑞鹏', '芭比堂', '波奇', 'E宠'] },
+	{ id: 12, name: '其他', icon: '📦', type: 'expense', keywords: [] }
+]
+
+// 收入分类
+export const incomeCategories = [
+	{ id: 101, name: '工资', icon: '💰', type: 'income', keywords: ['工资', '薪水', '薪资', '月薪', '年薪', '发工资', '工资收入'] },
+	{ id: 102, name: '兼职', icon: '💼', type: 'income', keywords: ['兼职', '外快', '副业', '临时工', '兼职收入', '美团众包', '饿了么', '闪送', '接单', '设计', '写作', '咨询'] },
+	{ id: 103, name: '奖金', icon: '🎁', type: 'income', keywords: ['奖金', '年终奖', '提成', '绩效', '奖励', '季度奖', '项目奖'] },
+	{ id: 104, name: '红包', icon: '🧧', type: 'income', keywords: ['红包', '压岁钱'] },
+	{ id: 105, name: '退款', icon: '↩️', type: 'income', keywords: ['退款', '退货', '退费', '返现', '退税'] },
+	{ id: 106, name: '报销', icon: '📋', type: 'income', keywords: ['报销', '补贴', '津贴', '餐补', '交通补贴'] },
+	{ id: 107, name: '投资', icon: '📈', type: 'income', keywords: ['利息', '分红', '股息', '理财', '投资', '股票', '基金', '收益', '投资收益', '支付宝', '微信理财通', '天天基金', '雪球'] },
+	{ id: 109, name: '礼金', icon: '🎀', type: 'income', keywords: ['礼金', '份子钱', '收礼', '随礼'] },
+	{ id: 110, name: '出售', icon: '💸', type: 'income', keywords: ['出售', '卖', '二手', '闲置', '转让', '闲鱼', '转转'] },
+	{ id: 108, name: '其他', icon: '💵', type: 'income', keywords: ['收入', '赚', '挣', '收到', '到账', '其他收入'] }
+]
+
+// 所有分类（兼容旧代码）
+export const categories = expenseCategories
+
+// 智能分类（支持收入和支出）
+export function smartClassify(text, merchant = '', type = 'expense') {
+	const searchText = (text + ' ' + merchant).toLowerCase()
+	const categoryList = type === 'income' ? incomeCategories : expenseCategories
+	
+	for (const category of categoryList) {
+		for (const keyword of category.keywords) {
+			if (searchText.includes(keyword)) {
+				return category
+			}
 		}
-	} catch (error) {
-		console.error('保存订阅信息失败:', error)
-	}
-}
-
-const syncData = async () => {
-	try {
-		await billStorage.syncToCloud()
-		// 同步后重新从API加载数据
-		const bills = await billStorage.getFromAPI()
-		if (bills && bills.length !== (data.allBills ? data.allBills.length : 0)) {
-			data.allBills = bills
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 21 页
-================================================================================
-			recalculateData()
-		}
-	} catch (error) {
-		console.log('同步失败:', error)
-	}
-}
-
-const calculateChangeRate = (bills, currentYear, currentMonth) => {
-	let lastYear = currentYear
-	let lastMonth = currentMonth - 1
-	if (lastMonth === 0) {
-		lastMonth = 12
-		lastYear = currentYear - 1
 	}
 	
-	const lastMonthBills = bills.filter(bill => {
-		const billDate = new Date(bill.date)
-		return billDate.getFullYear() === lastYear && 
-		       (billDate.getMonth() + 1) === lastMonth
-	})
-	
-	const lastMonthExpense = lastMonthBills.reduce((sum, bill) => sum + bill.amount, 0)
-	
-	if (lastMonthExpense === 0) {
-		data.changeRate = data.totalExpense > 0 ? 100 : 0
-	} else {
-		data.changeRate = Math.round(((data.totalExpense - lastMonthExpense) / lastMonthExpense) * 100)
-	}
+	// 默认返回"其他"
+	return categoryList[categoryList.length - 1]
 }
 
-const formatDate = (dateStr) => {
-	const date = new Date(dateStr)
+// 根据ID获取分类
+export function getCategoryById(id) {
+	const allCategories = [...expenseCategories, ...incomeCategories]
+	return allCategories.find(c => c.id === id) || expenseCategories[11]
+}
+
+// 获取所有分类（根据类型）
+export function getAllCategories(type = 'expense') {
+	return type === 'income' ? incomeCategories : expenseCategories
+}
+
+// 获取支出分类
+export function getExpenseCategories() {
+	return expenseCategories
+}
+
+// 获取收入分类
+export function getIncomeCategories() {
+	return incomeCategories
+}
+
+// ========== utils/date.js - 日期工具 ==========
+// 日期工具类
+
+// 格式化日期
+export function formatDate(date, format = 'YYYY-MM-DD') {
+	const d = new Date(date)
+	const year = d.getFullYear()
+	const month = String(d.getMonth() + 1).padStart(2, '0')
+	const day = String(d.getDate()).padStart(2, '0')
+	const hour = String(d.getHours()).padStart(2, '0')
+	const minute = String(d.getMinutes()).padStart(2, '0')
+	const second = String(d.getSeconds()).padStart(2, '0')
+	
+	return format
+		.replace('YYYY', year)
+		.replace('MM', month)
+		.replace('DD', day)
+		.replace('HH', hour)
+		.replace('mm', minute)
+		.replace('ss', second)
+}
+
+// 获取相对时间描述
+export function getRelativeTime(date) {
+	const d = new Date(date)
 	const now = new Date()
-	const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+	const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24))
 	
 	if (diff === 0) return '今天'
 	if (diff === 1) return '昨天'
 	if (diff === 2) return '前天'
-	return `${date.getMonth() + 1}月${date.getDate()}日`
+	if (diff < 7) return `${diff}天前`
+	if (diff < 30) return `${Math.floor(diff / 7)}周前`
+	if (diff < 365) return `${Math.floor(diff / 30)}月前`
+	return `${Math.floor(diff / 365)}年前`
 }
 
-const onMonthChange = async (e) => {
-	const selectedMonth = e.detail.value // 格式: YYYY-MM
-	data.currentMonth = selectedMonth
+// 解析自然语言日期
+export function parseNaturalDate(text) {
+	const now = new Date()
 	
-	const [year, month] = selectedMonth.split('-')
-	data.currentMonthText = `${year}年${month}月`
-	
-	// 检查登录状态
-	if (!checkLogin()) {
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 22 页
-================================================================================
-		// 未登录时只更新显示，不调用接口
-		data.allBills = []
-		data.recentBills = []
-		data.totalExpense = 0
-		data.totalIncome = 0
-		data.balance = 0
-		data.budgetPercent = 0
-		return
+	if (text.includes('今天') || text.includes('今日')) {
+		return formatDate(now)
 	}
 	
-	// 显示加载提示
-	uni.showLoading({ title: '加载中...' })
-	
-	try {
-		// 直接从API获取最新数据
-		data.allBills = await billStorage.getFromAPI()
-		recalculateData()
-	} catch (error) {
-		console.error('加载数据失败:', error)
-		uni.showToast({
-			title: '加载失败',
-			icon: 'none'
-		})
-	} finally {
-		uni.hideLoading()
+	if (text.includes('昨天') || text.includes('昨日')) {
+		const yesterday = new Date(now)
+		yesterday.setDate(yesterday.getDate() - 1)
+		return formatDate(yesterday)
 	}
+	
+	if (text.includes('前天')) {
+		const dayBefore = new Date(now)
+		dayBefore.setDate(dayBefore.getDate() - 2)
+		return formatDate(dayBefore)
+	}
+	
+	// 匹配具体日期格式
+	const dateMatch = text.match(/(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/)
+	if (dateMatch) {
+		const year = dateMatch[1]
+		const month = dateMatch[2].padStart(2, '0')
+		const day = dateMatch[3].padStart(2, '0')
+		return `${year}-${month}-${day}`
+	}
+	
+	return formatDate(now)
 }
 
-const openBudgetModal = () => {
-	// 检查登录状态
-	if (!checkLogin()) {
-		promptLogin()
-		return
-	}
+// 获取月份范围
+export function getMonthRange(year, month) {
+	const startDate = new Date(year, month - 1, 1)
+	const endDate = new Date(year, month, 0)
 	
-	// 如果正在防止点击穿透期间，不响应点击
-	if (data.preventClick) return
-	
-	data.showBudgetModal = true
-	uni.hideTabBar()
-}
-
-const closeBudgetModal = () => {
-	data.showBudgetModal = false
-	data.tempBudget = ''
-	// 延迟显示TabBar，防止事件穿透
-	setTimeout(() => {
-		uni.showTabBar()
-	}, 300)
-}
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 23 页
-================================================================================
-
-const confirmBudget = async () => {
-	const amount = parseFloat(data.tempBudget)
-	if (!amount || amount <= 0) {
-		uni.showToast({
-			title: '请输入有效金额',
-			icon: 'none'
-		})
-		return
-	}
-	
-	uni.showLoading({ title: '保存中...' })
-	const result = await billStorage.setBudget(amount)
-	uni.hideLoading()
-	
-	if (result.success) {
-		data.budget = amount
-		data.budgetPercent = Math.min(Math.round((data.totalExpense / data.budget) * 100), 100)
-		closeBudgetModal()
-		
-		// 奖励设置预算积分
-		const budgetReward = await rewardSetBudget()
-		if (budgetReward) {
-			uni.showToast({
-				title: `预算设置成功 +${budgetReward.addedPoints}积分`,
-				icon: 'success',
-				duration: 2000
-			})
-		} else {
-			uni.showToast({
-				title: '预算设置成功',
-				icon: 'success'
-			})
-		}
-	} else {
-		uni.showToast({
-			title: '设置失败',
-			icon: 'none'
-		})
+	return {
+		start: formatDate(startDate),
+		end: formatDate(endDate)
 	}
 }
 
-// 检查登录状态
-const checkLogin = () => {
-	const userInfo = uni.getStorageSync('userInfo')
-	return userInfo && userInfo.isLogin
-}
-
-// 提示登录
-const promptLogin = () => {
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 24 页
-================================================================================
-	uni.showModal({
-		title: '需要登录',
-		content: '登录后可以记账并同步数据到云端',
-		confirmText: '去登录',
-		cancelText: '稍后',
-		success: (res) => {
-			if (res.confirm) {
-				// 跳转到登录页面
-				// #ifdef MP-WEIXIN
-				// 小程序直接在个人中心登录
-				uni.switchTab({
-					url: '/pages/tab/profile/profile'
-				})
-				// #endif
-				
-				// #ifdef APP-PLUS
-				// APP跳转到登录页面
-				uni.navigateTo({
-					url: '/pages/user/login'
-				})
-				// #endif
-			}
-		}
-	})
-}
-
-const goToPhoto = () => {
-	// 检查登录
-	if (!checkLogin()) {
-		promptLogin()
-		return
-	}
+// 获取季度范围
+export function getQuarterRange(year, quarter) {
+	const startMonth = (quarter - 1) * 3
+	const endMonth = startMonth + 2
 	
-	// 使用 reLaunch 替代 navigateTo，清理页面栈，提升性能
-	uni.navigateTo({
-		url: '/pages/record/photo/photo',
-		// 添加页面切换动画优化
-		animationType: 'pop-in',
-		animationDuration: 200
-	})
-}
-
-const goToVoice = () => {
-	// 检查登录
-	if (!checkLogin()) {
-		promptLogin()
-		return
-	}
+	const startDate = new Date(year, startMonth, 1)
+	const endDate = new Date(year, endMonth + 1, 0)
 	
-	uni.navigateTo({
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 25 页
-================================================================================
-		url: '/pages/record/voice/voice'
-	})
-}
-
-const goToStatistics = () => {
-	uni.switchTab({
-		url: '/pages/tab/statistics/statistics'
-	})
-}
-
-const goToBills = () => {
-	uni.switchTab({
-		url: '/pages/tab/bills/bills'
-	})
-}
-
-const goToBillDetail = (bill) => {
-	// 跳转到账单详情页
-	uni.navigateTo({
-		url: `/pages/bills/detail?billData=${encodeURIComponent(JSON.stringify(bill))}`
-	})
-}
-
-const goToManualRecord = () => {
-	// 检查登录
-	if (!checkLogin()) {
-		promptLogin()
-		return
-	}
-	
-	uni.navigateTo({
-		url: '/pages/record/confirm/confirm'
-	})
-}
-
-// 悬浮按钮拖动相关
-let floatBtnStartX = 0
-let floatBtnStartY = 0
-let floatBtnTouchStartX = 0
-let floatBtnTouchStartY = 0
-let isDragging = false
-
-const onFloatBtnTouchStart = (e) => {
-	floatBtnStartX = data.floatBtnX
-	floatBtnStartY = data.floatBtnY
-	floatBtnTouchStartX = e.touches[0].clientX
-	floatBtnTouchStartY = e.touches[0].clientY
-	isDragging = false
-}
-
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 26 页
-================================================================================
-const onFloatBtnTouchMove = (e) => {
-	const moveX = e.touches[0].clientX - floatBtnTouchStartX
-	const moveY = e.touches[0].clientY - floatBtnTouchStartY
-	
-	// 移动超过5px才认为是拖动
-	if (Math.abs(moveX) > 5 || Math.abs(moveY) > 5) {
-		isDragging = true
-	}
-	
-	if (isDragging) {
-		const systemInfo = uni.getSystemInfoSync()
-		const btnSize = 60 // 按钮半径（120rpx / 2）
-		
-		// 计算新位置
-		let newX = floatBtnStartX + moveX
-		let newY = floatBtnStartY + moveY
-		
-		// 限制在屏幕范围内
-		newX = Math.max(btnSize, Math.min(systemInfo.windowWidth - btnSize, newX))
-		newY = Math.max(btnSize, Math.min(systemInfo.windowHeight - btnSize, newY))
-		
-		data.floatBtnX = newX
-		data.floatBtnY = newY
+	return {
+		start: formatDate(startDate),
+		end: formatDate(endDate)
 	}
 }
 
-const onFloatBtnTouchEnd = () => {
-	// 如果没有拖动，则触发点击事件
-	if (!isDragging) {
-		goToManualRecord()
-	}
-	isDragging = false
+// 获取年份范围
+export function getYearRange(year) {
+	const startDate = new Date(year, 0, 1)
+	const endDate = new Date(year, 11, 31)
+	
+	return {
+		start: formatDate(startDate),
+
+// ========== locale/index.js - 国际化配置 ==========
+import { createI18n } from 'vue-i18n'
+import zhCN from './zh-CN'
+import enUS from './en-US'
+
+// 获取系统语言
+const getSystemLanguage = () => {
+  let language = 'zh-CN'
+  
+  try {
+    // #ifdef APP-PLUS
+    if (typeof plus !== 'undefined') {
+      language = plus.os.language
+    }
+    // #endif
+    
+    // #ifdef H5
+    if (typeof navigator !== 'undefined') {
+      language = navigator.language
+    }
+    // #endif
+    
+    // #ifdef MP-WEIXIN
+    if (typeof uni !== 'undefined') {
+      language = uni.getSystemInfoSync().language
+    }
+    // #endif
+  } catch (e) {
+    console.log('获取系统语言失败', e)
+  }
+  
+  // 语言映射
+  const languageMap = {
+    'zh': 'zh-CN',
+    'zh-CN': 'zh-CN',
+    'zh-Hans': 'zh-CN',
+    'zh-Hans-CN': 'zh-CN',
+    'zh-TW': 'zh-CN',
+    'zh-Hant': 'zh-CN',
+    'en': 'en-US',
+    'en-US': 'en-US',
+    'en-GB': 'en-US'
+  }
+  
+  return languageMap[language] || 'zh-CN'
 }
 
-// 切换收入显示/隐藏
-const toggleIncome = () => {
-	data.hideIncome = !data.hideIncome
-	uni.setStorageSync('hideIncome', data.hideIncome)
+// 获取保存的语言设置
+const getSavedLanguage = () => {
+  try {
+    if (typeof uni !== 'undefined') {
+      return uni.getStorageSync('app_language')
+    }
+  } catch (e) {
+    console.log('获取保存的语言失败', e)
+  }
+  return ''
 }
 
-// 切换支出显示/隐藏
-const toggleExpense = () => {
-	data.hideExpense = !data.hideExpense
-	uni.setStorageSync('hideExpense', data.hideExpense)
-}
+const savedLanguage = getSavedLanguage() || getSystemLanguage()
 
-// 切换结余显示/隐藏
-const toggleBalance = () => {
-	data.hideBalance = !data.hideBalance
-	uni.setStorageSync('hideBalance', data.hideBalance)
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 27 页
-================================================================================
-}
-
-// 切换金额显示/隐藏（保留兼容）
-const toggleAmountVisibility = () => {
-	data.hideAmount = !data.hideAmount
-	// 保存到本地存储
-	uni.setStorageSync('hideAmount', data.hideAmount)
-}
-
-// 处理提醒弹框确认
-const handleReminderConfirm = () => {
-	// 不记录已提醒，让用户记账后自动停止提醒
-	console.log('用户点击去记账')
-}
-
-// 处理提醒弹框取消
-const handleReminderCancel = () => {
-	// 不记录已提醒，下次打开继续提醒
-	console.log('用户点击稍后')
-}
-
-// 检查APP更新
-const checkAppUpdate = async () => {
-	// #ifdef APP-PLUS
-	try {
-		const updateInfo = await checkUpdate()
-		
-		if (updateInfo.hasUpdate) {
-			data.updateInfo = updateInfo
-			data.showUpdateModal = true
-		}
-	} catch (error) {
-		console.error('检查更新失败:', error)
-	}
-	// #endif
-}
-
-// 关闭更新弹窗
-const closeUpdateModal = () => {
-	if (!data.updateInfo.isForce) {
-		data.showUpdateModal = false
-	}
-}
-
-// 确认更新
-const handleUpdateConfirm = () => {
-	console.log('开始下载更新')
-}
-
-// 下载完成
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 28 页
-================================================================================
-const handleDownloadComplete = () => {
-	data.showUpdateModal = false
-}
-
-// 初始化春节元素
-const initFestivalElements = () => {
-	// #ifdef MP-WEIXIN
-	// 检查红包雨时间
-	checkRedPacketTime()
-	
-	// 启动定时器，每秒更新一次
-	data.redPacketTimer = setInterval(() => {
-		checkRedPacketTime()
-	}, 1000)
-	// #endif
-	
-	// #ifdef APP-PLUS
-	// APP不显示红包雨功能
-	data.isFestivalActive = false
-	// #endif
-}
-
-// 检查红包雨时间
-const checkRedPacketTime = () => {
-	const now = Date.now()
-	const currentDate = new Date()
-	
-	// 春节活动时间：2026年2月3日到2月18日
-	const festivalStartDate = new Date('2026/02/03 00:00:00')
-	const festivalEndDate = new Date('2026/02/18 23:59:59')
-	
-	// 检查是否在活动期间
-	if (now < festivalStartDate.getTime() || now > festivalEndDate.getTime()) {
-		// 活动未开始或已结束
-		data.isFestivalActive = false
-		data.isRedPacketTime = false
-		data.showRedPackets = false
-		data.remainingTime = now < festivalStartDate.getTime() ? '活动未开始' : '活动已结束'
-		return
-	}
-	
-	// 活动进行中
-	data.isFestivalActive = true
-	
-	// 红包雨规则：每天固定时间段，每次2分钟
-	// 时间段：10:00, 14:00, 18:00, 21:00
-	const DURATION = 2 * 60 * 1000 // 2分钟持续时间
-	const RED_PACKET_HOURS = [10, 14, 18, 21] // 红包雨时段（小时）
-	
-	const currentHour = currentDate.getHours()
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 29 页
-================================================================================
-	const currentMinute = currentDate.getMinutes()
-	const currentSecond = currentDate.getSeconds()
-	
-	// 计算当前时间距离今天0点的毫秒数
-	const todayStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()).getTime()
-	const currentTimeInDay = now - todayStart
-	
-	// 检查是否在任何一个红包雨时段内
-	let isInRedPacketPeriod = false
-	let currentPeriodStart = 0
-	let nextPeriodStart = 0
-	
-	for (let hour of RED_PACKET_HOURS) {
-		const periodStart = todayStart + hour * 60 * 60 * 1000
-		const periodEnd = periodStart + DURATION
-		
-		if (now >= periodStart && now < periodEnd) {
-			// 当前在红包雨时段内
-			isInRedPacketPeriod = true
-			currentPeriodStart = periodStart
-			break
-		} else if (now < periodStart) {
-			// 找到下一个红包雨时段
-			nextPeriodStart = periodStart
-			break
-		}
-	}
-	
-	// 如果今天所有时段都过了，计算明天第一个时段
-	if (!isInRedPacketPeriod && nextPeriodStart === 0) {
-		const tomorrowStart = todayStart + 24 * 60 * 60 * 1000
-		nextPeriodStart = tomorrowStart + RED_PACKET_HOURS[0] * 60 * 60 * 1000
-	}
-	
-	if (isInRedPacketPeriod) {
-		// 正在红包雨时段内
-		if (!data.isRedPacketTime) {
-			data.isRedPacketTime = true
-			data.currentSessionPoints = 0
-			data.currentSessionBlessings = []
-			startRedPacketRain()
-		}
-		
-		// 更新剩余时间
-		const remainSeconds = Math.ceil((currentPeriodStart + DURATION - now) / 1000)
-		const minutes = Math.floor(remainSeconds / 60)
-		const seconds = remainSeconds % 60
-		data.remainingTime = `剩余 ${minutes}:${seconds.toString().padStart(2, '0')}`
-		return
-	}
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 30 页
-================================================================================
-	
-	// 不在红包雨时段内
-	if (data.isRedPacketTime) {
-		// 刚结束红包雨
-		data.isRedPacketTime = false
-		endRedPacketRain()
-		// 注意：currentSessionPoints 的重置已经在 closeResultModal() 中完成
-	}
-	
-	data.isRedPacketTime = false
-	data.showRedPackets = false
-	
-	// 显示下次红包雨倒计时
-	const remainMs = nextPeriodStart - now
-	const remainMinutes = Math.floor(remainMs / (60 * 1000))
-	const remainSeconds = Math.floor((remainMs % (60 * 1000)) / 1000)
-	
-	if (remainMinutes >= 60) {
-		const hours = Math.floor(remainMinutes / 60)
-		const mins = remainMinutes % 60
-		data.remainingTime = `${hours}小时${mins}分后开始`
-	} else if (remainMinutes > 0) {
-		data.remainingTime = `${remainMinutes}分钟后开始`
-	} else if (remainSeconds > 0) {
-		data.remainingTime = `${remainSeconds}秒后开始`
-	} else {
-		data.remainingTime = '即将开始'
-	}
-}
-
-// 开始红包雨
-const startRedPacketRain = () => {
-	data.showRedPackets = true
-	generateRedPackets()
-	
-	// 只在页面可见时播放音乐和显示提示
-	if (!data.isPageVisible) {
-		console.log('页面不可见，不播放音乐和提示')
-		return
-	}
-	
-	// 先播放红包雨来了的提示音
-	try {
-		const notifyAudio = uni.createInnerAudioContext()
-		notifyAudio.src = '/static/audio/red-packet-scome.mp3'
-		notifyAudio.volume = 0.8
-		notifyAudio.onError((err) => {
-			console.log('提示音播放失败:', err)
-			notifyAudio.destroy()
-		})
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 31 页
-================================================================================
-		notifyAudio.play()
-		notifyAudio.onEnded(() => {
-			notifyAudio.destroy()
-			// 提示音播放完后，开始循环播放背景音乐
-			startBgMusic()
-		})
-	} catch (e) {
-		console.log('提示音播放异常:', e)
-		// 如果提示音失败，直接播放背景音乐
-		startBgMusic()
-	}
-	
-	// 显示提示
-	uni.showToast({
-		title: '🧧 红包雨来啦！',
-		icon: 'none',
-		duration: 2000
-	})
-}
-
-// 开始背景音乐
-const startBgMusic = () => {
-	try {
-		// 如果已有音乐在播放，先停止
-		if (data.bgMusicContext) {
-			data.bgMusicContext.stop()
-			data.bgMusicContext.destroy()
-		}
-		
-		data.bgMusicContext = uni.createInnerAudioContext()
-		data.bgMusicContext.src = '/static/audio/red-packet-start.mp3'
-		data.bgMusicContext.loop = true // 循环播放
-		data.bgMusicContext.volume = 0.6 // 音量60%
-		data.bgMusicContext.onError((err) => {
-			console.log('背景音乐播放失败:', err)
-		})
-		data.bgMusicContext.play()
-	} catch (e) {
-		console.log('背景音乐播放异常:', e)
-	}
-}
-
-// 结束红包雨
-const endRedPacketRain = () => {
-	console.log('=== 红包雨结束 ===')
-	console.log('当前积分:', data.currentSessionPoints)
-	console.log('当前祝福语:', data.currentSessionBlessings)
-	console.log('页面可见:', data.isPageVisible)
-	
-	data.showRedPackets = false
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 32 页
-================================================================================
-	data.redPackets = []
-	
-	// 停止背景音乐
-	if (data.bgMusicContext) {
-		data.bgMusicContext.stop()
-		data.bgMusicContext.destroy()
-		data.bgMusicContext = null
-	}
-	
-	// 只在页面可见时显示结算弹窗（有积分或祝福语时才显示）
-	if ((data.currentSessionPoints > 0 || data.currentSessionBlessings.length > 0) && data.isPageVisible) {
-		console.log('✅ 显示结算弹窗')
-		data.showResultModal = true
-		
-		// 保存积分到总积分
-		if (data.currentSessionPoints > 0) {
-			let totalPoints = uni.getStorageSync('userPoints') || 0
-			totalPoints += data.currentSessionPoints
-			uni.setStorageSync('userPoints', totalPoints)
-			console.log('积分已保存，总积分:', totalPoints)
-		}
-		// 注意：不在这里重置数据，等弹窗关闭时再重置
-	} else if ((data.currentSessionPoints > 0 || data.currentSessionBlessings.length > 0) && !data.isPageVisible) {
-		console.log('⚠️ 页面不可见，静默保存积分')
-		// 页面不可见时,静默保存积分,不显示弹窗
-		if (data.currentSessionPoints > 0) {
-			let totalPoints = uni.getStorageSync('userPoints') || 0
-			totalPoints += data.currentSessionPoints
-			uni.setStorageSync('userPoints', totalPoints)
-		}
-		// 页面不可见时立即重置
-		data.currentSessionPoints = 0
-		data.currentSessionBlessings = []
-	} else {
-		console.log('❌ 不显示弹窗，原因：')
-		console.log('  - 积分为0:', data.currentSessionPoints === 0)
-		console.log('  - 祝福语为空:', data.currentSessionBlessings.length === 0)
-		console.log('  - 页面不可见:', !data.isPageVisible)
-		// 没有数据时也重置
-		data.currentSessionPoints = 0
-		data.currentSessionBlessings = []
-	}
-}
-
-// 生成红包雨
-const generateRedPackets = () => {
-	if (!data.isRedPacketTime) return
-	
-	const packets = []
-	// 生成15个红包，其中2-3个是大红包
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 33 页
-================================================================================
-	const bigPacketCount = Math.floor(Math.random() * 2) + 2 // 2-3个大红包
-	const bigPacketIndexes = []
-	
-	// 随机选择哪些是大红包
-	while (bigPacketIndexes.length < bigPacketCount) {
-		const randomIndex = Math.floor(Math.random() * 15)
-		if (!bigPacketIndexes.includes(randomIndex)) {
-			bigPacketIndexes.push(randomIndex)
-		}
-	}
-	
-	for (let i = 0; i < 15; i++) {
-		const isBig = bigPacketIndexes.includes(i)
-		packets.push({
-			left: Math.random() * 90 + 5,
-			delay: Math.random() * 2,
-			duration: isBig ? 5 + Math.random() * 2 : 4 + Math.random() * 2, // 大红包下落慢一点
-			clicked: false,
-			isBig: isBig // 标记是否是大红包
-		})
-	}
-	data.redPackets = packets
-	
-	// 6秒后重新生成（确保红包持续）
-	setTimeout(() => {
-		if (data.isRedPacketTime) {
-			generateRedPackets()
-		}
-	}, 6000)
-}
-
-// 点击红包
-const clickRedPacket = (index) => {
-	if (!data.isRedPacketTime) {
-		uni.showToast({
-			title: '红包雨已结束',
-			icon: 'none'
-		})
-		return
-	}
-	
-	// 防止重复点击
-	if (data.redPackets[index].clicked) return
-	data.redPackets[index].clicked = true
-	
-	// 判断是否是大红包
-	const isBig = data.redPackets[index].isBig
-	
-	// 50%概率获得积分，50%概率获得祝福语
-	const isPoints = Math.random() < 0.5
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 34 页
-================================================================================
-	let resultText = ''
-	
-	if (isPoints) {
-		// 积分红包
-		let points = 0
-		if (isBig) {
-			// 大红包：15-30积分
-			points = Math.floor(Math.random() * 16) + 15
-		} else {
-			// 小红包：1-10积分
-			points = Math.floor(Math.random() * 10) + 1
-		}
-		
-		data.currentSessionPoints += points
-		resultText = isBig ? `🎉 +${points}积分` : `+${points}积分`
-		console.log(`✅ 获得积分: +${points}，当前总积分: ${data.currentSessionPoints}`)
-	} else {
-		// 祝福语红包
-		const blessings = [
-			'🐴 马到成功',
-			'💰 财源滚滚',
-			'🎊 万事如意',
-			'🌟 心想事成',
-			'🎉 大吉大利',
-			'✨ 好运连连',
-			'🏆 一马当先',
-			'🎯 马上有钱',
-			'🌈 福星高照',
-			'🎁 喜事连连',
-			'🔥 红红火火',
-			'💎 财运亨通',
-			'🌸 花开富贵',
-			'🎪 笑口常开',
-			'🎨 锦绣前程'
-		]
-		
-		const blessing = blessings[Math.floor(Math.random() * blessings.length)]
-		data.currentSessionBlessings.push(blessing)
-		resultText = blessing
-		console.log(`✅ 获得祝福: ${blessing}，当前祝福数: ${data.currentSessionBlessings.length}`)
-	}
-	
-	// 播放抢红包音效
-	try {
-		const audioContext = uni.createInnerAudioContext()
-		audioContext.src = '/static/audio/red-packet-open.mp3'
-		audioContext.onError((err) => {
-			console.log('音效播放失败:', err)
-			audioContext.destroy()
-		})
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 35 页
-================================================================================
-		audioContext.play()
-		audioContext.onEnded(() => {
-			audioContext.destroy()
-		})
-	} catch (e) {
-		console.log('音效播放异常:', e)
-	}
-	
-	// 显示开红包动画
-	data.showOpenAnimation = true
-	data.grabResult = resultText
-	
-	// 震动反馈（大红包震动更强）
-	if (isBig) {
-		uni.vibrateLong()
-	} else {
-		uni.vibrateShort()
-	}
-	
-	// 1.5秒后隐藏动画
-	setTimeout(() => {
-		data.showOpenAnimation = false
-	}, 1500)
-}
-
-// 关闭结算弹窗
-const closeResultModal = () => {
-	console.log('关闭结算弹窗，重置数据')
-	data.showResultModal = false
-	// 关闭弹窗时才重置数据
-	data.currentSessionPoints = 0
-	data.currentSessionBlessings = []
-}
-
-// 从云端获取抢红包次数
-const loadRedPacketCount = async () => {
-	try {
-		const res = await request.call('billManager', {
-			action: 'getRedPacketCount'
-		})
-		
-		if (res.success) {
-			data.morningGrabCount = res.morningCount || 0
-			data.afternoonGrabCount = res.afternoonCount || 0
-			data.lastGrabTime = res.lastGrabTime || 0
-			console.log('抢红包次数加载成功:', res)
-		}
-	} catch (error) {
-		console.error('获取抢红包次数失败:', error)
-		// 失败时使用本地缓存
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 36 页
-================================================================================
-		data.morningGrabCount = uni.getStorageSync('morningGrabCount') || 0
-		data.afternoonGrabCount = uni.getStorageSync('afternoonGrabCount') || 0
-		data.lastGrabTime = uni.getStorageSync('lastGrabTime') || 0
-	}
-}
-
-// 下拉抢红包相关函数
-const onTouchStart = (e) => {
-	// 如果有弹框打开，不处理触摸事件
-	if (data.showMonthPicker || data.showBudgetModal) return
-	
-	// 记录起始位置
-	data.startY = e.touches[0].pageY
-	data.isGrabbingMode = false
-	console.log('触摸开始，Y坐标:', data.startY)
-}
-
-const onTouchMove = (e) => {
-	// 如果有弹框打开，不处理触摸事件
-	if (data.showMonthPicker || data.showBudgetModal) return
-	
-	if (data.startY === 0) return
-	const currentY = e.touches[0].pageY
-	const distance = currentY - data.startY
-	
-	// 只处理下拉
-	if (distance > 0) {
-		data.pullDistance = Math.min(distance, 150)
-		
-		console.log('下拉距离:', distance)
-		
-		// 如果下拉距离超过100，进入抢红包模式
-		if (distance > 100) {
-			data.isGrabbingMode = true
-			console.log('进入抢红包模式')
-		} else {
-			// 下拉距离小于100，普通刷新模式
-			data.isGrabbingMode = false
-		}
-	}
-}
-
-const onTouchEnd = async () => {
-	// 如果有弹框打开，不处理触摸事件
-	if (data.showMonthPicker || data.showBudgetModal) return
-	
-	console.log('触摸结束，下拉距离:', data.pullDistance, '抢红包模式:', data.isGrabbingMode)
-	
-	const distance = data.pullDistance
-	
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 37 页
-================================================================================
-	// 下拉距离超过100，触发抢红包
-	if (distance > 100) {
-		console.log('触发抢红包！')
-		grabRedPacket()
-	}
-	// 下拉距离在50-100之间，触发数据刷新
-	else if (distance > 50 && distance <= 100) {
-		console.log('触发数据刷新')
-		uni.showLoading({ title: '刷新中...' })
-		try {
-			// 直接从API获取最新数据
-			data.allBills = await billStorage.getFromAPI()
-			await loadBudget()
-			recalculateData()
-			
-			// 同时刷新抢红包次数
-			await loadRedPacketCount()
-			
-			uni.hideLoading()
-			uni.showToast({
-				title: '刷新成功',
-				icon: 'success',
-				duration: 1500
-			})
-		} catch (error) {
-			console.error('刷新失败:', error)
-			uni.hideLoading()
-			uni.showToast({
-				title: '刷新失败',
-				icon: 'none'
-			})
-		}
-	}
-	
-	data.startY = 0
-	data.pullDistance = 0
-	
-	// 延迟重置抢红包模式
-	setTimeout(() => {
-		data.isGrabbingMode = false
-	}, 300)
-}
-
-// 获取下拉提示文字
-const getPullHintText = () => {
-	const currentHour = new Date().getHours()
-	const isAfternoon = currentHour >= 12 // 12点及以后算下午
-	
-	// 获取上午和下午的抢红包次数（优先使用云端数据）
-	let morningGrabCount = data.morningGrabCount || 0
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 38 页
-================================================================================
-	let afternoonGrabCount = data.afternoonGrabCount || 0
-	
-	// 检查当前时段的次数
-	const currentPeriodCount = isAfternoon ? afternoonGrabCount : morningGrabCount
-	
-	// 根据下拉距离显示不同提示
-	if (data.pullDistance <= 50) {
-		return '下拉刷新数据'
-	} else if (data.pullDistance <= 100) {
-		return '松手刷新数据'
-	}
-	
-	// 下拉距离超过100，显示抢红包相关提示
-	// 检查次数限制（上午20次，下午20次）
-	if (currentPeriodCount >= 20) {
-		data.canGrabToday = false
-		if (isAfternoon) {
-			return '今日红包已抢完~'
-		} else {
-			return '上午红包已抢完，下午再来~'
-		}
-	}
-	
-	// 还有次数，可以抢
-	data.canGrabToday = true
-	return '松手抢红包！'
-}
-
-// 抢红包
-const grabRedPacket = async () => {
-	const now = Date.now()
-	const currentHour = new Date().getHours()
-	const isAfternoon = currentHour >= 12 // 12点及以后算下午
-	
-	// 检查当前时段的次数限制（上午20次，下午20次）
-	const currentPeriodCount = isAfternoon ? data.afternoonGrabCount : data.morningGrabCount
-	if (currentPeriodCount >= 20) {
-		if (isAfternoon) {
-			uni.showToast({
-				title: '今日红包已抢完，明天再来吧~',
-				icon: 'none',
-				duration: 2000
-			})
-		} else {
-			uni.showToast({
-				title: '上午红包已抢完，下午再来~',
-				icon: 'none',
-				duration: 2000
-			})
-		}
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 39 页
-================================================================================
-		return
-	}
-	
-	// 可以抢红包了！显示开红包动画
-	data.showOpenAnimation = true
-	
-	// 完全随机决定是积分还是祝福语（50%概率）
-	const isPoints = Math.random() < 0.5
-	
-	let resultText = ''
-	let toastText = ''
-	let points = 0
-	
-	if (isPoints) {
-		// 积分红包：1-10分随机
-		points = Math.floor(Math.random() * 10) + 1
-		resultText = `+${points}积分`
-		toastText = `恭喜获得${points}积分！`
-	} else {
-		// 祝福语红包：随机选择
-		const blessings = [
-			'🐴 马到成功',
-			'💰 财源滚滚',
-			'🎊 万事如意',
-			'🌟 心想事成',
-			'🎉 大吉大利',
-			'✨ 好运连连',
-			'🏆 一马当先',
-			'🎯 马上有钱',
-			'🌈 福星高照',
-			'🎁 喜事连连',
-			'🔥 红红火火',
-			'💎 财运亨通',
-			'🌸 花开富贵',
-			'🎪 笑口常开',
-			'🎨 锦绣前程'
-		]
-		
-		const blessing = blessings[Math.floor(Math.random() * blessings.length)]
-		resultText = blessing
-		toastText = `收到祝福：${blessing}`
-	}
-	
-	// 调用API记录抢红包
-	try {
-		const res = await request.call('billManager', {
-			action: 'grabRedPacket',
-			data: {
-				isAfternoon: isAfternoon,
-				points: isPoints ? points : 0,
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 40 页
-================================================================================
-				reason: '抢红包'
-			}
-		})
-		
-		if (res.success) {
-			// 更新本地次数
-			data.morningGrabCount = res.morningCount
-			data.afternoonGrabCount = res.afternoonCount
-			data.lastGrabTime = res.lastGrabTime
-			
-			// 如果是积分红包，检查是否升级
-			if (isPoints) {
-				// 获取当前积分
-				const currentPoints = uni.getStorageSync('userPoints') || 0
-				const oldPoints = currentPoints - points
-				
-				const levelUpInfo = checkLevelUp(oldPoints, currentPoints)
-				
-				if (levelUpInfo && levelUpInfo.isLevelUp) {
-					// 检查是否已经提示过这个等级
-					const notifiedLevel = uni.getStorageSync('notifiedLevel') || 0
-					const newLevel = levelUpInfo.newLevel.level
-					
-					if (notifiedLevel < newLevel) {
-						// 记录已提示的等级
-						uni.setStorageSync('notifiedLevel', newLevel)
-						
-						setTimeout(() => {
-							uni.showModal({
-								title: '🎉 恭喜升级',
-								content: `恭喜您从【${levelUpInfo.oldLevel.name}】升级到【${levelUpInfo.newLevel.name}】！\n\n${levelUpInfo.newLevel.desc}\n\n继续记账，冲击更高等级~`,
-								showCancel: false,
-								confirmText: '太棒了',
-								confirmColor: levelUpInfo.newLevel.color
-							})
-						}, 2500)
-					}
-				}
-			}
-		} else {
-			// API调用失败
-			uni.showToast({
-				title: res.message || '抢红包失败',
-				icon: 'none',
-				duration: 2000
-			})
-			data.showOpenAnimation = false
-			return
-		}
-		
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 41 页
-================================================================================
-	} catch (error) {
-		console.error('抢红包失败:', error)
-		uni.showToast({
-			title: '网络错误，请重试',
-			icon: 'none',
-			duration: 2000
-		})
-		data.showOpenAnimation = false
-		return
-	}
-	
-	// 显示结果
-	data.grabResult = resultText
-	
-	// 震动反馈
-	uni.vibrateShort()
-	
-	// 1.5秒后隐藏开红包动画，显示toast
-	setTimeout(() => {
-		data.showOpenAnimation = false
-		uni.showToast({
-			title: toastText,
-			icon: isPoints ? 'success' : 'none',
-			duration: 2000
-		})
-	}, 1500)
-}
-
-const getBudgetCardClass = () => {
-	if (data.budgetPercent >= 100) return 'budget-danger'
-	if (data.budgetPercent >= 80) return 'budget-warning'
-	return ''
-}
-
-const getBudgetPercentClass = () => {
-	if (data.budgetPercent >= 100) return 'percent-danger'
-	if (data.budgetPercent >= 80) return 'percent-warning'
-	return ''
-}
-
-const getBudgetProgressClass = () => {
-	if (data.budgetPercent >= 100) return 'progress-danger'
-	if (data.budgetPercent >= 80) return 'progress-warning'
-	return ''
-}
-
-const getBudgetWarningText = () => {
-	if (data.budgetPercent >= 100) {
-		const over = data.totalExpense - data.budget
-		return `已超支 ¥${over.toFixed(0)}`
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 42 页
-================================================================================
-	}
-	if (data.budgetPercent >= 80) {
-		const remaining = data.budget - data.totalExpense
-		return `仅剩 ¥${remaining.toFixed(0)}`
-	}
-	return ''
-}
-
-// 获取剩余抢红包次数
-const getRemainCount = () => {
-	const currentHour = new Date().getHours()
-	const isAfternoon = currentHour >= 12
-	const currentPeriodCount = isAfternoon ? data.afternoonGrabCount : data.morningGrabCount
-	return Math.max(0, 20 - currentPeriodCount)
-}
-
-// 显示红包引导（用户点击红包入口时触发）
-const showRedPacketGuide = () => {
-	data.showGuide = true
-}
-
-// 关闭引导
-const closeGuide = () => {
-	data.showGuide = false
-	// 标记用户已看过引导
-	uni.setStorageSync('hasSeenRedPacketGuide', true)
-}
-
-// 切换预算详情显示
-const toggleBudgetDetail = () => {
-	data.showBudgetDetail = !data.showBudgetDetail
-}
-
-// 格式化金额显示
-const formatAmount = (amount) => {
-	const absAmount = Math.abs(amount)
-	if (absAmount >= 100000) {
-		// 大于等于10万，保留两位小数
-		return absAmount.toFixed(2)
-	} else {
-		// 小于10万，保留两位小数
-		return absAmount.toFixed(2)
-	}
-}
-
-onLoad((options) => {
-	// 先初始化悬浮按钮位置（在其他初始化之前）
-	const systemInfo = uni.getSystemInfoSync()
-	const rpxToPx = systemInfo.windowWidth / 750
-	data.floatBtnX = systemInfo.windowWidth - (180 * rpxToPx)
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 43 页
-================================================================================
-	data.floatBtnY = systemInfo.windowHeight - (250 * rpxToPx)
-	
-	initData()
-	loadBudget()
-	loadData()
-	
-	// 初始化春节元素（会设置 isFestivalActive）
-	initFestivalElements()
-	
-	// 监听账单保存事件
-	uni.$on('billSaved', handleBillSaved)
-	
-	// 监听显示提醒弹框事件
-	uni.$on('showReminderModal', () => {
-		console.log('收到显示提醒弹框事件')
-		console.log('reminderModalRef.value:', reminderModalRef.value)
-		
-		// 使用 nextTick 确保组件已经挂载
-		nextTick(() => {
-			if (reminderModalRef.value && typeof reminderModalRef.value.showModal === 'function') {
-				console.log('调用 showModal 方法')
-				reminderModalRef.value.showModal()
-			} else {
-				console.error('reminderModalRef 未准备好或 showModal 方法不存在')
-				// 降级方案：使用系统弹框
-				uni.showModal({
-					title: '记账提醒',
-					content: '今天还没记账哦~\n养成每天记账的好习惯，让收支更清晰！',
-					confirmText: '去记账',
-					cancelText: '稍后',
-					success: (res) => {
-						if (res.confirm) {
-							// 用户点击去记账，不做任何操作（已在首页）
-							console.log('用户点击去记账')
-						} else {
-							// 用户点击稍后，不做任何操作
-							console.log('用户点击稍后')
-						}
-					}
-				})
-			}
-		})
-	})
-	
-	// 首次加载后，后台静默同步一次云端数据
-	setTimeout(() => {
-		syncData()
-	}, 1000)
-	
-	// 检查APP更新（仅APP端）
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 44 页
-================================================================================
-	// #ifdef APP-PLUS
-	checkAppUpdate()
-	// #endif
+const i18n = createI18n({
+  locale: savedLanguage,
+  fallbackLocale: 'zh-CN',
+  legacy: false,
+  globalInjection: true,
+  messages: {
+    'zh-CN': zhCN,
+    'en-US': enUS
+  }
 })
 
-onShow(() => {
-	// 页面显示时滚动到顶部
-	uni.pageScrollTo({
-		scrollTop: 0,
-		duration: 0
-	})
-	
-	// 标记页面可见
-	data.isPageVisible = true
-	
-	// 恢复红包雨定时器
-	if (!data.redPacketTimer && data.isFestivalActive) {
-		data.redPacketTimer = setInterval(() => {
-			checkRedPacketTime()
-		}, 1000)
-		// 立即检查一次
-		checkRedPacketTime()
-	}
-	
-	// 如果红包雨正在进行且音乐未播放，开始播放背景音乐（不播放提示音）
-	if (data.isRedPacketTime && !data.bgMusicContext) {
-		startBgMusic()
-	}
-	
-	// 检查是否需要刷新数据
-	const needRefresh = uni.getStorageSync('needRefreshHome')
-	
-	if (needRefresh) {
-		// 清除标记
-		uni.removeStorageSync('needRefreshHome')
-		// 立即显示加载提示
-		uni.showLoading({ title: '刷新中...' })
-		// 直接从API获取最新数据并刷新
-		billStorage.getFromAPI().then(bills => {
-			console.log('从API获取到的账单数量:', bills ? bills.length : 0)
-			data.allBills = bills || []
-			// 重新加载预算
-			loadBudget()
-			// 重新计算所有数据
-			recalculateData()
-			uni.hideLoading()
-			console.log('数据刷新完成，分类排行:', data.topCategories)
-		}).catch(error => {
-			console.error('刷新失败:', error)
-			uni.showToast({
+export default i18n
 
-================================================================================
-钱哪去了智能记账系统V1.0    第 45 页
-================================================================================
-				title: '刷新失败',
-				icon: 'none'
-			})
-			uni.hideLoading()
-		})
-	} else if (!data.allBills || data.allBills.length === 0) {
-		// 如果缓存为空（比如首次进入），也加载数据
-		loadData()
-	}
-})
-
-// 下拉刷新
-onPullDownRefresh(async () => {
-	try {
-		uni.showLoading({ title: '加载中...', mask: true })
-		
-		const [bills] = await Promise.all([
-			billStorage.getFromAPI(),
-			loadBudget()
-		])
-		
-		if (bills) {
-			data.allBills = bills
-			recalculateData()
-		}
-		
-		uni.hideLoading()
-		uni.showToast({ title: '刷新成功', icon: 'success', duration: 1500 })
-	} catch (error) {
-		console.error('下拉刷新失败:', error)
-		uni.hideLoading()
-		uni.showToast({ title: '刷新失败，请重试', icon: 'none', duration: 2000 })
-		
-		try {
-			await loadData()
-		} catch (e) {
-			console.error('本地加载失败:', e)
-		}
-	} finally {
-		uni.stopPullDownRefresh()
-	}
-})
-
-onHide(() => {
-	// 标记页面不可见
-	data.isPageVisible = false
-	
-	// 暂停红包雨定时器(但不清除,切回来时继续)
-	if (data.redPacketTimer) {
-		clearInterval(data.redPacketTimer)
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 46 页
-================================================================================
-		data.redPacketTimer = null
-	}
-	
-	// 停止背景音乐
-	if (data.bgMusicContext) {
-		data.bgMusicContext.stop()
-		data.bgMusicContext.destroy()
-		data.bgMusicContext = null
-	}
-})
-
-onUnload(() => {
-	// 移除事件监听
-	uni.$off('billSaved', handleBillSaved)
-	uni.$off('showReminderModal')
-	
-	// 清除定时器
-	if (data.redPacketTimer) {
-		clearInterval(data.redPacketTimer)
-		data.redPacketTimer = null
-	}
-	
-	// 停止背景音乐
-	if (data.bgMusicContext) {
-		data.bgMusicContext.stop()
-		data.bgMusicContext.destroy()
-		data.bgMusicContext = null
-	}
-})
-
-</script>
-
-<script>
-// 分享功能配置
+// ========== locale/zh-CN.js - 中文语言包 ==========
 export default {
-	onShareAppMessage(res) {
-		return {
-			title: '语音拍照记账，3秒搞定！AI智能分类，消费一目了然',
-			path: '/pages/tab/index/index?from=share',
-			imageUrl: '/static/logo.png'
-		}
-	},
-	onShareTimeline() {
-		return {
-			title: '语音拍照记账，3秒搞定！AI智能分类，消费一目了然',
-			query: 'from=timeline',
-			imageUrl: '/static/logo.png'
-		}
-	}
+  common: {
+    confirm: '确认',
+    cancel: '取消',
+    save: '保存',
+    delete: '删除',
+    edit: '编辑',
+    loading: '加载中...',
+    success: '操作成功',
+    fail: '操作失败',
+    submit: '提交',
+    done: '完成',
+    back: '返回',
+    search: '搜索',
+    all: '全部',
+    today: '今天',
+    yesterday: '昨天',
+    thisMonth: '本月',
+    thisYear: '本年'
+  },
+  
+  tabbar: {
+    home: '首页',
+    bills: '账单',
+    statistics: '统计',
+    profile: '我的'
+  },
+  
+  home: {
+    title: '钱哪去了',
+    monthlyIncome: '本月收入',
+    monthlyExpense: '本月支出',
+    balance: '结余',
+    budget: '预算',
+    quickRecord: '快速记账',
+    voiceRecord: '语音记账',
+    photoRecord: '拍照记账',
+    manualRecord: '手动记账',
+    recentBills: '最近账单',
+    viewAll: '查看全部',
+    noBills: '还没有账单，快去记一笔吧'
+  },
+  
+  record: {
+    title: '记一笔',
+    amount: '金额',
+    category: '分类',
+    date: '日期',
+    remark: '备注',
+    income: '收入',
+    expense: '支出',
+    pleaseInputAmount: '请输入金额',
+    pleaseSelectCategory: '请选择分类',
+    recordSuccess: '记账成功',
+    deleteConfirm: '确定删除这笔账单吗？',
+    deleteSuccess: '删除成功'
+  },
+  
+  category: {
+    food: '餐饮',
+    shopping: '购物',
+    transport: '交通',
+    entertainment: '娱乐',
+    medical: '医疗',
+    education: '教育',
+    housing: '住房',
+    other: '其他',
+    salary: '工资',
+    bonus: '奖金',
+    investment: '投资'
+  },
+  
+  bills: {
+    title: '账单',
+    income: '收入',
+    expense: '支出',
+    total: '共',
+    items: '笔',
+    noBills: '暂无账单',
+    detail: '账单详情'
+  },
+  
+  statistics: {
+    title: '统计',
+    income: '收入',
+    expense: '支出',
+    balance: '结余',
+    noData: '暂无数据'
+  },
+  
+  profile: {
+    title: '我的',
+    login: '登录/注册',
+    logout: '退出登录',
+    logoutConfirm: '确定退出登录吗？',
+    points: '积分',
+    level: '等级'
+  },
+  
+  settings: {
+    title: '系统设置',
+    language: '语言设置',
+    about: '关于我们',
+    feedback: '意见反馈',
+    reminder: '记账提醒',
+    logout: '退出登录'
+  },
+  
+  user: {
+    login: '登录',
+    register: '注册',
+    phone: '手机号',
+    password: '密码',
+    confirmPassword: '确认密码',
+    verifyCode: '验证码',
+    getCode: '获取验证码',
+    wechatLogin: '微信登录',
+    forgotPassword: '忘记密码',
+    agreeTerms: '我已阅读并同意',
+    userAgreement: '《用户协议》',
+    privacyPolicy: '《隐私政策》',
+    and: '和',
+    pleaseAgree: '请先同意用户协议和隐私政策',
+    loginSuccess: '登录成功',
+    registerSuccess: '注册成功',
+    invalidPhone: '请输入正确的手机号',
+    passwordTooShort: '密码至少6位',
+    passwordNotMatch: '两次密码不一致'
+  },
+  
+  reminder: {
+    title: '记账提醒',
+    enable: '开启提醒',
+    time: '提醒时间',
+    saveSuccess: '保存成功'
+  },
+  
+  feedback: {
+    title: '意见反馈',
+    content: '反馈内容',
+    contentPlaceholder: '请详细描述你的问题或建议',
+    submit: '提交',
+    submitSuccess: '提交成功，感谢你的反馈',
+    pleaseInputContent: '请输入反馈内容'
+  },
+  
+  about: {
+    title: '关于我们',
+    appName: '钱哪去了',
+    version: '版本',
+    description: '智能记账助手，让记账像聊天一样简单'
+  }
 }
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 47 页
-================================================================================
-</script>
-
-<style lang="scss" scoped>
-	@import "@/styles/variables.scss";
-	
-	.page {
-		width: 100%;
-		min-height: 100vh;
-		background: #F7F8FA;
-		position: relative;
-		overflow: hidden;
-	}
-	
-	/* 自定义导航栏 */
-	.custom-navbar {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: transparent;
-		z-index: 1000;
-	}
-	
-	/* 系统样式导航栏（非活动期间） */
-	.system-navbar {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: #52C41A;
-		z-index: 1000;
-		
-		.navbar-content {
-			height: 44px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			/* #ifdef APP-PLUS */
-			padding-bottom: 8rpx;
-			/* #endif */
-		}
-		
-		.navbar-title-text {
-			font-size: 36rpx;
-			font-weight: $font-weight-bold;
-			color: $text-white;
-		}
-	}
-	
-	.navbar-content {
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 48 页
-================================================================================
-		height: 44px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0 $spacing-lg;
-	}
-	
-	.navbar-left,
-	.navbar-right {
-		width: 80rpx;
-		display: flex;
-		align-items: center;
-	}
-	
-	.navbar-right {
-		justify-content: flex-end;
-	}
-	
-	.navbar-title {
-		flex: 1;
-		display: flex;
-		justify-content: center;
-	}
-	
-	.title-text {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
-		letter-spacing: 1rpx;
-	}
-	
-	/* 灯笼装饰 */
-	.lantern {
-		font-size: 48rpx;
-		animation: swing 3s ease-in-out infinite;
-		filter: drop-shadow(0 2rpx 8rpx rgba(255, 255, 255, 0.5));
-	}
-	
-	.navbar-right .lantern {
-		animation-delay: 1.5s;
-	}
-	
-	@keyframes swing {
-		0%, 100% {
-			transform: rotate(-8deg);
-		}
-		50% {
-			transform: rotate(8deg);
-		}
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 49 页
-================================================================================
-	}
-	
-	/* 春节横幅背景 */
-	.festival-bg {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: linear-gradient(180deg, #FF4D4F 0%, #FF6B6B 100%);
-		padding-bottom: 48rpx;
-		text-align: center;
-		box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.3);
-		z-index: 999;
-	}
-	
-	.festival-text {
-		font-size: 28rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
-		letter-spacing: 2rpx;
-		display: inline-block;
-		animation: shine-text 3s ease-in-out infinite;
-	}
-	
-	@keyframes shine-text {
-		0%, 100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.85;
-		}
-	}
-	
-	/* 红包入口 */
-	.red-packet-entry {
-		margin: 24rpx 32rpx 0;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-		border-radius: 24rpx;
-		padding: 24rpx 32rpx;
-		display: flex;
-		justify-content: center;
-		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-		animation: pulse-entry 2s ease-in-out infinite;
-	}
-	
-	.entry-content {
-		display: flex;
-		align-items: center;
-		gap: 24rpx;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 50 页
-================================================================================
-		position: relative;
-		margin-right: 60rpx;
-	}
-	
-	@keyframes pulse-entry {
-		0%, 100% {
-			transform: scale(1);
-			box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-		}
-		50% {
-			transform: scale(1.02);
-			box-shadow: 0 12rpx 32rpx rgba(255, 215, 0, 0.4);
-		}
-	}
-	
-	.entry-icon {
-		font-size: 72rpx;
-		animation: shake-packet 1s ease-in-out infinite;
-		flex-shrink: 0;
-	}
-	
-	@keyframes shake-packet {
-		0%, 100% {
-			transform: rotate(0deg);
-		}
-		25% {
-			transform: rotate(-10deg);
-		}
-		75% {
-			transform: rotate(10deg);
-		}
-	}
-	
-	.entry-text {
-		display: flex;
-		flex-direction: column;
-		gap: 8rpx;
-		align-items: center;
-		text-align: center;
-	}
-	
-	.entry-title {
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: #FF4D4F;
-	}
-	
-	.entry-subtitle {
-		font-size: 24rpx;
-		color: #999;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 51 页
-================================================================================
-	}
-	
-	.entry-count {
-		background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-		padding: 12rpx 24rpx;
-		border-radius: 32rpx;
-		box-shadow: 0 4rpx 12rpx rgba(255, 215, 0, 0.4);
-	}
-	
-	.count-text {
-		font-size: 24rpx;
-		font-weight: $font-weight-bold;
-		color: #8B4513;
-	}
-	
-	/* 新手引导弹窗 */
-	.guide-modal {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 10002;
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.guide-content {
-		width: 600rpx;
-		background: linear-gradient(180deg, #FFF 0%, #FFF9F0 100%);
-		border-radius: 32rpx;
-		overflow: hidden;
-		animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	}
-	
-	.guide-header {
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		padding: 32rpx;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	
-	.guide-title {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 52 页
-================================================================================
-	}
-	
-	.guide-close {
-		font-size: 48rpx;
-		color: rgba(255, 255, 255, 0.9);
-		width: 56rpx;
-		height: 56rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	
-	.guide-body {
-		padding: 48rpx 32rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 24rpx;
-	}
-	
-	.guide-packet {
-		font-size: 160rpx;
-		animation: bounce-guide 1s ease-in-out infinite;
-	}
-	
-	@keyframes bounce-guide {
-		0%, 100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-20rpx);
-		}
-	}
-	
-	.guide-arrow {
-		font-size: 64rpx;
-		animation: arrow-down 1s ease-in-out infinite;
-	}
-	
-	@keyframes arrow-down {
-		0%, 100% {
-			transform: translateY(0);
-			opacity: 1;
-		}
-		50% {
-			transform: translateY(20rpx);
-			opacity: 0.5;
-		}
-	}
-	
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 53 页
-================================================================================
-	.guide-tip {
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: #FF4D4F;
-		margin-bottom: 16rpx;
-	}
-	
-	.guide-rules {
-		width: 100%;
-		background: rgba(255, 77, 79, 0.05);
-		border-radius: 16rpx;
-		padding: 24rpx;
-		display: flex;
-		flex-direction: column;
-		gap: 12rpx;
-	}
-	
-	.rule-item {
-		font-size: 26rpx;
-		color: #666;
-		line-height: 1.6;
-	}
-	
-	.guide-footer {
-		padding: 0 32rpx 32rpx;
-	}
-	
-	.guide-btn {
-		width: 100%;
-		height: 88rpx;
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		border-radius: 44rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-		box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.4);
-	}
-	
-	/* 红包雨结算弹窗 */
-	.result-modal {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		display: flex;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 54 页
-================================================================================
-		align-items: center;
-		justify-content: center;
-		z-index: 10003;
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.result-content {
-		width: 600rpx;
-		background: linear-gradient(180deg, #FFF 0%, #FFF9F0 100%);
-		border-radius: 32rpx;
-		overflow: hidden;
-		animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	}
-	
-	.result-header {
-		background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-		padding: 32rpx;
-		text-align: center;
-	}
-	
-	.result-title {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: #8B4513;
-	}
-	
-	.result-body {
-		padding: 48rpx 32rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 32rpx;
-	}
-	
-	.result-points {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 16rpx;
-	}
-	
-	.points-label {
-		font-size: 28rpx;
-		color: #999;
-	}
-	
-	.points-value {
-		font-size: 120rpx;
-		font-weight: $font-weight-bold;
-		color: #FF4D4F;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 55 页
-================================================================================
-		font-family: 'DIN Alternate', monospace;
-		text-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.3);
-		animation: pulse-points 1s ease-in-out infinite;
-	}
-	
-	@keyframes pulse-points {
-		0%, 100% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.05);
-		}
-	}
-	
-	.points-unit {
-		font-size: 32rpx;
-		color: #666;
-	}
-	
-	/* 祝福语统计 */
-	.result-blessings {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 16rpx;
-	}
-	
-	.blessings-label {
-		font-size: 28rpx;
-		color: #999;
-	}
-	
-	.blessings-list {
-		width: 100%;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 16rpx;
-		justify-content: center;
-		max-height: 300rpx;
-		overflow-y: auto;
-	}
-	
-	.blessing-item {
-		background: linear-gradient(135deg, #FFE5E5 0%, #FFD4D4 100%);
-		padding: 12rpx 24rpx;
-		border-radius: 32rpx;
-		font-size: 24rpx;
-		color: #FF4D4F;
-		font-weight: $font-weight-semibold;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 56 页
-================================================================================
-		box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.15);
-		animation: fadeInUp 0.5s ease;
-	}
-	
-	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(20rpx);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-	
-	/* 空状态 */
-	.result-empty {
-		padding: 48rpx 0;
-	}
-	
-	.empty-text {
-		font-size: 28rpx;
-		color: #999;
-	}
-	
-	.result-tip {
-		width: 100%;
-		background: rgba(255, 77, 79, 0.05);
-		border-radius: 16rpx;
-		padding: 24rpx;
-		text-align: center;
-	}
-	
-	.tip-text {
-		font-size: 28rpx;
-		color: #FF4D4F;
-		font-weight: $font-weight-semibold;
-	}
-	
-	.result-footer {
-		padding: 0 32rpx 32rpx;
-	}
-	
-	.result-btn {
-		width: 100%;
-		height: 88rpx;
-		background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-		border-radius: 44rpx;
-		display: flex;
-		align-items: center;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 57 页
-================================================================================
-		justify-content: center;
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: #8B4513;
-		box-shadow: 0 8rpx 24rpx rgba(255, 165, 0, 0.4);
-	}
-	
-	/* 红包入口激活状态 */
-	.red-packet-entry.active {
-		animation: pulse-active 1s ease-in-out infinite;
-		background: linear-gradient(135deg, #FFE5E5 0%, #FFD4D4 100%);
-	}
-	
-	@keyframes pulse-active {
-		0%, 100% {
-			transform: scale(1);
-			box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.3);
-		}
-		50% {
-			transform: scale(1.03);
-			box-shadow: 0 12rpx 32rpx rgba(255, 77, 79, 0.4);
-		}
-	}
-	
-	.entry-badge {
-		background: #FF4D4F;
-		color: $text-white;
-		font-size: 24rpx;
-		font-weight: $font-weight-bold;
-		padding: 8rpx 16rpx;
-		border-radius: 32rpx;
-		animation: blink 1s ease-in-out infinite;
-		position: absolute;
-		right: -80rpx;
-	}
-	
-	@keyframes blink {
-		0%, 100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.6;
-		}
-	}
-	
-	.badge-text {
-		color: $text-white;
-	}
-	
-	/* 下拉抢红包提示 */
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 58 页
-================================================================================
-	.pull-hint {
-		position: fixed;
-		top: 120rpx;
-		left: 50%;
-		transform: translateX(-50%) translateY(-100rpx);
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		padding: 20rpx 40rpx;
-		border-radius: 60rpx;
-		display: flex;
-		align-items: center;
-		gap: 16rpx;
-		box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.4);
-		z-index: 101;
-		opacity: 0;
-		transition: all 0.3s ease;
-		border: 3rpx solid rgba(255, 255, 255, 0.5);
-	}
-	
-	.pull-hint.show {
-		opacity: 1;
-		transform: translateX(-50%) translateY(0);
-	}
-	
-	.hint-icon {
-		font-size: 48rpx;
-		animation: bounce-hint 0.6s ease-in-out infinite;
-	}
-	
-	@keyframes bounce-hint {
-		0%, 100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-8rpx);
-		}
-	}
-	
-	.hint-text {
-		font-size: 28rpx;
-		color: $text-white;
-		font-weight: $font-weight-bold;
-		text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
-	}
-	
-	/* 开红包炸裂动画 */
-	.open-packet-animation {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 59 页
-================================================================================
-		bottom: 0;
-		z-index: 10001;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	
-	.packet-bg {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.packet-content {
-		position: relative;
-		z-index: 1;
-	}
-	
-	/* 红包炸开效果 */
-	.packet-explode {
-		position: relative;
-		width: 300rpx;
-		height: 400rpx;
-		margin: 0 auto;
-	}
-	
-	.packet-half {
-		position: absolute;
-		width: 150rpx;
-		height: 400rpx;
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		border-radius: 20rpx;
-		box-shadow: 0 8rpx 32rpx rgba(255, 0, 0, 0.6);
-	}
-	
-	.packet-left {
-		left: 0;
-		animation: explode-left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-		transform-origin: right center;
-	}
-	
-	.packet-right {
-		right: 0;
-		animation: explode-right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-		transform-origin: left center;
-	}
-
-================================================================================
-钱哪去了智能记账系统V1.0    第 60 页
-================================================================================
-	
-	@keyframes explode-left {
-		0% {
-			transform: translateX(0) rotate(0deg);
-			opacity: 1;
-		}
-		100% {
-			transform: translateX(-200rpx) rotate(-45deg);
-			opacity: 0;
-		}
-	}
-	
-	@keyframes explode-right {
-		0% {
-			transform: translateX(0) rotate(0deg);
-			opacity: 1;
-		}
-		100% {
-			transform: translateX(200rpx) rotate(45deg);
-			opacity: 0;
-		}
-	}
-	
-	/* 金币飞出效果 */
-	.coins-fly {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-	}
-	
-	.coin {
-		position: absolute;
-		font-size: 60rpx;
-		animation: coin-fly 0.8s ease-out forwards;
-		opacity: 0;
-	}
-	
-	.coin:nth-child(1) { animation-delay: 0.3s; --angle: 0deg; }
-	.coin:nth-child(2) { animation-delay: 0.35s; --angle: 30deg; }
-	.coin:nth-child(3) { animation-delay: 0.4s; --angle: 60deg; }
-	.coin:nth-child(4) { animation-delay: 0.45s; --angle: 90deg; }
-	.coin:nth-child(5) { animation-delay: 0.5s; --angle: 120deg; }
-	.coin:nth-child(6) { animation-delay: 0.55s; --angle: 150deg; }
-	.coin:nth-child(7) { animation-delay: 0.6s; --angle: 180deg; }
-	.coin:nth-child(8) { animation-delay: 0.65s; --angle: 210deg; }
-	.coin:nth-child(9) { animation-delay: 0.7s; --angle: 240deg; }
-	.coin:nth-child(10) { animation-delay: 0.75s; --angle: 270deg; }
-	.coin:nth-child(11) { animation-delay: 0.8s; --angle: 300deg; }
-	.coin:nth-child(12) { animation-delay: 0.85s; --angle: 330deg; }
 
