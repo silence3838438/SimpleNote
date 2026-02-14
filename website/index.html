@@ -130,22 +130,38 @@
             margin-bottom: 30px;
         }
         
+        .download-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 100px;
+            flex-wrap: wrap;
+        }
+        
+        .download-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
         .qr-code {
-            width: 200px;
-            height: 200px;
+            width: 160px;
+            height: 160px;
             background: white;
-            margin: 0 auto 20px;
+            margin: 0 auto 15px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 14px;
             color: #666;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
         .download-text {
             font-size: 16px;
             opacity: 0.9;
+            margin-bottom: 5px;
         }
         
         /* 底部 */
@@ -193,6 +209,19 @@
             
             .features {
                 grid-template-columns: 1fr;
+            }
+            
+            .download-container {
+                gap: 40px;
+            }
+            
+            .qr-code {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .download-text {
+                font-size: 14px;
             }
         }
     </style>
@@ -266,11 +295,35 @@
         
         <div class="download-section">
             <h2>📱 立即下载</h2>
-            <div class="qr-code">
-                <img src="miniprogram-qrcode.jpg" alt="微信小程序二维码" style="width: 100%; height: 100%; border-radius: 10px;">
+            <div class="download-container">
+                <!-- 微信小程序 -->
+                <div class="download-item">
+                    <div class="qr-code">
+                        <img src="miniprogram-qrcode.jpg" alt="微信小程序二维码" style="width: 100%; height: 100%; border-radius: 10px;">
+                    </div>
+                    <p class="download-text">微信长按识别"钱哪去了"</p>
+                    <p class="download-text" style="font-size: 14px; opacity: 0.8;">或公众号搜索"钱哪去了"</p>
+                </div>
+                
+                <!-- 安卓应用 -->
+                <div class="download-item">
+                    <div class="qr-code">
+                        <img src="androidCode.jpg" alt="安卓应用下载二维码" style="width: 100%; height: 100%; border-radius: 10px;">
+                    </div>
+                    <p class="download-text">扫码下载安卓应用</p>
+                    <p class="download-text" style="font-size: 14px; opacity: 0.8;">支持 Android 5.0+</p>
+                </div>
+                
+                <!-- 微信公众号 -->
+                <div class="download-item">
+                    <div class="qr-code">
+                        <img src="gongzhonghao.jpg" alt="微信公众号二维码" style="width: 100%; height: 100%; border-radius: 10px;">
+                    </div>
+                    <p class="download-text">关注公众号"钱哪去了"</p>
+                    <p class="download-text" style="font-size: 14px; opacity: 0.8;">获取最新功能和优惠</p>
+                </div>
             </div>
-            <p class="download-text">支持微信小程序、iOS、Android、HarmonyOS</p>
-            <p class="download-text" style="margin-top: 10px; font-size: 14px;">即将上线各大应用商店</p>
+            <p class="download-text" style="margin-top: 30px; font-size: 14px; opacity: 0.8;">iOS版本即将上线 App Store</p>
         </div>
         
         <footer>

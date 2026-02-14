@@ -353,7 +353,7 @@ const openUserAgreement = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 40rpx; /* 减小间距，从56rpx改为40rpx */
+	margin-bottom: 100rpx;
 }
 
 .page-title {

@@ -320,7 +320,7 @@ const goToLogin = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 40rpx;
+	margin-bottom: 100rpx;
 }
 
 .page-title {

@@ -288,6 +288,44 @@
 			</view>
 		</view>
 		
+		<!-- 昵称修改弹框 -->
+		<view class="nickname-modal" v-if="data.showNicknameModal" @click="closeNicknameModal">
+			<view class="nickname-modal-content" @click.stop>
+				<view class="nickname-header">
+					<text class="nickname-title">修改昵称</text>
+					<view class="nickname-close" @click="closeNicknameModal">
+						<text class="close-icon">✕</text>
+					</view>
+				</view>
+				
+				<view class="nickname-body">
+					<view class="nickname-input-wrapper">
+						<input 
+							class="nickname-input" 
+							v-model="data.tempNickname"
+							placeholder="请输入昵称"
+							placeholder-class="nickname-placeholder"
+							maxlength="20"
+						/>
+						<text class="nickname-count">{{ data.tempNickname.length }}/20</text>
+					</view>
+					<view class="nickname-tips">
+						<text class="tip-item">• 昵称长度不超过20个字符</text>
+						<text class="tip-item">• 建议使用真实姓名或常用昵称</text>
+					</view>
+				</view>
+				
+				<view class="nickname-footer">
+					<view class="nickname-btn cancel-btn" @click="closeNicknameModal">
+						<text class="nickname-btn-text">取消</text>
+					</view>
+					<view class="nickname-btn confirm-btn" @click="confirmNickname">
+						<text class="nickname-btn-text">确定</text>
+					</view>
+				</view>
+			</view>
+		</view>
+		
 		<!-- 隐私协议弹框 -->
 		<view class="privacy-modal" v-if="data.showPrivacyModal" @click="closePrivacyModal">
 			<view class="privacy-modal-content" @click.stop>
@@ -356,6 +394,8 @@ const data = reactive({
 	showLevelModal: false, // 是否显示等级详情弹框
 	showPrivacyModal: false, // 是否显示隐私协议弹框
 	showShareModal: false, // 是否显示分享弹框
+	showNicknameModal: false, // 是否显示昵称修改弹框
+	tempNickname: '', // 临时昵称
 	reminderTime: '', // 提醒时间
 	// APP更新相关
 	showUpdateModal: false,
@@ -605,49 +645,61 @@ const updateWechatAvatar = () => {
 
 // 修改昵称
 const changeNickname = () => {
-	uni.showModal({
-		title: '修改昵称',
-		editable: true,
-		placeholderText: '请输入昵称',
-		content: data.userInfo.nickName,
-		success: async (res) => {
-			if (res.confirm && res.content) {
-				const nickname = res.content.trim()
-				if (!nickname) {
-					uni.showToast({
-						title: '昵称不能为空',
-						icon: 'none'
-					})
-					return
-				}
-				
-				// 显示加载提示
-				uni.showLoading({ title: '保存中...' })
-				
-				try {
-					// 更新到云端
-					await updateUserInfoToCloud(nickname, data.userInfo.avatarUrl)
-					
-					// 更新本地
-					data.userInfo.nickName = nickname
-					uni.setStorageSync('userInfo', data.userInfo)
-					
-					uni.hideLoading()
-					uni.showToast({
-						title: '昵称修改成功',
-						icon: 'success'
-					})
-				} catch (error) {
-					uni.hideLoading()
-					console.error('更新昵称失败:', error)
-					uni.showToast({
-						title: '保存失败',
-						icon: 'none'
-					})
-				}
-			}
-		}
-	})
+	data.showNicknameModal = true
+	data.tempNickname = data.userInfo.nickName
+}
+
+// 关闭昵称弹框
+const closeNicknameModal = () => {
+	data.showNicknameModal = false
+	data.tempNickname = ''
+}
+
+// 确认修改昵称
+const confirmNickname = async () => {
+	const nickname = data.tempNickname.trim()
+	if (!nickname) {
+		uni.showToast({
+			title: '昵称不能为空',
+			icon: 'none'
+		})
+		return
+	}
+	
+	if (nickname.length > 20) {
+		uni.showToast({
+			title: '昵称不能超过20个字符',
+			icon: 'none'
+		})
+		return
+	}
+	
+	// 显示加载提示
+	uni.showLoading({ title: '保存中...' })
+	
+	try {
+		// 更新到云端
+		await updateUserInfoToCloud(nickname, data.userInfo.avatarUrl)
+		
+		// 更新本地
+		data.userInfo.nickName = nickname
+		uni.setStorageSync('userInfo', data.userInfo)
+		
+		uni.hideLoading()
+		uni.showToast({
+			title: '昵称修改成功',
+			icon: 'success'
+		})
+		
+		closeNicknameModal()
+	} catch (error) {
+		uni.hideLoading()
+		console.error('更新昵称失败:', error)
+		uni.showToast({
+			title: '保存失败',
+			icon: 'none'
+		})
+	}
 }
 
 // 更新用户信息到云端
@@ -2433,6 +2485,176 @@ const handleDownloadComplete = () => {
 }
 
 .confirm-btn .privacy-btn-text {
+	color: #FFFFFF;
+}
+
+/* 昵称修改弹框 */
+.nickname-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+	animation: fadeIn 0.3s ease;
+	padding: 80rpx;
+}
+
+.nickname-modal-content {
+	width: 100%;
+	max-width: 560rpx;
+	background: #FFFFFF;
+	border-radius: 24rpx;
+	overflow: hidden;
+	animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
+}
+
+.nickname-header {
+	position: relative;
+	padding: 40rpx 32rpx 24rpx;
+	text-align: center;
+	background: linear-gradient(180deg, #F8FFF9 0%, #FFFFFF 100%);
+	border-bottom: 2rpx solid #F0F0F0;
+}
+
+.nickname-title {
+	font-size: 34rpx;
+	font-weight: 700;
+	color: #1a1a1a;
+	letter-spacing: 0.5rpx;
+}
+
+.nickname-close {
+	position: absolute;
+	top: 32rpx;
+	right: 32rpx;
+	width: 48rpx;
+	height: 48rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.04);
+	transition: all 0.2s ease;
+}
+
+.nickname-close:active {
+	background: rgba(0, 0, 0, 0.08);
+	transform: scale(0.9);
+}
+
+.close-icon {
+	font-size: 32rpx;
+	color: #999;
+	font-weight: 300;
+	line-height: 1;
+}
+
+.nickname-body {
+	padding: 40rpx 32rpx;
+}
+
+.nickname-input-wrapper {
+	position: relative;
+	background: #FAFAFA;
+	border-radius: 16rpx;
+	border: 2rpx solid #F0F0F0;
+	padding: 24rpx 28rpx;
+	transition: all 0.3s ease;
+}
+
+.nickname-input-wrapper:focus-within {
+	background: #FFFFFF;
+	border-color: #52C41A;
+	box-shadow: 0 0 0 6rpx rgba(82, 196, 26, 0.08);
+}
+
+.nickname-input {
+	width: 100%;
+	font-size: 32rpx;
+	color: #1a1a1a;
+	line-height: 1.5;
+	padding-right: 80rpx;
+}
+
+.nickname-placeholder {
+	color: #BFBFBF;
+}
+
+.nickname-count {
+	position: absolute;
+	right: 28rpx;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 24rpx;
+	color: #999;
+	font-family: 'DIN Alternate', monospace;
+}
+
+.nickname-tips {
+	margin-top: 24rpx;
+	padding: 20rpx 24rpx;
+	background: linear-gradient(135deg, #F0FFF4 0%, #F8FFF9 100%);
+	border-radius: 12rpx;
+	border-left: 4rpx solid #52C41A;
+}
+
+.tip-item {
+	display: block;
+	font-size: 24rpx;
+	color: #666;
+	line-height: 2;
+}
+
+.nickname-footer {
+	display: flex;
+	gap: 16rpx;
+	padding: 0 32rpx 32rpx;
+}
+
+.nickname-btn {
+	flex: 1;
+	padding: 28rpx;
+	border-radius: 16rpx;
+	text-align: center;
+	transition: all 0.2s ease;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.nickname-btn:active {
+	transform: scale(0.96);
+}
+
+.nickname-btn.cancel-btn {
+	background: #F5F5F5;
+	box-shadow: none;
+}
+
+.nickname-btn.cancel-btn:active {
+	background: #E8E8E8;
+}
+
+.nickname-btn.confirm-btn {
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
+}
+
+.nickname-btn-text {
+	font-size: 30rpx;
+	font-weight: 600;
+	letter-spacing: 0.5rpx;
+}
+
+.nickname-btn.cancel-btn .nickname-btn-text {
+	color: #666;
+}
+
+.nickname-btn.confirm-btn .nickname-btn-text {
 	color: #FFFFFF;
 }
 </style>

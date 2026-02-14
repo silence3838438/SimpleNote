@@ -49,7 +49,7 @@ const shareToWechatFriend = () => {
 		type: 0,
 		title: '语音拍照记账，3秒搞定！消费一目了然',
 		summary: '钱哪去了 - 轻松管理每一笔',
-		href: 'https://qiannaqule.top',
+		href: 'https://api.qiannaqule.top',
 		imageUrl: '/static/shareLine.png',
 		success: () => {
 			emit('share', 'friend')
@@ -68,7 +68,7 @@ const shareToWechatMoments = () => {
 		type: 0,
 		title: '钱哪去了 - 语音拍照记账，轻松管理每一笔',
 		summary: '语音拍照记账，3秒搞定！消费一目了然',
-		href: 'https://qiannaqule.top',
+		href: 'https://api.qiannaqule.top',
 		imageUrl: '/static/shareLine.png',
 		success: () => {
 			emit('share', 'moments')
@@ -153,7 +153,7 @@ const shareToWechatMoments = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 80rpx;
+	gap: 120rpx;
 	padding: 80rpx 32rpx 100rpx;
 	background: rgba(255, 255, 255, 0.95);
 	backdrop-filter: blur(20rpx);
@@ -187,8 +187,7 @@ const shareToWechatMoments = () => {
 .share-icon {
 	width: 96rpx;
 	height: 96rpx;
-	border-radius: 20rpx;
-	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+	display: block;
 }
 
 .share-label {

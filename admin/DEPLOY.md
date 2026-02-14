@@ -37,7 +37,7 @@ chmod -R 755 /www/admin
 rm /tmp/admin-dist.tar.gz
 
 echo "✅ 部署完成！"
-echo "访问地址: https://api.qiannaqule.top/admin"
+echo "访问地址: https://api.qiannaqule.top/admin/"
 EOF
 ```
 
@@ -90,7 +90,7 @@ nginx -t && systemctl reload nginx
 ssh root@8.218.209.109 "ls -la /www/admin"
 
 # 测试访问
-curl -I https://api.qiannaqule.top/admin
+curl -I https://api.qiannaqule.top/admin/
 
 # 应该返回 200 状态码
 ```
