@@ -45,6 +45,21 @@
 				</view>
 				<!-- #endif -->
 				
+				<!-- 绑定手机号（仅登录后显示） -->
+				<view class="function-item" @click="goToBindPhone" v-if="data.isLogin">
+					<view class="function-left">
+						<view class="function-icon phone-icon">
+							<text class="icon-text">📱</text>
+						</view>
+						<text class="function-title">绑定手机号</text>
+					</view>
+					<view class="function-right">
+						<text class="function-desc" v-if="data.phoneNumber">{{ data.phoneNumber }}</text>
+						<text class="function-desc inactive" v-else>未绑定</text>
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				
 				<!-- 用户注销（仅登录后显示） -->
 				<view class="function-item danger-item" @click="handleDeleteAccount" v-if="data.isLogin">
 					<view class="function-left">
@@ -111,6 +126,7 @@ const { t, locale } = useI18n()
 
 const data = reactive({
 	isLogin: false,
+	phoneNumber: '', // 绑定的手机号（脱敏显示）
 	appVersion: '',
 	showUpdateModal: false,
 	updateInfo: {
@@ -130,6 +146,32 @@ const data = reactive({
 const checkLogin = () => {
 	const userInfo = uni.getStorageSync('userInfo')
 	data.isLogin = userInfo && userInfo.isLogin
+	
+	// 如果已登录，加载手机号
+	if (data.isLogin) {
+		loadPhoneNumber()
+	}
+}
+
+// 加载手机号
+const loadPhoneNumber = async () => {
+	try {
+		const res = await request.call('auth/get-phone')
+		if (res.success && res.data && res.data.phone) {
+			// 脱敏显示手机号
+			const phone = res.data.phone
+			data.phoneNumber = phone.substring(0, 3) + '****' + phone.substring(7)
+		}
+	} catch (error) {
+		console.error('获取手机号失败:', error)
+	}
+}
+
+// 跳转到绑定手机号页面
+const goToBindPhone = () => {
+	uni.navigateTo({
+		url: '/pages/settings/bind-phone'
+	})
 }
 
 // 获取APP版本号
@@ -407,6 +449,10 @@ onLoad(() => {
 	flex-shrink: 0;
 }
 
+.phone-icon {
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+}
+
 .about-icon {
 	background: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
 }
@@ -490,6 +536,10 @@ onLoad(() => {
 	font-size: $font-size-base;
 	color: #52C41A;
 	font-weight: $font-weight-medium;
+}
+
+.function-desc.inactive {
+	color: $text-tertiary;
 }
 
 .arrow {

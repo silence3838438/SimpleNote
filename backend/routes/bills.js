@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const xlsx = require('node-xlsx');
 
 // 账单管理路由
 router.post('/', async (req, res) => {
@@ -53,6 +54,8 @@ router.post('/', async (req, res) => {
         return await getUserInfo(req, res, userId);
       case 'updateUserInfo':
         return await updateUserInfo(req, res, userId, data);
+      case 'exportExcel':
+        return await exportExcel(req, res, userId, data);
       default:
         res.json({ success: false, message: '未知操作' });
     }
@@ -244,24 +247,51 @@ async function setBudget(req, res, userId, data) {
 
 // 获取提醒设置
 async function getReminder(req, res, userId) {
-  const result = await db.query('SELECT * FROM reminders WHERE user_id = ?', [userId]);
+  // 获取用户的 openid
+  const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
+  if (userResult.length === 0 || !userResult[0].openid) {
+    return res.json({
+      success: true,
+      reminder: { enabled: false, time: '21:00', reminder_time: '21:00' }
+    });
+  }
   
-  res.json({
-    success: true,
-    reminder: result.length > 0 ? result[0] : { enabled: false, time: '21:00' }
-  });
+  const openid = userResult[0].openid;
+  const result = await db.query('SELECT * FROM reminders WHERE user_id = ?', [openid]);
+  
+  if (result.length > 0) {
+    // 确保返回的数据包含 time 和 reminder_time 两个字段（兼容性）
+    const reminder = result[0];
+    reminder.reminder_time = reminder.time || reminder.reminder_time || '21:00';
+    res.json({
+      success: true,
+      reminder: reminder
+    });
+  } else {
+    res.json({
+      success: true,
+      reminder: { enabled: false, time: '21:00', reminder_time: '21:00' }
+    });
+  }
 }
 
 // 设置提醒
 async function setReminder(req, res, userId, data) {
-  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [userId]);
+  // 获取用户的 openid
+  const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
+  if (userResult.length === 0 || !userResult[0].openid) {
+    return res.json({ success: false, message: '用户 openid 不存在' });
+  }
+  
+  const openid = userResult[0].openid;
+  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [openid]);
   
   if (existing.length > 0) {
-    await db.query('UPDATE reminders SET enabled = ?, time = ?, update_time = NOW() WHERE user_id = ?', 
-      [data.enabled, data.time, userId]);
+    await db.query('UPDATE reminders SET enabled = ?, time = ?, updated_at = NOW() WHERE user_id = ?', 
+      [data.enabled, data.time, openid]);
   } else {
-    await db.query('INSERT INTO reminders (user_id, enabled, time, create_time) VALUES (?, ?, ?, NOW())', 
-      [userId, data.enabled, data.time]);
+    await db.query('INSERT INTO reminders (user_id, enabled, time, created_at) VALUES (?, ?, ?, NOW())', 
+      [openid, data.enabled, data.time]);
   }
   
   res.json({ success: true, message: data.enabled ? '提醒设置成功' : '提醒已关闭' });
@@ -271,17 +301,26 @@ async function setReminder(req, res, userId, data) {
 async function saveReminderSubscription(req, res, userId, data) {
   const { subscribed, templateId, reminderTime } = data;
   
-  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [userId]);
+  // 获取用户的 openid（用于发送订阅消息）
+  const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
+  if (userResult.length === 0 || !userResult[0].openid) {
+    return res.json({ success: false, message: '用户 openid 不存在，无法订阅' });
+  }
+  
+  const openid = userResult[0].openid;
+  
+  // 使用 openid 作为 user_id 存储（因为发送订阅消息需要 openid）
+  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [openid]);
   
   if (existing.length > 0) {
     await db.query(
-      'UPDATE reminders SET enabled = ?, time = ?, template_id = ?, update_time = NOW() WHERE user_id = ?',
-      [subscribed, reminderTime, templateId, userId]
+      'UPDATE reminders SET enabled = ?, time = ?, template_id = ?, updated_at = NOW() WHERE user_id = ?',
+      [subscribed, reminderTime, templateId, openid]
     );
   } else {
     await db.query(
-      'INSERT INTO reminders (user_id, enabled, time, template_id, create_time) VALUES (?, ?, ?, ?, NOW())',
-      [userId, subscribed, reminderTime, templateId]
+      'INSERT INTO reminders (user_id, enabled, time, template_id, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [openid, subscribed, reminderTime, templateId]
     );
   }
   
@@ -518,6 +557,81 @@ async function updateUserInfo(req, res, userId, data) {
   );
   
   res.json({ success: true, message: '用户信息更新成功' });
+}
+
+// 导出Excel
+async function exportExcel(req, res, userId, data) {
+  try {
+    const { bills } = data;
+    
+    if (!bills || bills.length === 0) {
+      return res.json({
+        success: false,
+        message: '没有可导出的账单数据'
+      });
+    }
+    
+    // 准备Excel数据
+    const sheetData = [
+      // 表头
+      ['日期', '类型', '分类', '商家/备注', '金额']
+    ];
+    
+    // 按日期排序
+    bills.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // 添加数据行
+    bills.forEach(bill => {
+      sheetData.push([
+        bill.date,
+        bill.type === 'income' ? '收入' : '支出',
+        bill.categoryName || '其他',
+        bill.merchant || '-',
+        bill.type === 'income' ? bill.amount : -bill.amount
+      ]);
+    });
+    
+    // 添加空行
+    sheetData.push([]);
+    
+    // 添加统计汇总
+    const totalIncome = bills.filter(b => b.type === 'income').reduce((sum, b) => sum + b.amount, 0);
+    const totalExpense = bills.filter(b => b.type === 'expense').reduce((sum, b) => sum + b.amount, 0);
+    const balance = totalIncome - totalExpense;
+    
+    sheetData.push(['统计汇总']);
+    sheetData.push(['总收入', totalIncome.toFixed(2)]);
+    sheetData.push(['总支出', totalExpense.toFixed(2)]);
+    sheetData.push(['结余', balance.toFixed(2)]);
+    sheetData.push(['账单总数', bills.length]);
+    sheetData.push(['导出时间', new Date().toLocaleString('zh-CN')]);
+    
+    // 生成Excel文件
+    const buffer = xlsx.build([
+      {
+        name: '账单明细',
+        data: sheetData,
+        options: {}
+      }
+    ]);
+    
+    // 将buffer转换为base64返回给前端
+    const base64 = buffer.toString('base64');
+    const fileName = `账单_${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    res.json({
+      success: true,
+      data: base64,
+      fileName: fileName
+    });
+    
+  } catch (error) {
+    console.error('导出Excel失败:', error);
+    res.json({
+      success: false,
+      message: '导出失败：' + error.message
+    });
+  }
 }
 
 module.exports = router;

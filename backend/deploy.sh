@@ -33,6 +33,11 @@ else
     sshpass -p "$PASSWORD" scp -r routes/ "$SERVER:$REMOTE_DIR/"
     sshpass -p "$PASSWORD" scp -r middleware/ "$SERVER:$REMOTE_DIR/"
     sshpass -p "$PASSWORD" scp server.js db.js "$SERVER:$REMOTE_DIR/"
+    
+    # 上传migrations目录
+    echo "📤 上传migrations目录..."
+    sshpass -p "$PASSWORD" scp -r migrations/ "$SERVER:$REMOTE_DIR/" 2>/dev/null || echo "⚠️  migrations目录不存在"
+    
     if [ $? -ne 0 ]; then
         echo "❌ 文件上传失败"
         exit 1
@@ -46,12 +51,20 @@ echo "🔄 执行数据库迁移..."
 # 先上传迁移脚本
 sshpass -p "$PASSWORD" scp migrate-db.js "$SERVER:$REMOTE_DIR/"
 
+# 上传migrations目录
+echo "📤 上传migrations目录..."
+sshpass -p "$PASSWORD" scp -r migrations/ "$SERVER:$REMOTE_DIR/" 2>/dev/null || echo "⚠️  migrations目录不存在或上传失败"
+
 # 执行数据库迁移
 sshpass -p "$PASSWORD" ssh "$SERVER" "cd /www/backend && node migrate-db.js"
 
 if [ $? -ne 0 ]; then
     echo "⚠️  数据库迁移失败，但继续部署..."
 fi
+
+# 执行reminders表的template_id字段迁移
+echo "🔄 执行reminders表迁移..."
+sshpass -p "$PASSWORD" ssh "$SERVER" "cd /www/backend && node migrations/add-template-id-to-reminders.js" 2>/dev/null || echo "⚠️  reminders表迁移失败或已完成"
 
 echo ""
 echo "🔄 重启后端服务..."

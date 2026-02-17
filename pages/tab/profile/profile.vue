@@ -397,6 +397,7 @@ const data = reactive({
 	showNicknameModal: false, // 是否显示昵称修改弹框
 	tempNickname: '', // 临时昵称
 	reminderTime: '', // 提醒时间
+	phoneNumber: '', // 绑定的手机号（脱敏显示）
 	// APP更新相关
 	showUpdateModal: false,
 	updateInfo: {
@@ -1309,15 +1310,80 @@ const goToAIChat = () => {
 	})
 }
 
+// 跳转到绑定手机号页面 - 已移至系统设置页面
+
+// 跳转到绑定手机号页面
+const goToBindPhone = () => {
+	uni.navigateTo({
+		url: '/pages/settings/bind-phone'
+	})
+}
+
+// 加载绑定状态
+const loadBindingStatus = async () => {
+	// 检查登录状态
+	const userInfo = uni.getStorageSync('userInfo')
+	if (!userInfo || !userInfo.isLogin) {
+		data.phoneNumber = ''
+		return
+	}
+	
+	try {
+		const res = await request.call('account/binding-status', {}, 'GET')
+		if (res.success && res.data) {
+			data.phoneNumber = res.data.phone || ''
+		}
+	} catch (error) {
+		console.error('获取绑定状态失败:', error)
+	}
+}
+
+// 加载绑定状态 - 已移至系统设置页面
+
 // 加载提醒时间
-const loadReminderTime = () => {
-	// 统一使用 reminderEnabled 字段
+const loadReminderTime = async () => {
+	// 先从本地缓存读取，立即显示
 	const reminderEnabled = uni.getStorageSync('reminderEnabled') || false
 	if (reminderEnabled) {
 		const reminderTime = uni.getStorageSync('reminderTime') || ''
 		data.reminderTime = reminderTime
 	} else {
 		data.reminderTime = ''
+	}
+	
+	// 检查登录状态
+	const userInfo = uni.getStorageSync('userInfo')
+	if (!userInfo || !userInfo.isLogin) {
+		return
+	}
+	
+	// 然后异步从云端获取最新数据，静默更新
+	try {
+		const res = await request.call('billManager', {
+			action: 'getReminder'
+		})
+		
+		console.log('获取提醒设置返回:', res)
+		
+		if (res.success && res.reminder) {
+			const reminderTime = res.reminder.reminder_time || res.reminder.time || ''
+			console.log('云端提醒时间:', reminderTime)
+			
+			// 如果云端数据与本地不同，更新本地和显示
+			if (reminderTime && reminderTime !== data.reminderTime) {
+				data.reminderTime = reminderTime
+				uni.setStorageSync('reminderTime', reminderTime)
+				uni.setStorageSync('reminderEnabled', true)
+			} else if (!reminderTime && data.reminderTime) {
+				// 云端没有数据，但本地有，可能是删除了
+				data.reminderTime = ''
+				uni.removeStorageSync('reminderTime')
+				uni.removeStorageSync('reminderEnabled')
+			}
+		}
+	} catch (error) {
+		console.error('获取提醒时间失败:', error)
+		// 获取失败不影响显示，继续使用本地缓存
 	}
 }
 
@@ -1333,6 +1399,7 @@ onLoad(() => {
 	getSystemInfo()
 	loadStats()
 	loadReminderTime()
+	loadBindingStatus()
 	// #ifdef APP-PLUS
 	getAppVersion()
 	// #endif
@@ -1358,6 +1425,9 @@ onShow(() => {
 	
 	// 重新加载提醒时间（用户可能刚设置完）
 	loadReminderTime()
+	
+	// 重新加载绑定状态（用户可能刚绑定完）
+	loadBindingStatus()
 	
 	// 检查是否有升级（延迟检查，避免与数据加载冲突）
 	setTimeout(() => {
@@ -1648,7 +1718,7 @@ const handleDownloadComplete = () => {
 	background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
 	border-radius: $radius-lg;
 	padding: $spacing-xl;
-	margin: 32rpx $spacing-lg $spacing-xl;
+	margin: 32rpx $spacing-lg $spacing-xl $spacing-lg;
 	box-shadow: $shadow-card;
 	backdrop-filter: blur(20rpx);
 	border: 2rpx solid rgba(255, 255, 255, 0.5);
@@ -1836,7 +1906,7 @@ const handleDownloadComplete = () => {
 	justify-content: space-around;
 	background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.3) 100%);
 	padding: $spacing-xl $spacing-lg;
-	margin: 0 $spacing-lg;
+	margin: 0 $spacing-md $spacing-xl $spacing-md;
 	border-radius: $radius-2xl;
 	backdrop-filter: blur(10rpx);
 	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
@@ -1908,7 +1978,7 @@ const handleDownloadComplete = () => {
 	background: $bg-white;
 	border-radius: $radius-lg;
 	padding: $spacing-lg;
-	margin: -24rpx $spacing-lg 0;
+	margin: -24rpx $spacing-lg $spacing-xl $spacing-lg;
 	box-shadow: $shadow-card;
 }
 
@@ -1970,6 +2040,10 @@ const handleDownloadComplete = () => {
 	background: linear-gradient(135deg, #FA8C16 0%, #FFA940 100%);
 }
 
+.phone-icon {
+	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+}
+
 .share-icon {
 	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
 }
@@ -2028,8 +2102,8 @@ const handleDownloadComplete = () => {
 
 /* 退出登录区域 */
 .logout-section {
-	padding: 0 $spacing-lg;
-	margin: $spacing-lg 0 0;
+	padding: 0 $spacing-md;
+	margin: 0;
 	display: flex;
 	justify-content: center;
 }
@@ -2396,7 +2470,7 @@ const handleDownloadComplete = () => {
 
 .privacy-modal-content {
 	width: 100%;
-	max-width: 560rpx;
+	max-width: 640rpx; /* 从560rpx增加到640rpx，让弹框更宽 */
 	background: #FFFFFF;
 	border-radius: $radius-xl;
 	overflow: hidden;

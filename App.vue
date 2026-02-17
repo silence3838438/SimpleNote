@@ -23,24 +23,28 @@
 	// 从云端加载提醒设置
 	const loadReminderSettingsFromCloud = async () => {
 		try {
-			// #ifdef MP-WEIXIN
-			const result = await wx.cloud.callFunction({
-				name: 'billManager',
-				data: {
-					action: 'getReminder',
-					data: {}
+			const token = uni.getStorageSync('token')
+			if (!token) {
+				console.log('未登录，跳过加载提醒设置')
+				return
+			}
+			
+			const result = await uni.request({
+				url: 'https://api.qiannaqule.top/bills/reminder',
+				method: 'GET',
+				header: {
+					'Authorization': `Bearer ${token}`
 				}
 			})
 			
-			if (result.result.success && result.result.reminder) {
-				const reminder = result.result.reminder
+			if (result.statusCode === 200 && result.data.success && result.data.reminder) {
+				const reminder = result.data.reminder
 				console.log('从云端加载提醒设置:', reminder)
 				
 				// 同步到本地存储
-				uni.setStorageSync('reminderEnabled', reminder.enabled)
-				uni.setStorageSync('reminderTime', reminder.time)
+				uni.setStorageSync('reminderEnabled', reminder.enabled || false)
+				uni.setStorageSync('reminderTime', reminder.time || '20:00')
 			}
-			// #endif
 		} catch (error) {
 			console.error('加载提醒设置失败:', error)
 			// 加载失败不影响应用启动，使用本地缓存

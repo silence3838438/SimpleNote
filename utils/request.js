@@ -10,15 +10,16 @@ class Request {
 	 * 调用HTTP API
 	 * @param {String} path - API路径
 	 * @param {Object} data - 请求数据
+	 * @param {String} method - 请求方法，默认POST
 	 */
-	async call(path, data = {}) {
-		return this.callHttpApi(path, data)
+	async call(path, data = {}, method = 'POST') {
+		return this.callHttpApi(path, data, method)
 	}
 	
 	/**
 	 * 调用HTTP API
 	 */
-	async callHttpApi(path, data) {
+	async callHttpApi(path, data, method = 'POST') {
 		return new Promise((resolve, reject) => {
 			const token = uni.getStorageSync('token') || ''
 			
@@ -40,7 +41,7 @@ class Request {
 			
 			uni.request({
 				url: `${apiConfig.apiBaseUrl}/${path}`,
-				method: 'POST',
+				method: method,
 				data: requestData,
 				header: headers,
 				timeout: 10000, // 10秒超时

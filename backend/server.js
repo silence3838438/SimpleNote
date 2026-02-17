@@ -57,9 +57,11 @@ const appRoutes = require('./routes/app');
 const adminRoutes = require('./routes/admin');
 const aiEnhanceRoutes = require('./routes/ai-enhance');
 const aiChatRoutes = require('./routes/ai-chat');
+const accountBindingRoutes = require('./routes/account-binding');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/account', accountBindingRoutes); // 账号绑定接口
 app.use('/api/billManager', optionalAuthMiddleware, billRoutes); // 需要登录才能操作
 app.use('/api/ocrRecognize', authMiddleware, ocrRoutes); // 必须登录才能使用（修复：改用authMiddleware）
 app.use('/api/baiduASR', authMiddleware, asrRoutes); // 必须登录才能使用（修复：改用authMiddleware）

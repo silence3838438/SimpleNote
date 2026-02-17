@@ -153,6 +153,7 @@ import { reactive, computed } from 'vue'
 import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import billStorage from '@/utils/billStorage.js'
 import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
+import request from '@/utils/request.js'
 
 const data = reactive({
 	allBills: [],
@@ -176,7 +177,9 @@ const data = reactive({
 	availableMonths: ['全部'], // 当前可用的月份列表（根据年份动态变化）
 	pickerValue: [0, 0],
 	tempYear: '',
-	tempMonth: 0
+	tempMonth: 0,
+	// 防止点击穿透的标志
+	isPickerClosing: false
 })
 
 const loadData = async () => {
@@ -345,8 +348,17 @@ const confirmMonthPicker = async () => {
 		data.currentMonth = `${year}-${monthStr}`
 	}
 	
+	// 设置标志位，防止点击穿透
+	data.isPickerClosing = true
+	
+	// 先关闭选择器
 	data.showCustomPicker = false
 	uni.showTabBar() // 显示tabbar
+	
+	// 延迟500ms后重置标志位
+	setTimeout(() => {
+		data.isPickerClosing = false
+	}, 500)
 	
 	// 检查登录状态
 	if (!checkLogin()) {
@@ -537,6 +549,12 @@ const formatAmount = (amount) => {
 
 // 导出账单
 const exportBills = async () => {
+	// 防止点击穿透
+	if (data.isPickerClosing) {
+		console.log('⚠️ 选择器正在关闭，忽略导出操作')
+		return
+	}
+	
 	// 获取当前筛选后的账单
 	const billsToExport = data.groupedBills.flatMap(group => group.bills)
 	
@@ -551,10 +569,9 @@ const exportBills = async () => {
 	uni.showLoading({ title: '正在生成Excel...' })
 	
 	try {
-		// #ifdef MP-WEIXIN
-		// 调用云函数生成Excel
-		const res = await wx.cloud.callFunction({
-			name: 'exportExcel',
+		// 调用后端API导出Excel
+		const res = await request.call('billManager', {
+			action: 'exportExcel',
 			data: {
 				bills: billsToExport
 			}
@@ -562,89 +579,73 @@ const exportBills = async () => {
 		
 		uni.hideLoading()
 		
-		if (res.result.success) {
-			// 下载文件
-			uni.showModal({
-				title: '导出成功',
-				content: `已导出${billsToExport.length}笔账单，是否下载？`,
-				confirmText: '下载',
-				success: (modalRes) => {
-					if (modalRes.confirm) {
-						uni.downloadFile({
-							url: res.result.tempFileURL,
-							success: (downloadRes) => {
-								if (downloadRes.statusCode === 200) {
-									// 保存到本地
-									uni.saveFile({
-										tempFilePath: downloadRes.tempFilePath,
-										success: (saveRes) => {
-											uni.showModal({
-												title: '下载成功',
-												content: '文件已保存，是否打开？',
-												confirmText: '打开',
-												success: (openRes) => {
-													if (openRes.confirm) {
-														uni.openDocument({
-															filePath: saveRes.savedFilePath,
-															fileType: 'xlsx',
-															success: () => {
-																console.log('打开文档成功')
-															},
-															fail: (err) => {
-																console.error('打开文档失败:', err)
-																uni.showToast({
-																	title: '打开失败',
-																	icon: 'none'
-																})
-															}
-														})
-													}
-												}
-											})
-										},
-										fail: (err) => {
-											console.error('保存文件失败:', err)
-											uni.showToast({
-												title: '保存失败',
-												icon: 'none'
-											})
-										}
-									})
-								}
-							},
-							fail: (err) => {
-								console.error('下载失败:', err)
-								uni.showToast({
-									title: '下载失败',
-									icon: 'none'
+		if (res.success) {
+			// #ifdef MP-WEIXIN
+			// 将base64转换为文件
+			const base64 = res.data
+			const fileName = res.fileName
+			const fs = uni.getFileSystemManager()
+			const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`
+			
+			// 写入文件
+			fs.writeFile({
+				filePath: filePath,
+				data: base64,
+				encoding: 'base64',
+				success: () => {
+					uni.showModal({
+						title: '导出成功',
+						content: `已导出${billsToExport.length}笔账单，是否打开？`,
+						confirmText: '打开',
+						success: (modalRes) => {
+							if (modalRes.confirm) {
+								uni.openDocument({
+									filePath: filePath,
+									fileType: 'xlsx',
+									success: () => {
+										console.log('打开文档成功')
+									},
+									fail: (err) => {
+										console.error('打开文档失败:', err)
+										uni.showToast({
+											title: '打开失败',
+											icon: 'none'
+										})
+									}
 								})
 							}
-						})
-					}
+						}
+					})
+				},
+				fail: (err) => {
+					console.error('保存文件失败:', err)
+					uni.showToast({
+						title: '保存失败',
+						icon: 'none'
+					})
 				}
 			})
+			// #endif
+			
+			// #ifndef MP-WEIXIN
+			uni.showToast({
+				title: '导出成功',
+				icon: 'success'
+			})
+			// #endif
 		} else {
 			uni.showToast({
-				title: '生成失败：' + res.result.error,
+				title: '导出失败: ' + (res.message || '未知错误'),
 				icon: 'none'
 			})
 		}
-		// #endif
-		
-		// #ifndef MP-WEIXIN
-		uni.hideLoading()
-		uni.showToast({
-			title: '当前环境不支持Excel导出',
-			icon: 'none'
-		})
-		// #endif
-		
 	} catch (error) {
 		uni.hideLoading()
 		console.error('导出账单失败:', error)
 		uni.showToast({
-			title: '导出失败',
-			icon: 'none'
+			title: '导出失败: ' + (error.message || '网络错误'),
+			icon: 'none',
+			duration: 3000
 		})
 	}
 }
@@ -797,14 +798,16 @@ onPullDownRefresh(async () => {
 	}
 	
 	.container {
+		padding: $spacing-sm $spacing-md;
 		padding-bottom: 100rpx;
 	}
 	
 	/* 顶部搜索栏 */
 	.header-bar {
-		padding: $spacing-lg;
+		padding: $spacing-lg $spacing-md;
 		background: $bg-white;
 		border-bottom: 1rpx solid #F0F0F0;
+		margin-bottom: $spacing-sm;
 	}
 	
 	/* 搜索输入框 */
@@ -860,7 +863,7 @@ onPullDownRefresh(async () => {
 	/* 统计卡片 - 美团风格优化 */
 	.summary-card {
 		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-		margin: $spacing-md;
+		margin: 0 0 $spacing-xl 0;
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: 32rpx $spacing-lg; /* 美团风格：更紧凑的内边距 */
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
@@ -940,8 +943,8 @@ onPullDownRefresh(async () => {
 	
 	/* 筛选标签 - 横向滚动 */
 	.filter-scroll {
-		padding: $spacing-lg $spacing-md; /* 增加上下内边距 */
-		margin-bottom: $spacing-xl; /* 增加与列表的间距 */
+		padding: $spacing-lg 0; /* 增加上下内边距 */
+		margin-bottom: $spacing-md; /* 减小与列表的间距 */
 		white-space: nowrap;
 		background: $bg-white;
 	}
@@ -1032,7 +1035,7 @@ onPullDownRefresh(async () => {
 		display: flex;
 		flex-direction: column;
 		gap: $spacing-md;
-		padding: 0 $spacing-md $spacing-md;
+		padding: 0 0 $spacing-md 0;
 	}
 	
 	.date-group {

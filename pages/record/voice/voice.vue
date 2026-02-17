@@ -430,7 +430,7 @@ const startRecord = async () => {
 		// #ifdef MP-WEIXIN
 		data.recorderManager.start({
 			duration: 60000,
-			format: 'aac',
+			format: 'wav',  // 改为wav格式，百度ASR支持
 			sampleRate: 16000,
 			numberOfChannels: 1,
 			encodeBitRate: 48000,
@@ -626,8 +626,8 @@ const handleRecordStop = async (res) => {
 			// #endif
 		})
 		
-		// 确定音频格式（APP端使用amr，小程序端使用aac）
-		let audioFormat = 'aac'
+		// 确定音频格式（APP端使用amr，小程序端使用wav）
+		let audioFormat = 'wav'  // 小程序端改为wav格式
 		// #ifdef APP-PLUS
 		audioFormat = 'amr'  // 百度ASR官方支持格式
 		// #endif

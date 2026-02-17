@@ -99,6 +99,7 @@ async function initTables() {
         user_id VARCHAR(100) NOT NULL UNIQUE,
         enabled BOOLEAN DEFAULT FALSE,
         time VARCHAR(10) DEFAULT '21:00',
+        template_id VARCHAR(100) DEFAULT NULL,
         create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
         update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

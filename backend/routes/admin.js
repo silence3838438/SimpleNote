@@ -62,8 +62,14 @@ router.get('/stats', cacheMiddleware(30000), async (req, res) => {
     );
     const monthNew = monthNewResult[0].count;
     
-    // 总账单数
-    const billCountResult = await db.query('SELECT COUNT(*) as count FROM bills');
+    // 总账单数（去重）
+    const billCountResult = await db.query(`
+      SELECT COUNT(*) as count FROM (
+        SELECT MIN(id) as id
+        FROM bills
+        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills
+    `);
     const totalBills = billCountResult[0].count;
     
     // 今日活跃用户
@@ -72,16 +78,26 @@ router.get('/stats', cacheMiddleware(30000), async (req, res) => {
     );
     const todayActive = todayActiveResult[0].count;
     
-    // 总收入金额
-    const totalIncomeResult = await db.query(
-      'SELECT SUM(amount) as total FROM bills WHERE type = "income"'
-    );
+    // 总收入金额（去重）
+    const totalIncomeResult = await db.query(`
+      SELECT SUM(amount) as total FROM (
+        SELECT ANY_VALUE(amount) as amount
+        FROM bills
+        WHERE type = "income"
+        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills
+    `);
     const totalIncome = totalIncomeResult[0].total || 0;
     
-    // 总支出金额
-    const totalExpenseResult = await db.query(
-      'SELECT SUM(amount) as total FROM bills WHERE type = "expense"'
-    );
+    // 总支出金额（去重）
+    const totalExpenseResult = await db.query(`
+      SELECT SUM(amount) as total FROM (
+        SELECT ANY_VALUE(amount) as amount
+        FROM bills
+        WHERE type = "expense"
+        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills
+    `);
     const totalExpense = totalExpenseResult[0].total || 0;
     
     res.json({
@@ -163,16 +179,23 @@ router.get('/stats/income-expense', async (req, res) => {
   }
 });
 
-// 获取分类统计
+// 获取分类统计（去重）
 router.get('/stats/category', async (req, res) => {
   try {
     const result = await db.query(`
       SELECT 
-        category_name,
+        ANY_VALUE(category_name) as category_name,
         COUNT(*) as count,
         SUM(amount) as total
-      FROM bills 
-      WHERE type = 'expense' AND category_name IS NOT NULL
+      FROM (
+        SELECT 
+          MIN(id) as id,
+          ANY_VALUE(category_name) as category_name,
+          ANY_VALUE(amount) as amount
+        FROM bills 
+        WHERE type = 'expense' AND category_name IS NOT NULL
+        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills
       GROUP BY category_name
       ORDER BY total DESC
       LIMIT 10
@@ -191,16 +214,22 @@ router.get('/stats/category', async (req, res) => {
   }
 });
 
-// 获取数据趋势（最近7天的账单数量）
+// 获取数据趋势（最近7天的账单数量）- 去重
 router.get('/stats/trend', async (req, res) => {
   try {
-    // 获取最近7天的账单数量统计
+    // 获取最近7天的去重账单数量统计
     const trendResult = await db.query(`
       SELECT 
         DATE(date) as day,
         COUNT(*) as count
-      FROM bills 
-      WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+      FROM (
+        SELECT 
+          MIN(id) as id,
+          date
+        FROM bills 
+        WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills
       GROUP BY DATE(date)
       ORDER BY day ASC
     `);
@@ -277,19 +306,38 @@ router.get('/users', async (req, res) => {
     );
     const total = countResult[0].count;
     
-    // 获取列表（包含账单数、总金额、积分等信息）
+    // 获取列表（包含账单数、总金额、积分等信息）- 使用去重后的数据
     const list = await db.query(
       `SELECT 
         u.*,
-        COUNT(DISTINCT b.id) as bill_count,
-        COALESCE(SUM(CASE WHEN b.type = 'expense' THEN b.amount ELSE 0 END), 0) as total_expense,
-        COALESCE(SUM(CASE WHEN b.type = 'income' THEN b.amount ELSE 0 END), 0) as total_income,
+        (
+          SELECT COUNT(*) FROM (
+            SELECT MIN(id) as id
+            FROM bills b
+            WHERE b.user_id = u.id
+            GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+          ) as unique_bills
+        ) as bill_count,
+        (
+          SELECT COALESCE(SUM(amount), 0) FROM (
+            SELECT ANY_VALUE(amount) as amount
+            FROM bills b
+            WHERE b.user_id = u.id AND b.type = 'expense'
+            GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+          ) as unique_expense
+        ) as total_expense,
+        (
+          SELECT COALESCE(SUM(amount), 0) FROM (
+            SELECT ANY_VALUE(amount) as amount
+            FROM bills b
+            WHERE b.user_id = u.id AND b.type = 'income'
+            GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+          ) as unique_income
+        ) as total_income,
         COALESCE(p.points, 0) as points
       FROM users u
-      LEFT JOIN bills b ON u.id = b.user_id
       LEFT JOIN user_points p ON u.id = p.user_id
       WHERE ${whereClause}
-      GROUP BY u.id
       ORDER BY u.created_at DESC 
       LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
       params
@@ -394,6 +442,8 @@ router.get('/stats/channel', async (req, res) => {
 router.get('/users/:id/detail', async (req, res) => {
   try {
     const { id } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(pageSize);
     
     // 用户基本信息
     const userResult = await db.query('SELECT * FROM users WHERE id = ?', [id]);
@@ -402,25 +452,62 @@ router.get('/users/:id/detail', async (req, res) => {
     }
     const user = userResult[0];
     
-    // 统计数据
-    const statsResult = await db.query(`
+    // bills 表的 user_id 存储的是用户的 id（数字），不是 openid
+    const userIdentifier = id;
+    
+    // 使用 GROUP BY 去重，保留最小的 ID
+    // 获取去重后的账单总数和统计
+    const statsQuery = `
       SELECT 
         COUNT(*) as bill_count,
         COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense,
         COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income
-      FROM bills WHERE user_id = ?
-    `, [id]);
-    const stats = statsResult[0];
+      FROM (
+        SELECT 
+          MIN(id) as id,
+          type,
+          amount
+        FROM bills 
+        WHERE user_id = ?
+        GROUP BY type, amount, COALESCE(merchant, ''), date, category_id, COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills
+    `;
+    
+    const statsResult = await db.query(statsQuery, [userIdentifier]);
+    const stats = {
+      bill_count: statsResult[0].bill_count,
+      total_expense: parseFloat(statsResult[0].total_expense).toFixed(2),
+      total_income: parseFloat(statsResult[0].total_income).toFixed(2)
+    };
     
     // 积分信息
     const pointsResult = await db.query('SELECT points FROM user_points WHERE user_id = ?', [id]);
     const points = pointsResult[0]?.points || 0;
     
-    // 最近账单
-    const recentBills = await db.query(
-      'SELECT * FROM bills WHERE user_id = ? ORDER BY create_time DESC LIMIT 10',
-      [id]
-    );
+    // 获取去重后的账单列表（分页）
+    const safePageSize = parseInt(pageSize);
+    const safeOffset = offset;
+    const billsQuery = `
+      SELECT 
+        MIN(id) as id,
+        ANY_VALUE(user_id) as user_id,
+        type,
+        amount,
+        ANY_VALUE(merchant) as merchant,
+        date,
+        ANY_VALUE(category_id) as category_id,
+        ANY_VALUE(category_name) as category_name,
+        ANY_VALUE(note) as note,
+        create_time,
+        MAX(update_time) as update_time
+      FROM bills 
+      WHERE user_id = ?
+      GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ORDER BY create_time DESC
+      LIMIT ${safePageSize} OFFSET ${safeOffset}
+    `;
+    
+    const recentBills = await db.query(billsQuery, [userIdentifier]);
     
     // 积分历史
     const pointsHistory = await db.query(
@@ -437,6 +524,9 @@ router.get('/users/:id/detail', async (req, res) => {
           points
         },
         recentBills,
+        billTotal: stats.bill_count,
+        billPage: parseInt(page),
+        billPageSize: parseInt(pageSize),
         pointsHistory
       }
     });
@@ -547,7 +637,7 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
-// 获取账单列表
+// 获取账单列表（去重）
 router.get('/bills', async (req, res) => {
   try {
     const { 
@@ -601,16 +691,37 @@ router.get('/bills', async (req, res) => {
       params.push(parseFloat(maxAmount));
     }
     
-    // 获取总数
+    // 获取去重后的总数
     const countResult = await db.query(
-      `SELECT COUNT(*) as count FROM bills WHERE ${whereClause}`,
+      `SELECT COUNT(*) as count FROM (
+        SELECT MIN(id) as id
+        FROM bills 
+        WHERE ${whereClause}
+        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ) as unique_bills`,
       params
     );
     const total = countResult[0].count;
     
-    // 获取列表
+    // 获取去重后的列表
     const list = await db.query(
-      `SELECT * FROM bills WHERE ${whereClause} ORDER BY create_time DESC LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
+      `SELECT 
+        MIN(id) as id,
+        ANY_VALUE(user_id) as user_id,
+        type,
+        amount,
+        ANY_VALUE(merchant) as merchant,
+        date,
+        ANY_VALUE(category_id) as category_id,
+        ANY_VALUE(category_name) as category_name,
+        ANY_VALUE(note) as note,
+        create_time,
+        MAX(update_time) as update_time
+      FROM bills 
+      WHERE ${whereClause}
+      GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ORDER BY create_time DESC 
+      LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
       params
     );
     
@@ -662,7 +773,7 @@ router.get('/bills/:id/detail', async (req, res) => {
   }
 });
 
-// 导出账单数据
+// 导出账单数据（去重）
 router.get('/bills/export', async (req, res) => {
   try {
     const { 
@@ -701,8 +812,25 @@ router.get('/bills/export', async (req, res) => {
       params.push(endDate);
     }
     
+    // 导出去重后的账单
     const bills = await db.query(
-      `SELECT * FROM bills WHERE ${whereClause} ORDER BY create_time DESC LIMIT 10000`,
+      `SELECT 
+        MIN(id) as id,
+        ANY_VALUE(user_id) as user_id,
+        type,
+        amount,
+        ANY_VALUE(merchant) as merchant,
+        date,
+        ANY_VALUE(category_id) as category_id,
+        ANY_VALUE(category_name) as category_name,
+        ANY_VALUE(note) as note,
+        create_time,
+        MAX(update_time) as update_time
+      FROM bills 
+      WHERE ${whereClause}
+      GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+      ORDER BY create_time DESC 
+      LIMIT 10000`,
       params
     );
     

@@ -577,7 +577,7 @@ router.post('/account-login', async (req, res) => {
 // 发送验证码（添加安全检查）
 router.post('/send-code', checkSMSLimit, async (req, res) => {
   try {
-    const { phone, type } = req.body; // type: register, reset
+    const { phone, type } = req.body; // type: register, reset, bind
     
     if (!phone) {
       return res.json({
@@ -623,6 +623,9 @@ router.post('/send-code', checkSMSLimit, async (req, res) => {
         });
       }
     }
+
+    // 如果是绑定手机号，不做额外检查（允许绑定已存在或不存在的手机号）
+    // 绑定逻辑会在 /bind-phone 接口中处理
 
     // 检查发送频率限制
     // 1. 检查60秒内是否已发送

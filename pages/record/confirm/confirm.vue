@@ -950,8 +950,22 @@ const saveBill = async () => {
 		uni.setStorageSync('needRefreshStatistics', true)
 		uni.setStorageSync('needRefreshBills', true)
 		
-		// 显示订阅引导弹框
-		showReminderSubscribeGuide()
+		// 编辑模式：直接返回首页
+		if (data.editMode) {
+			uni.showToast({
+				title: '更新成功',
+				icon: 'success',
+				duration: 1500
+			})
+			setTimeout(() => {
+				uni.switchTab({
+					url: '/pages/tab/index/index'
+				})
+			}, 1500)
+		} else {
+			// 新增模式：显示订阅引导弹框
+			showReminderSubscribeGuide()
+		}
 	} else {
 		uni.showToast({
 			title: data.editMode ? '更新失败，请重试' : '保存失败，请重试',

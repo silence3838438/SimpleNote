@@ -69,13 +69,14 @@
 
 <script setup>
 import { reactive } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import billStorage from '@/utils/billStorage.js'
 import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
 
 const data = reactive({
 	bill: {},
-	categories: []
+	categories: [],
+	billId: null // 保存账单ID用于刷新
 })
 
 onLoad((options) => {
@@ -84,6 +85,7 @@ onLoad((options) => {
 	if (options.billData) {
 		try {
 			data.bill = JSON.parse(decodeURIComponent(options.billData))
+			data.billId = data.bill.id // 保存账单ID
 			
 			// 根据账单类型选择对应的分类列表
 			const billType = data.bill.type || 'expense'
@@ -104,6 +106,37 @@ onLoad((options) => {
 		}
 	}
 })
+
+// 页面显示时重新加载账单数据
+onShow(async () => {
+	if (data.billId) {
+		await refreshBillData()
+	}
+})
+
+// 刷新账单数据
+const refreshBillData = async () => {
+	try {
+		// 从本地存储获取最新的账单数据
+		const bills = await billStorage.getBills()
+		const updatedBill = bills.find(b => b.id === data.billId)
+		
+		if (updatedBill) {
+			// 更新账单数据
+			data.bill = { ...updatedBill }
+			
+			// 更新分类信息
+			const billType = data.bill.type || 'expense'
+			const categoryList = billType === 'income' ? getIncomeCategories() : getExpenseCategories()
+			const category = categoryList.find(c => c.id === data.bill.categoryId) || {}
+			
+			data.bill.categoryIcon = category.icon || '📦'
+			data.bill.categoryName = category.name || data.bill.categoryName || '其他'
+		}
+	} catch (error) {
+		console.error('刷新账单数据失败:', error)
+	}
+}
 
 const formatDate = (dateStr) => {
 	if (!dateStr) return '-'

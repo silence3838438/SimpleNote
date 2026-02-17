@@ -131,6 +131,13 @@
 					}
 				},
 				{
+					"path": "bind-phone",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTextStyle": "white"
+					}
+				},
+				{
 					"path": "reminder",
 					"style": {
 						"navigationBarTitleText": "记账提醒",

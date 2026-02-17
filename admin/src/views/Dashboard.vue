@@ -31,28 +31,28 @@
       </el-col>
       
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card class="stat-card expense-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #fff7e6;">
-              <el-icon color="#faad14" :size="32"><TrendCharts /></el-icon>
+            <div class="stat-icon" style="background: #fff1f0;">
+              <el-icon color="#ff4d4f" :size="32"><TrendCharts /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ stats.todayActive }}</div>
-              <div class="stat-label">今日活跃</div>
+              <div class="stat-value expense-value">¥{{ stats.totalExpense }}</div>
+              <div class="stat-label">总支出</div>
             </div>
           </div>
         </el-card>
       </el-col>
       
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card class="stat-card income-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #fff0f6;">
-              <el-icon color="#eb2f96" :size="32"><Money /></el-icon>
+            <div class="stat-icon" style="background: #f6ffed;">
+              <el-icon color="#52c41a" :size="32"><Money /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">¥{{ stats.totalAmount }}</div>
-              <div class="stat-label">总记账金额</div>
+              <div class="stat-value income-value">¥{{ stats.totalIncome }}</div>
+              <div class="stat-label">总收入</div>
             </div>
           </div>
         </el-card>
@@ -90,8 +90,8 @@ import request from '@/utils/request'
 const stats = ref({
   totalUsers: 0,
   totalBills: 0,
-  todayActive: 0,
-  totalAmount: 0
+  totalExpense: '0.00',
+  totalIncome: '0.00'
 })
 
 const userChartRef = ref(null)
@@ -107,8 +107,8 @@ const fetchStats = async () => {
       stats.value = {
         totalUsers: data.totalUsers,
         totalBills: data.totalBills,
-        todayActive: data.todayActive,
-        totalAmount: (parseFloat(data.totalExpense) + parseFloat(data.totalIncome)).toFixed(2)
+        totalExpense: data.totalExpense,
+        totalIncome: data.totalIncome
       }
     }
   } catch (error) {

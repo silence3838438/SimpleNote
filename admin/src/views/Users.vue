@@ -149,19 +149,24 @@
         
         <!-- 最近账单卡片 -->
         <div class="bills-card">
-          <div class="card-title">最近账单</div>
+          <div class="card-title">
+            <span>账单列表</span>
+            <span class="bill-count">共 {{ currentUserDetail.billTotal || 0 }} 笔</span>
+          </div>
           <div v-if="currentUserDetail.recentBills.length > 0" class="bills-list">
             <div 
-              v-for="bill in currentUserDetail.recentBills.slice(0, 8)" 
+              v-for="bill in currentUserDetail.recentBills" 
               :key="bill.id"
               class="bill-item"
             >
               <div class="bill-left">
                 <div class="bill-merchant">{{ bill.merchant || '未知商家' }}</div>
                 <div class="bill-meta">
-                  <span>{{ bill.date }}</span>
+                  <span>{{ formatBillDate(bill.date) }}</span>
                   <span class="divider">·</span>
                   <span>{{ bill.category_name || '其他' }}</span>
+                  <span class="divider">·</span>
+                  <span class="bill-time">{{ formatBillTime(bill.create_time) }}</span>
                 </div>
               </div>
               <div class="bill-right">
@@ -172,6 +177,20 @@
             </div>
           </div>
           <el-empty v-else description="暂无账单记录" :image-size="60" />
+          
+          <!-- 分页 -->
+          <el-pagination
+            v-if="currentUserDetail.billTotal > 0"
+            v-model:current-page="billPagination.page"
+            v-model:page-size="billPagination.pageSize"
+            :total="currentUserDetail.billTotal"
+            :page-sizes="[10, 20, 50]"
+            layout="total, sizes, prev, pager, next"
+            @size-change="handleBillPageChange"
+            @current-change="handleBillPageChange"
+            class="bill-pagination"
+            small
+          />
         </div>
       </div>
     </el-dialog>
@@ -232,17 +251,43 @@ const handleReset = () => {
 
 const detailDialogVisible = ref(false)
 const currentUserDetail = ref(null)
+const billPagination = reactive({
+  page: 1,
+  pageSize: 10
+})
 
 const viewDetail = async (row) => {
   try {
-    const res = await request.get(`/admin/users/${row.id}/detail`)
-    if (res.success) {
-      currentUserDetail.value = res.data
-      detailDialogVisible.value = true
-    }
+    billPagination.page = 1
+    billPagination.pageSize = 10
+    await fetchUserDetail(row.id)
+    detailDialogVisible.value = true
   } catch (error) {
     console.error('获取用户详情失败:', error)
     ElMessage.error('获取用户详情失败')
+  }
+}
+
+const fetchUserDetail = async (userId) => {
+  try {
+    const res = await request.get(`/admin/users/${userId}/detail`, {
+      params: {
+        page: billPagination.page,
+        pageSize: billPagination.pageSize
+      }
+    })
+    if (res.success) {
+      currentUserDetail.value = res.data
+    }
+  } catch (error) {
+    console.error('获取用户详情失败:', error)
+    throw error
+  }
+}
+
+const handleBillPageChange = async () => {
+  if (currentUserDetail.value && currentUserDetail.value.user) {
+    await fetchUserDetail(currentUserDetail.value.user.id)
   }
 }
 
@@ -267,6 +312,24 @@ const handleDelete = (row) => {
 const formatDate = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleString('zh-CN')
+}
+
+const formatBillDate = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const formatBillTime = (timestamp) => {
+  if (!timestamp) return '-'
+  const d = new Date(Number(timestamp))
+  return d.toLocaleString('zh-CN', { 
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 onMounted(() => {

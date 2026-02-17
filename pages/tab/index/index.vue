@@ -1,25 +1,8 @@
 <template>
 	<view class="page">
+		<!-- 系统样式导航栏 -->
 		<!-- #ifdef MP-WEIXIN -->
-		<!-- 自定义导航栏（活动期间显示） -->
-		<view class="custom-navbar" v-if="data.isFestivalActive" :style="{ paddingTop: statusBarHeight + 'px' }">
-			<view class="navbar-content">
-				<view class="navbar-left">
-					<view class="lantern">🏮</view>
-				</view>
-				<view class="navbar-title">
-					<text class="title-text">💰 钱哪去了</text>
-				</view>
-				<view class="navbar-right">
-					<view class="lantern">🏮</view>
-				</view>
-			</view>
-		</view>
-		<!-- #endif -->
-		
-		<!-- 系统样式导航栏（非活动期间显示或APP） -->
-		<!-- #ifdef MP-WEIXIN -->
-		<view class="system-navbar" v-if="!data.isFestivalActive" :style="{ paddingTop: statusBarHeight + 'px' }">
+		<view class="system-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
 		<!-- #endif -->
 		<!-- #ifdef APP-PLUS -->
 		<view class="system-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
@@ -30,140 +13,7 @@
 		</view>
 		
 		<!-- #ifdef MP-WEIXIN -->
-		<!-- 春节横幅背景（活动期间显示） -->
-		<view class="festival-bg" v-if="data.isFestivalActive" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
-			<text class="festival-text">🎊 新春快乐 · 马年大吉 🎊</text>
-			<!-- 红包入口提示 -->
-			<view class="red-packet-entry" @click="showRedPacketGuide" :class="{ 'active': data.isRedPacketTime }">
-				<view class="entry-content">
-					<view class="entry-icon">🧧</view>
-					<view class="entry-text">
-						<text class="entry-title">{{ data.isRedPacketTime ? '红包雨进行中' : '春节红包' }}</text>
-						<text class="entry-subtitle">{{ data.remainingTime }}</text>
-					</view>
-					<view class="entry-badge" v-if="data.isRedPacketTime">
-						<text class="badge-text">抢</text>
-					</view>
-				</view>
-			</view>
-		</view>
-		<!-- #endif -->
-		
-		<!-- #ifdef MP-WEIXIN -->
-		<!-- 下拉抢红包提示 -->
-		<view class="pull-hint" :class="{ 'show': data.pullDistance > 50 }">
-			<text class="hint-icon">🧧</text>
-			<text class="hint-text">{{ getPullHintText() }}</text>
-		</view>
-		
-		<!-- 抢红包动画（已废弃，使用新的开红包动画） -->
-		
-		<!-- 红包雨（可点击抢红包） -->
-		<view class="red-packet-rain" v-if="data.showRedPackets">
-			<view 
-				class="red-packet" 
-				:class="{ 'red-packet-big': packet.isBig }"
-				v-for="(packet, index) in data.redPackets" 
-				:key="index"
-				:style="{ left: packet.left + '%', animationDelay: packet.delay + 's', animationDuration: packet.duration + 's' }"
-				@click="clickRedPacket(index)"
-			>
-				🧧
-			</view>
-		</view>
-		
-		<!-- 开红包炸裂动画 -->
-		<view class="open-packet-animation" v-if="data.showOpenAnimation">
-			<view class="packet-bg"></view>
-			<view class="packet-content">
-				<!-- 红包炸开效果 -->
-				<view class="packet-explode">
-					<view class="packet-half packet-left"></view>
-					<view class="packet-half packet-right"></view>
-				</view>
-				<!-- 金币飞出效果 -->
-				<view class="coins-fly">
-					<text class="coin" v-for="i in 12" :key="i">💰</text>
-				</view>
-				<!-- 结果显示 -->
-				<view class="result-show">
-					<text class="result-text">{{ data.grabResult }}</text>
-				</view>
-			</view>
-		</view>
-		
-		<!-- 新手引导弹窗 -->
-		<view class="guide-modal" v-if="data.showGuide" @click="closeGuide">
-			<view class="guide-content" @click.stop>
-				<view class="guide-header">
-					<text class="guide-title">🧧 春节红包来啦！</text>
-					<text class="guide-close" @click="closeGuide">✕</text>
-				</view>
-				<view class="guide-body">
-					<view class="guide-packet">🧧</view>
-					<view class="guide-arrow">👆</view>
-					<text class="guide-tip">点击飘落的红包即可抢</text>
-					<view class="guide-rules">
-						<text class="rule-item">• 每30分钟一场，每场2分钟</text>
-						<text class="rule-item">• 随机获得积分或祝福语</text>
-						<text class="rule-item">• 积分可在个人页面查看</text>
-					</view>
-				</view>
-				<view class="guide-footer">
-					<view class="guide-btn" @click="closeGuide">我知道了</view>
-				</view>
-			</view>
-		</view>
-		
-		<!-- 红包雨结算弹窗 -->
-		<view class="result-modal" v-if="data.showResultModal" @click="closeResultModal">
-			<view class="result-content" @click.stop>
-				<view class="result-header">
-					<text class="result-title">🎉 红包雨结束</text>
-				</view>
-				<view class="result-body">
-					<!-- 积分统计 -->
-					<view class="result-points" v-if="data.currentSessionPoints > 0">
-						<text class="points-label">本场获得</text>
-						<text class="points-value">{{ data.currentSessionPoints }}</text>
-						<text class="points-unit">积分</text>
-					</view>
-					
-					<!-- 祝福语统计 -->
-					<view class="result-blessings" v-if="data.currentSessionBlessings.length > 0">
-						<text class="blessings-label">收到祝福</text>
-						<view class="blessings-list">
-							<text class="blessing-item" v-for="(blessing, index) in data.currentSessionBlessings" :key="index">
-								{{ blessing }}
-							</text>
-						</view>
-					</view>
-					
-					<!-- 空状态提示 -->
-					<view class="result-empty" v-if="data.currentSessionPoints === 0 && data.currentSessionBlessings.length === 0">
-						<text class="empty-text">下次再来试试吧~</text>
-					</view>
-					
-					<view class="result-tip">
-						<text class="tip-text">{{ data.remainingTime }}</text>
-					</view>
-				</view>
-				<view class="result-footer">
-					<view class="result-btn" @click="closeResultModal">知道了</view>
-				</view>
-			</view>
-		</view>
-		
-		<!-- 烟花特效 -->
-		<canvas 
-			class="fireworks-canvas" 
-			canvas-id="fireworksCanvas" 
-			v-if="data.showFireworks"
-		></canvas>
-		<!-- #endif -->
-		
-		<!-- #ifdef MP-WEIXIN -->
-		<view class="container" :style="{ paddingTop: data.isFestivalActive ? (statusBarHeight + 44 + 140) + 'px' : (statusBarHeight + 44) + 'px' }">
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
 		<!-- #endif -->
 		<!-- #ifdef APP-PLUS -->
 		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
@@ -339,7 +189,9 @@
 		<!-- 近期账单 -->
 		<view class="bills-card">
 			<view class="card-title">近期账单</view>
-			<view class="bills-list">
+			
+			<!-- 账单列表 -->
+			<view class="bills-list" v-if="data.recentBills.length > 0">
 				<view class="bill-item" v-for="(bill, index) in data.recentBills" :key="bill._id || index" @click="goToBillDetail(bill)">
 					<view class="bill-left">
 						<text class="bill-icon">{{ bill.categoryIcon }}</text>
@@ -359,9 +211,14 @@
 					</view>
 				</view>
 			</view>
-			<view class="empty-tip" v-if="data.recentBills.length === 0">
-				暂无账单记录，快去记账吧~
+			
+			<!-- 空状态 - 参考账单页面样式 -->
+			<view class="empty-state" v-if="data.recentBills.length === 0">
+				<text class="empty-icon">📝</text>
+				<text class="empty-text">暂无账单记录</text>
+				<text class="empty-tip">快去记一笔吧~</text>
 			</view>
+			
 			<view class="view-all" v-if="data.recentBills.length > 0" @click="goToBills">查看全部账单</view>
 		</view>
 	</view>
@@ -441,45 +298,12 @@ const data = reactive({
 	quickAmounts: [3000, 5000, 8000, 10000, 15000, 20000],
 	allBills: [], // 缓存所有账单数据
 	preventClick: false, // 防止事件穿透的标记
+	isPickerClosing: false, // 防止选择器关闭时的点击穿透
 	showBudgetDetail: false, // 显示预算详情
 	hideAmount: false, // 隐藏金额
 	hideIncome: false, // 隐藏收入
 	hideExpense: false, // 隐藏支出
 	hideBalance: false, // 隐藏结余
-	// #ifdef MP-WEIXIN
-	isFestivalActive: true, // 春节活动是否进行中（仅小程序）
-	// #endif
-	// #ifdef APP-PLUS
-	isFestivalActive: false, // APP不显示春节活动
-	// #endif
-	// 春节元素
-	showRedPackets: false, // 显示红包雨（只在红包雨时段显示）
-	showFireworks: false, // 显示烟花
-	redPackets: [], // 红包数组
-	// 红包雨系统
-	isRedPacketTime: false, // 是否是红包雨时间
-	redPacketEndTime: 0, // 红包雨结束时间
-	nextRedPacketTime: 0, // 下次红包雨时间
-	currentSessionPoints: 0, // 本场红包雨获得的积分
-	currentSessionBlessings: [], // 本场红包雨获得的祝福语
-	redPacketTimer: null, // 倒计时定时器
-	remainingTime: '', // 剩余时间文字
-	showResultModal: false, // 显示结算弹窗
-	bgMusicContext: null, // 背景音乐上下文
-	isPageVisible: true, // 页面是否可见
-	// 下拉抢红包（废弃）
-	startY: 0,
-	pullDistance: 0,
-	isGrabbingRedPacket: false,
-	grabResult: '',
-	lastGrabTime: 0,
-	grabAttemptCount: 0,
-	isGrabbingMode: false,
-	showOpenAnimation: false, // 显示开红包动画
-	canGrabToday: true,
-	morningGrabCount: 0,
-	afternoonGrabCount: 0,
-	showGuide: false, // 显示新手引导
 	floatBtnX: 550, // 悬浮按钮X坐标（初始值，会在onLoad中根据屏幕尺寸调整）
 	floatBtnY: 800, // 悬浮按钮Y坐标（初始值，会在onLoad中根据屏幕尺寸调整）
 	// 版本更新
@@ -841,8 +665,18 @@ const confirmMonthPicker = async () => {
 	
 	data.currentMonth = selectedMonth
 	data.currentMonthText = `${year}年${month}月`
+	
+	// 设置标志位，防止点击穿透
+	data.isPickerClosing = true
+	
+	// 先关闭选择器
 	data.showCustomPicker = false
 	uni.showTabBar() // 显示tabbar
+	
+	// 延迟500ms后重置标志位
+	setTimeout(() => {
+		data.isPickerClosing = false
+	}, 500)
 	
 	// 检查登录状态
 	if (!checkLogin()) {
@@ -1007,6 +841,12 @@ const promptLogin = () => {
 }
 
 const goToPhoto = () => {
+	// 防止点击穿透
+	if (data.isPickerClosing) {
+		console.log('⚠️ 选择器正在关闭，忽略拍照操作')
+		return
+	}
+	
 	// 检查登录
 	if (!checkLogin()) {
 		promptLogin()
@@ -1184,679 +1024,7 @@ const handleDownloadComplete = () => {
 	data.showUpdateModal = false
 }
 
-// 初始化春节元素
-const initFestivalElements = () => {
-	// #ifdef MP-WEIXIN
-	// 检查红包雨时间
-	checkRedPacketTime()
-	
-	// 启动定时器，每秒更新一次
-	data.redPacketTimer = setInterval(() => {
-		checkRedPacketTime()
-	}, 1000)
-	// #endif
-	
-	// #ifdef APP-PLUS
-	// APP不显示红包雨功能
-	data.isFestivalActive = false
-	// #endif
-}
 
-// 检查红包雨时间
-const checkRedPacketTime = () => {
-	const now = Date.now()
-	const currentDate = new Date()
-	
-	// 春节活动时间：2026年2月3日到2月18日
-	const festivalStartDate = new Date('2026/02/03 00:00:00')
-	const festivalEndDate = new Date('2026/02/18 23:59:59')
-	
-	// 检查是否在活动期间
-	if (now < festivalStartDate.getTime() || now > festivalEndDate.getTime()) {
-		// 活动未开始或已结束
-		data.isFestivalActive = false
-		data.isRedPacketTime = false
-		data.showRedPackets = false
-		data.remainingTime = now < festivalStartDate.getTime() ? '活动未开始' : '活动已结束'
-		return
-	}
-	
-	// 活动进行中
-	data.isFestivalActive = true
-	
-	// 红包雨规则：每天固定时间段，每次2分钟
-	// 时间段：10:00, 14:00, 18:00, 21:00
-	const DURATION = 2 * 60 * 1000 // 2分钟持续时间
-	const RED_PACKET_HOURS = [10, 14, 18, 21] // 红包雨时段（小时）
-	
-	const currentHour = currentDate.getHours()
-	const currentMinute = currentDate.getMinutes()
-	const currentSecond = currentDate.getSeconds()
-	
-	// 计算当前时间距离今天0点的毫秒数
-	const todayStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()).getTime()
-	const currentTimeInDay = now - todayStart
-	
-	// 检查是否在任何一个红包雨时段内
-	let isInRedPacketPeriod = false
-	let currentPeriodStart = 0
-	let nextPeriodStart = 0
-	
-	for (let hour of RED_PACKET_HOURS) {
-		const periodStart = todayStart + hour * 60 * 60 * 1000
-		const periodEnd = periodStart + DURATION
-		
-		if (now >= periodStart && now < periodEnd) {
-			// 当前在红包雨时段内
-			isInRedPacketPeriod = true
-			currentPeriodStart = periodStart
-			break
-		} else if (now < periodStart) {
-			// 找到下一个红包雨时段
-			nextPeriodStart = periodStart
-			break
-		}
-	}
-	
-	// 如果今天所有时段都过了，计算明天第一个时段
-	if (!isInRedPacketPeriod && nextPeriodStart === 0) {
-		const tomorrowStart = todayStart + 24 * 60 * 60 * 1000
-		nextPeriodStart = tomorrowStart + RED_PACKET_HOURS[0] * 60 * 60 * 1000
-	}
-	
-	if (isInRedPacketPeriod) {
-		// 正在红包雨时段内
-		if (!data.isRedPacketTime) {
-			data.isRedPacketTime = true
-			data.currentSessionPoints = 0
-			data.currentSessionBlessings = []
-			startRedPacketRain()
-		}
-		
-		// 更新剩余时间
-		const remainSeconds = Math.ceil((currentPeriodStart + DURATION - now) / 1000)
-		const minutes = Math.floor(remainSeconds / 60)
-		const seconds = remainSeconds % 60
-		data.remainingTime = `剩余 ${minutes}:${seconds.toString().padStart(2, '0')}`
-		return
-	}
-	
-	// 不在红包雨时段内
-	if (data.isRedPacketTime) {
-		// 刚结束红包雨
-		data.isRedPacketTime = false
-		endRedPacketRain()
-		// 注意：currentSessionPoints 的重置已经在 closeResultModal() 中完成
-	}
-	
-	data.isRedPacketTime = false
-	data.showRedPackets = false
-	
-	// 显示下次红包雨倒计时
-	const remainMs = nextPeriodStart - now
-	const remainMinutes = Math.floor(remainMs / (60 * 1000))
-	const remainSeconds = Math.floor((remainMs % (60 * 1000)) / 1000)
-	
-	if (remainMinutes >= 60) {
-		const hours = Math.floor(remainMinutes / 60)
-		const mins = remainMinutes % 60
-		data.remainingTime = `${hours}小时${mins}分后开始`
-	} else if (remainMinutes > 0) {
-		data.remainingTime = `${remainMinutes}分钟后开始`
-	} else if (remainSeconds > 0) {
-		data.remainingTime = `${remainSeconds}秒后开始`
-	} else {
-		data.remainingTime = '即将开始'
-	}
-}
-
-// 开始红包雨
-const startRedPacketRain = () => {
-	data.showRedPackets = true
-	generateRedPackets()
-	
-	// 只在页面可见时播放音乐和显示提示
-	if (!data.isPageVisible) {
-		console.log('页面不可见，不播放音乐和提示')
-		return
-	}
-	
-	// 先播放红包雨来了的提示音
-	try {
-		const notifyAudio = uni.createInnerAudioContext()
-		notifyAudio.src = '/static/audio/red-packet-scome.mp3'
-		notifyAudio.volume = 0.8
-		notifyAudio.onError((err) => {
-			console.log('提示音播放失败:', err)
-			notifyAudio.destroy()
-		})
-		notifyAudio.play()
-		notifyAudio.onEnded(() => {
-			notifyAudio.destroy()
-			// 提示音播放完后，开始循环播放背景音乐
-			startBgMusic()
-		})
-	} catch (e) {
-		console.log('提示音播放异常:', e)
-		// 如果提示音失败，直接播放背景音乐
-		startBgMusic()
-	}
-	
-	// 显示提示
-	uni.showToast({
-		title: '🧧 红包雨来啦！',
-		icon: 'none',
-		duration: 2000
-	})
-}
-
-// 开始背景音乐
-const startBgMusic = () => {
-	try {
-		// 如果已有音乐在播放，先停止
-		if (data.bgMusicContext) {
-			data.bgMusicContext.stop()
-			data.bgMusicContext.destroy()
-		}
-		
-		data.bgMusicContext = uni.createInnerAudioContext()
-		data.bgMusicContext.src = '/static/audio/red-packet-start.mp3'
-		data.bgMusicContext.loop = true // 循环播放
-		data.bgMusicContext.volume = 0.6 // 音量60%
-		data.bgMusicContext.onError((err) => {
-			console.log('背景音乐播放失败:', err)
-		})
-		data.bgMusicContext.play()
-	} catch (e) {
-		console.log('背景音乐播放异常:', e)
-	}
-}
-
-// 结束红包雨
-const endRedPacketRain = () => {
-	console.log('=== 红包雨结束 ===')
-	console.log('当前积分:', data.currentSessionPoints)
-	console.log('当前祝福语:', data.currentSessionBlessings)
-	console.log('页面可见:', data.isPageVisible)
-	
-	data.showRedPackets = false
-	data.redPackets = []
-	
-	// 停止背景音乐
-	if (data.bgMusicContext) {
-		data.bgMusicContext.stop()
-		data.bgMusicContext.destroy()
-		data.bgMusicContext = null
-	}
-	
-	// 只在页面可见时显示结算弹窗（有积分或祝福语时才显示）
-	if ((data.currentSessionPoints > 0 || data.currentSessionBlessings.length > 0) && data.isPageVisible) {
-		console.log('✅ 显示结算弹窗')
-		data.showResultModal = true
-		
-		// 保存积分到总积分
-		if (data.currentSessionPoints > 0) {
-			let totalPoints = uni.getStorageSync('userPoints') || 0
-			totalPoints += data.currentSessionPoints
-			uni.setStorageSync('userPoints', totalPoints)
-			console.log('积分已保存，总积分:', totalPoints)
-		}
-		// 注意：不在这里重置数据，等弹窗关闭时再重置
-	} else if ((data.currentSessionPoints > 0 || data.currentSessionBlessings.length > 0) && !data.isPageVisible) {
-		console.log('⚠️ 页面不可见，静默保存积分')
-		// 页面不可见时,静默保存积分,不显示弹窗
-		if (data.currentSessionPoints > 0) {
-			let totalPoints = uni.getStorageSync('userPoints') || 0
-			totalPoints += data.currentSessionPoints
-			uni.setStorageSync('userPoints', totalPoints)
-		}
-		// 页面不可见时立即重置
-		data.currentSessionPoints = 0
-		data.currentSessionBlessings = []
-	} else {
-		console.log('❌ 不显示弹窗，原因：')
-		console.log('  - 积分为0:', data.currentSessionPoints === 0)
-		console.log('  - 祝福语为空:', data.currentSessionBlessings.length === 0)
-		console.log('  - 页面不可见:', !data.isPageVisible)
-		// 没有数据时也重置
-		data.currentSessionPoints = 0
-		data.currentSessionBlessings = []
-	}
-}
-
-// 生成红包雨
-const generateRedPackets = () => {
-	if (!data.isRedPacketTime) return
-	
-	const packets = []
-	// 生成15个红包，其中2-3个是大红包
-	const bigPacketCount = Math.floor(Math.random() * 2) + 2 // 2-3个大红包
-	const bigPacketIndexes = []
-	
-	// 随机选择哪些是大红包
-	while (bigPacketIndexes.length < bigPacketCount) {
-		const randomIndex = Math.floor(Math.random() * 15)
-		if (!bigPacketIndexes.includes(randomIndex)) {
-			bigPacketIndexes.push(randomIndex)
-		}
-	}
-	
-	for (let i = 0; i < 15; i++) {
-		const isBig = bigPacketIndexes.includes(i)
-		packets.push({
-			left: Math.random() * 90 + 5,
-			delay: Math.random() * 2,
-			duration: isBig ? 5 + Math.random() * 2 : 4 + Math.random() * 2, // 大红包下落慢一点
-			clicked: false,
-			isBig: isBig // 标记是否是大红包
-		})
-	}
-	data.redPackets = packets
-	
-	// 6秒后重新生成（确保红包持续）
-	setTimeout(() => {
-		if (data.isRedPacketTime) {
-			generateRedPackets()
-		}
-	}, 6000)
-}
-
-// 点击红包
-const clickRedPacket = (index) => {
-	if (!data.isRedPacketTime) {
-		uni.showToast({
-			title: '红包雨已结束',
-			icon: 'none'
-		})
-		return
-	}
-	
-	// 防止重复点击
-	if (data.redPackets[index].clicked) return
-	data.redPackets[index].clicked = true
-	
-	// 判断是否是大红包
-	const isBig = data.redPackets[index].isBig
-	
-	// 50%概率获得积分，50%概率获得祝福语
-	const isPoints = Math.random() < 0.5
-	let resultText = ''
-	
-	if (isPoints) {
-		// 积分红包
-		let points = 0
-		if (isBig) {
-			// 大红包：15-30积分
-			points = Math.floor(Math.random() * 16) + 15
-		} else {
-			// 小红包：1-10积分
-			points = Math.floor(Math.random() * 10) + 1
-		}
-		
-		data.currentSessionPoints += points
-		resultText = isBig ? `🎉 +${points}积分` : `+${points}积分`
-		console.log(`✅ 获得积分: +${points}，当前总积分: ${data.currentSessionPoints}`)
-	} else {
-		// 祝福语红包
-		const blessings = [
-			'🐴 马到成功',
-			'💰 财源滚滚',
-			'🎊 万事如意',
-			'🌟 心想事成',
-			'🎉 大吉大利',
-			'✨ 好运连连',
-			'🏆 一马当先',
-			'🎯 马上有钱',
-			'🌈 福星高照',
-			'🎁 喜事连连',
-			'🔥 红红火火',
-			'💎 财运亨通',
-			'🌸 花开富贵',
-			'🎪 笑口常开',
-			'🎨 锦绣前程'
-		]
-		
-		const blessing = blessings[Math.floor(Math.random() * blessings.length)]
-		data.currentSessionBlessings.push(blessing)
-		resultText = blessing
-		console.log(`✅ 获得祝福: ${blessing}，当前祝福数: ${data.currentSessionBlessings.length}`)
-	}
-	
-	// 播放抢红包音效
-	try {
-		const audioContext = uni.createInnerAudioContext()
-		audioContext.src = '/static/audio/red-packet-open.mp3'
-		audioContext.onError((err) => {
-			console.log('音效播放失败:', err)
-			audioContext.destroy()
-		})
-		audioContext.play()
-		audioContext.onEnded(() => {
-			audioContext.destroy()
-		})
-	} catch (e) {
-		console.log('音效播放异常:', e)
-	}
-	
-	// 显示开红包动画
-	data.showOpenAnimation = true
-	data.grabResult = resultText
-	
-	// 震动反馈（大红包震动更强）
-	if (isBig) {
-		uni.vibrateLong()
-	} else {
-		uni.vibrateShort()
-	}
-	
-	// 1.5秒后隐藏动画
-	setTimeout(() => {
-		data.showOpenAnimation = false
-	}, 1500)
-}
-
-// 关闭结算弹窗
-const closeResultModal = () => {
-	console.log('关闭结算弹窗，重置数据')
-	data.showResultModal = false
-	// 关闭弹窗时才重置数据
-	data.currentSessionPoints = 0
-	data.currentSessionBlessings = []
-}
-
-// 从云端获取抢红包次数
-const loadRedPacketCount = async () => {
-	try {
-		const res = await request.call('billManager', {
-			action: 'getRedPacketCount'
-		})
-		
-		if (res.success) {
-			data.morningGrabCount = res.morningCount || 0
-			data.afternoonGrabCount = res.afternoonCount || 0
-			data.lastGrabTime = res.lastGrabTime || 0
-			console.log('抢红包次数加载成功:', res)
-		}
-	} catch (error) {
-		console.error('获取抢红包次数失败:', error)
-		// 失败时使用本地缓存
-		data.morningGrabCount = uni.getStorageSync('morningGrabCount') || 0
-		data.afternoonGrabCount = uni.getStorageSync('afternoonGrabCount') || 0
-		data.lastGrabTime = uni.getStorageSync('lastGrabTime') || 0
-	}
-}
-
-// 下拉抢红包相关函数
-const onTouchStart = (e) => {
-	// 如果有弹框打开，不处理触摸事件
-	if (data.showMonthPicker || data.showBudgetModal) return
-	
-	// 记录起始位置
-	data.startY = e.touches[0].pageY
-	data.isGrabbingMode = false
-	console.log('触摸开始，Y坐标:', data.startY)
-}
-
-const onTouchMove = (e) => {
-	// 如果有弹框打开，不处理触摸事件
-	if (data.showMonthPicker || data.showBudgetModal) return
-	
-	if (data.startY === 0) return
-	const currentY = e.touches[0].pageY
-	const distance = currentY - data.startY
-	
-	// 只处理下拉
-	if (distance > 0) {
-		data.pullDistance = Math.min(distance, 150)
-		
-		console.log('下拉距离:', distance)
-		
-		// 如果下拉距离超过100，进入抢红包模式
-		if (distance > 100) {
-			data.isGrabbingMode = true
-			console.log('进入抢红包模式')
-		} else {
-			// 下拉距离小于100，普通刷新模式
-			data.isGrabbingMode = false
-		}
-	}
-}
-
-const onTouchEnd = async () => {
-	// 如果有弹框打开，不处理触摸事件
-	if (data.showMonthPicker || data.showBudgetModal) return
-	
-	console.log('触摸结束，下拉距离:', data.pullDistance, '抢红包模式:', data.isGrabbingMode)
-	
-	const distance = data.pullDistance
-	
-	// 下拉距离超过100，触发抢红包
-	if (distance > 100) {
-		console.log('触发抢红包！')
-		grabRedPacket()
-	}
-	// 下拉距离在50-100之间，触发数据刷新
-	else if (distance > 50 && distance <= 100) {
-		console.log('触发数据刷新')
-		uni.showLoading({ title: '刷新中...' })
-		try {
-			// 直接从API获取最新数据
-			data.allBills = await billStorage.getFromAPI()
-			await loadBudget()
-			recalculateData()
-			
-			// 同时刷新抢红包次数
-			await loadRedPacketCount()
-			
-			uni.hideLoading()
-			uni.showToast({
-				title: '刷新成功',
-				icon: 'success',
-				duration: 1500
-			})
-		} catch (error) {
-			console.error('刷新失败:', error)
-			uni.hideLoading()
-			uni.showToast({
-				title: '刷新失败',
-				icon: 'none'
-			})
-		}
-	}
-	
-	data.startY = 0
-	data.pullDistance = 0
-	
-	// 延迟重置抢红包模式
-	setTimeout(() => {
-		data.isGrabbingMode = false
-	}, 300)
-}
-
-// 获取下拉提示文字
-const getPullHintText = () => {
-	const currentHour = new Date().getHours()
-	const isAfternoon = currentHour >= 12 // 12点及以后算下午
-	
-	// 获取上午和下午的抢红包次数（优先使用云端数据）
-	let morningGrabCount = data.morningGrabCount || 0
-	let afternoonGrabCount = data.afternoonGrabCount || 0
-	
-	// 检查当前时段的次数
-	const currentPeriodCount = isAfternoon ? afternoonGrabCount : morningGrabCount
-	
-	// 根据下拉距离显示不同提示
-	if (data.pullDistance <= 50) {
-		return '下拉刷新数据'
-	} else if (data.pullDistance <= 100) {
-		return '松手刷新数据'
-	}
-	
-	// 下拉距离超过100，显示抢红包相关提示
-	// 检查次数限制（上午20次，下午20次）
-	if (currentPeriodCount >= 20) {
-		data.canGrabToday = false
-		if (isAfternoon) {
-			return '今日红包已抢完~'
-		} else {
-			return '上午红包已抢完，下午再来~'
-		}
-	}
-	
-	// 还有次数，可以抢
-	data.canGrabToday = true
-	return '松手抢红包！'
-}
-
-// 抢红包
-const grabRedPacket = async () => {
-	const now = Date.now()
-	const currentHour = new Date().getHours()
-	const isAfternoon = currentHour >= 12 // 12点及以后算下午
-	
-	// 检查当前时段的次数限制（上午20次，下午20次）
-	const currentPeriodCount = isAfternoon ? data.afternoonGrabCount : data.morningGrabCount
-	if (currentPeriodCount >= 20) {
-		if (isAfternoon) {
-			uni.showToast({
-				title: '今日红包已抢完，明天再来吧~',
-				icon: 'none',
-				duration: 2000
-			})
-		} else {
-			uni.showToast({
-				title: '上午红包已抢完，下午再来~',
-				icon: 'none',
-				duration: 2000
-			})
-		}
-		return
-	}
-	
-	// 可以抢红包了！显示开红包动画
-	data.showOpenAnimation = true
-	
-	// 完全随机决定是积分还是祝福语（50%概率）
-	const isPoints = Math.random() < 0.5
-	
-	let resultText = ''
-	let toastText = ''
-	let points = 0
-	
-	if (isPoints) {
-		// 积分红包：1-10分随机
-		points = Math.floor(Math.random() * 10) + 1
-		resultText = `+${points}积分`
-		toastText = `恭喜获得${points}积分！`
-	} else {
-		// 祝福语红包：随机选择
-		const blessings = [
-			'🐴 马到成功',
-			'💰 财源滚滚',
-			'🎊 万事如意',
-			'🌟 心想事成',
-			'🎉 大吉大利',
-			'✨ 好运连连',
-			'🏆 一马当先',
-			'🎯 马上有钱',
-			'🌈 福星高照',
-			'🎁 喜事连连',
-			'🔥 红红火火',
-			'💎 财运亨通',
-			'🌸 花开富贵',
-			'🎪 笑口常开',
-			'🎨 锦绣前程'
-		]
-		
-		const blessing = blessings[Math.floor(Math.random() * blessings.length)]
-		resultText = blessing
-		toastText = `收到祝福：${blessing}`
-	}
-	
-	// 调用API记录抢红包
-	try {
-		const res = await request.call('billManager', {
-			action: 'grabRedPacket',
-			data: {
-				isAfternoon: isAfternoon,
-				points: isPoints ? points : 0,
-				reason: '抢红包'
-			}
-		})
-		
-		if (res.success) {
-			// 更新本地次数
-			data.morningGrabCount = res.morningCount
-			data.afternoonGrabCount = res.afternoonCount
-			data.lastGrabTime = res.lastGrabTime
-			
-			// 如果是积分红包，检查是否升级
-			if (isPoints) {
-				// 获取当前积分
-				const currentPoints = uni.getStorageSync('userPoints') || 0
-				const oldPoints = currentPoints - points
-				
-				const levelUpInfo = checkLevelUp(oldPoints, currentPoints)
-				
-				if (levelUpInfo && levelUpInfo.isLevelUp) {
-					// 检查是否已经提示过这个等级
-					const notifiedLevel = uni.getStorageSync('notifiedLevel') || 0
-					const newLevel = levelUpInfo.newLevel.level
-					
-					if (notifiedLevel < newLevel) {
-						// 记录已提示的等级
-						uni.setStorageSync('notifiedLevel', newLevel)
-						
-						setTimeout(() => {
-							uni.showModal({
-								title: '🎉 恭喜升级',
-								content: `恭喜您从【${levelUpInfo.oldLevel.name}】升级到【${levelUpInfo.newLevel.name}】！\n\n${levelUpInfo.newLevel.desc}\n\n继续记账，冲击更高等级~`,
-								showCancel: false,
-								confirmText: '太棒了',
-								confirmColor: levelUpInfo.newLevel.color
-							})
-						}, 2500)
-					}
-				}
-			}
-		} else {
-			// API调用失败
-			uni.showToast({
-				title: res.message || '抢红包失败',
-				icon: 'none',
-				duration: 2000
-			})
-			data.showOpenAnimation = false
-			return
-		}
-		
-	} catch (error) {
-		console.error('抢红包失败:', error)
-		uni.showToast({
-			title: '网络错误，请重试',
-			icon: 'none',
-			duration: 2000
-		})
-		data.showOpenAnimation = false
-		return
-	}
-	
-	// 显示结果
-	data.grabResult = resultText
-	
-	// 震动反馈
-	uni.vibrateShort()
-	
-	// 1.5秒后隐藏开红包动画，显示toast
-	setTimeout(() => {
-		data.showOpenAnimation = false
-		uni.showToast({
-			title: toastText,
-			icon: isPoints ? 'success' : 'none',
-			duration: 2000
-		})
-	}, 1500)
-}
 
 const getBudgetCardClass = () => {
 	if (data.budgetPercent >= 100) return 'budget-danger'
@@ -1888,26 +1056,6 @@ const getBudgetWarningText = () => {
 	return ''
 }
 
-// 获取剩余抢红包次数
-const getRemainCount = () => {
-	const currentHour = new Date().getHours()
-	const isAfternoon = currentHour >= 12
-	const currentPeriodCount = isAfternoon ? data.afternoonGrabCount : data.morningGrabCount
-	return Math.max(0, 20 - currentPeriodCount)
-}
-
-// 显示红包引导（用户点击红包入口时触发）
-const showRedPacketGuide = () => {
-	data.showGuide = true
-}
-
-// 关闭引导
-const closeGuide = () => {
-	data.showGuide = false
-	// 标记用户已看过引导
-	uni.setStorageSync('hasSeenRedPacketGuide', true)
-}
-
 // 切换预算详情显示
 const toggleBudgetDetail = () => {
 	data.showBudgetDetail = !data.showBudgetDetail
@@ -1935,9 +1083,6 @@ onLoad((options) => {
 	initData()
 	loadBudget()
 	loadData()
-	
-	// 初始化春节元素（会设置 isFestivalActive）
-	initFestivalElements()
 	
 	// 监听账单保存事件
 	uni.$on('billSaved', handleBillSaved)
@@ -1992,23 +1137,6 @@ onShow(() => {
 		duration: 0
 	})
 	
-	// 标记页面可见
-	data.isPageVisible = true
-	
-	// 恢复红包雨定时器
-	if (!data.redPacketTimer && data.isFestivalActive) {
-		data.redPacketTimer = setInterval(() => {
-			checkRedPacketTime()
-		}, 1000)
-		// 立即检查一次
-		checkRedPacketTime()
-	}
-	
-	// 如果红包雨正在进行且音乐未播放，开始播放背景音乐（不播放提示音）
-	if (data.isRedPacketTime && !data.bgMusicContext) {
-		startBgMusic()
-	}
-	
 	// 检查是否需要刷新数据
 	const needRefresh = uni.getStorageSync('needRefreshHome')
 	
@@ -2026,7 +1154,7 @@ onShow(() => {
 			// 重新计算所有数据
 			recalculateData()
 			uni.hideLoading()
-			console.log('数据刷新完成，分类排行:', data.topCategories)
+			console.log('数据刷新完成')
 		}).catch(error => {
 			console.error('刷新失败:', error)
 			uni.showToast({
@@ -2074,40 +1202,13 @@ onPullDownRefresh(async () => {
 })
 
 onHide(() => {
-	// 标记页面不可见
-	data.isPageVisible = false
-	
-	// 暂停红包雨定时器(但不清除,切回来时继续)
-	if (data.redPacketTimer) {
-		clearInterval(data.redPacketTimer)
-		data.redPacketTimer = null
-	}
-	
-	// 停止背景音乐
-	if (data.bgMusicContext) {
-		data.bgMusicContext.stop()
-		data.bgMusicContext.destroy()
-		data.bgMusicContext = null
-	}
+	// 页面隐藏时不需要特殊处理
 })
 
 onUnload(() => {
 	// 移除事件监听
 	uni.$off('billSaved', handleBillSaved)
 	uni.$off('showReminderModal')
-	
-	// 清除定时器
-	if (data.redPacketTimer) {
-		clearInterval(data.redPacketTimer)
-		data.redPacketTimer = null
-	}
-	
-	// 停止背景音乐
-	if (data.bgMusicContext) {
-		data.bgMusicContext.stop()
-		data.bgMusicContext.destroy()
-		data.bgMusicContext = null
-	}
 })
 
 </script>
@@ -2212,857 +1313,8 @@ export default {
 		letter-spacing: 1rpx;
 	}
 	
-	/* 灯笼装饰 */
-	.lantern {
-		font-size: 48rpx;
-		animation: swing 3s ease-in-out infinite;
-		filter: drop-shadow(0 2rpx 8rpx rgba(255, 255, 255, 0.5));
-	}
-	
-	.navbar-right .lantern {
-		animation-delay: 1.5s;
-	}
-	
-	@keyframes swing {
-		0%, 100% {
-			transform: rotate(-8deg);
-		}
-		50% {
-			transform: rotate(8deg);
-		}
-	}
-	
-	/* 春节横幅背景 */
-	.festival-bg {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: linear-gradient(180deg, #FF4D4F 0%, #FF6B6B 100%);
-		padding-bottom: 48rpx;
-		text-align: center;
-		box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.3);
-		z-index: 999;
-	}
-	
-	.festival-text {
-		font-size: 28rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
-		letter-spacing: 2rpx;
-		display: inline-block;
-		animation: shine-text 3s ease-in-out infinite;
-	}
-	
-	@keyframes shine-text {
-		0%, 100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.85;
-		}
-	}
-	
-	/* 红包入口 */
-	.red-packet-entry {
-		margin: 24rpx 32rpx 0;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-		border-radius: 24rpx;
-		padding: 24rpx 32rpx;
-		display: flex;
-		justify-content: center;
-		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-		animation: pulse-entry 2s ease-in-out infinite;
-	}
-	
-	.entry-content {
-		display: flex;
-		align-items: center;
-		gap: 24rpx;
-		position: relative;
-		margin-right: 60rpx;
-	}
-	
-	@keyframes pulse-entry {
-		0%, 100% {
-			transform: scale(1);
-			box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-		}
-		50% {
-			transform: scale(1.02);
-			box-shadow: 0 12rpx 32rpx rgba(255, 215, 0, 0.4);
-		}
-	}
-	
-	.entry-icon {
-		font-size: 72rpx;
-		animation: shake-packet 1s ease-in-out infinite;
-		flex-shrink: 0;
-	}
-	
-	@keyframes shake-packet {
-		0%, 100% {
-			transform: rotate(0deg);
-		}
-		25% {
-			transform: rotate(-10deg);
-		}
-		75% {
-			transform: rotate(10deg);
-		}
-	}
-	
-	.entry-text {
-		display: flex;
-		flex-direction: column;
-		gap: 8rpx;
-		align-items: center;
-		text-align: center;
-	}
-	
-	.entry-title {
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: #FF4D4F;
-	}
-	
-	.entry-subtitle {
-		font-size: 24rpx;
-		color: #999;
-	}
-	
-	.entry-count {
-		background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-		padding: 12rpx 24rpx;
-		border-radius: 32rpx;
-		box-shadow: 0 4rpx 12rpx rgba(255, 215, 0, 0.4);
-	}
-	
-	.count-text {
-		font-size: 24rpx;
-		font-weight: $font-weight-bold;
-		color: #8B4513;
-	}
-	
-	/* 新手引导弹窗 */
-	.guide-modal {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 10002;
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.guide-content {
-		width: 600rpx;
-		background: linear-gradient(180deg, #FFF 0%, #FFF9F0 100%);
-		border-radius: 32rpx;
-		overflow: hidden;
-		animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	}
-	
-	.guide-header {
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		padding: 32rpx;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	
-	.guide-title {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-	}
-	
-	.guide-close {
-		font-size: 48rpx;
-		color: rgba(255, 255, 255, 0.9);
-		width: 56rpx;
-		height: 56rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	
-	.guide-body {
-		padding: 48rpx 32rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 24rpx;
-	}
-	
-	.guide-packet {
-		font-size: 160rpx;
-		animation: bounce-guide 1s ease-in-out infinite;
-	}
-	
-	@keyframes bounce-guide {
-		0%, 100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-20rpx);
-		}
-	}
-	
-	.guide-arrow {
-		font-size: 64rpx;
-		animation: arrow-down 1s ease-in-out infinite;
-	}
-	
-	@keyframes arrow-down {
-		0%, 100% {
-			transform: translateY(0);
-			opacity: 1;
-		}
-		50% {
-			transform: translateY(20rpx);
-			opacity: 0.5;
-		}
-	}
-	
-	.guide-tip {
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: #FF4D4F;
-		margin-bottom: 16rpx;
-	}
-	
-	.guide-rules {
-		width: 100%;
-		background: rgba(255, 77, 79, 0.05);
-		border-radius: 16rpx;
-		padding: 24rpx;
-		display: flex;
-		flex-direction: column;
-		gap: 12rpx;
-	}
-	
-	.rule-item {
-		font-size: 26rpx;
-		color: #666;
-		line-height: 1.6;
-	}
-	
-	.guide-footer {
-		padding: 0 32rpx 32rpx;
-	}
-	
-	.guide-btn {
-		width: 100%;
-		height: 88rpx;
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		border-radius: 44rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-		box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.4);
-	}
-	
-	/* 红包雨结算弹窗 */
-	.result-modal {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 10003;
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.result-content {
-		width: 600rpx;
-		background: linear-gradient(180deg, #FFF 0%, #FFF9F0 100%);
-		border-radius: 32rpx;
-		overflow: hidden;
-		animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	}
-	
-	.result-header {
-		background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-		padding: 32rpx;
-		text-align: center;
-	}
-	
-	.result-title {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: #8B4513;
-	}
-	
-	.result-body {
-		padding: 48rpx 32rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 32rpx;
-	}
-	
-	.result-points {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 16rpx;
-	}
-	
-	.points-label {
-		font-size: 28rpx;
-		color: #999;
-	}
-	
-	.points-value {
-		font-size: 120rpx;
-		font-weight: $font-weight-bold;
-		color: #FF4D4F;
-		font-family: 'DIN Alternate', monospace;
-		text-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.3);
-		animation: pulse-points 1s ease-in-out infinite;
-	}
-	
-	@keyframes pulse-points {
-		0%, 100% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.05);
-		}
-	}
-	
-	.points-unit {
-		font-size: 32rpx;
-		color: #666;
-	}
-	
-	/* 祝福语统计 */
-	.result-blessings {
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 16rpx;
-	}
-	
-	.blessings-label {
-		font-size: 28rpx;
-		color: #999;
-	}
-	
-	.blessings-list {
-		width: 100%;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 16rpx;
-		justify-content: center;
-		max-height: 300rpx;
-		overflow-y: auto;
-	}
-	
-	.blessing-item {
-		background: linear-gradient(135deg, #FFE5E5 0%, #FFD4D4 100%);
-		padding: 12rpx 24rpx;
-		border-radius: 32rpx;
-		font-size: 24rpx;
-		color: #FF4D4F;
-		font-weight: $font-weight-semibold;
-		box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.15);
-		animation: fadeInUp 0.5s ease;
-	}
-	
-	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(20rpx);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-	
-	/* 空状态 */
-	.result-empty {
-		padding: 48rpx 0;
-	}
-	
-	.empty-text {
-		font-size: 28rpx;
-		color: #999;
-	}
-	
-	.result-tip {
-		width: 100%;
-		background: rgba(255, 77, 79, 0.05);
-		border-radius: 16rpx;
-		padding: 24rpx;
-		text-align: center;
-	}
-	
-	.tip-text {
-		font-size: 28rpx;
-		color: #FF4D4F;
-		font-weight: $font-weight-semibold;
-	}
-	
-	.result-footer {
-		padding: 0 32rpx 32rpx;
-	}
-	
-	.result-btn {
-		width: 100%;
-		height: 88rpx;
-		background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-		border-radius: 44rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 32rpx;
-		font-weight: $font-weight-bold;
-		color: #8B4513;
-		box-shadow: 0 8rpx 24rpx rgba(255, 165, 0, 0.4);
-	}
-	
-	/* 红包入口激活状态 */
-	.red-packet-entry.active {
-		animation: pulse-active 1s ease-in-out infinite;
-		background: linear-gradient(135deg, #FFE5E5 0%, #FFD4D4 100%);
-	}
-	
-	@keyframes pulse-active {
-		0%, 100% {
-			transform: scale(1);
-			box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.3);
-		}
-		50% {
-			transform: scale(1.03);
-			box-shadow: 0 12rpx 32rpx rgba(255, 77, 79, 0.4);
-		}
-	}
-	
-	.entry-badge {
-		background: #FF4D4F;
-		color: $text-white;
-		font-size: 24rpx;
-		font-weight: $font-weight-bold;
-		padding: 8rpx 16rpx;
-		border-radius: 32rpx;
-		animation: blink 1s ease-in-out infinite;
-		position: absolute;
-		right: -80rpx;
-	}
-	
-	@keyframes blink {
-		0%, 100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.6;
-		}
-	}
-	
-	.badge-text {
-		color: $text-white;
-	}
-	
-	/* 下拉抢红包提示 */
-	.pull-hint {
-		position: fixed;
-		top: 120rpx;
-		left: 50%;
-		transform: translateX(-50%) translateY(-100rpx);
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		padding: 20rpx 40rpx;
-		border-radius: 60rpx;
-		display: flex;
-		align-items: center;
-		gap: 16rpx;
-		box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.4);
-		z-index: 101;
-		opacity: 0;
-		transition: all 0.3s ease;
-		border: 3rpx solid rgba(255, 255, 255, 0.5);
-	}
-	
-	.pull-hint.show {
-		opacity: 1;
-		transform: translateX(-50%) translateY(0);
-	}
-	
-	.hint-icon {
-		font-size: 48rpx;
-		animation: bounce-hint 0.6s ease-in-out infinite;
-	}
-	
-	@keyframes bounce-hint {
-		0%, 100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-8rpx);
-		}
-	}
-	
-	.hint-text {
-		font-size: 28rpx;
-		color: $text-white;
-		font-weight: $font-weight-bold;
-		text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
-	}
-	
-	/* 开红包炸裂动画 */
-	.open-packet-animation {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		z-index: 10001;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	
-	.packet-bg {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.packet-content {
-		position: relative;
-		z-index: 1;
-	}
-	
-	/* 红包炸开效果 */
-	.packet-explode {
-		position: relative;
-		width: 300rpx;
-		height: 400rpx;
-		margin: 0 auto;
-	}
-	
-	.packet-half {
-		position: absolute;
-		width: 150rpx;
-		height: 400rpx;
-		background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-		border-radius: 20rpx;
-		box-shadow: 0 8rpx 32rpx rgba(255, 0, 0, 0.6);
-	}
-	
-	.packet-left {
-		left: 0;
-		animation: explode-left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-		transform-origin: right center;
-	}
-	
-	.packet-right {
-		right: 0;
-		animation: explode-right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-		transform-origin: left center;
-	}
-	
-	@keyframes explode-left {
-		0% {
-			transform: translateX(0) rotate(0deg);
-			opacity: 1;
-		}
-		100% {
-			transform: translateX(-200rpx) rotate(-45deg);
-			opacity: 0;
-		}
-	}
-	
-	@keyframes explode-right {
-		0% {
-			transform: translateX(0) rotate(0deg);
-			opacity: 1;
-		}
-		100% {
-			transform: translateX(200rpx) rotate(45deg);
-			opacity: 0;
-		}
-	}
-	
-	/* 金币飞出效果 */
-	.coins-fly {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-	}
-	
-	.coin {
-		position: absolute;
-		font-size: 60rpx;
-		animation: coin-fly 0.8s ease-out forwards;
-		opacity: 0;
-	}
-	
-	.coin:nth-child(1) { animation-delay: 0.3s; --angle: 0deg; }
-	.coin:nth-child(2) { animation-delay: 0.35s; --angle: 30deg; }
-	.coin:nth-child(3) { animation-delay: 0.4s; --angle: 60deg; }
-	.coin:nth-child(4) { animation-delay: 0.45s; --angle: 90deg; }
-	.coin:nth-child(5) { animation-delay: 0.5s; --angle: 120deg; }
-	.coin:nth-child(6) { animation-delay: 0.55s; --angle: 150deg; }
-	.coin:nth-child(7) { animation-delay: 0.6s; --angle: 180deg; }
-	.coin:nth-child(8) { animation-delay: 0.65s; --angle: 210deg; }
-	.coin:nth-child(9) { animation-delay: 0.7s; --angle: 240deg; }
-	.coin:nth-child(10) { animation-delay: 0.75s; --angle: 270deg; }
-	.coin:nth-child(11) { animation-delay: 0.8s; --angle: 300deg; }
-	.coin:nth-child(12) { animation-delay: 0.85s; --angle: 330deg; }
-	
-	@keyframes coin-fly {
-		0% {
-			transform: translate(0, 0) scale(0);
-			opacity: 0;
-		}
-		50% {
-			opacity: 1;
-		}
-		100% {
-			transform: translate(
-				calc(cos(var(--angle)) * 200rpx),
-				calc(sin(var(--angle)) * 200rpx)
-			) scale(1);
-			opacity: 0;
-		}
-	}
-	
-	/* 结果显示 */
-	.result-show {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		animation: result-show 0.5s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-		opacity: 0;
-	}
-	
-	.result-text {
-		font-size: 80rpx;
-		font-weight: $font-weight-bold;
-		color: #FFD700;
-		text-shadow: 0 4rpx 20rpx rgba(255, 215, 0, 0.8),
-		             0 0 40rpx rgba(255, 215, 0, 0.6);
-		white-space: nowrap;
-	}
-	
-	@keyframes result-show {
-		0% {
-			transform: translate(-50%, -50%) scale(0);
-			opacity: 0;
-		}
-		100% {
-			transform: translate(-50%, -50%) scale(1);
-			opacity: 1;
-		}
-	}
-	
-	/* 抢红包动画（旧版，已废弃） */
-	.red-packet-grab {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.6);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 10001;
-		animation: fadeIn 0.3s ease;
-	}
-	
-	.grab-animation {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 40rpx;
-		animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-	}
-	
-	@keyframes scaleIn {
-		0% {
-			transform: scale(0);
-			opacity: 0;
-		}
-		100% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-	
-	.grab-packet {
-		font-size: 200rpx;
-		animation: rotate-packet 1s ease-in-out;
-		filter: drop-shadow(0 8rpx 24rpx rgba(255, 0, 0, 0.6));
-	}
-	
-	@keyframes rotate-packet {
-		0% {
-			transform: rotate(0deg) scale(0.5);
-		}
-		50% {
-			transform: rotate(180deg) scale(1.2);
-		}
-		100% {
-			transform: rotate(360deg) scale(1);
-		}
-	}
-	
-	.grab-text {
-		font-size: 64rpx;
-		font-weight: $font-weight-bold;
-		color: #FFD700;
-		text-shadow: 0 4rpx 12rpx rgba(255, 215, 0, 0.6);
-		animation: pulse-text 0.8s ease-in-out infinite;
-	}
-	
-	@keyframes pulse-text {
-		0%, 100% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.1);
-		}
-	}
-	
-	/* 春节装饰：灯笼 */
-	.lantern {
-		position: absolute;
-		top: calc(constant(safe-area-inset-top) + 10rpx);
-		top: calc(env(safe-area-inset-top) + 10rpx);
-		font-size: 64rpx;
-		z-index: 1001;
-		animation: swing 3s ease-in-out infinite;
-		filter: drop-shadow(0 4rpx 12rpx rgba(255, 255, 255, 0.5));
-	}
-	
-	.lantern-left {
-		left: 20rpx;
-	}
-	
-	.lantern-right {
-		right: 20rpx;
-		animation-delay: 1.5s;
-	}
-	
-	@keyframes swing {
-		0%, 100% {
-			transform: rotate(-8deg);
-		}
-		50% {
-			transform: rotate(8deg);
-		}
-	}
-	
-	/* 红包雨 */
-	.red-packet-rain {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		pointer-events: none; /* 容器不拦截点击 */
-		z-index: 99;
-	}
-	
-	.red-packet {
-		position: absolute;
-		top: -100rpx;
-		font-size: 80rpx;
-		animation: fall linear infinite;
-		filter: drop-shadow(0 4rpx 12rpx rgba(255, 0, 0, 0.5));
-		pointer-events: auto; /* 红包可以点击 */
-		cursor: pointer;
-		transition: transform 0.1s ease;
-	}
-	
-	.red-packet:active {
-		transform: scale(1.2);
-		filter: drop-shadow(0 8rpx 24rpx rgba(255, 215, 0, 0.8));
-	}
-	
-	/* 大红包样式 */
-	.red-packet-big {
-		font-size: 120rpx;
-		filter: drop-shadow(0 8rpx 24rpx rgba(255, 215, 0, 0.8));
-		animation: fall-big linear infinite, glow 1.5s ease-in-out infinite;
-		z-index: 100;
-	}
-	
-	.red-packet-big:active {
-		transform: scale(1.3);
-		filter: drop-shadow(0 12rpx 32rpx rgba(255, 215, 0, 1));
-	}
-	
-	@keyframes fall {
-		0% {
-			top: -100rpx;
-			transform: rotate(0deg);
-		}
-		100% {
-			top: 100vh;
-			transform: rotate(360deg);
-		}
-	}
-	
-	@keyframes fall-big {
-		0% {
-			top: -150rpx;
-			transform: rotate(0deg) scale(1);
-		}
-		50% {
-			transform: rotate(180deg) scale(1.1);
-		}
-		100% {
-			top: 100vh;
-			transform: rotate(360deg) scale(1);
-		}
-	}
-	
-	@keyframes glow {
-		0%, 100% {
-			filter: drop-shadow(0 8rpx 24rpx rgba(255, 215, 0, 0.8));
-		}
-		50% {
-			filter: drop-shadow(0 12rpx 32rpx rgba(255, 215, 0, 1));
-		}
-	}
-	
-	/* 烟花画布 */
-	.fireworks-canvas {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 98;
-	}
-	
 	.container {
-		padding: $spacing-md;
+		padding: $spacing-sm $spacing-md;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
 	}
@@ -3072,13 +1324,13 @@ export default {
 		justify-content: space-between;
 		align-items: center;
 		/* #ifdef MP-WEIXIN */
-		margin-bottom: $spacing-lg;
-		padding-top: $spacing-sm;
+		margin-bottom: $spacing-xl;
+		padding-top: $spacing-lg;
 		/* #endif */
 		/* #ifdef APP-PLUS */
 		margin-bottom: $spacing-xl;
-		padding-top: $spacing-lg;
-		margin-top: $spacing-md;
+		padding-top: $spacing-xl;
+		margin-top: $spacing-sm;
 		/* #endif */
 		position: relative;
 		z-index: 100;
@@ -3247,7 +1499,7 @@ export default {
 	.income-expense-cards {
 		display: flex;
 		gap: $spacing-md;
-		margin-bottom: $spacing-lg;
+		margin-bottom: $spacing-xl;
 	}
 	
 	.income-card, .expense-card-mini {
@@ -3288,7 +1540,7 @@ export default {
 	.balance-card {
 		border-radius: $radius-2xl;
 		padding: $spacing-xl;
-		margin-bottom: $spacing-lg;
+		margin-bottom: $spacing-xl;
 		text-align: center;
 		position: relative;
 		overflow: hidden;
@@ -3341,7 +1593,7 @@ export default {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		gap: $spacing-lg;
-		margin-bottom: $spacing-lg;
+		margin-bottom: $spacing-xl;
 	}
 
 	.action-btn {
@@ -3395,7 +1647,7 @@ export default {
 	.action-buttons-compact {
 		display: flex;
 		gap: $spacing-md;
-		margin-bottom: $spacing-lg;
+		margin-bottom: $spacing-xl;
 	}
 	
 	.action-btn-compact {
@@ -3474,9 +1726,9 @@ export default {
 	/* 收支结余合并卡片 - 美团风格优化 */
 	.finance-summary-card {
 		background: $bg-white;
-		border-radius: $radius-xl; /* 美团风格：更小的圆角 */
+		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: 32rpx 24rpx;
-		margin-bottom: $spacing-md;
+		margin-bottom: $spacing-xl;
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 		border: 1rpx solid $border-light;
 	}
@@ -3647,7 +1899,7 @@ export default {
 		background: $bg-white;
 		border-radius: $radius-2xl;
 		padding: $spacing-2xl;
-		margin-bottom: $spacing-lg;
+		margin-bottom: $spacing-xl;
 		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 		transition: all $transition-fast;
 		border: 2rpx solid rgba(82, 196, 26, 0.08);
@@ -3846,9 +2098,9 @@ export default {
 	/* 简化版预算卡片 - 美团风格优化 */
 	.budget-card-compact {
 		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：更小的圆角 */
-		padding: 24rpx;
-		margin-bottom: $spacing-lg;
+		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+		padding: 32rpx 28rpx; /* 增加内边距，从24rpx增加到32rpx 28rpx */
+		margin-bottom: $spacing-xl;
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 		transition: all $transition-fast;
 		cursor: pointer;
@@ -3876,11 +2128,11 @@ export default {
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		margin-bottom: $spacing-md;
+		margin-bottom: $spacing-lg; /* 增加底部间距，从md改为lg */
 	}
 	
 	.budget-title-compact {
-		font-size: $font-size-base;
+		font-size: $font-size-lg; /* 增加字体大小，从base改为lg */
 		color: $text-primary;
 		font-weight: $font-weight-semibold;
 	}
@@ -3914,7 +2166,7 @@ export default {
 	}
 	
 	.budget-percent-compact {
-		font-size: 36rpx; /* 美团风格：稍小的字号 */
+		font-size: 44rpx; /* 增加字体大小，从36rpx改为44rpx */
 		color: $primary-color;
 		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
@@ -3929,7 +2181,7 @@ export default {
 	}
 	
 	.budget-bar-compact {
-		height: 12rpx; /* 美团风格：更细的进度条 */
+		height: 16rpx; /* 增加进度条高度，从12rpx改为16rpx */
 		background: $bg-light;
 		border-radius: $radius-sm; /* 美团风格：更小的圆角 */
 		overflow: hidden;
@@ -4241,8 +2493,8 @@ export default {
 	/* 账单卡片 - 美团风格优化 */
 	.bills-card {
 		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：更小的圆角 */
-		padding: 24rpx;
+		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+		padding: 20rpx; /* 减小内边距，从24rpx改为20rpx */
 		margin-bottom: $spacing-xl;
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 		border: 1rpx solid $border-light;
@@ -4252,8 +2504,8 @@ export default {
 		font-size: $font-size-base; /* 美团风格：标准字号 */
 		font-weight: $font-weight-semibold;
 		color: $text-primary;
-		margin-bottom: $spacing-md;
-		padding-bottom: $spacing-sm;
+		margin-bottom: $spacing-sm; /* 减小底部间距，从md改为sm */
+		padding-bottom: $spacing-xs; /* 减小底部内边距，从sm改为xs */
 		border-bottom: 1rpx solid $border-light;
 	}
 
@@ -4295,7 +2547,7 @@ export default {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 20rpx 16rpx; /* 美团风格：更紧凑的内边距 */
+		padding: 16rpx 12rpx; /* 减小内边距，从20rpx 16rpx改为16rpx 12rpx */
 		background: $bg-white;
 		border-radius: $radius-md; /* 美团风格：更小的圆角 */
 		transition: all $transition-fast;
@@ -4332,10 +2584,10 @@ export default {
 	}
 
 	.bill-icon {
-		font-size: 40rpx; /* 美团风格：稍小的图标 */
-		margin-right: $spacing-md;
-		width: 64rpx; /* 美团风格：更小的图标容器 */
-		height: 64rpx;
+		font-size: 36rpx; /* 减小图标大小，从40rpx改为36rpx */
+		margin-right: $spacing-sm; /* 减小右边距，从md改为sm */
+		width: 56rpx; /* 减小图标容器，从64rpx改为56rpx */
+		height: 56rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -4349,7 +2601,7 @@ export default {
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 6rpx;
+		gap: 4rpx; /* 减小间距，从6rpx改为4rpx */
 	}
 
 	.bill-merchant {
@@ -4380,9 +2632,9 @@ export default {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 6rpx;
+		gap: 4rpx; /* 减小间距，从6rpx改为4rpx */
 		flex-shrink: 0;
-		margin-left: $spacing-md;
+		margin-left: $spacing-sm; /* 减小左边距，从md改为sm */
 	}
 
 	.bill-amount {
@@ -4405,9 +2657,38 @@ export default {
 	}
 
 	.empty-tip {
+		font-size: $font-size-sm;
+		color: $text-tertiary;
+	}
+	
+	/* 近期账单空状态 - 美团风格优化 */
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 60rpx 0; /* 从100rpx减少到60rpx，让空状态往上移动 */
 		text-align: center;
-		padding: 60rpx 0;
-		font-size: $font-size-md;
+		background: $bg-white;
+		border-radius: $radius-lg;
+		margin: $spacing-md 0;
+	}
+	
+	.empty-icon {
+		font-size: 120rpx;
+		margin-bottom: $spacing-lg;
+		opacity: 0.3;
+	}
+	
+	.empty-text {
+		font-size: $font-size-lg;
+		color: $text-secondary;
+		font-weight: $font-weight-medium;
+		margin-bottom: $spacing-xs;
+	}
+	
+	.empty-tip {
+		font-size: $font-size-sm;
 		color: $text-tertiary;
 	}
 	

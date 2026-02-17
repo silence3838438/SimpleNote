@@ -108,21 +108,8 @@ onLoad((options) => {
 	// 初始化时间选择器
 	initTimePicker()
 	
-	// 检查用户是否设置过提醒时间
-	const reminderEnabled = uni.getStorageSync('reminderEnabled')
-	const savedTime = uni.getStorageSync('reminderTime')
-	
-	// 只有在用户明确开启过提醒的情况下才显示时间
-	if (reminderEnabled && savedTime) {
-		data.selectedTime = savedTime
-		const [hour, minute] = savedTime.split(':').map(v => parseInt(v))
-		data.tempHour = hour
-		data.tempMinute = minute
-		data.pickerValue = [hour, minute]
-	} else {
-		// 否则显示"未设置"
-		data.selectedTime = '未设置'
-	}
+	// 从云端获取提醒设置
+	loadReminderFromCloud()
 })
 
 const initTimePicker = () => {
@@ -136,6 +123,75 @@ const initTimePicker = () => {
 	data.minutes = []
 	for (let i = 0; i < 60; i++) {
 		data.minutes.push(i.toString().padStart(2, '0'))
+	}
+}
+
+const loadReminderFromCloud = async () => {
+	try {
+		// 显示加载提示
+		uni.showLoading({ title: '加载中...' })
+		
+		// 从云端获取提醒设置
+		const res = await request.call('billManager', {
+			action: 'getReminder'
+		})
+		
+		console.log('获取提醒设置返回:', res)
+		
+		uni.hideLoading()
+		
+		if (res.success && res.reminder) {
+			// 后端返回的是 reminder 对象，可能包含 time 或 reminder_time 字段
+			const savedTime = res.reminder.reminder_time || res.reminder.time || ''
+			console.log('提醒时间:', savedTime)
+			
+			if (savedTime) {
+				// 云端有设置，使用云端数据
+				data.selectedTime = savedTime
+				const [hour, minute] = savedTime.split(':').map(v => parseInt(v))
+				data.tempHour = hour
+				data.tempMinute = minute
+				data.pickerValue = [hour, minute]
+				
+				// 同步到本地
+				uni.setStorageSync('reminderTime', savedTime)
+				uni.setStorageSync('reminderEnabled', true)
+			} else {
+				// 云端没有设置
+				data.selectedTime = '未设置'
+			}
+		} else {
+			// 云端没有设置，检查本地
+			const reminderEnabled = uni.getStorageSync('reminderEnabled')
+			const savedTime = uni.getStorageSync('reminderTime')
+			
+			if (reminderEnabled && savedTime) {
+				data.selectedTime = savedTime
+				const [hour, minute] = savedTime.split(':').map(v => parseInt(v))
+				data.tempHour = hour
+				data.tempMinute = minute
+				data.pickerValue = [hour, minute]
+			} else {
+				data.selectedTime = '未设置'
+			}
+		}
+	} catch (error) {
+		uni.hideLoading()
+		console.error('获取提醒设置失败:', error)
+		
+		// 获取失败，使用本地缓存
+		const reminderEnabled = uni.getStorageSync('reminderEnabled')
+		const savedTime = uni.getStorageSync('reminderTime')
+		
+		if (reminderEnabled && savedTime) {
+			data.selectedTime = savedTime
+			const [hour, minute] = savedTime.split(':').map(v => parseInt(v))
+			data.tempHour = hour
+			data.tempMinute = minute
+			data.pickerValue = [hour, minute]
+		} else {
+			data.selectedTime = '未设置'
+		}
 	}
 }
 
@@ -183,6 +239,7 @@ const saveAndSubscribe = async () => {
 	try {
 		// 先保存时间到本地
 		uni.setStorageSync('reminderTime', data.selectedTime)
+		uni.setStorageSync('reminderEnabled', true)
 		
 		// 请求订阅授权
 		uni.requestSubscribeMessage({
@@ -195,15 +252,13 @@ const saveAndSubscribe = async () => {
 					try {
 						await saveSubscriptionToCloud()
 						
-						// 统一使用 reminderEnabled 字段
-						uni.setStorageSync('reminderEnabled', true)
-						
 						uni.showToast({
 							title: '设置成功',
 							icon: 'success',
-							duration: 2000
+							duration: 1500
 						})
 						
+						// 延迟返回，确保本地缓存已更新
 						setTimeout(() => {
 							// 如果是从记账成功页面跳转过来的，跳转到首页
 							if (data.fromBillSuccess) {
@@ -212,9 +267,11 @@ const saveAndSubscribe = async () => {
 								})
 							} else {
 								// 否则返回上一页
-								uni.navigateBack()
+								uni.navigateBack({
+									delta: 1
+								})
 							}
-						}, 2000)
+						}, 1500)
 					} catch (error) {
 						console.error('保存订阅信息失败:', error)
 						uni.showToast({
