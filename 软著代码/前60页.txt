@@ -1,0 +1,3359 @@
+================================================================================
+                                 第 1 页（共 60 页）
+================================================================================
+
+   1 | // ========================================
+   2 | // 文件: App.vue
+   3 | // ========================================
+   4 | <script setup>
+   5 | 	import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
+   6 | 	import { updateTabBarText } from '@/utils/i18nHelper'
+   7 | 	
+   8 | 	const initCategories = () => {
+   9 | 		const categories = [
+  10 | 			{ id: 1, name: '餐饮', icon: '🍜', keywords: ['餐厅', '饭店', '食堂', '外卖', '麦当劳', '肯德基', '星巴克', '咖啡'] },
+  11 | 			{ id: 2, name: '交通', icon: '🚗', keywords: ['滴滴', '出租', '地铁', '公交', '加油', '停车'] },
+  12 | 			{ id: 3, name: '购物', icon: '🛒', keywords: ['超市', '商场', '淘宝', '京东', '拼多多'] },
+  13 | 			{ id: 4, name: '娱乐', icon: '🎮', keywords: ['电影', '游戏', 'KTV', '健身'] },
+  14 | 			{ id: 5, name: '住房', icon: '🏠', keywords: ['房租', '物业', '水电', '燃气'] },
+  15 | 			{ id: 6, name: '医疗', icon: '💊', keywords: ['医院', '药店', '体检'] },
+  16 | 			{ id: 7, name: '通讯', icon: '📱', keywords: ['话费', '流量', '宽带'] },
+  17 | 			{ id: 8, name: '服饰', icon: '👔', keywords: ['衣服', '鞋子', '包包'] },
+  18 | 			{ id: 9, name: '美容', icon: '💄', keywords: ['美发', '美甲', '化妆品'] },
+  19 | 			{ id: 10, name: '学习', icon: '📚', keywords: ['书籍', '课程', '培训'] },
+  20 | 			{ id: 11, name: '社交', icon: '👥', keywords: ['聚餐', '礼物', '红包'] },
+  21 | 			{ id: 12, name: '其他', icon: '📦', keywords: [] }
+  22 | 		]
+  23 | 		uni.setStorageSync('categories', categories)
+  24 | 	}
+  25 | 	
+  26 | 	// 从云端加载提醒设置
+  27 | 	const loadReminderSettingsFromCloud = async () => {
+  28 | 		try {
+  29 | 			const token = uni.getStorageSync('token')
+  30 | 			if (!token) {
+  31 | 				return
+  32 | 			}
+  33 | 			
+  34 | 			const result = await uni.request({
+  35 | 				url: 'https://api.qiannaqule.top/bills/reminder',
+  36 | 				method: 'GET',
+  37 | 				header: {
+  38 | 					'Authorization': `Bearer ${token}`
+  39 | 				}
+  40 | 			})
+  41 | 			
+  42 | 			if (result.statusCode === 200 && result.data.success && result.data.reminder) {
+  43 | 				const reminder = result.data.reminder
+  44 | 				
+  45 | 				// 同步到本地存储
+  46 | 				uni.setStorageSync('reminderEnabled', reminder.enabled || false)
+  47 | 				uni.setStorageSync('reminderTime', reminder.time || '20:00')
+  48 | 			}
+  49 | 		} catch (error) {
+  50 | 			console.error('加载提醒设置失败:', error)
+
+
+================================================================================
+                                 第 2 页（共 60 页）
+================================================================================
+
+  51 | 			// 加载失败不影响应用启动，使用本地缓存
+  52 | 		}
+  53 | 	}
+  54 | 	
+  55 | 	// 检查是否需要提醒记账
+  56 | 	const checkReminderAndNotify = () => {
+  57 | 		try {
+  58 | 			// 1. 检查是否开启了提醒
+  59 | 			const reminderEnabled = uni.getStorageSync('reminderEnabled')
+  60 | 			if (!reminderEnabled) {
+  61 | 				return
+  62 | 			}
+  63 | 			
+  64 | 			// 2. 获取提醒时间
+  65 | 			const reminderTime = uni.getStorageSync('reminderTime')
+  66 | 			if (!reminderTime) {
+  67 | 				return
+  68 | 			}
+  69 | 			
+  70 | 			// 3. 检查今天是否已经提醒过（每天只提醒一次）
+  71 | 			const today = new Date().toDateString()
+  72 | 			const lastReminderDate = uni.getStorageSync('lastReminderDate')
+  73 | 			
+  74 | 			if (lastReminderDate === today) {
+  75 | 				return
+  76 | 			}
+  77 | 			
+  78 | 			// 4. 检查当前时间是否已经过了提醒时间
+  79 | 			const now = new Date()
+  80 | 			const currentHour = now.getHours()
+  81 | 			const currentMinute = now.getMinutes()
+  82 | 			const currentTime = currentHour * 60 + currentMinute // 转换为分钟数
+  83 | 			
+  84 | 			const [reminderHour, reminderMinute] = reminderTime.split(':').map(Number)
+  85 | 			const reminderTimeInMinutes = reminderHour * 60 + reminderMinute
+  86 | 			
+  87 | 			if (currentTime < reminderTimeInMinutes) {
+  88 | 				return
+  89 | 			}
+  90 | 			
+  91 | 			// 5. 检查今天是否已经记过账
+  92 | 			const bills = uni.getStorageSync('bills') || []
+  93 | 			const todayBills = bills.filter(bill => {
+  94 | 				const billDate = new Date(bill.date).toDateString()
+  95 | 				return billDate === today
+  96 | 			})
+  97 | 			
+  98 | 			if (todayBills.length > 0) {
+  99 | 				return
+ 100 | 			}
+
+
+================================================================================
+                                 第 3 页（共 60 页）
+================================================================================
+
+ 101 | 			
+ 102 | 			// 6. 检查应用是否刚启动（避免频繁弹窗）
+ 103 | 			const lastShowTime = uni.getStorageSync('lastAppShowTime') || 0
+ 104 | 			const timeSinceLastShow = Date.now() - lastShowTime
+ 105 | 			
+ 106 | 			// 如果距离上次显示不到30秒，不弹窗（避免频繁切换应用时重复弹窗）
+ 107 | 			if (timeSinceLastShow < 30000) {
+ 108 | 				return
+ 109 | 			}
+ 110 | 			
+ 111 | 			// 记录本次显示时间
+ 112 | 			uni.setStorageSync('lastAppShowTime', Date.now())
+ 113 | 			
+ 114 | 			// 7. 显示提醒弹窗（使用自定义弹框）
+ 115 | 			showReminderModal()
+ 116 | 			
+ 117 | 			// 记录今天已提醒，避免重复弹窗
+ 118 | 			uni.setStorageSync('lastReminderDate', today)
+ 119 | 		} catch (error) {
+ 120 | 			console.error('检查提醒失败:', error)
+ 121 | 		}
+ 122 | 	}
+ 123 | 	
+ 124 | 	// 显示精美的提醒弹框
+ 125 | 	const showReminderModal = () => {
+ 126 | 		// 延迟触发，确保首页已经加载完成
+ 127 | 		setTimeout(() => {
+ 128 | 			uni.$emit('showReminderModal')
+ 129 | 		}, 800)
+ 130 | 	}
+ 131 | 	
+ 132 | 	// 自动登录（小程序和APP通用）
+ 133 | 	const autoLogin = async () => {
+ 134 | 		try {
+ 135 | 			// 检查本地是否有用户信息和token
+ 136 | 			const userInfo = uni.getStorageSync('userInfo')
+ 137 | 			const token = uni.getStorageSync('token')
+ 138 | 			
+ 139 | 			
+ 140 | 			// 如果本地有用户信息且已登录，说明之前登录过
+ 141 | 			if (userInfo && userInfo.isLogin && token) {
+ 142 | 				
+ 143 | 				// #ifdef MP-WEIXIN
+ 144 | 				// 小程序：静默登录，获取新的code换取token
+ 145 | 				const loginRes = await uni.login()
+ 146 | 				
+ 147 | 				if (loginRes.code) {
+ 148 | 					// 调用后端接口，使用code换取新token
+ 149 | 					const result = await uni.request({
+ 150 | 						url: 'https://api.qiannaqule.top/auth/wechat-login',
+
+
+================================================================================
+                                 第 4 页（共 60 页）
+================================================================================
+
+ 151 | 						method: 'POST',
+ 152 | 						data: {
+ 153 | 							code: loginRes.code,
+ 154 | 							nickName: userInfo.nickName,
+ 155 | 							avatarUrl: userInfo.avatarUrl
+ 156 | 						},
+ 157 | 						header: {
+ 158 | 							'Content-Type': 'application/json'
+ 159 | 						}
+ 160 | 					})
+ 161 | 					
+ 162 | 					
+ 163 | 					if (result.statusCode === 200 && result.data.success) {
+ 164 | 						// 更新token和用户信息
+ 165 | 						const newUserInfo = {
+ 166 | 							nickName: result.data.data?.nickName || userInfo.nickName,
+ 167 | 							avatarUrl: result.data.data?.avatarUrl || userInfo.avatarUrl,
+ 168 | 							isLogin: true
+ 169 | 						}
+ 170 | 						
+ 171 | 						uni.setStorageSync('userInfo', newUserInfo)
+ 172 | 						uni.setStorageSync('token', result.data.token)
+ 173 | 						
+ 174 | 					} else {
+ 175 | 						uni.removeStorageSync('userInfo')
+ 176 | 						uni.removeStorageSync('token')
+ 177 | 					}
+ 178 | 				}
+ 179 | 				// #endif
+ 180 | 				
+ 181 | 				// #ifdef APP-PLUS
+ 182 | 				// APP：验证token是否有效
+ 183 | 				try {
+ 184 | 					const result = await uni.request({
+ 185 | 						url: 'https://api.qiannaqule.top/api/auth/verify-token',
+ 186 | 						method: 'GET',
+ 187 | 						header: {
+ 188 | 							'Authorization': `Bearer ${token}`
+ 189 | 						}
+ 190 | 					})
+ 191 | 					
+ 192 | 					
+ 193 | 					if (result.statusCode === 200 && result.data.success) {
+ 194 | 						// token有效，更新用户信息（可能昵称头像有变化）
+ 195 | 						if (result.data.data) {
+ 196 | 							const updatedUserInfo = {
+ 197 | 								nickName: result.data.data.nickName || userInfo.nickName,
+ 198 | 								avatarUrl: result.data.data.avatarUrl || userInfo.avatarUrl,
+ 199 | 								isLogin: true
+ 200 | 							}
+
+
+================================================================================
+                                 第 5 页（共 60 页）
+================================================================================
+
+ 201 | 							uni.setStorageSync('userInfo', updatedUserInfo)
+ 202 | 						}
+ 203 | 					} else {
+ 204 | 						// token无效，清除登录状态
+ 205 | 						uni.removeStorageSync('userInfo')
+ 206 | 						uni.removeStorageSync('token')
+ 207 | 					}
+ 208 | 				} catch (error) {
+ 209 | 					console.error('验证token异常:', error)
+ 210 | 					// 验证失败，但不清除登录状态，让用户继续使用
+ 211 | 					// 只有在明确token无效时才清除
+ 212 | 				}
+ 213 | 				// #endif
+ 214 | 			} else {
+ 215 | 			}
+ 216 | 		} catch (error) {
+ 217 | 			console.error('自动登录失败:', error)
+ 218 | 			// 失败不影响应用启动
+ 219 | 		}
+ 220 | 	}
+ 221 | 	
+ 222 | 	onLaunch(async () => {
+ 223 | 		// 初始化云开发环境
+ 224 | 		// #ifdef MP-WEIXIN
+ 225 | 		if (!wx.cloud) {
+ 226 | 			console.error('请使用 2.2.3 或以上的基础库以使用云能力')
+ 227 | 		} else {
+ 228 | 			wx.cloud.init({
+ 229 | 				env: 'cloud1-8gxevfq393690dfe',
+ 230 | 				traceUser: true
+ 231 | 			})
+ 232 | 		}
+ 233 | 		// #endif
+ 234 | 		
+ 235 | 		// 初始化分类数据
+ 236 | 		initCategories()
+ 237 | 		
+ 238 | 		// 更新 tabBar 文字（支持国际化）- 延迟执行确保 tabBar 已准备好
+ 239 | 		setTimeout(() => {
+ 240 | 			updateTabBarText()
+ 241 | 		}, 100)
+ 242 | 		
+ 243 | 		// 自动登录（小程序和APP通用，在加载提醒设置之前）
+ 244 | 		await autoLogin()
+ 245 | 		
+ 246 | 		// 从云端加载提醒设置（等待加载完成）
+ 247 | 		await loadReminderSettingsFromCloud()
+ 248 | 	})
+ 249 | 	
+ 250 | 	onShow(() => {
+
+
+================================================================================
+                                 第 6 页（共 60 页）
+================================================================================
+
+ 251 | 		// 延迟检查，确保云端数据已加载
+ 252 | 		setTimeout(() => {
+ 253 | 			checkReminderAndNotify()
+ 254 | 		}, 500)
+ 255 | 	})
+ 256 | 	
+ 257 | 	onHide(() => {
+ 258 | 	})
+ 259 | </script>
+ 260 | 
+ 261 | <style lang="scss">
+ 262 | @import "@/styles/variables.scss";
+ 263 | 
+ 264 | page {
+ 265 | 	background-color: $bg-page;
+ 266 | 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+ 267 | }
+ 268 | 
+ 269 | /* 隐藏导航栏下边框 */
+ 270 | page::before {
+ 271 | 	display: none !important;
+ 272 | }
+ 273 | 
+ 274 | /* 隐藏TabBar上边框 */
+ 275 | uni-tabbar .uni-tabbar-border {
+ 276 | 	display: none !important;
+ 277 | 	height: 0 !important;
+ 278 | 	background-color: transparent !important;
+ 279 | }
+ 280 | 
+ 281 | /* 通用样式类 */
+ 282 | .flex {
+ 283 | 	display: flex;
+ 284 | }
+ 285 | 
+ 286 | .flex-center {
+ 287 | 	display: flex;
+ 288 | 	align-items: center;
+ 289 | 	justify-content: center;
+ 290 | }
+ 291 | 
+ 292 | .flex-between {
+ 293 | 	display: flex;
+ 294 | 	align-items: center;
+ 295 | 	justify-content: space-between;
+ 296 | }
+ 297 | 
+ 298 | .flex-column {
+ 299 | 	display: flex;
+ 300 | 	flex-direction: column;
+
+
+================================================================================
+                                 第 7 页（共 60 页）
+================================================================================
+
+ 301 | }
+ 302 | 
+ 303 | .text-center {
+ 304 | 	text-align: center;
+ 305 | }
+ 306 | 
+ 307 | .text-right {
+ 308 | 	text-align: right;
+ 309 | }
+ 310 | 
+ 311 | .ellipsis {
+ 312 | 	overflow: hidden;
+ 313 | 	text-overflow: ellipsis;
+ 314 | 	white-space: nowrap;
+ 315 | }
+ 316 | 
+ 317 | .ellipsis-2 {
+ 318 | 	overflow: hidden;
+ 319 | 	text-overflow: ellipsis;
+ 320 | 	display: -webkit-box;
+ 321 | 	-webkit-line-clamp: 2;
+ 322 | 	-webkit-box-orient: vertical;
+ 323 | }
+ 324 | </style>
+ 325 | 
+ 326 | 
+ 327 | // ========================================
+ 328 | // 文件: admin/src/App.vue
+ 329 | // ========================================
+ 330 | <template>
+ 331 |   <router-view />
+ 332 | </template>
+ 333 | 
+ 334 | <script setup>
+ 335 | </script>
+ 336 | 
+ 337 | <style>
+ 338 | * {
+ 339 |   margin: 0;
+ 340 |   padding: 0;
+ 341 |   box-sizing: border-box;
+ 342 | }
+ 343 | 
+ 344 | body {
+ 345 |   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+ 346 | }
+ 347 | 
+ 348 | #app {
+ 349 |   width: 100%;
+ 350 |   height: 100vh;
+
+
+================================================================================
+                                 第 8 页（共 60 页）
+================================================================================
+
+ 351 | }
+ 352 | </style>
+ 353 | 
+ 354 | 
+ 355 | // ========================================
+ 356 | // 文件: admin/src/layout/index.vue
+ 357 | // ========================================
+ 358 | <template>
+ 359 |   <el-container class="layout-container">
+ 360 |     <el-aside width="200px" class="sidebar">
+ 361 |       <div class="logo">
+ 362 |         <h2>💰 管理后台</h2>
+ 363 |       </div>
+ 364 |       
+ 365 |       <el-menu
+ 366 |         :default-active="activeMenu"
+ 367 |         router
+ 368 |         background-color="#001529"
+ 369 |         text-color="#fff"
+ 370 |         active-text-color="#52C41A"
+ 371 |       >
+ 372 |         <el-menu-item
+ 373 |           v-for="route in routes"
+ 374 |           :key="route.path"
+ 375 |           :index="route.path"
+ 376 |         >
+ 377 |           <el-icon><component :is="route.meta.icon" /></el-icon>
+ 378 |           <span>{{ route.meta.title }}</span>
+ 379 |         </el-menu-item>
+ 380 |       </el-menu>
+ 381 |     </el-aside>
+ 382 |     
+ 383 |     <el-container>
+ 384 |       <el-header class="header">
+ 385 |         <div class="header-left">
+ 386 |           <h3>{{ currentTitle }}</h3>
+ 387 |         </div>
+ 388 |         <div class="header-right">
+ 389 |           <el-dropdown @command="handleCommand">
+ 390 |             <span class="user-info">
+ 391 |               <el-icon><User /></el-icon>
+ 392 |               <span>管理员</span>
+ 393 |             </span>
+ 394 |             <template #dropdown>
+ 395 |               <el-dropdown-menu>
+ 396 |                 <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+ 397 |               </el-dropdown-menu>
+ 398 |             </template>
+ 399 |           </el-dropdown>
+ 400 |         </div>
+
+
+================================================================================
+                                 第 9 页（共 60 页）
+================================================================================
+
+ 401 |       </el-header>
+ 402 |       
+ 403 |       <el-main class="main-content">
+ 404 |         <router-view />
+ 405 |       </el-main>
+ 406 |     </el-container>
+ 407 |   </el-container>
+ 408 | </template>
+ 409 | 
+ 410 | <script setup>
+ 411 | import { computed } from 'vue'
+ 412 | import { useRouter, useRoute } from 'vue-router'
+ 413 | import { ElMessageBox } from 'element-plus'
+ 414 | 
+ 415 | const router = useRouter()
+ 416 | const route = useRoute()
+ 417 | 
+ 418 | const routes = [
+ 419 |   { path: '/dashboard', meta: { title: '数据概览', icon: 'DataAnalysis' } },
+ 420 |   { path: '/users', meta: { title: '用户管理', icon: 'User' } },
+ 421 |   { path: '/bills', meta: { title: '账单管理', icon: 'Tickets' } },
+ 422 |   { path: '/feedback', meta: { title: '意见反馈', icon: 'ChatDotRound' } },
+ 423 |   { path: '/app-version', meta: { title: '版本管理', icon: 'Upload' } }
+ 424 | ]
+ 425 | 
+ 426 | const activeMenu = computed(() => route.path)
+ 427 | const currentTitle = computed(() => {
+ 428 |   const current = routes.find(r => r.path === route.path)
+ 429 |   return current?.meta.title || ''
+ 430 | })
+ 431 | 
+ 432 | const handleCommand = (command) => {
+ 433 |   if (command === 'logout') {
+ 434 |     ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+ 435 |       confirmButtonText: '确定',
+ 436 |       cancelButtonText: '取消',
+ 437 |       type: 'warning'
+ 438 |     }).then(() => {
+ 439 |       localStorage.removeItem('admin_token')
+ 440 |       router.push('/login')
+ 441 |     })
+ 442 |   }
+ 443 | }
+ 444 | </script>
+ 445 | 
+ 446 | <style scoped>
+ 447 | .layout-container {
+ 448 |   height: 100vh;
+ 449 | }
+ 450 | 
+
+
+================================================================================
+                                 第 10 页（共 60 页）
+================================================================================
+
+ 451 | .sidebar {
+ 452 |   background-color: #001529;
+ 453 |   overflow-x: hidden;
+ 454 | }
+ 455 | 
+ 456 | .logo {
+ 457 |   height: 60px;
+ 458 |   display: flex;
+ 459 |   align-items: center;
+ 460 |   justify-content: center;
+ 461 |   color: white;
+ 462 |   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+ 463 | }
+ 464 | 
+ 465 | .logo h2 {
+ 466 |   font-size: 18px;
+ 467 |   font-weight: 600;
+ 468 | }
+ 469 | 
+ 470 | .header {
+ 471 |   background: white;
+ 472 |   border-bottom: 1px solid #f0f0f0;
+ 473 |   display: flex;
+ 474 |   align-items: center;
+ 475 |   justify-content: space-between;
+ 476 |   padding: 0 24px;
+ 477 | }
+ 478 | 
+ 479 | .header-left h3 {
+ 480 |   font-size: 18px;
+ 481 |   color: #1a1a1a;
+ 482 | }
+ 483 | 
+ 484 | .user-info {
+ 485 |   display: flex;
+ 486 |   align-items: center;
+ 487 |   gap: 8px;
+ 488 |   cursor: pointer;
+ 489 |   padding: 8px 12px;
+ 490 |   border-radius: 4px;
+ 491 |   transition: background 0.3s;
+ 492 | }
+ 493 | 
+ 494 | .user-info:hover {
+ 495 |   background: #f5f5f5;
+ 496 | }
+ 497 | 
+ 498 | .main-content {
+ 499 |   background: #f0f2f5;
+ 500 |   padding: 24px;
+
+
+================================================================================
+                                 第 11 页（共 60 页）
+================================================================================
+
+ 501 | }
+ 502 | </style>
+ 503 | 
+ 504 | 
+ 505 | // ========================================
+ 506 | // 文件: admin/src/main.js
+ 507 | // ========================================
+ 508 | import { createApp } from 'vue'
+ 509 | import ElementPlus from 'element-plus'
+ 510 | import 'element-plus/dist/index.css'
+ 511 | import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+ 512 | import router from './router'
+ 513 | import App from './App.vue'
+ 514 | 
+ 515 | const app = createApp(App)
+ 516 | 
+ 517 | // 注册所有图标
+ 518 | for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+ 519 |   app.component(key, component)
+ 520 | }
+ 521 | 
+ 522 | app.use(ElementPlus)
+ 523 | app.use(router)
+ 524 | app.mount('#app')
+ 525 | 
+ 526 | 
+ 527 | // ========================================
+ 528 | // 文件: admin/src/router/index.js
+ 529 | // ========================================
+ 530 | import { createRouter, createWebHashHistory } from 'vue-router'
+ 531 | 
+ 532 | const routes = [
+ 533 |   {
+ 534 |     path: '/login',
+ 535 |     name: 'Login',
+ 536 |     component: () => import('@/views/Login.vue')
+ 537 |   },
+ 538 |   {
+ 539 |     path: '/',
+ 540 |     component: () => import('@/layout/index.vue'),
+ 541 |     redirect: '/dashboard',
+ 542 |     children: [
+ 543 |       {
+ 544 |         path: 'dashboard',
+ 545 |         name: 'Dashboard',
+ 546 |         component: () => import('@/views/Dashboard.vue'),
+ 547 |         meta: { title: '数据概览', icon: 'DataAnalysis' }
+ 548 |       },
+ 549 |       {
+ 550 |         path: 'users',
+
+
+================================================================================
+                                 第 12 页（共 60 页）
+================================================================================
+
+ 551 |         name: 'Users',
+ 552 |         component: () => import('@/views/Users.vue'),
+ 553 |         meta: { title: '用户管理', icon: 'User' }
+ 554 |       },
+ 555 |       {
+ 556 |         path: 'bills',
+ 557 |         name: 'Bills',
+ 558 |         component: () => import('@/views/Bills.vue'),
+ 559 |         meta: { title: '账单管理', icon: 'Tickets' }
+ 560 |       },
+ 561 |       {
+ 562 |         path: 'feedback',
+ 563 |         name: 'Feedback',
+ 564 |         component: () => import('@/views/Feedback.vue'),
+ 565 |         meta: { title: '意见反馈', icon: 'ChatDotRound' }
+ 566 |       },
+ 567 |       {
+ 568 |         path: 'app-version',
+ 569 |         name: 'AppVersion',
+ 570 |         component: () => import('@/views/AppVersion.vue'),
+ 571 |         meta: { title: '版本管理', icon: 'Upload' }
+ 572 |       }
+ 573 |     ]
+ 574 |   }
+ 575 | ]
+ 576 | 
+ 577 | const router = createRouter({
+ 578 |   history: createWebHashHistory(),
+ 579 |   routes
+ 580 | })
+ 581 | 
+ 582 | // 路由守卫
+ 583 | router.beforeEach((to, from, next) => {
+ 584 |   const token = localStorage.getItem('admin_token')
+ 585 |   
+ 586 |   if (to.path === '/login') {
+ 587 |     next()
+ 588 |   } else {
+ 589 |     if (token) {
+ 590 |       next()
+ 591 |     } else {
+ 592 |       next('/login')
+ 593 |     }
+ 594 |   }
+ 595 | })
+ 596 | 
+ 597 | export default router
+ 598 | 
+ 599 | 
+ 600 | // ========================================
+
+
+================================================================================
+                                 第 13 页（共 60 页）
+================================================================================
+
+ 601 | // 文件: admin/src/utils/request.js
+ 602 | // ========================================
+ 603 | import axios from 'axios'
+ 604 | import { ElMessage } from 'element-plus'
+ 605 | 
+ 606 | const request = axios.create({
+ 607 |   baseURL: '/api',
+ 608 |   timeout: 10000
+ 609 | })
+ 610 | 
+ 611 | // 请求拦截器
+ 612 | request.interceptors.request.use(
+ 613 |   config => {
+ 614 |     const token = localStorage.getItem('admin_token')
+ 615 |     if (token) {
+ 616 |       config.headers.Authorization = `Bearer ${token}`
+ 617 |     }
+ 618 |     return config
+ 619 |   },
+ 620 |   error => {
+ 621 |     return Promise.reject(error)
+ 622 |   }
+ 623 | )
+ 624 | 
+ 625 | // 响应拦截器
+ 626 | request.interceptors.response.use(
+ 627 |   response => {
+ 628 |     const res = response.data
+ 629 |     
+ 630 |     if (res.success === false) {
+ 631 |       ElMessage.error(res.message || '请求失败')
+ 632 |       return Promise.reject(new Error(res.message || '请求失败'))
+ 633 |     }
+ 634 |     
+ 635 |     return res
+ 636 |   },
+ 637 |   error => {
+ 638 |     ElMessage.error(error.message || '网络错误')
+ 639 |     return Promise.reject(error)
+ 640 |   }
+ 641 | )
+ 642 | 
+ 643 | export default request
+ 644 | 
+ 645 | 
+ 646 | // ========================================
+ 647 | // 文件: admin/src/views/AppVersion.vue
+ 648 | // ========================================
+ 649 | <template>
+ 650 |   <div class="app-version-container">
+
+
+================================================================================
+                                 第 14 页（共 60 页）
+================================================================================
+
+ 651 |     <el-card class="header-card">
+ 652 |       <div class="header-content">
+ 653 |         <div>
+ 654 |           <h2>APP版本管理</h2>
+ 655 |           <p class="subtitle">管理Android和iOS应用版本更新</p>
+ 656 |         </div>
+ 657 |         <el-button type="primary" @click="showAddDialog">
+ 658 |           <el-icon><Plus /></el-icon>
+ 659 |           发布新版本
+ 660 |         </el-button>
+ 661 |       </div>
+ 662 |     </el-card>
+ 663 | 
+ 664 |     <!-- 平台切换 -->
+ 665 |     <el-tabs v-model="activePlatform" class="platform-tabs">
+ 666 |       <el-tab-pane label="Android" name="Android">
+ 667 |         <version-list 
+ 668 |           :versions="androidVersions" 
+ 669 |           platform="Android"
+ 670 |           @edit="handleEdit"
+ 671 |           @delete="handleDelete"
+ 672 |           @toggle-force="handleToggleForce"
+ 673 |         />
+ 674 |       </el-tab-pane>
+ 675 |       <el-tab-pane label="iOS" name="iOS">
+ 676 |         <version-list 
+ 677 |           :versions="iosVersions" 
+ 678 |           platform="iOS"
+ 679 |           @edit="handleEdit"
+ 680 |           @delete="handleDelete"
+ 681 |           @toggle-force="handleToggleForce"
+ 682 |         />
+ 683 |       </el-tab-pane>
+ 684 |     </el-tabs>
+ 685 | 
+ 686 |     <!-- 添加/编辑版本对话框 -->
+ 687 |     <el-dialog 
+ 688 |       v-model="dialogVisible" 
+ 689 |       :title="dialogTitle"
+ 690 |       width="600px"
+ 691 |       :close-on-click-modal="false"
+ 692 |     >
+ 693 |       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
+ 694 |         <el-form-item label="平台" prop="platform">
+ 695 |           <el-select v-model="form.platform" placeholder="请选择平台" :disabled="isEdit">
+ 696 |             <el-option label="Android" value="Android" />
+ 697 |             <el-option label="iOS" value="iOS" />
+ 698 |           </el-select>
+ 699 |         </el-form-item>
+ 700 | 
+
+
+================================================================================
+                                 第 15 页（共 60 页）
+================================================================================
+
+ 701 |         <el-form-item label="版本号" prop="version">
+ 702 |           <el-input v-model="form.version" placeholder="如: 1.0.1" />
+ 703 |           <div class="form-tip">格式: 主版本号.次版本号.修订号</div>
+ 704 |         </el-form-item>
+ 705 | 
+ 706 |         <el-form-item label="更新内容" prop="updateContent">
+ 707 |           <el-input 
+ 708 |             v-model="updateContentText" 
+ 709 |             type="textarea" 
+ 710 |             :rows="4"
+ 711 |             placeholder="每行一条更新内容"
+ 712 |           />
+ 713 |           <div class="form-tip">每行一条更新内容,自动分行显示</div>
+ 714 |         </el-form-item>
+ 715 | 
+ 716 |         <el-form-item label="安装包大小" prop="packageSize" v-if="form.platform === 'Android'">
+ 717 |           <el-input v-model="form.packageSize" placeholder="如: 15.8MB" />
+ 718 |         </el-form-item>
+ 719 | 
+ 720 |         <el-form-item label="更新方式" v-if="form.platform === 'Android'">
+ 721 |           <el-radio-group v-model="form.updateType">
+ 722 |             <el-radio label="server">服务器下载</el-radio>
+ 723 |             <el-radio label="market">应用市场</el-radio>
+ 724 |           </el-radio-group>
+ 725 |           <div class="form-tip">
+ 726 |             服务器下载：用户直接从服务器下载APK安装<br/>
+ 727 |             应用市场：根据手机品牌跳转到对应应用市场更新
+ 728 |           </div>
+ 729 |         </el-form-item>
+ 730 | 
+ 731 |         <el-form-item label="下载地址" prop="downloadUrl" v-if="form.platform === 'Android' && form.updateType === 'server'">
+ 732 |           <el-input v-model="form.downloadUrl" placeholder="APK下载地址" />
+ 733 |           <div class="form-tip">
+ 734 |             服务器APK文件地址,用户点击更新后会下载此文件
+ 735 |           </div>
+ 736 |         </el-form-item>
+ 737 | 
+ 738 |         <!-- 应用市场配置 -->
+ 739 |         <el-card v-if="form.platform === 'Android' && form.updateType === 'market'" class="market-config-card">
+ 740 |           <template #header>
+ 741 |             <div class="card-header">
+ 742 |               <span>应用市场配置</span>
+ 743 |               <el-tag size="small" type="info">根据手机品牌自动跳转</el-tag>
+ 744 |             </div>
+ 745 |           </template>
+ 746 |           
+ 747 |           <el-form-item label="华为应用市场">
+ 748 |             <el-input v-model="form.markets.huawei" placeholder="appmarket://details?id=com.qiannaqule.money" />
+ 749 |           </el-form-item>
+ 750 |           
+
+
+================================================================================
+                                 第 16 页（共 60 页）
+================================================================================
+
+ 751 |           <el-form-item label="小米应用商店">
+ 752 |             <el-input v-model="form.markets.xiaomi" placeholder="https://app.mi.com/details?id=com.qiannaqule.money" />
+ 753 |           </el-form-item>
+ 754 |           
+ 755 |           <el-form-item label="VIVO应用商店">
+ 756 |             <el-input v-model="form.markets.vivo" placeholder="vivomarket://details?id=com.qiannaqule.money" />
+ 757 |           </el-form-item>
+ 758 |           
+ 759 |           <el-form-item label="OPPO软件商店">
+ 760 |             <el-input v-model="form.markets.oppo" placeholder="market://details?id=com.qiannaqule.money" />
+ 761 |           </el-form-item>
+ 762 |           
+ 763 |           <el-form-item label="荣耀应用市场">
+ 764 |             <el-input v-model="form.markets.honor" placeholder="market://details?id=com.qiannaqule.money" />
+ 765 |           </el-form-item>
+ 766 | 
+ 767 |           <el-alert 
+ 768 |             title="应用市场链接说明" 
+ 769 |             type="info" 
+ 770 |             :closable="false"
+ 771 |             style="margin-top: 12px"
+ 772 |           >
+ 773 |             <ul style="margin: 8px 0; padding-left: 20px; line-height: 1.8;">
+ 774 |               <li>华为：appmarket://details?id=包名</li>
+ 775 |               <li>小米：https://app.mi.com/details?id=包名</li>
+ 776 |               <li>VIVO：vivomarket://details?id=包名</li>
+ 777 |               <li>OPPO/荣耀：market://details?id=包名</li>
+ 778 |               <li>当前包名：com.qiannaqule.money</li>
+ 779 |             </ul>
+ 780 |           </el-alert>
+ 781 |         </el-card>
+ 782 |         
+ 783 |         <el-alert 
+ 784 |           v-if="form.platform === 'iOS'" 
+ 785 |           title="iOS版本更新说明" 
+ 786 |           type="info" 
+ 787 |           :closable="false"
+ 788 |           style="margin-bottom: 16px"
+ 789 |         >
+ 790 |           iOS应用更新通过App Store进行,用户点击更新后会自动跳转到App Store
+ 791 |         </el-alert>
+ 792 | 
+ 793 |         <el-form-item label="强制更新">
+ 794 |           <el-switch v-model="form.isForce" />
+ 795 |           <div class="form-tip">开启后用户必须更新才能使用APP</div>
+ 796 |         </el-form-item>
+ 797 | 
+ 798 |         <el-form-item label="上传APK" v-if="form.platform === 'Android' && form.updateType === 'server'">
+ 799 |           <el-upload
+ 800 |             class="upload-demo"
+
+
+================================================================================
+                                 第 17 页（共 60 页）
+================================================================================
+
+ 801 |             :action="uploadUrl"
+ 802 |             :headers="uploadHeaders"
+ 803 |             :on-success="handleUploadSuccess"
+ 804 |             :on-error="handleUploadError"
+ 805 |             :before-upload="beforeUpload"
+ 806 |             accept=".apk"
+ 807 |             :limit="1"
+ 808 |           >
+ 809 |             <el-button type="primary">点击上传APK</el-button>
+ 810 |             <template #tip>
+ 811 |               <div class="el-upload__tip">
+ 812 |                 只能上传APK文件,且不超过100MB
+ 813 |               </div>
+ 814 |             </template>
+ 815 |           </el-upload>
+ 816 |         </el-form-item>
+ 817 | 
+ 818 |         <el-form-item label="安卓二维码" v-if="form.platform === 'Android'">
+ 819 |           <el-upload
+ 820 |             class="upload-demo"
+ 821 |             :action="qrcodeUploadUrl"
+ 822 |             :headers="uploadHeaders"
+ 823 |             :on-success="handleQrcodeUploadSuccess"
+ 824 |             :on-error="handleQrcodeUploadError"
+ 825 |             :before-upload="beforeQrcodeUpload"
+ 826 |             accept=".jpg,.jpeg,.png"
+ 827 |             :limit="1"
+ 828 |             :show-file-list="false"
+ 829 |           >
+ 830 |             <el-button type="success" size="small">上传二维码图片</el-button>
+ 831 |             <template #tip>
+ 832 |               <div class="el-upload__tip">
+ 833 |                 上传安卓应用下载二维码（非必填），支持JPG/PNG，不超过5MB
+ 834 |               </div>
+ 835 |             </template>
+ 836 |           </el-upload>
+ 837 |           <div v-if="androidQrcodeUrl" class="qrcode-preview">
+ 838 |             <img :src="androidQrcodeUrl" alt="安卓二维码" />
+ 839 |             <p>当前二维码（官网显示）</p>
+ 840 |           </div>
+ 841 |         </el-form-item>
+ 842 |       </el-form>
+ 843 | 
+ 844 |       <template #footer>
+ 845 |         <el-button @click="dialogVisible = false">取消</el-button>
+ 846 |         <el-button type="primary" @click="handleSubmit" :loading="submitting">
+ 847 |           {{ isEdit ? '保存' : '发布' }}
+ 848 |         </el-button>
+ 849 |       </template>
+ 850 |     </el-dialog>
+
+
+================================================================================
+                                 第 18 页（共 60 页）
+================================================================================
+
+ 851 |   </div>
+ 852 | </template>
+ 853 | 
+ 854 | <script setup>
+ 855 | import { ref, reactive, computed, onMounted } from 'vue'
+ 856 | import { ElMessage, ElMessageBox } from 'element-plus'
+ 857 | import { Plus } from '@element-plus/icons-vue'
+ 858 | import VersionList from './components/VersionList.vue'
+ 859 | import request from '@/utils/request'
+ 860 | 
+ 861 | const activePlatform = ref('Android')
+ 862 | const androidVersions = ref([])
+ 863 | const iosVersions = ref([])
+ 864 | const dialogVisible = ref(false)
+ 865 | const isEdit = ref(false)
+ 866 | const submitting = ref(false)
+ 867 | const formRef = ref(null)
+ 868 | const androidQrcodeUrl = ref('')
+ 869 | 
+ 870 | const form = reactive({
+ 871 |   id: null,
+ 872 |   platform: 'Android',
+ 873 |   version: '',
+ 874 |   updateContent: [],
+ 875 |   packageSize: '',
+ 876 |   downloadUrl: '',
+ 877 |   isForce: false,
+ 878 |   updateType: 'server', // server: 服务器下载, market: 应用市场
+ 879 |   markets: {
+ 880 |     huawei: 'appmarket://details?id=com.qiannaqule.money',
+ 881 |     xiaomi: 'https://app.mi.com/details?id=com.qiannaqule.money',
+ 882 |     vivo: 'vivomarket://details?id=com.qiannaqule.money',
+ 883 |     oppo: 'market://details?id=com.qiannaqule.money',
+ 884 |     honor: 'market://details?id=com.qiannaqule.money'
+ 885 |   }
+ 886 | })
+ 887 | 
+ 888 | const updateContentText = ref('')
+ 889 | 
+ 890 | const rules = {
+ 891 |   platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
+ 892 |   version: [
+ 893 |     { required: true, message: '请输入版本号', trigger: 'blur' },
+ 894 |     { pattern: /^\d+\.\d+\.\d+$/, message: '版本号格式不正确', trigger: 'blur' }
+ 895 |   ],
+ 896 |   updateContent: [
+ 897 |     { 
+ 898 |       required: true, 
+ 899 |       validator: (rule, value, callback) => {
+ 900 |         const content = updateContentText.value.trim()
+
+
+================================================================================
+                                 第 19 页（共 60 页）
+================================================================================
+
+ 901 |         if (!content) {
+ 902 |           callback(new Error('请输入更新内容'))
+ 903 |         } else {
+ 904 |           callback()
+ 905 |         }
+ 906 |       },
+ 907 |       trigger: 'blur' 
+ 908 |     }
+ 909 |   ],
+ 910 |   packageSize: [
+ 911 |     { 
+ 912 |       required: true, 
+ 913 |       validator: (rule, value, callback) => {
+ 914 |         if (form.platform === 'Android' && !value) {
+ 915 |           callback(new Error('请输入安装包大小'))
+ 916 |         } else {
+ 917 |           callback()
+ 918 |         }
+ 919 |       },
+ 920 |       trigger: 'blur' 
+ 921 |     }
+ 922 |   ],
+ 923 |   downloadUrl: [
+ 924 |     { 
+ 925 |       required: true, 
+ 926 |       validator: (rule, value, callback) => {
+ 927 |         if (form.platform === 'Android' && form.updateType === 'server' && !value) {
+ 928 |           callback(new Error('请输入下载地址'))
+ 929 |         } else {
+ 930 |           callback()
+ 931 |         }
+ 932 |       },
+ 933 |       trigger: 'blur' 
+ 934 |     }
+ 935 |   ]
+ 936 | }
+ 937 | 
+ 938 | const dialogTitle = computed(() => {
+ 939 |   return isEdit.value ? '编辑版本' : '发布新版本'
+ 940 | })
+ 941 | 
+ 942 | const uploadUrl = computed(() => {
+ 943 |   return 'https://api.qiannaqule.top/api/admin/upload-apk'
+ 944 | })
+ 945 | 
+ 946 | const qrcodeUploadUrl = computed(() => {
+ 947 |   return 'https://api.qiannaqule.top/api/admin/upload-android-qrcode'
+ 948 | })
+ 949 | 
+ 950 | const uploadHeaders = computed(() => {
+
+
+================================================================================
+                                 第 20 页（共 60 页）
+================================================================================
+
+ 951 |   return {
+ 952 |     'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+ 953 |   }
+ 954 | })
+ 955 | 
+ 956 | // 加载版本列表
+ 957 | const loadVersions = async () => {
+ 958 |   try {
+ 959 |     const res = await request.get('/admin/app-versions')
+ 960 |     if (res.success) {
+ 961 |       androidVersions.value = res.data.filter(v => v.platform === 'Android')
+ 962 |       iosVersions.value = res.data.filter(v => v.platform === 'iOS')
+ 963 |     }
+ 964 |   } catch (error) {
+ 965 |     ElMessage.error('加载版本列表失败')
+ 966 |   }
+ 967 | }
+ 968 | 
+ 969 | // 加载安卓二维码
+ 970 | const loadAndroidQrcode = async () => {
+ 971 |   try {
+ 972 |     const res = await request.get('/admin/android-qrcode')
+ 973 |     if (res.success && res.data.qrcodeUrl) {
+ 974 |       androidQrcodeUrl.value = res.data.qrcodeUrl
+ 975 |     }
+ 976 |   } catch (error) {
+ 977 |     // 静默处理错误，表不存在时不显示错误
+ 978 |   }
+ 979 | }
+ 980 | 
+ 981 | // 显示添加对话框
+ 982 | const showAddDialog = () => {
+ 983 |   isEdit.value = false
+ 984 |   resetForm()
+ 985 |   form.platform = activePlatform.value
+ 986 |   dialogVisible.value = true
+ 987 | }
+ 988 | 
+ 989 | // 编辑版本
+ 990 | const handleEdit = (version) => {
+ 991 |   isEdit.value = true
+ 992 |   Object.assign(form, version)
+ 993 |   updateContentText.value = version.updateContent.join('\n')
+ 994 |   dialogVisible.value = true
+ 995 | }
+ 996 | 
+ 997 | // 删除版本
+ 998 | const handleDelete = async (version) => {
+ 999 |   try {
+1000 |     await ElMessageBox.confirm(
+
+
+================================================================================
+                                 第 21 页（共 60 页）
+================================================================================
+
+1001 |       `确定要删除版本 ${version.version} 吗？`,
+1002 |       '提示',
+1003 |       {
+1004 |         confirmButtonText: '确定',
+1005 |         cancelButtonText: '取消',
+1006 |         type: 'warning'
+1007 |       }
+1008 |     )
+1009 | 
+1010 |     const res = await request.delete(`/admin/app-versions/${version.id}`)
+1011 |     if (res.success) {
+1012 |       ElMessage.success('删除成功')
+1013 |       loadVersions()
+1014 |     }
+1015 |   } catch (error) {
+1016 |     if (error !== 'cancel') {
+1017 |       ElMessage.error('删除失败')
+1018 |     }
+1019 |   }
+1020 | }
+1021 | 
+1022 | // 切换强制更新
+1023 | const handleToggleForce = async (version) => {
+1024 |   try {
+1025 |     const res = await request.put(`/admin/app-versions/${version.id}/force`, {
+1026 |       isForce: !version.isForce
+1027 |     })
+1028 |     if (res.success) {
+1029 |       ElMessage.success('更新成功')
+1030 |       loadVersions()
+1031 |     }
+1032 |   } catch (error) {
+1033 |     ElMessage.error('更新失败')
+1034 |   }
+1035 | }
+1036 | 
+1037 | // 提交表单
+1038 | const handleSubmit = async () => {
+1039 |   try {
+1040 |     await formRef.value.validate()
+1041 |     
+1042 |     // 处理更新内容
+1043 |     form.updateContent = updateContentText.value
+1044 |       .split('\n')
+1045 |       .filter(line => line.trim())
+1046 |       .map(line => line.trim())
+1047 | 
+1048 |     if (form.updateContent.length === 0) {
+1049 |       ElMessage.error('请输入至少一条更新内容')
+1050 |       return
+
+
+================================================================================
+                                 第 22 页（共 60 页）
+================================================================================
+
+1051 |     }
+1052 | 
+1053 |     // iOS平台不需要下载地址和包大小
+1054 |     if (form.platform === 'iOS') {
+1055 |       form.downloadUrl = 'https://apps.apple.com'
+1056 |       form.packageSize = '-'
+1057 |       form.updateType = 'market'
+1058 |     }
+1059 | 
+1060 |     // Android应用市场模式不需要下载地址
+1061 |     if (form.platform === 'Android' && form.updateType === 'market') {
+1062 |       form.downloadUrl = 'market'
+1063 |     }
+1064 | 
+1065 |     submitting.value = true
+1066 | 
+1067 |     const url = isEdit.value 
+1068 |       ? `/admin/app-versions/${form.id}` 
+1069 |       : '/admin/app-versions'
+1070 |     
+1071 |     const method = isEdit.value ? 'put' : 'post'
+1072 |     
+1073 |     const res = await request[method](url, form)
+1074 |     
+1075 |     if (res.success) {
+1076 |       ElMessage.success(isEdit.value ? '保存成功' : '发布成功')
+1077 |       dialogVisible.value = false
+1078 |       loadVersions()
+1079 |     }
+1080 |   } catch (error) {
+1081 |     if (error !== false) {
+1082 |       ElMessage.error(isEdit.value ? '保存失败' : '发布失败')
+1083 |     }
+1084 |   } finally {
+1085 |     submitting.value = false
+1086 |   }
+1087 | }
+1088 | 
+1089 | // 重置表单
+1090 | const resetForm = () => {
+1091 |   Object.assign(form, {
+1092 |     id: null,
+1093 |     platform: 'Android',
+1094 |     version: '',
+1095 |     updateContent: [],
+1096 |     packageSize: '',
+1097 |     downloadUrl: '',
+1098 |     isForce: false,
+1099 |     updateType: 'server',
+1100 |     markets: {
+
+
+================================================================================
+                                 第 23 页（共 60 页）
+================================================================================
+
+1101 |       huawei: 'appmarket://details?id=com.qiannaqule.money',
+1102 |       xiaomi: 'https://app.mi.com/details?id=com.qiannaqule.money',
+1103 |       vivo: 'vivomarket://details?id=com.qiannaqule.money',
+1104 |       oppo: 'market://details?id=com.qiannaqule.money',
+1105 |       honor: 'market://details?id=com.qiannaqule.money'
+1106 |     }
+1107 |   })
+1108 |   updateContentText.value = ''
+1109 |   formRef.value?.clearValidate()
+1110 | }
+1111 | 
+1112 | // 上传前检查
+1113 | const beforeUpload = (file) => {
+1114 |   const isAPK = file.name.endsWith('.apk')
+1115 |   const isLt100M = file.size / 1024 / 1024 < 100
+1116 | 
+1117 |   if (!isAPK) {
+1118 |     ElMessage.error('只能上传APK文件!')
+1119 |     return false
+1120 |   }
+1121 |   if (!isLt100M) {
+1122 |     ElMessage.error('APK文件大小不能超过100MB!')
+1123 |     return false
+1124 |   }
+1125 |   return true
+1126 | }
+1127 | 
+1128 | // 上传成功
+1129 | const handleUploadSuccess = (response) => {
+1130 |   if (response.success) {
+1131 |     form.downloadUrl = response.url
+1132 |     form.packageSize = response.size
+1133 |     ElMessage.success('上传成功')
+1134 |   } else {
+1135 |     ElMessage.error(response.message || '上传失败')
+1136 |   }
+1137 | }
+1138 | 
+1139 | // 上传失败
+1140 | const handleUploadError = () => {
+1141 |   ElMessage.error('上传失败，请重试')
+1142 | }
+1143 | 
+1144 | // 上传二维码前检查
+1145 | const beforeQrcodeUpload = (file) => {
+1146 |   const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)
+1147 |   const isLt5M = file.size / 1024 / 1024 < 5
+1148 | 
+1149 |   if (!isImage) {
+1150 |     ElMessage.error('只能上传JPG或PNG图片!')
+
+
+================================================================================
+                                 第 24 页（共 60 页）
+================================================================================
+
+1151 |     return false
+1152 |   }
+1153 |   if (!isLt5M) {
+1154 |     ElMessage.error('图片大小不能超过5MB!')
+1155 |     return false
+1156 |   }
+1157 |   return true
+1158 | }
+1159 | 
+1160 | // 二维码上传成功
+1161 | const handleQrcodeUploadSuccess = (response) => {
+1162 |   if (response.success) {
+1163 |     androidQrcodeUrl.value = response.url
+1164 |     ElMessage.success('二维码上传成功')
+1165 |   } else {
+1166 |     ElMessage.error(response.message || '上传失败')
+1167 |   }
+1168 | }
+1169 | 
+1170 | // 二维码上传失败
+1171 | const handleQrcodeUploadError = () => {
+1172 |   ElMessage.error('二维码上传失败，请重试')
+1173 | }
+1174 | 
+1175 | onMounted(() => {
+1176 |   loadVersions()
+1177 |   loadAndroidQrcode()
+1178 | })
+1179 | </script>
+1180 | 
+1181 | <style scoped>
+1182 | .app-version-container {
+1183 |   padding: 20px;
+1184 | }
+1185 | 
+1186 | .header-card {
+1187 |   margin-bottom: 20px;
+1188 | }
+1189 | 
+1190 | .header-content {
+1191 |   display: flex;
+1192 |   justify-content: space-between;
+1193 |   align-items: center;
+1194 | }
+1195 | 
+1196 | .header-content h2 {
+1197 |   margin: 0 0 8px 0;
+1198 |   font-size: 24px;
+1199 |   color: #303133;
+1200 | }
+
+
+================================================================================
+                                 第 25 页（共 60 页）
+================================================================================
+
+1201 | 
+1202 | .subtitle {
+1203 |   margin: 0;
+1204 |   font-size: 14px;
+1205 |   color: #909399;
+1206 | }
+1207 | 
+1208 | .platform-tabs {
+1209 |   background: white;
+1210 |   padding: 20px;
+1211 |   border-radius: 4px;
+1212 | }
+1213 | 
+1214 | .form-tip {
+1215 |   font-size: 12px;
+1216 |   color: #909399;
+1217 |   margin-top: 4px;
+1218 |   line-height: 1.5;
+1219 | }
+1220 | 
+1221 | .upload-demo {
+1222 |   width: 100%;
+1223 | }
+1224 | 
+1225 | .market-config-card {
+1226 |   margin-bottom: 16px;
+1227 | }
+1228 | 
+1229 | .card-header {
+1230 |   display: flex;
+1231 |   justify-content: space-between;
+1232 |   align-items: center;
+1233 | }
+1234 | 
+1235 | .market-config-card :deep(.el-card__body) {
+1236 |   padding-top: 0;
+1237 | }
+1238 | 
+1239 | .qrcode-preview {
+1240 |   margin-top: 12px;
+1241 |   text-align: center;
+1242 | }
+1243 | 
+1244 | .qrcode-preview img {
+1245 |   width: 150px;
+1246 |   height: 150px;
+1247 |   border-radius: 8px;
+1248 |   border: 1px solid #dcdfe6;
+1249 | }
+1250 | 
+
+
+================================================================================
+                                 第 26 页（共 60 页）
+================================================================================
+
+1251 | .qrcode-preview p {
+1252 |   margin-top: 8px;
+1253 |   font-size: 12px;
+1254 |   color: #909399;
+1255 | }
+1256 | </style>
+1257 | 
+1258 | 
+1259 | // ========================================
+1260 | // 文件: admin/src/views/Bills.vue
+1261 | // ========================================
+1262 | <template>
+1263 |   <div class="bills-page">
+1264 |     <el-card>
+1265 |       <!-- 搜索栏 -->
+1266 |       <el-form :inline="true" :model="searchForm" class="search-form">
+1267 |         <el-form-item label="用户ID">
+1268 |           <el-input v-model="searchForm.userId" placeholder="请输入用户ID" clearable />
+1269 |         </el-form-item>
+1270 |         <el-form-item label="分类">
+1271 |           <el-select v-model="searchForm.category" placeholder="请选择分类" clearable>
+1272 |             <el-option label="餐饮" value="餐饮" />
+1273 |             <el-option label="交通" value="交通" />
+1274 |             <el-option label="购物" value="购物" />
+1275 |             <el-option label="娱乐" value="娱乐" />
+1276 |           </el-select>
+1277 |         </el-form-item>
+1278 |         <el-form-item>
+1279 |           <el-button type="primary" @click="handleSearch">搜索</el-button>
+1280 |           <el-button @click="handleReset">重置</el-button>
+1281 |         </el-form-item>
+1282 |       </el-form>
+1283 |       
+1284 |       <!-- 账单列表 -->
+1285 |       <el-table :data="billList" v-loading="loading" border>
+1286 |         <el-table-column prop="id" label="ID" width="80" />
+1287 |         <el-table-column prop="user_id" label="用户ID" width="100" />
+1288 |         <el-table-column prop="amount" label="金额" width="120">
+1289 |           <template #default="{ row }">
+1290 |             <span :style="{ color: row.type === 'expense' ? '#f5222d' : '#52c41a' }">
+1291 |               {{ row.type === 'expense' ? '-' : '+' }}¥{{ row.amount }}
+1292 |             </span>
+1293 |           </template>
+1294 |         </el-table-column>
+1295 |         <el-table-column prop="category" label="分类" width="100" />
+1296 |         <el-table-column prop="merchant" label="商家" show-overflow-tooltip />
+1297 |         <el-table-column prop="note" label="备注" show-overflow-tooltip />
+1298 |         <el-table-column label="记账方式" width="100">
+1299 |           <template #default="{ row }">
+1300 |             <el-tag v-if="row.input_method === 'voice'" type="success">语音</el-tag>
+
+
+================================================================================
+                                 第 27 页（共 60 页）
+================================================================================
+
+1301 |             <el-tag v-else-if="row.input_method === 'photo'" type="warning">拍照</el-tag>
+1302 |             <el-tag v-else>手动</el-tag>
+1303 |           </template>
+1304 |         </el-table-column>
+1305 |         <el-table-column label="创建时间" width="180">
+1306 |           <template #default="{ row }">
+1307 |             {{ formatDate(row.created_at) }}
+1308 |           </template>
+1309 |         </el-table-column>
+1310 |         <el-table-column label="操作" width="100" fixed="right">
+1311 |           <template #default="{ row }">
+1312 |             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+1313 |           </template>
+1314 |         </el-table-column>
+1315 |       </el-table>
+1316 |       
+1317 |       <!-- 分页 -->
+1318 |       <el-pagination
+1319 |         v-model:current-page="pagination.page"
+1320 |         v-model:page-size="pagination.pageSize"
+1321 |         :total="pagination.total"
+1322 |         :page-sizes="[10, 20, 50, 100]"
+1323 |         layout="total, sizes, prev, pager, next, jumper"
+1324 |         @size-change="fetchBills"
+1325 |         @current-change="fetchBills"
+1326 |         class="pagination"
+1327 |       />
+1328 |     </el-card>
+1329 |   </div>
+1330 | </template>
+1331 | 
+1332 | <script setup>
+1333 | import { ref, reactive, onMounted } from 'vue'
+1334 | import { ElMessage, ElMessageBox } from 'element-plus'
+1335 | import request from '@/utils/request'
+1336 | 
+1337 | const loading = ref(false)
+1338 | const billList = ref([])
+1339 | 
+1340 | const searchForm = reactive({
+1341 |   userId: '',
+1342 |   category: ''
+1343 | })
+1344 | 
+1345 | const pagination = reactive({
+1346 |   page: 1,
+1347 |   pageSize: 10,
+1348 |   total: 0
+1349 | })
+1350 | 
+
+
+================================================================================
+                                 第 28 页（共 60 页）
+================================================================================
+
+1351 | const fetchBills = async () => {
+1352 |   try {
+1353 |     loading.value = true
+1354 |     const res = await request.get('/admin/bills', {
+1355 |       params: {
+1356 |         page: pagination.page,
+1357 |         pageSize: pagination.pageSize,
+1358 |         ...searchForm
+1359 |       }
+1360 |     })
+1361 |     
+1362 |     if (res.success) {
+1363 |       billList.value = res.data.list
+1364 |       pagination.total = res.data.total
+1365 |     }
+1366 |   } catch (error) {
+1367 |     console.error('获取账单列表失败:', error)
+1368 |   } finally {
+1369 |     loading.value = false
+1370 |   }
+1371 | }
+1372 | 
+1373 | const handleSearch = () => {
+1374 |   pagination.page = 1
+1375 |   fetchBills()
+1376 | }
+1377 | 
+1378 | const handleReset = () => {
+1379 |   searchForm.userId = ''
+1380 |   searchForm.category = ''
+1381 |   handleSearch()
+1382 | }
+1383 | 
+1384 | const handleDelete = (row) => {
+1385 |   ElMessageBox.confirm('确定要删除这条账单吗？', '提示', {
+1386 |     confirmButtonText: '确定',
+1387 |     cancelButtonText: '取消',
+1388 |     type: 'warning'
+1389 |   }).then(async () => {
+1390 |     try {
+1391 |       const res = await request.delete(`/admin/bills/${row.id}`)
+1392 |       if (res.success) {
+1393 |         ElMessage.success('删除成功')
+1394 |         fetchBills()
+1395 |       }
+1396 |     } catch (error) {
+1397 |       console.error('删除失败:', error)
+1398 |     }
+1399 |   })
+1400 | }
+
+
+================================================================================
+                                 第 29 页（共 60 页）
+================================================================================
+
+1401 | 
+1402 | const formatDate = (date) => {
+1403 |   if (!date) return '-'
+1404 |   return new Date(date).toLocaleString('zh-CN')
+1405 | }
+1406 | 
+1407 | onMounted(() => {
+1408 |   fetchBills()
+1409 | })
+1410 | </script>
+1411 | 
+1412 | <style scoped>
+1413 | .bills-page {
+1414 |   width: 100%;
+1415 | }
+1416 | 
+1417 | .search-form {
+1418 |   margin-bottom: 20px;
+1419 | }
+1420 | 
+1421 | .pagination {
+1422 |   margin-top: 20px;
+1423 |   justify-content: flex-end;
+1424 | }
+1425 | </style>
+1426 | 
+1427 | 
+1428 | // ========================================
+1429 | // 文件: admin/src/views/Dashboard.vue
+1430 | // ========================================
+1431 | <template>
+1432 |   <div class="dashboard">
+1433 |     <!-- 统计卡片 -->
+1434 |     <el-row :gutter="20" class="stats-row">
+1435 |       <el-col :span="6">
+1436 |         <el-card class="stat-card">
+1437 |           <div class="stat-content">
+1438 |             <div class="stat-icon" style="background: #e6f7ff;">
+1439 |               <el-icon color="#1890ff" :size="32"><User /></el-icon>
+1440 |             </div>
+1441 |             <div class="stat-info">
+1442 |               <div class="stat-value">{{ stats.totalUsers }}</div>
+1443 |               <div class="stat-label">总用户数</div>
+1444 |             </div>
+1445 |           </div>
+1446 |         </el-card>
+1447 |       </el-col>
+1448 |       
+1449 |       <el-col :span="6">
+1450 |         <el-card class="stat-card">
+
+
+================================================================================
+                                 第 30 页（共 60 页）
+================================================================================
+
+1451 |           <div class="stat-content">
+1452 |             <div class="stat-icon" style="background: #f0f9ff;">
+1453 |               <el-icon color="#52c41a" :size="32"><Tickets /></el-icon>
+1454 |             </div>
+1455 |             <div class="stat-info">
+1456 |               <div class="stat-value">{{ stats.totalBills }}</div>
+1457 |               <div class="stat-label">总账单数</div>
+1458 |             </div>
+1459 |           </div>
+1460 |         </el-card>
+1461 |       </el-col>
+1462 |       
+1463 |       <el-col :span="6">
+1464 |         <el-card class="stat-card expense-card">
+1465 |           <div class="stat-content">
+1466 |             <div class="stat-icon" style="background: #fff1f0;">
+1467 |               <el-icon color="#ff4d4f" :size="32"><TrendCharts /></el-icon>
+1468 |             </div>
+1469 |             <div class="stat-info">
+1470 |               <div class="stat-value expense-value">¥{{ stats.totalExpense }}</div>
+1471 |               <div class="stat-label">总支出</div>
+1472 |             </div>
+1473 |           </div>
+1474 |         </el-card>
+1475 |       </el-col>
+1476 |       
+1477 |       <el-col :span="6">
+1478 |         <el-card class="stat-card income-card">
+1479 |           <div class="stat-content">
+1480 |             <div class="stat-icon" style="background: #f6ffed;">
+1481 |               <el-icon color="#52c41a" :size="32"><Money /></el-icon>
+1482 |             </div>
+1483 |             <div class="stat-info">
+1484 |               <div class="stat-value income-value">¥{{ stats.totalIncome }}</div>
+1485 |               <div class="stat-label">总收入</div>
+1486 |             </div>
+1487 |           </div>
+1488 |         </el-card>
+1489 |       </el-col>
+1490 |     </el-row>
+1491 |     
+1492 |     <!-- 图表区域 -->
+1493 |     <el-row :gutter="20" class="charts-row">
+1494 |       <el-col :span="12">
+1495 |         <el-card>
+1496 |           <template #header>
+1497 |             <span>用户增长趋势</span>
+1498 |           </template>
+1499 |           <div ref="userChartRef" style="height: 300px;"></div>
+1500 |         </el-card>
+
+
+================================================================================
+                                 第 31 页（共 60 页）
+================================================================================
+
+1501 |       </el-col>
+1502 |       
+1503 |       <el-col :span="12">
+1504 |         <el-card>
+1505 |           <template #header>
+1506 |             <span>账单分类统计</span>
+1507 |           </template>
+1508 |           <div ref="billChartRef" style="height: 300px;"></div>
+1509 |         </el-card>
+1510 |       </el-col>
+1511 |     </el-row>
+1512 |   </div>
+1513 | </template>
+1514 | 
+1515 | <script setup>
+1516 | import { ref, onMounted } from 'vue'
+1517 | import * as echarts from 'echarts'
+1518 | import request from '@/utils/request'
+1519 | 
+1520 | const stats = ref({
+1521 |   totalUsers: 0,
+1522 |   totalBills: 0,
+1523 |   totalExpense: '0.00',
+1524 |   totalIncome: '0.00'
+1525 | })
+1526 | 
+1527 | const userChartRef = ref(null)
+1528 | const billChartRef = ref(null)
+1529 | let userChart = null
+1530 | let billChart = null
+1531 | 
+1532 | const fetchStats = async () => {
+1533 |   try {
+1534 |     const res = await request.get('/admin/stats')
+1535 |     if (res.success) {
+1536 |       const data = res.data
+1537 |       stats.value = {
+1538 |         totalUsers: data.totalUsers,
+1539 |         totalBills: data.totalBills,
+1540 |         totalExpense: data.totalExpense,
+1541 |         totalIncome: data.totalIncome
+1542 |       }
+1543 |     }
+1544 |   } catch (error) {
+1545 |     console.error('获取统计数据失败:', error)
+1546 |   }
+1547 | }
+1548 | 
+1549 | const fetchUserGrowth = async () => {
+1550 |   try {
+
+
+================================================================================
+                                 第 32 页（共 60 页）
+================================================================================
+
+1551 |     const res = await request.get('/admin/stats/trend')
+1552 |     if (res.success && res.data) {
+1553 |       const { days, counts } = res.data
+1554 |       initUserChart(days, counts)
+1555 |     }
+1556 |   } catch (error) {
+1557 |     console.error('获取用户增长趋势失败:', error)
+1558 |     // 使用默认数据
+1559 |     initUserChart(['周一', '周二', '周三', '周四', '周五', '周六', '周日'], [0, 0, 0, 0, 0, 0, 0])
+1560 |   }
+1561 | }
+1562 | 
+1563 | const fetchCategoryStats = async () => {
+1564 |   try {
+1565 |     const res = await request.get('/admin/stats/category')
+1566 |     if (res.success && res.data) {
+1567 |       const data = res.data.map(item => ({
+1568 |         value: parseFloat(item.total),
+1569 |         name: item.category_name
+1570 |       }))
+1571 |       initBillChart(data)
+1572 |     }
+1573 |   } catch (error) {
+1574 |     console.error('获取分类统计失败:', error)
+1575 |     // 使用默认数据
+1576 |     initBillChart([])
+1577 |   }
+1578 | }
+1579 | 
+1580 | const initUserChart = (days, counts) => {
+1581 |   if (!userChartRef.value) return
+1582 |   
+1583 |   if (!userChart) {
+1584 |     userChart = echarts.init(userChartRef.value)
+1585 |   }
+1586 |   
+1587 |   userChart.setOption({
+1588 |     tooltip: { 
+1589 |       trigger: 'axis',
+1590 |       formatter: '{b}: {c}笔账单'
+1591 |     },
+1592 |     xAxis: {
+1593 |       type: 'category',
+1594 |       data: days
+1595 |     },
+1596 |     yAxis: { 
+1597 |       type: 'value',
+1598 |       minInterval: 1
+1599 |     },
+1600 |     series: [{
+
+
+================================================================================
+                                 第 33 页（共 60 页）
+================================================================================
+
+1601 |       data: counts,
+1602 |       type: 'line',
+1603 |       smooth: true,
+1604 |       itemStyle: { color: '#52c41a' },
+1605 |       areaStyle: {
+1606 |         color: {
+1607 |           type: 'linear',
+1608 |           x: 0,
+1609 |           y: 0,
+1610 |           x2: 0,
+1611 |           y2: 1,
+1612 |           colorStops: [{
+1613 |             offset: 0, color: 'rgba(82, 196, 26, 0.3)'
+1614 |           }, {
+1615 |             offset: 1, color: 'rgba(82, 196, 26, 0.05)'
+1616 |           }]
+1617 |         }
+1618 |       }
+1619 |     }]
+1620 |   })
+1621 | }
+1622 | 
+1623 | const initBillChart = (data) => {
+1624 |   if (!billChartRef.value) return
+1625 |   
+1626 |   if (!billChart) {
+1627 |     billChart = echarts.init(billChartRef.value)
+1628 |   }
+1629 |   
+1630 |   if (data.length === 0) {
+1631 |     billChart.setOption({
+1632 |       title: {
+1633 |         text: '暂无数据',
+1634 |         left: 'center',
+1635 |         top: 'center',
+1636 |         textStyle: {
+1637 |           color: '#999',
+1638 |           fontSize: 14
+1639 |         }
+1640 |       }
+1641 |     })
+1642 |     return
+1643 |   }
+1644 |   
+1645 |   billChart.setOption({
+1646 |     tooltip: { 
+1647 |       trigger: 'item',
+1648 |       formatter: '{b}: ¥{c} ({d}%)'
+1649 |     },
+1650 |     legend: {
+
+
+================================================================================
+                                 第 34 页（共 60 页）
+================================================================================
+
+1651 |       orient: 'vertical',
+1652 |       right: 10,
+1653 |       top: 'center'
+1654 |     },
+1655 |     series: [{
+1656 |       type: 'pie',
+1657 |       radius: ['40%', '70%'],
+1658 |       center: ['40%', '50%'],
+1659 |       data: data,
+1660 |       emphasis: {
+1661 |         itemStyle: {
+1662 |           shadowBlur: 10,
+1663 |           shadowOffsetX: 0,
+1664 |           shadowColor: 'rgba(0, 0, 0, 0.5)'
+1665 |         }
+1666 |       }
+1667 |     }]
+1668 |   })
+1669 | }
+1670 | 
+1671 | onMounted(() => {
+1672 |   fetchStats()
+1673 |   fetchUserGrowth()
+1674 |   fetchCategoryStats()
+1675 | })
+1676 | </script>
+1677 | 
+1678 | <style scoped>
+1679 | .dashboard {
+1680 |   width: 100%;
+1681 | }
+1682 | 
+1683 | .stats-row {
+1684 |   margin-bottom: 20px;
+1685 | }
+1686 | 
+1687 | .stat-card {
+1688 |   cursor: pointer;
+1689 |   transition: all 0.3s;
+1690 | }
+1691 | 
+1692 | .stat-card:hover {
+1693 |   transform: translateY(-4px);
+1694 |   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+1695 | }
+1696 | 
+1697 | .stat-content {
+1698 |   display: flex;
+1699 |   align-items: center;
+1700 |   gap: 16px;
+
+
+================================================================================
+                                 第 35 页（共 60 页）
+================================================================================
+
+1701 | }
+1702 | 
+1703 | .stat-icon {
+1704 |   width: 60px;
+1705 |   height: 60px;
+1706 |   border-radius: 8px;
+1707 |   display: flex;
+1708 |   align-items: center;
+1709 |   justify-content: center;
+1710 | }
+1711 | 
+1712 | .stat-info {
+1713 |   flex: 1;
+1714 | }
+1715 | 
+1716 | .stat-value {
+1717 |   font-size: 24px;
+1718 |   font-weight: 600;
+1719 |   color: #1a1a1a;
+1720 |   margin-bottom: 4px;
+1721 | }
+1722 | 
+1723 | .stat-label {
+1724 |   font-size: 14px;
+1725 |   color: #666;
+1726 | }
+1727 | 
+1728 | .charts-row {
+1729 |   margin-top: 20px;
+1730 | }
+1731 | </style>
+1732 | 
+1733 | 
+1734 | // ========================================
+1735 | // 文件: admin/src/views/Feedback.vue
+1736 | // ========================================
+1737 | <template>
+1738 |   <div class="feedback-container">
+1739 |     <h2>意见反馈管理</h2>
+1740 |     
+1741 |     <!-- 统计卡片 -->
+1742 |     <div class="stats-cards">
+1743 |       <div class="stat-card">
+1744 |         <div class="stat-value">{{ total }}</div>
+1745 |         <div class="stat-label">总反馈数</div>
+1746 |       </div>
+1747 |     </div>
+1748 |     
+1749 |     <!-- 反馈列表 -->
+1750 |     <div class="feedback-list">
+
+
+================================================================================
+                                 第 36 页（共 60 页）
+================================================================================
+
+1751 |       <div v-if="loading" class="loading">加载中...</div>
+1752 |       <div v-else-if="feedbackList.length === 0" class="empty">暂无反馈</div>
+1753 |       <div v-else>
+1754 |         <div v-for="item in feedbackList" :key="item.id" class="feedback-item">
+1755 |           <div class="feedback-header">
+1756 |             <span class="feedback-id">#{{ item.id }}</span>
+1757 |             <span class="feedback-time">{{ formatTime(item.created_at) }}</span>
+1758 |           </div>
+1759 |           <div class="feedback-content">{{ item.content }}</div>
+1760 |           <div v-if="item.images && item.images.length > 0" class="feedback-images">
+1761 |             <img v-for="(img, index) in item.images" :key="index" :src="img" class="feedback-image" />
+1762 |           </div>
+1763 |           <div class="feedback-footer">
+1764 |             <span v-if="item.user_info" class="user-info">
+1765 |               用户：{{ item.user_info.nickname || item.user_info.phone || '匿名' }}
+1766 |             </span>
+1767 |             <span v-else class="user-info">匿名反馈</span>
+1768 |             <button @click="deleteFeedback(item.id)" class="delete-btn">删除</button>
+1769 |           </div>
+1770 |         </div>
+1771 |       </div>
+1772 |     </div>
+1773 |     
+1774 |     <!-- 分页 -->
+1775 |     <div class="pagination" v-if="total > pageSize">
+1776 |       <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+1777 |       <span>第 {{ currentPage }} / {{ totalPages }} 页</span>
+1778 |       <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+1779 |     </div>
+1780 |   </div>
+1781 | </template>
+1782 | 
+1783 | <script>
+1784 | import axios from 'axios';
+1785 | 
+1786 | export default {
+1787 |   name: 'Feedback',
+1788 |   data() {
+1789 |     return {
+1790 |       feedbackList: [],
+1791 |       loading: false,
+1792 |       currentPage: 1,
+1793 |       pageSize: 20,
+1794 |       total: 0
+1795 |     };
+1796 |   },
+1797 |   computed: {
+1798 |     totalPages() {
+1799 |       return Math.ceil(this.total / this.pageSize);
+1800 |     }
+
+
+================================================================================
+                                 第 37 页（共 60 页）
+================================================================================
+
+1801 |   },
+1802 |   mounted() {
+1803 |     this.loadFeedback();
+1804 |   },
+1805 |   methods: {
+1806 |     async loadFeedback() {
+1807 |       this.loading = true;
+1808 |       try {
+1809 |         const token = localStorage.getItem('adminToken');
+1810 |         const response = await axios.get(`/api/admin/feedback?page=${this.currentPage}&pageSize=${this.pageSize}`, {
+1811 |           headers: { Authorization: `Bearer ${token}` }
+1812 |         });
+1813 |         
+1814 |         if (response.data.success) {
+1815 |           this.feedbackList = response.data.data;
+1816 |           this.total = response.data.total;
+1817 |         } else {
+1818 |           alert('加载失败：' + response.data.message);
+1819 |         }
+1820 |       } catch (error) {
+1821 |         console.error('加载反馈失败:', error);
+1822 |         alert('加载失败');
+1823 |       } finally {
+1824 |         this.loading = false;
+1825 |       }
+1826 |     },
+1827 |     async deleteFeedback(id) {
+1828 |       if (!confirm('确定要删除这条反馈吗？')) return;
+1829 |       
+1830 |       try {
+1831 |         const token = localStorage.getItem('adminToken');
+1832 |         const response = await axios.delete(`/api/admin/feedback/${id}`, {
+1833 |           headers: { Authorization: `Bearer ${token}` }
+1834 |         });
+1835 |         
+1836 |         if (response.data.success) {
+1837 |           alert('删除成功');
+1838 |           this.loadFeedback();
+1839 |         } else {
+1840 |           alert('删除失败：' + response.data.message);
+1841 |         }
+1842 |       } catch (error) {
+1843 |         console.error('删除反馈失败:', error);
+1844 |         alert('删除失败');
+1845 |       }
+1846 |     },
+1847 |     formatTime(time) {
+1848 |       const date = new Date(time);
+1849 |       return date.toLocaleString('zh-CN');
+1850 |     },
+
+
+================================================================================
+                                 第 38 页（共 60 页）
+================================================================================
+
+1851 |     prevPage() {
+1852 |       if (this.currentPage > 1) {
+1853 |         this.currentPage--;
+1854 |         this.loadFeedback();
+1855 |       }
+1856 |     },
+1857 |     nextPage() {
+1858 |       if (this.currentPage < this.totalPages) {
+1859 |         this.currentPage++;
+1860 |         this.loadFeedback();
+1861 |       }
+1862 |     }
+1863 |   }
+1864 | };
+1865 | </script>
+1866 | 
+1867 | <style scoped>
+1868 | .feedback-container {
+1869 |   padding: 20px;
+1870 | }
+1871 | 
+1872 | h2 {
+1873 |   margin-bottom: 20px;
+1874 |   color: #333;
+1875 | }
+1876 | 
+1877 | .stats-cards {
+1878 |   display: flex;
+1879 |   gap: 20px;
+1880 |   margin-bottom: 30px;
+1881 | }
+1882 | 
+1883 | .stat-card {
+1884 |   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+1885 |   padding: 20px;
+1886 |   border-radius: 12px;
+1887 |   color: white;
+1888 |   min-width: 150px;
+1889 | }
+1890 | 
+1891 | .stat-value {
+1892 |   font-size: 32px;
+1893 |   font-weight: bold;
+1894 |   margin-bottom: 5px;
+1895 | }
+1896 | 
+1897 | .stat-label {
+1898 |   font-size: 14px;
+1899 |   opacity: 0.9;
+1900 | }
+
+
+================================================================================
+                                 第 39 页（共 60 页）
+================================================================================
+
+1901 | 
+1902 | .feedback-list {
+1903 |   background: white;
+1904 |   border-radius: 12px;
+1905 |   padding: 20px;
+1906 |   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+1907 | }
+1908 | 
+1909 | .loading, .empty {
+1910 |   text-align: center;
+1911 |   padding: 40px;
+1912 |   color: #999;
+1913 | }
+1914 | 
+1915 | .feedback-item {
+1916 |   border: 1px solid #e8e8e8;
+1917 |   border-radius: 8px;
+1918 |   padding: 15px;
+1919 |   margin-bottom: 15px;
+1920 |   transition: all 0.3s;
+1921 | }
+1922 | 
+1923 | .feedback-item:hover {
+1924 |   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+1925 | }
+1926 | 
+1927 | .feedback-header {
+1928 |   display: flex;
+1929 |   justify-content: space-between;
+1930 |   margin-bottom: 10px;
+1931 |   font-size: 12px;
+1932 |   color: #999;
+1933 | }
+1934 | 
+1935 | .feedback-id {
+1936 |   font-weight: bold;
+1937 |   color: #667eea;
+1938 | }
+1939 | 
+1940 | .feedback-content {
+1941 |   font-size: 14px;
+1942 |   line-height: 1.6;
+1943 |   color: #333;
+1944 |   margin-bottom: 10px;
+1945 |   white-space: pre-wrap;
+1946 | }
+1947 | 
+1948 | .feedback-images {
+1949 |   display: flex;
+1950 |   gap: 10px;
+
+
+================================================================================
+                                 第 40 页（共 60 页）
+================================================================================
+
+1951 |   margin-bottom: 10px;
+1952 | }
+1953 | 
+1954 | .feedback-image {
+1955 |   width: 100px;
+1956 |   height: 100px;
+1957 |   object-fit: cover;
+1958 |   border-radius: 8px;
+1959 |   cursor: pointer;
+1960 | }
+1961 | 
+1962 | .feedback-footer {
+1963 |   display: flex;
+1964 |   justify-content: space-between;
+1965 |   align-items: center;
+1966 |   padding-top: 10px;
+1967 |   border-top: 1px solid #f0f0f0;
+1968 | }
+1969 | 
+1970 | .user-info {
+1971 |   font-size: 12px;
+1972 |   color: #666;
+1973 | }
+1974 | 
+1975 | .delete-btn {
+1976 |   padding: 5px 15px;
+1977 |   background: #ff4d4f;
+1978 |   color: white;
+1979 |   border: none;
+1980 |   border-radius: 4px;
+1981 |   cursor: pointer;
+1982 |   font-size: 12px;
+1983 | }
+1984 | 
+1985 | .delete-btn:hover {
+1986 |   background: #ff7875;
+1987 | }
+1988 | 
+1989 | .pagination {
+1990 |   display: flex;
+1991 |   justify-content: center;
+1992 |   align-items: center;
+1993 |   gap: 20px;
+1994 |   margin-top: 20px;
+1995 | }
+1996 | 
+1997 | .pagination button {
+1998 |   padding: 8px 16px;
+1999 |   background: #52C41A;
+2000 |   color: white;
+
+
+================================================================================
+                                 第 41 页（共 60 页）
+================================================================================
+
+2001 |   border: none;
+2002 |   border-radius: 4px;
+2003 |   cursor: pointer;
+2004 | }
+2005 | 
+2006 | .pagination button:disabled {
+2007 |   background: #d9d9d9;
+2008 |   cursor: not-allowed;
+2009 | }
+2010 | 
+2011 | .pagination button:not(:disabled):hover {
+2012 |   background: #73d13d;
+2013 | }
+2014 | </style>
+2015 | 
+2016 | 
+2017 | // ========================================
+2018 | // 文件: admin/src/views/Login.vue
+2019 | // ========================================
+2020 | <template>
+2021 |   <div class="login-container">
+2022 |     <div class="login-box">
+2023 |       <div class="logo-section">
+2024 |         <h1>💰 钱哪去了</h1>
+2025 |         <p>管理后台</p>
+2026 |       </div>
+2027 |       
+2028 |       <el-form :model="form" :rules="rules" ref="formRef" class="login-form">
+2029 |         <el-form-item prop="username">
+2030 |           <el-input
+2031 |             v-model="form.username"
+2032 |             placeholder="请输入用户名"
+2033 |             prefix-icon="User"
+2034 |             size="large"
+2035 |           />
+2036 |         </el-form-item>
+2037 |         
+2038 |         <el-form-item prop="password">
+2039 |           <el-input
+2040 |             v-model="form.password"
+2041 |             type="password"
+2042 |             placeholder="请输入密码"
+2043 |             prefix-icon="Lock"
+2044 |             size="large"
+2045 |             @keyup.enter="handleLogin"
+2046 |           />
+2047 |         </el-form-item>
+2048 |         
+2049 |         <el-button
+2050 |           type="primary"
+
+
+================================================================================
+                                 第 42 页（共 60 页）
+================================================================================
+
+2051 |           size="large"
+2052 |           :loading="loading"
+2053 |           @click="handleLogin"
+2054 |           class="login-btn"
+2055 |         >
+2056 |           登录
+2057 |         </el-button>
+2058 |       </el-form>
+2059 |     </div>
+2060 |   </div>
+2061 | </template>
+2062 | 
+2063 | <script setup>
+2064 | import { ref, reactive } from 'vue'
+2065 | import { useRouter } from 'vue-router'
+2066 | import { ElMessage } from 'element-plus'
+2067 | import request from '@/utils/request'
+2068 | 
+2069 | const router = useRouter()
+2070 | const formRef = ref(null)
+2071 | const loading = ref(false)
+2072 | 
+2073 | const form = reactive({
+2074 |   username: '',
+2075 |   password: ''
+2076 | })
+2077 | 
+2078 | const rules = {
+2079 |   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+2080 |   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+2081 | }
+2082 | 
+2083 | const handleLogin = async () => {
+2084 |   try {
+2085 |     await formRef.value.validate()
+2086 |     loading.value = true
+2087 |     
+2088 |     const res = await request.post('/admin/login', form)
+2089 |     
+2090 |     if (res.success) {
+2091 |       localStorage.setItem('admin_token', res.token)
+2092 |       ElMessage.success('登录成功')
+2093 |       router.push('/')
+2094 |     }
+2095 |   } catch (error) {
+2096 |     console.error('登录失败:', error)
+2097 |   } finally {
+2098 |     loading.value = false
+2099 |   }
+2100 | }
+
+
+================================================================================
+                                 第 43 页（共 60 页）
+================================================================================
+
+2101 | </script>
+2102 | 
+2103 | <style scoped>
+2104 | .login-container {
+2105 |   width: 100%;
+2106 |   height: 100vh;
+2107 |   background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+2108 |   display: flex;
+2109 |   align-items: center;
+2110 |   justify-content: center;
+2111 | }
+2112 | 
+2113 | .login-box {
+2114 |   width: 400px;
+2115 |   padding: 40px;
+2116 |   background: white;
+2117 |   border-radius: 16px;
+2118 |   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+2119 | }
+2120 | 
+2121 | .logo-section {
+2122 |   text-align: center;
+2123 |   margin-bottom: 40px;
+2124 | }
+2125 | 
+2126 | .logo-section h1 {
+2127 |   font-size: 32px;
+2128 |   color: #1a1a1a;
+2129 |   margin-bottom: 8px;
+2130 | }
+2131 | 
+2132 | .logo-section p {
+2133 |   font-size: 16px;
+2134 |   color: #666;
+2135 | }
+2136 | 
+2137 | .login-form {
+2138 |   margin-top: 30px;
+2139 | }
+2140 | 
+2141 | .login-btn {
+2142 |   width: 100%;
+2143 |   margin-top: 10px;
+2144 | }
+2145 | </style>
+2146 | 
+2147 | 
+2148 | // ========================================
+2149 | // 文件: admin/src/views/Users.vue
+2150 | // ========================================
+
+
+================================================================================
+                                 第 44 页（共 60 页）
+================================================================================
+
+2151 | <template>
+2152 |   <div class="users-page">
+2153 |     <el-card>
+2154 |       <!-- 搜索栏 -->
+2155 |       <el-form :inline="true" :model="searchForm" class="search-form">
+2156 |         <el-form-item label="用户昵称">
+2157 |           <el-input v-model="searchForm.nickname" placeholder="请输入用户昵称" clearable />
+2158 |         </el-form-item>
+2159 |         <el-form-item label="手机号">
+2160 |           <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
+2161 |         </el-form-item>
+2162 |         <el-form-item>
+2163 |           <el-button type="primary" @click="handleSearch">搜索</el-button>
+2164 |           <el-button @click="handleReset">重置</el-button>
+2165 |         </el-form-item>
+2166 |       </el-form>
+2167 |       
+2168 |       <!-- 用户列表 -->
+2169 |       <el-table :data="userList" v-loading="loading" border>
+2170 |         <el-table-column prop="id" label="ID" width="80" />
+2171 |         <el-table-column label="头像" width="80">
+2172 |           <template #default="{ row }">
+2173 |             <el-avatar :src="row.avatar_url" />
+2174 |           </template>
+2175 |         </el-table-column>
+2176 |         <el-table-column prop="nickname" label="昵称" />
+2177 |         <el-table-column prop="phone" label="手机号" />
+2178 |         <el-table-column label="密码状态" width="100">
+2179 |           <template #default="{ row }">
+2180 |             <el-tag v-if="row.password" type="success" size="small">已设置</el-tag>
+2181 |             <el-tag v-else type="info" size="small">未设置</el-tag>
+2182 |           </template>
+2183 |         </el-table-column>
+2184 |         <el-table-column prop="openid" label="OpenID" show-overflow-tooltip />
+2185 |         <el-table-column label="注册时间" width="180">
+2186 |           <template #default="{ row }">
+2187 |             {{ formatDate(row.created_at) }}
+2188 |           </template>
+2189 |         </el-table-column>
+2190 |         <el-table-column label="最后登录" width="180">
+2191 |           <template #default="{ row }">
+2192 |             {{ formatDate(row.last_login) }}
+2193 |           </template>
+2194 |         </el-table-column>
+2195 |         <el-table-column label="操作" width="200" fixed="right">
+2196 |           <template #default="{ row }">
+2197 |             <el-button type="primary" link @click="viewDetail(row)">详情</el-button>
+2198 |             <el-button type="warning" link @click="handleResetPassword(row)">重置密码</el-button>
+2199 |             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+2200 |           </template>
+
+
+================================================================================
+                                 第 45 页（共 60 页）
+================================================================================
+
+2201 |         </el-table-column>
+2202 |       </el-table>
+2203 |       
+2204 |       <!-- 分页 -->
+2205 |       <el-pagination
+2206 |         v-model:current-page="pagination.page"
+2207 |         v-model:page-size="pagination.pageSize"
+2208 |         :total="pagination.total"
+2209 |         :page-sizes="[10, 20, 50, 100]"
+2210 |         layout="total, sizes, prev, pager, next, jumper"
+2211 |         @size-change="fetchUsers"
+2212 |         @current-change="fetchUsers"
+2213 |         class="pagination"
+2214 |       />
+2215 |     </el-card>
+2216 |     
+2217 |     <!-- 用户详情对话框 -->
+2218 |     <el-dialog
+2219 |       v-model="detailDialogVisible"
+2220 |       title="用户详情"
+2221 |       width="900px"
+2222 |       :close-on-click-modal="false"
+2223 |       class="user-detail-dialog"
+2224 |     >
+2225 |       <div v-if="currentUserDetail" class="user-detail-content">
+2226 |         <!-- 用户头部卡片 -->
+2227 |         <div class="user-header-card">
+2228 |           <div class="user-avatar">
+2229 |             <el-avatar :size="64" :src="currentUserDetail.user.avatar_url">
+2230 |               <el-icon :size="32"><User /></el-icon>
+2231 |             </el-avatar>
+2232 |           </div>
+2233 |           <div class="user-info">
+2234 |             <div class="user-name">{{ currentUserDetail.user.nickname || '未设置昵称' }}</div>
+2235 |             <div class="user-meta">
+2236 |               <span class="meta-item">
+2237 |                 <el-icon><Iphone /></el-icon>
+2238 |                 {{ currentUserDetail.user.phone || '未绑定' }}
+2239 |               </span>
+2240 |               <span class="meta-item">
+2241 |                 <el-icon><Calendar /></el-icon>
+2242 |                 {{ formatDate(currentUserDetail.user.created_at) }}
+2243 |               </span>
+2244 |             </div>
+2245 |           </div>
+2246 |         </div>
+2247 |         
+2248 |         <!-- 统计数据卡片 -->
+2249 |         <div class="stats-cards">
+2250 |           <div class="stat-card expense">
+
+
+================================================================================
+                                 第 46 页（共 60 页）
+================================================================================
+
+2251 |             <div class="stat-icon">
+2252 |               <el-icon><TrendCharts /></el-icon>
+2253 |             </div>
+2254 |             <div class="stat-content">
+2255 |               <div class="stat-label">总支出</div>
+2256 |               <div class="stat-value">¥{{ currentUserDetail.stats.total_expense }}</div>
+2257 |             </div>
+2258 |           </div>
+2259 |           <div class="stat-card income">
+2260 |             <div class="stat-icon">
+2261 |               <el-icon><Money /></el-icon>
+2262 |             </div>
+2263 |             <div class="stat-content">
+2264 |               <div class="stat-label">总收入</div>
+2265 |               <div class="stat-value">¥{{ currentUserDetail.stats.total_income }}</div>
+2266 |             </div>
+2267 |           </div>
+2268 |           <div class="stat-card bills">
+2269 |             <div class="stat-icon">
+2270 |               <el-icon><Tickets /></el-icon>
+2271 |             </div>
+2272 |             <div class="stat-content">
+2273 |               <div class="stat-label">账单数</div>
+2274 |               <div class="stat-value">{{ currentUserDetail.stats.bill_count }}笔</div>
+2275 |             </div>
+2276 |           </div>
+2277 |           <div class="stat-card points">
+2278 |             <div class="stat-icon">
+2279 |               <el-icon><Star /></el-icon>
+2280 |             </div>
+2281 |             <div class="stat-content">
+2282 |               <div class="stat-label">积分</div>
+2283 |               <div class="stat-value">{{ currentUserDetail.stats.points }}</div>
+2284 |             </div>
+2285 |           </div>
+2286 |         </div>
+2287 |         
+2288 |         <!-- 详细信息卡片 -->
+2289 |         <div class="info-card">
+2290 |           <div class="card-title">详细信息</div>
+2291 |           <div class="info-grid">
+2292 |             <div class="info-item">
+2293 |               <span class="label">手机号</span>
+2294 |               <span class="value">{{ currentUserDetail.user.phone || '未绑定' }}</span>
+2295 |             </div>
+2296 |             <div class="info-item">
+2297 |               <span class="label">密码状态</span>
+2298 |               <span class="value">
+2299 |                 <el-tag v-if="currentUserDetail.user.password" type="success" size="small">已设置</el-tag>
+2300 |                 <el-tag v-else type="info" size="small">未设置</el-tag>
+
+
+================================================================================
+                                 第 47 页（共 60 页）
+================================================================================
+
+2301 |               </span>
+2302 |             </div>
+2303 |             <div class="info-item">
+2304 |               <span class="label">用户ID</span>
+2305 |               <span class="value">{{ currentUserDetail.user.id }}</span>
+2306 |             </div>
+2307 |             <div class="info-item">
+2308 |               <span class="label">OpenID</span>
+2309 |               <span class="value text-ellipsis">{{ currentUserDetail.user.openid || '-' }}</span>
+2310 |             </div>
+2311 |             <div class="info-item">
+2312 |               <span class="label">最后登录</span>
+2313 |               <span class="value">{{ formatDate(currentUserDetail.user.last_login) }}</span>
+2314 |             </div>
+2315 |           </div>
+2316 |         </div>
+2317 |         
+2318 |         <!-- 最近账单卡片 -->
+2319 |         <div class="bills-card">
+2320 |           <div class="card-title">
+2321 |             <span>账单列表</span>
+2322 |             <span class="bill-count">共 {{ currentUserDetail.billTotal || 0 }} 笔</span>
+2323 |           </div>
+2324 |           <div v-if="currentUserDetail.recentBills.length > 0" class="bills-list">
+2325 |             <div 
+2326 |               v-for="bill in currentUserDetail.recentBills" 
+2327 |               :key="bill.id"
+2328 |               class="bill-item"
+2329 |             >
+2330 |               <div class="bill-left">
+2331 |                 <div class="bill-merchant">{{ bill.merchant || '未知商家' }}</div>
+2332 |                 <div class="bill-meta">
+2333 |                   <span>{{ formatBillDate(bill.date) }}</span>
+2334 |                   <span class="divider">·</span>
+2335 |                   <span>{{ bill.category_name || '其他' }}</span>
+2336 |                   <span class="divider">·</span>
+2337 |                   <span class="bill-time">{{ formatBillTime(bill.create_time) }}</span>
+2338 |                 </div>
+2339 |               </div>
+2340 |               <div class="bill-right">
+2341 |                 <div :class="['bill-amount', bill.type]">
+2342 |                   {{ bill.type === 'expense' ? '-' : '+' }}¥{{ bill.amount }}
+2343 |                 </div>
+2344 |               </div>
+2345 |             </div>
+2346 |           </div>
+2347 |           <el-empty v-else description="暂无账单记录" :image-size="60" />
+2348 |           
+2349 |           <!-- 分页 -->
+2350 |           <el-pagination
+
+
+================================================================================
+                                 第 48 页（共 60 页）
+================================================================================
+
+2351 |             v-if="currentUserDetail.billTotal > 0"
+2352 |             v-model:current-page="billPagination.page"
+2353 |             v-model:page-size="billPagination.pageSize"
+2354 |             :total="currentUserDetail.billTotal"
+2355 |             :page-sizes="[10, 20, 50]"
+2356 |             layout="total, sizes, prev, pager, next"
+2357 |             @size-change="handleBillPageChange"
+2358 |             @current-change="handleBillPageChange"
+2359 |             class="bill-pagination"
+2360 |             small
+2361 |           />
+2362 |         </div>
+2363 |       </div>
+2364 |     </el-dialog>
+2365 |   </div>
+2366 | </template>
+2367 | 
+2368 | <script setup>
+2369 | import { ref, reactive, onMounted } from 'vue'
+2370 | import { ElMessage, ElMessageBox } from 'element-plus'
+2371 | import request from '@/utils/request'
+2372 | 
+2373 | const loading = ref(false)
+2374 | const userList = ref([])
+2375 | 
+2376 | const searchForm = reactive({
+2377 |   nickname: '',
+2378 |   phone: ''
+2379 | })
+2380 | 
+2381 | const pagination = reactive({
+2382 |   page: 1,
+2383 |   pageSize: 10,
+2384 |   total: 0
+2385 | })
+2386 | 
+2387 | const fetchUsers = async () => {
+2388 |   try {
+2389 |     loading.value = true
+2390 |     const res = await request.get('/admin/users', {
+2391 |       params: {
+2392 |         page: pagination.page,
+2393 |         pageSize: pagination.pageSize,
+2394 |         ...searchForm
+2395 |       }
+2396 |     })
+2397 |     
+2398 |     if (res.success) {
+2399 |       userList.value = res.data.list
+2400 |       pagination.total = res.data.total
+
+
+================================================================================
+                                 第 49 页（共 60 页）
+================================================================================
+
+2401 |     }
+2402 |   } catch (error) {
+2403 |     console.error('获取用户列表失败:', error)
+2404 |   } finally {
+2405 |     loading.value = false
+2406 |   }
+2407 | }
+2408 | 
+2409 | const handleSearch = () => {
+2410 |   pagination.page = 1
+2411 |   fetchUsers()
+2412 | }
+2413 | 
+2414 | const handleReset = () => {
+2415 |   searchForm.nickname = ''
+2416 |   searchForm.phone = ''
+2417 |   handleSearch()
+2418 | }
+2419 | 
+2420 | const detailDialogVisible = ref(false)
+2421 | const currentUserDetail = ref(null)
+2422 | const billPagination = reactive({
+2423 |   page: 1,
+2424 |   pageSize: 10
+2425 | })
+2426 | 
+2427 | const viewDetail = async (row) => {
+2428 |   try {
+2429 |     billPagination.page = 1
+2430 |     billPagination.pageSize = 10
+2431 |     await fetchUserDetail(row.id)
+2432 |     detailDialogVisible.value = true
+2433 |   } catch (error) {
+2434 |     console.error('获取用户详情失败:', error)
+2435 |     ElMessage.error('获取用户详情失败')
+2436 |   }
+2437 | }
+2438 | 
+2439 | const fetchUserDetail = async (userId) => {
+2440 |   try {
+2441 |     const res = await request.get(`/admin/users/${userId}/detail`, {
+2442 |       params: {
+2443 |         page: billPagination.page,
+2444 |         pageSize: billPagination.pageSize
+2445 |       }
+2446 |     })
+2447 |     if (res.success) {
+2448 |       currentUserDetail.value = res.data
+2449 |     }
+2450 |   } catch (error) {
+
+
+================================================================================
+                                 第 50 页（共 60 页）
+================================================================================
+
+2451 |     console.error('获取用户详情失败:', error)
+2452 |     throw error
+2453 |   }
+2454 | }
+2455 | 
+2456 | const handleBillPageChange = async () => {
+2457 |   if (currentUserDetail.value && currentUserDetail.value.user) {
+2458 |     await fetchUserDetail(currentUserDetail.value.user.id)
+2459 |   }
+2460 | }
+2461 | 
+2462 | const handleDelete = (row) => {
+2463 |   ElMessageBox.confirm(`确定要删除用户 ${row.nickname} 吗？`, '提示', {
+2464 |     confirmButtonText: '确定',
+2465 |     cancelButtonText: '取消',
+2466 |     type: 'warning'
+2467 |   }).then(async () => {
+2468 |     try {
+2469 |       const res = await request.delete(`/admin/users/${row.id}`)
+2470 |       if (res.success) {
+2471 |         ElMessage.success('删除成功')
+2472 |         fetchUsers()
+2473 |       }
+2474 |     } catch (error) {
+2475 |       console.error('删除失败:', error)
+2476 |     }
+2477 |   })
+2478 | }
+2479 | 
+2480 | const handleResetPassword = (row) => {
+2481 |   ElMessageBox.confirm(
+2482 |     `确定要重置用户 ${row.nickname || row.phone} 的密码吗？`, 
+2483 |     '重置密码', 
+2484 |     {
+2485 |       confirmButtonText: '确定',
+2486 |       cancelButtonText: '取消',
+2487 |       type: 'warning'
+2488 |     }
+2489 |   ).then(async () => {
+2490 |     try {
+2491 |       const res = await request.post(`/admin/users/${row.id}/reset-password`)
+2492 |       if (res.success) {
+2493 |         // 显示新密码
+2494 |         ElMessageBox.alert(
+2495 |           `新密码：${res.newPassword}\n\n请将此密码告知用户，此密码仅显示一次！`, 
+2496 |           '密码重置成功', 
+2497 |           {
+2498 |             confirmButtonText: '我已复制',
+2499 |             type: 'success',
+2500 |             dangerouslyUseHTMLString: false
+
+
+================================================================================
+                                 第 51 页（共 60 页）
+================================================================================
+
+2501 |           }
+2502 |         )
+2503 |       } else {
+2504 |         ElMessage.error(res.message || '重置失败')
+2505 |       }
+2506 |     } catch (error) {
+2507 |       console.error('重置密码失败:', error)
+2508 |       ElMessage.error('重置密码失败')
+2509 |     }
+2510 |   })
+2511 | }
+2512 | 
+2513 | const formatDate = (date) => {
+2514 |   if (!date) return '-'
+2515 |   return new Date(date).toLocaleString('zh-CN')
+2516 | }
+2517 | 
+2518 | const formatBillDate = (date) => {
+2519 |   if (!date) return '-'
+2520 |   const d = new Date(date)
+2521 |   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+2522 | }
+2523 | 
+2524 | const formatBillTime = (timestamp) => {
+2525 |   if (!timestamp) return '-'
+2526 |   const d = new Date(Number(timestamp))
+2527 |   return d.toLocaleString('zh-CN', { 
+2528 |     year: 'numeric',
+2529 |     month: '2-digit',
+2530 |     day: '2-digit',
+2531 |     hour: '2-digit',
+2532 |     minute: '2-digit'
+2533 |   })
+2534 | }
+2535 | 
+2536 | onMounted(() => {
+2537 |   fetchUsers()
+2538 | })
+2539 | </script>
+2540 | 
+2541 | <style scoped>
+2542 | .users-page {
+2543 |   width: 100%;
+2544 | }
+2545 | 
+2546 | .search-form {
+2547 |   margin-bottom: 20px;
+2548 | }
+2549 | 
+2550 | .pagination {
+
+
+================================================================================
+                                 第 52 页（共 60 页）
+================================================================================
+
+2551 |   margin-top: 20px;
+2552 |   justify-content: flex-end;
+2553 | }
+2554 | 
+2555 | /* 对话框样式 */
+2556 | .user-detail-dialog :deep(.el-dialog__body) {
+2557 |   padding: 20px 24px;
+2558 |   max-height: 70vh;
+2559 |   overflow-y: auto;
+2560 | }
+2561 | 
+2562 | .user-detail-content {
+2563 |   display: flex;
+2564 |   flex-direction: column;
+2565 |   gap: 16px;
+2566 | }
+2567 | 
+2568 | /* 用户头部卡片 */
+2569 | .user-header-card {
+2570 |   display: flex;
+2571 |   align-items: center;
+2572 |   gap: 20px;
+2573 |   padding: 24px;
+2574 |   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+2575 |   border-radius: 12px;
+2576 |   color: white;
+2577 |   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+2578 | }
+2579 | 
+2580 | .user-avatar {
+2581 |   flex-shrink: 0;
+2582 | }
+2583 | 
+2584 | .user-avatar :deep(.el-avatar) {
+2585 |   border: 3px solid rgba(255, 255, 255, 0.3);
+2586 |   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+2587 | }
+2588 | 
+2589 | .user-info {
+2590 |   flex: 1;
+2591 | }
+2592 | 
+2593 | .user-name {
+2594 |   font-size: 22px;
+2595 |   font-weight: 600;
+2596 |   margin-bottom: 8px;
+2597 | }
+2598 | 
+2599 | .user-meta {
+2600 |   display: flex;
+
+
+================================================================================
+                                 第 53 页（共 60 页）
+================================================================================
+
+2601 |   gap: 20px;
+2602 |   font-size: 14px;
+2603 |   opacity: 0.95;
+2604 | }
+2605 | 
+2606 | .meta-item {
+2607 |   display: flex;
+2608 |   align-items: center;
+2609 |   gap: 6px;
+2610 | }
+2611 | 
+2612 | /* 统计卡片 */
+2613 | .stats-cards {
+2614 |   display: grid;
+2615 |   grid-template-columns: repeat(4, 1fr);
+2616 |   gap: 12px;
+2617 | }
+2618 | 
+2619 | .stat-card {
+2620 |   display: flex;
+2621 |   align-items: center;
+2622 |   gap: 12px;
+2623 |   padding: 16px;
+2624 |   border-radius: 10px;
+2625 |   background: white;
+2626 |   border: 1px solid #f0f0f0;
+2627 |   transition: all 0.3s;
+2628 |   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+2629 | }
+2630 | 
+2631 | .stat-card:hover {
+2632 |   transform: translateY(-2px);
+2633 |   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+2634 | }
+2635 | 
+2636 | .stat-card .stat-icon {
+2637 |   width: 48px;
+2638 |   height: 48px;
+2639 |   border-radius: 10px;
+2640 |   display: flex;
+2641 |   align-items: center;
+2642 |   justify-content: center;
+2643 |   font-size: 24px;
+2644 | }
+2645 | 
+2646 | .stat-card.expense .stat-icon {
+2647 |   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+2648 |   color: white;
+2649 | }
+2650 | 
+
+
+================================================================================
+                                 第 54 页（共 60 页）
+================================================================================
+
+2651 | .stat-card.income .stat-icon {
+2652 |   background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+2653 |   color: white;
+2654 | }
+2655 | 
+2656 | .stat-card.bills .stat-icon {
+2657 |   background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+2658 |   color: white;
+2659 | }
+2660 | 
+2661 | .stat-card.points .stat-icon {
+2662 |   background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
+2663 |   color: white;
+2664 | }
+2665 | 
+2666 | .stat-content {
+2667 |   flex: 1;
+2668 | }
+2669 | 
+2670 | .stat-label {
+2671 |   font-size: 13px;
+2672 |   color: #868e96;
+2673 |   margin-bottom: 4px;
+2674 | }
+2675 | 
+2676 | .stat-value {
+2677 |   font-size: 20px;
+2678 |   font-weight: 700;
+2679 |   color: #212529;
+2680 | }
+2681 | 
+2682 | /* 详细信息卡片 */
+2683 | .info-card {
+2684 |   padding: 20px;
+2685 |   background: white;
+2686 |   border-radius: 10px;
+2687 |   border: 1px solid #f0f0f0;
+2688 |   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+2689 | }
+2690 | 
+2691 | .card-title {
+2692 |   font-size: 16px;
+2693 |   font-weight: 600;
+2694 |   color: #212529;
+2695 |   margin-bottom: 16px;
+2696 |   padding-bottom: 12px;
+2697 |   border-bottom: 2px solid #f1f3f5;
+2698 | }
+2699 | 
+2700 | .info-grid {
+
+
+================================================================================
+                                 第 55 页（共 60 页）
+================================================================================
+
+2701 |   display: grid;
+2702 |   grid-template-columns: repeat(3, 1fr);
+2703 |   gap: 16px;
+2704 | }
+2705 | 
+2706 | .info-item {
+2707 |   display: flex;
+2708 |   flex-direction: column;
+2709 |   gap: 6px;
+2710 | }
+2711 | 
+2712 | .info-item .label {
+2713 |   font-size: 12px;
+2714 |   color: #868e96;
+2715 | }
+2716 | 
+2717 | .info-item .value {
+2718 |   font-size: 14px;
+2719 |   color: #212529;
+2720 |   font-weight: 500;
+2721 | }
+2722 | 
+2723 | .text-ellipsis {
+2724 |   overflow: hidden;
+2725 |   text-overflow: ellipsis;
+2726 |   white-space: nowrap;
+2727 | }
+2728 | 
+2729 | /* 账单卡片 */
+2730 | .bills-card {
+2731 |   padding: 20px;
+2732 |   background: white;
+2733 |   border-radius: 10px;
+2734 |   border: 1px solid #f0f0f0;
+2735 |   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+2736 | }
+2737 | 
+2738 | .bills-list {
+2739 |   display: flex;
+2740 |   flex-direction: column;
+2741 |   gap: 8px;
+2742 | }
+2743 | 
+2744 | .bill-item {
+2745 |   display: flex;
+2746 |   align-items: center;
+2747 |   justify-content: space-between;
+2748 |   padding: 12px 16px;
+2749 |   background: #f8f9fa;
+2750 |   border-radius: 8px;
+
+
+================================================================================
+                                 第 56 页（共 60 页）
+================================================================================
+
+2751 |   border: 1px solid transparent;
+2752 |   transition: all 0.2s;
+2753 | }
+2754 | 
+2755 | .bill-item:hover {
+2756 |   background: #f1f3f5;
+2757 |   border-color: #dee2e6;
+2758 | }
+2759 | 
+2760 | .bill-left {
+2761 |   flex: 1;
+2762 | }
+2763 | 
+2764 | .bill-merchant {
+2765 |   font-size: 14px;
+2766 |   font-weight: 500;
+2767 |   color: #212529;
+2768 |   margin-bottom: 4px;
+2769 | }
+2770 | 
+2771 | .bill-meta {
+2772 |   font-size: 12px;
+2773 |   color: #868e96;
+2774 | }
+2775 | 
+2776 | .bill-meta .divider {
+2777 |   margin: 0 6px;
+2778 | }
+2779 | 
+2780 | .bill-right {
+2781 |   margin-left: 16px;
+2782 | }
+2783 | 
+2784 | .bill-amount {
+2785 |   font-size: 16px;
+2786 |   font-weight: 700;
+2787 | }
+2788 | 
+2789 | .bill-amount.expense {
+2790 |   color: #ff6b6b;
+2791 | }
+2792 | 
+2793 | .bill-amount.income {
+2794 |   color: #51cf66;
+2795 | }
+2796 | 
+2797 | /* 密码哈希样式 */
+2798 | .password-hash {
+2799 |   font-family: 'Courier New', monospace;
+2800 |   font-size: 12px;
+
+
+================================================================================
+                                 第 57 页（共 60 页）
+================================================================================
+
+2801 |   color: #666;
+2802 |   word-break: break-all;
+2803 | }
+2804 | 
+2805 | .info-item.full-width {
+2806 |   grid-column: 1 / -1;
+2807 | }
+2808 | 
+2809 | .info-item.full-width .value {
+2810 |   max-width: 100%;
+2811 |   word-break: break-all;
+2812 | }
+2813 | </style>
+2814 | 
+2815 | 
+2816 | // ========================================
+2817 | // 文件: admin/src/views/components/VersionList.vue
+2818 | // ========================================
+2819 | <template>
+2820 |   <div class="version-list">
+2821 |     <el-empty v-if="versions.length === 0" description="暂无版本记录" />
+2822 |     
+2823 |     <div v-else class="version-cards">
+2824 |       <el-card 
+2825 |         v-for="version in versions" 
+2826 |         :key="version.id" 
+2827 |         class="version-card"
+2828 |         :class="{ 'is-force': version.isForce }"
+2829 |       >
+2830 |         <div class="card-header">
+2831 |           <div class="version-info">
+2832 |             <div class="version-number">
+2833 |               <span class="version-text">v{{ version.version }}</span>
+2834 |               <el-tag v-if="version.isForce" type="danger" size="small">强制更新</el-tag>
+2835 |               <el-tag v-else type="success" size="small">可选更新</el-tag>
+2836 |             </div>
+2837 |             <div class="version-meta">
+2838 |               <span class="meta-item">
+2839 |                 <el-icon><Calendar /></el-icon>
+2840 |                 {{ version.updateTime }}
+2841 |               </span>
+2842 |               <span class="meta-item">
+2843 |                 <el-icon><Document /></el-icon>
+2844 |                 {{ version.packageSize }}
+2845 |               </span>
+2846 |             </div>
+2847 |           </div>
+2848 |           
+2849 |           <div class="card-actions">
+2850 |             <el-switch
+
+
+================================================================================
+                                 第 58 页（共 60 页）
+================================================================================
+
+2851 |               v-model="version.isForce"
+2852 |               active-text="强制"
+2853 |               inactive-text="可选"
+2854 |               @change="$emit('toggle-force', version)"
+2855 |             />
+2856 |             <el-button 
+2857 |               type="primary" 
+2858 |               size="small" 
+2859 |               @click="$emit('edit', version)"
+2860 |               link
+2861 |             >
+2862 |               <el-icon><Edit /></el-icon>
+2863 |               编辑
+2864 |             </el-button>
+2865 |             <el-button 
+2866 |               type="danger" 
+2867 |               size="small" 
+2868 |               @click="$emit('delete', version)"
+2869 |               link
+2870 |             >
+2871 |               <el-icon><Delete /></el-icon>
+2872 |               删除
+2873 |             </el-button>
+2874 |           </div>
+2875 |         </div>
+2876 | 
+2877 |         <div class="card-body">
+2878 |           <div class="update-content">
+2879 |             <div class="content-title">更新内容:</div>
+2880 |             <ul class="content-list">
+2881 |               <li v-for="(item, index) in version.updateContent" :key="index">
+2882 |                 {{ item }}
+2883 |               </li>
+2884 |             </ul>
+2885 |           </div>
+2886 | 
+2887 |           <div class="download-url">
+2888 |             <div class="url-label">下载地址:</div>
+2889 |             <el-input 
+2890 |               :model-value="version.downloadUrl" 
+2891 |               readonly
+2892 |               size="small"
+2893 |             >
+2894 |               <template #append>
+2895 |                 <el-button @click="copyUrl(version.downloadUrl)">
+2896 |                   <el-icon><CopyDocument /></el-icon>
+2897 |                   复制
+2898 |                 </el-button>
+2899 |               </template>
+2900 |             </el-input>
+
+
+================================================================================
+                                 第 59 页（共 60 页）
+================================================================================
+
+2901 |           </div>
+2902 |         </div>
+2903 |       </el-card>
+2904 |     </div>
+2905 |   </div>
+2906 | </template>
+2907 | 
+2908 | <script setup>
+2909 | import { Calendar, Document, Edit, Delete, CopyDocument } from '@element-plus/icons-vue'
+2910 | import { ElMessage } from 'element-plus'
+2911 | 
+2912 | defineProps({
+2913 |   versions: {
+2914 |     type: Array,
+2915 |     default: () => []
+2916 |   },
+2917 |   platform: {
+2918 |     type: String,
+2919 |     required: true
+2920 |   }
+2921 | })
+2922 | 
+2923 | defineEmits(['edit', 'delete', 'toggle-force'])
+2924 | 
+2925 | const copyUrl = (url) => {
+2926 |   navigator.clipboard.writeText(url).then(() => {
+2927 |     ElMessage.success('已复制到剪贴板')
+2928 |   }).catch(() => {
+2929 |     ElMessage.error('复制失败')
+2930 |   })
+2931 | }
+2932 | </script>
+2933 | 
+2934 | <style scoped>
+2935 | .version-list {
+2936 |   min-height: 400px;
+2937 | }
+2938 | 
+2939 | .version-cards {
+2940 |   display: grid;
+2941 |   gap: 16px;
+2942 | }
+2943 | 
+2944 | .version-card {
+2945 |   transition: all 0.3s;
+2946 | }
+2947 | 
+2948 | .version-card:hover {
+2949 |   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+2950 | }
+
+
+================================================================================
+                                 第 60 页（共 60 页）
+================================================================================
+
+2951 | 
+2952 | .version-card.is-force {
+2953 |   border-left: 4px solid #f56c6c;
+2954 | }
+2955 | 
+2956 | .card-header {
+2957 |   display: flex;
+2958 |   justify-content: space-between;
+2959 |   align-items: flex-start;
+2960 |   margin-bottom: 16px;
+2961 |   padding-bottom: 16px;
+2962 |   border-bottom: 1px solid #ebeef5;
+2963 | }
+2964 | 
+2965 | .version-info {
+2966 |   flex: 1;
+2967 | }
+2968 | 
+2969 | .version-number {
+2970 |   display: flex;
+2971 |   align-items: center;
+2972 |   gap: 8px;
+2973 |   margin-bottom: 8px;
+2974 | }
+2975 | 
+2976 | .version-text {
+2977 |   font-size: 20px;
+2978 |   font-weight: bold;
+2979 |   color: #303133;
+2980 | }
+2981 | 
+2982 | .version-meta {
+2983 |   display: flex;
+2984 |   gap: 16px;
+2985 |   font-size: 14px;
+2986 |   color: #909399;
+2987 | }
+2988 | 
+2989 | .meta-item {
+2990 |   display: flex;
+2991 |   align-items: center;
+2992 |   gap: 4px;
+2993 | }
+2994 | 
+2995 | .card-actions {
+2996 |   display: flex;
+2997 |   align-items: center;
+2998 |   gap: 8px;
+2999 | }
+3000 | 
+
