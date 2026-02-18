@@ -143,6 +143,34 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='安卓二维码表';
     `);
 
+    // 应用配置表
+    await query(`
+      CREATE TABLE IF NOT EXISTS app_config (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        config_key VARCHAR(100) UNIQUE NOT NULL COMMENT '配置键',
+        config_value TEXT COMMENT '配置值',
+        config_type VARCHAR(50) DEFAULT 'string' COMMENT '配置类型: string, boolean, number, json',
+        description VARCHAR(255) COMMENT '配置描述',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应用配置表';
+    `);
+
+    // 插入默认配置
+    await query(`
+      INSERT INTO app_config (config_key, config_value, config_type, description) 
+      VALUES 
+        ('show_ai_advisor', 'true', 'boolean', '是否显示AI财务顾问功能（全局默认）'),
+        ('show_ai_advisor_huawei', 'true', 'boolean', '华为应用市场是否显示AI财务顾问'),
+        ('show_ai_advisor_xiaomi', 'true', 'boolean', '小米应用商店是否显示AI财务顾问'),
+        ('show_ai_advisor_oppo', 'true', 'boolean', 'OPPO软件商店是否显示AI财务顾问'),
+        ('show_ai_advisor_vivo', 'true', 'boolean', 'vivo应用商店是否显示AI财务顾问'),
+        ('show_ai_advisor_honor', 'true', 'boolean', '荣耀应用市场是否显示AI财务顾问'),
+        ('show_ai_advisor_ios', 'true', 'boolean', 'iOS App Store是否显示AI财务顾问'),
+        ('show_ai_advisor_wechat', 'true', 'boolean', '微信小程序是否显示AI财务顾问')
+      ON DUPLICATE KEY UPDATE config_key=config_key;
+    `);
+
     console.log('✅ 数据库表初始化成功');
   } catch (error) {
     console.error('❌ 数据库表初始化失败:', error);

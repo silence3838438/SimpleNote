@@ -63,7 +63,8 @@ const routes = [
   { path: '/users', meta: { title: '用户管理', icon: 'User' } },
   { path: '/bills', meta: { title: '账单管理', icon: 'Tickets' } },
   { path: '/feedback', meta: { title: '意见反馈', icon: 'ChatDotRound' } },
-  { path: '/app-version', meta: { title: '版本管理', icon: 'Upload' } }
+  { path: '/app-version', meta: { title: '版本管理', icon: 'Upload' } },
+  { path: '/app-config', meta: { title: '配置管理', icon: 'Setting' } }
 ]
 
 const activeMenu = computed(() => route.path)

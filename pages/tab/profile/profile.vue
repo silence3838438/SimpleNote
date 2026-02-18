@@ -187,7 +187,7 @@
 				<!-- #endif -->
 				
 				<!-- AI财务顾问 -->
-				<view class="function-item" @click="goToAIChat">
+				<view class="function-item" v-if="data.appConfig.show_ai_advisor && data.userInfo.isLogin" @click="goToAIChat">
 					<view class="function-left">
 						<view class="function-icon ai-icon">
 							<text class="icon-text">🤖</text>
@@ -382,7 +382,11 @@ const data = reactive({
 		updateType: 'server',
 		markets: {}
 	},
-	appVersion: ''
+	appVersion: '',
+	// 应用配置
+	appConfig: {
+		show_ai_advisor: true // 默认显示AI财务顾问
+	}
 })
 
 // 获取今日积分（从云端获取）
@@ -1304,6 +1308,66 @@ const loadReminderTime = async () => {
 	}
 }
 
+// 加载应用配置
+const loadAppConfig = async () => {
+	try {
+		const res = await request.call('config/public', {}, 'GET')
+		if (res.success && res.data) {
+			// 默认配置
+			let showAiAdvisor = res.data.show_ai_advisor
+			
+			// #ifdef MP-WEIXIN
+			// 微信小程序
+			if (res.data.show_ai_advisor_wechat !== undefined) {
+				showAiAdvisor = res.data.show_ai_advisor_wechat
+			}
+			// #endif
+			
+			// #ifdef APP-PLUS
+			const systemInfo = uni.getSystemInfoSync()
+			const platform = systemInfo.platform || '' // ios 或 android
+			
+			if (platform === 'ios') {
+				// iOS平台
+				if (res.data.show_ai_advisor_ios !== undefined) {
+					showAiAdvisor = res.data.show_ai_advisor_ios
+				}
+			} else if (platform === 'android') {
+				// Android平台 - 根据设备品牌选择
+				const deviceBrand = (systemInfo.brand || '').toLowerCase()
+				
+				// 品牌映射
+				const brandMap = {
+					'huawei': 'show_ai_advisor_huawei',
+					'honor': 'show_ai_advisor_honor',
+					'xiaomi': 'show_ai_advisor_xiaomi',
+					'redmi': 'show_ai_advisor_xiaomi', // 红米使用小米配置
+					'oppo': 'show_ai_advisor_oppo',
+					'realme': 'show_ai_advisor_oppo', // realme使用OPPO配置
+					'oneplus': 'show_ai_advisor_oppo', // 一加使用OPPO配置
+					'vivo': 'show_ai_advisor_vivo',
+					'iqoo': 'show_ai_advisor_vivo' // iQOO使用vivo配置
+				}
+				
+				const configKey = brandMap[deviceBrand]
+				if (configKey && res.data[configKey] !== undefined) {
+					showAiAdvisor = res.data[configKey]
+				}
+			}
+			// #endif
+			
+			data.appConfig = {
+				...data.appConfig,
+				...res.data,
+				show_ai_advisor: showAiAdvisor // 使用平台/品牌特定配置覆盖
+			}
+		}
+	} catch (error) {
+		console.error('获取应用配置失败:', error)
+		// 失败时使用默认配置
+	}
+}
+
 // 获取APP版本号
 const getAppVersion = () => {
 	// #ifdef APP-PLUS
@@ -1314,6 +1378,7 @@ const getAppVersion = () => {
 
 onLoad(() => {
 	getSystemInfo()
+	loadAppConfig() // 加载应用配置
 	loadStats()
 	loadReminderTime()
 	loadBindingStatus()
@@ -1335,6 +1400,9 @@ onShow(() => {
 			isLogin: false
 		}
 	}
+	
+	// 重新加载应用配置（实时获取最新配置）
+	loadAppConfig()
 	
 	// 每次显示页面时静默刷新数据（不显示loading）
 	// 先显示本地缓存，然后在后台更新

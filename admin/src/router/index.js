@@ -40,6 +40,12 @@ const routes = [
         name: 'AppVersion',
         component: () => import('@/views/AppVersion.vue'),
         meta: { title: '版本管理', icon: 'Upload' }
+      },
+      {
+        path: 'app-config',
+        name: 'AppConfig',
+        component: () => import('@/views/AppConfig.vue'),
+        meta: { title: '配置管理', icon: 'Setting' }
       }
     ]
   }
