@@ -1,2471 +1,2999 @@
-// 钱哪去了智能记账系统 V1.0 源代码文档（后60页）
-// 开发者：[你的姓名]
-// 开发完成日期：2026年2月
+ 117      console.error('获取统计数据失败:', error);
+ 118      res.json({
+ 119        success: false,
+ 120        message: error.message || '获取统计数据失败'
+ 121      });
+ 122    }
+ 123  });
+ 124  
+ 125  // 获取用户增长趋势
+ 126  router.get('/stats/user-growth', async (req, res) => {
+ 127    try {
+ 128      const { days = 30 } = req.query;
+ 129      
+ 130      const result = await db.query(`
+ 131        SELECT 
+ 132          DATE(created_at) as day,
+ 133          COUNT(*) as count
+ 134        FROM users 
+ 135        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+ 136        GROUP BY DATE(created_at)
+ 137        ORDER BY day ASC
+ 138      `, [parseInt(days)]);
+ 139      
+ 140      res.json({
+ 141        success: true,
+ 142        data: result
+ 143      });
+ 144    } catch (error) {
+ 145      console.error('获取用户增长趋势失败:', error);
+ 146      res.json({
+ 147        success: false,
+ 148        message: error.message || '获取用户增长趋势失败'
+ 149      });
+ 150    }
+ 151  });
+ 152  
+ 153  // 获取收支统计
+ 154  router.get('/stats/income-expense', async (req, res) => {
+ 155    try {
+ 156      const { days = 7 } = req.query;
+ 157      
+ 158      const result = await db.query(`
+ 159        SELECT 
+ 160          DATE(date) as day,
+ 161          SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income,
+ 162          SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense
+ 163        FROM bills 
+ 164        WHERE date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+ 165        GROUP BY DATE(date)
+ 166        ORDER BY day ASC
+ 167      `, [parseInt(days)]);
+ 168      
+ 169      res.json({
+ 170        success: true,
+ 171        data: result
+ 172      });
+ 173    } catch (error) {
+ 174      console.error('获取收支统计失败:', error);
+ 175      res.json({
+ 176        success: false,
+ 177        message: error.message || '获取收支统计失败'
+ 178      });
+ 179    }
+ 180  });
+ 181  
+ 182  // 获取分类统计（去重）
+ 183  router.get('/stats/category', async (req, res) => {
+ 184    try {
+ 185      const result = await db.query(`
+ 186        SELECT 
+ 187          ANY_VALUE(category_name) as category_name,
+ 188          COUNT(*) as count,
+ 189          SUM(amount) as total
+ 190        FROM (
+ 191          SELECT 
+ 192            MIN(id) as id,
+ 193            ANY_VALUE(category_name) as category_name,
+ 194            ANY_VALUE(amount) as amount
+ 195          FROM bills 
+ 196          WHERE type = 'expense' AND category_name IS NOT NULL
+ 197          GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 198        ) as unique_bills
+ 199        GROUP BY category_name
+ 200        ORDER BY total DESC
+ 201        LIMIT 10
+ 202      `);
+ 203      
+ 204      res.json({
+ 205        success: true,
+ 206        data: result
+ 207      });
+ 208    } catch (error) {
+ 209      console.error('获取分类统计失败:', error);
+ 210      res.json({
+ 211        success: false,
+ 212        message: error.message || '获取分类统计失败'
+ 213      });
+ 214    }
+ 215  });
+ 216  
+ 217  // 获取数据趋势（最近7天的账单数量）- 去重
+ 218  router.get('/stats/trend', async (req, res) => {
+ 219    try {
+ 220      // 获取最近7天的去重账单数量统计
+ 221      const trendResult = await db.query(`
+ 222        SELECT 
+ 223          DATE(date) as day,
+ 224          COUNT(*) as count
+ 225        FROM (
+ 226          SELECT 
+ 227            MIN(id) as id,
+ 228            date
+ 229          FROM bills 
+ 230          WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+ 231          GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 232        ) as unique_bills
+ 233        GROUP BY DATE(date)
+ 234        ORDER BY day ASC
+ 235      `);
+ 236      
+ 237      // 生成最近7天的日期数组
+ 238      const days = [];
+ 239      const counts = [];
+ 240      const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+ 241      
+ 242      for (let i = 6; i >= 0; i--) {
+ 243        const date = new Date();
+ 244        date.setDate(date.getDate() - i);
+ 245        const dateStr = date.toISOString().split('T')[0];
+ 246        
+ 247        // 查找该日期的数据
+ 248        const dayData = trendResult.find(item => {
+ 249          const itemDate = new Date(item.day).toISOString().split('T')[0];
+ 250          return itemDate === dateStr;
+ 251        });
+ 252        
+ 253        days.push(dayNames[date.getDay()]);
+ 254        counts.push(dayData ? dayData.count : 0);
+ 255      }
+ 256      
+ 257      res.json({
+ 258        success: true,
+ 259        data: {
+ 260          days,
+ 261          counts
+ 262        }
+ 263      });
+ 264    } catch (error) {
+ 265      console.error('获取数据趋势失败:', error);
+ 266      res.json({
+ 267        success: false,
+ 268        message: error.message || '获取数据趋势失败'
+ 269      });
+ 270    }
+ 271  });
+ 272  
+ 273  // 获取用户列表
+ 274  router.get('/users', async (req, res) => {
+ 275    try {
+ 276      const { page = 1, pageSize = 10, nickname, phone, status, platform, source } = req.query;
+ 277      const offset = (page - 1) * pageSize;
+ 278      
+ 279      let whereClause = '1=1';
+ 280      const params = [];
+ 281      
+ 282      if (nickname) {
+ 283        whereClause += ' AND u.nickname LIKE ?';
+ 284        params.push(`%${nickname}%`);
+ 285      }
+ 286      
+ 287      if (phone) {
+ 288        whereClause += ' AND u.phone LIKE ?';
+ 289        params.push(`%${phone}%`);
+ 290      }
+ 291      
+ 292      if (platform) {
+ 293        whereClause += ' AND u.platform = ?';
+ 294        params.push(platform);
+ 295      }
+ 296      
+ 297      if (source) {
+ 298        whereClause += ' AND u.source = ?';
+ 299        params.push(source);
+ 300      }
+ 301      
+ 302      // 获取总数
+ 303      const countResult = await db.query(
+ 304        `SELECT COUNT(*) as count FROM users u WHERE ${whereClause}`,
+ 305        params
+ 306      );
+ 307      const total = countResult[0].count;
+ 308      
+ 309      // 获取列表（包含账单数、总金额、积分等信息）- 使用去重后的数据
+ 310      const list = await db.query(
+ 311        `SELECT 
+ 312          u.*,
+ 313          (
+ 314            SELECT COUNT(*) FROM (
+ 315              SELECT MIN(id) as id
+ 316              FROM bills b
+ 317              WHERE b.user_id = u.id
+ 318              GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 319            ) as unique_bills
+ 320          ) as bill_count,
+ 321          (
+ 322            SELECT COALESCE(SUM(amount), 0) FROM (
+ 323              SELECT ANY_VALUE(amount) as amount
+ 324              FROM bills b
+ 325              WHERE b.user_id = u.id AND b.type = 'expense'
+ 326              GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 327            ) as unique_expense
+ 328          ) as total_expense,
+ 329          (
+ 330            SELECT COALESCE(SUM(amount), 0) FROM (
+ 331              SELECT ANY_VALUE(amount) as amount
+ 332              FROM bills b
+ 333              WHERE b.user_id = u.id AND b.type = 'income'
+ 334              GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 335            ) as unique_income
+ 336          ) as total_income,
+ 337          COALESCE(p.points, 0) as points
+ 338        FROM users u
+ 339        LEFT JOIN user_points p ON u.id = p.user_id
+ 340        WHERE ${whereClause}
+ 341        ORDER BY u.created_at DESC 
+ 342        LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
+ 343        params
+ 344      );
+ 345      
+ 346      res.json({
+ 347        success: true,
+ 348        data: {
+ 349          list,
+ 350          total
+ 351        }
+ 352      });
+ 353    } catch (error) {
+ 354      console.error('获取用户列表失败:', error);
+ 355      res.json({
+ 356        success: false,
+ 357        message: error.message || '获取用户列表失败'
+ 358      });
+ 359    }
+ 360  });
+ 361  
+ 362  // 获取平台统计
+ 363  router.get('/stats/platform', async (req, res) => {
+ 364    try {
+ 365      const result = await db.query(`
+ 366        SELECT 
+ 367          platform,
+ 368          COUNT(*) as count
+ 369        FROM users 
+ 370        WHERE platform IS NOT NULL
+ 371        GROUP BY platform
+ 372        ORDER BY count DESC
+ 373      `);
+ 374      
+ 375      res.json({
+ 376        success: true,
+ 377        data: result
+ 378      });
+ 379    } catch (error) {
+ 380      console.error('获取平台统计失败:', error);
+ 381      res.json({
+ 382        success: false,
+ 383        message: error.message || '获取平台统计失败'
+ 384      });
+ 385    }
+ 386  });
+ 387  
+ 388  // 获取来源统计
+ 389  router.get('/stats/source', async (req, res) => {
+ 390    try {
+ 391      const result = await db.query(`
+ 392        SELECT 
+ 393          source,
+ 394          COUNT(*) as count
+ 395        FROM users 
+ 396        WHERE source IS NOT NULL
+ 397        GROUP BY source
+ 398        ORDER BY count DESC
+ 399      `);
+ 400      
+ 401      res.json({
+ 402        success: true,
+ 403        data: result
+ 404      });
+ 405    } catch (error) {
+ 406      console.error('获取来源统计失败:', error);
+ 407      res.json({
+ 408        success: false,
+ 409        message: error.message || '获取来源统计失败'
+ 410      });
+ 411    }
+ 412  });
+ 413  
+ 414  // 获取渠道统计
+ 415  router.get('/stats/channel', async (req, res) => {
+ 416    try {
+ 417      const result = await db.query(`
+ 418        SELECT 
+ 419          channel,
+ 420          COUNT(*) as count
+ 421        FROM users 
+ 422        WHERE channel IS NOT NULL AND channel != ''
+ 423        GROUP BY channel
+ 424        ORDER BY count DESC
+ 425        LIMIT 20
+ 426      `);
+ 427      
+ 428      res.json({
+ 429        success: true,
+ 430        data: result
+ 431      });
+ 432    } catch (error) {
+ 433      console.error('获取渠道统计失败:', error);
+ 434      res.json({
+ 435        success: false,
+ 436        message: error.message || '获取渠道统计失败'
+ 437      });
+ 438    }
+ 439  });
+ 440  
+ 441  // 获取用户详情
+ 442  router.get('/users/:id/detail', async (req, res) => {
+ 443    try {
+ 444      const { id } = req.params;
+ 445      const { page = 1, pageSize = 10 } = req.query;
+ 446      const offset = (parseInt(page) - 1) * parseInt(pageSize);
+ 447      
+ 448      // 用户基本信息
+ 449      const userResult = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+ 450      if (userResult.length === 0) {
+ 451        return res.json({ success: false, message: '用户不存在' });
+ 452      }
+ 453      const user = userResult[0];
+ 454      
+ 455      // bills 表的 user_id 存储的是用户的 id（数字），不是 openid
+ 456      const userIdentifier = id;
+ 457      
+ 458      // 使用 GROUP BY 去重，保留最小的 ID
+ 459      // 获取去重后的账单总数和统计
+ 460      const statsQuery = `
+ 461        SELECT 
+ 462          COUNT(*) as bill_count,
+ 463          COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense,
+ 464          COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income
+ 465        FROM (
+ 466          SELECT 
+ 467            MIN(id) as id,
+ 468            type,
+ 469            amount
+ 470          FROM bills 
+ 471          WHERE user_id = ?
+ 472          GROUP BY type, amount, COALESCE(merchant, ''), date, category_id, COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 473        ) as unique_bills
+ 474      `;
+ 475      
+ 476      const statsResult = await db.query(statsQuery, [userIdentifier]);
+ 477      const stats = {
+ 478        bill_count: statsResult[0].bill_count,
+ 479        total_expense: parseFloat(statsResult[0].total_expense).toFixed(2),
+ 480        total_income: parseFloat(statsResult[0].total_income).toFixed(2)
+ 481      };
+ 482      
+ 483      // 积分信息
+ 484      const pointsResult = await db.query('SELECT points FROM user_points WHERE user_id = ?', [id]);
+ 485      const points = pointsResult[0]?.points || 0;
+ 486      
+ 487      // 获取去重后的账单列表（分页）
+ 488      const safePageSize = parseInt(pageSize);
+ 489      const safeOffset = offset;
+ 490      const billsQuery = `
+ 491        SELECT 
+ 492          MIN(id) as id,
+ 493          ANY_VALUE(user_id) as user_id,
+ 494          type,
+ 495          amount,
+ 496          ANY_VALUE(merchant) as merchant,
+ 497          date,
+ 498          ANY_VALUE(category_id) as category_id,
+ 499          ANY_VALUE(category_name) as category_name,
+ 500          ANY_VALUE(note) as note,
+ 501          create_time,
+ 502          MAX(update_time) as update_time
+ 503        FROM bills 
+ 504        WHERE user_id = ?
+ 505        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 506        ORDER BY create_time DESC
+ 507        LIMIT ${safePageSize} OFFSET ${safeOffset}
+ 508      `;
+ 509      
+ 510      const recentBills = await db.query(billsQuery, [userIdentifier]);
+ 511      
+ 512      // 积分历史
+ 513      const pointsHistory = await db.query(
+ 514        'SELECT * FROM points_history WHERE user_id = ? ORDER BY create_time DESC LIMIT 10',
+ 515        [id]
+ 516      );
+ 517      
+ 518      res.json({
+ 519        success: true,
+ 520        data: {
+ 521          user,
+ 522          stats: {
+ 523            ...stats,
+ 524            points
+ 525          },
+ 526          recentBills,
+ 527          billTotal: stats.bill_count,
+ 528          billPage: parseInt(page),
+ 529          billPageSize: parseInt(pageSize),
+ 530          pointsHistory
+ 531        }
+ 532      });
+ 533    } catch (error) {
+ 534      console.error('获取用户详情失败:', error);
+ 535      res.json({
+ 536        success: false,
+ 537        message: error.message || '获取用户详情失败'
+ 538      });
+ 539    }
+ 540  });
+ 541  
+ 542  // 调整用户积分
+ 543  router.post('/users/:id/points', async (req, res) => {
+ 544    try {
+ 545      const { id } = req.params;
+ 546      const { points, reason } = req.body;
+ 547      
+ 548      if (!points || !reason) {
+ 549        return res.json({ success: false, message: '参数不完整' });
+ 550      }
+ 551      
+ 552      // 检查用户是否存在
+ 553      const userResult = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+ 554      if (userResult.length === 0) {
+ 555        return res.json({ success: false, message: '用户不存在' });
+ 556      }
+ 557      
+ 558      // 更新或插入积分
+ 559      await db.query(`
+ 560        INSERT INTO user_points (user_id, points) 
+ 561        VALUES (?, ?)
+ 562        ON DUPLICATE KEY UPDATE points = points + ?
+ 563      `, [id, points, points]);
+ 564      
+ 565      // 记录积分历史
+ 566      await db.query(
+ 567        'INSERT INTO points_history (user_id, points, reason) VALUES (?, ?, ?)',
+ 568        [id, points, reason]
+ 569      );
+ 570      
+ 571      res.json({
+ 572        success: true,
+ 573        message: '积分调整成功'
+ 574      });
+ 575    } catch (error) {
+ 576      console.error('调整积分失败:', error);
+ 577      res.json({
+ 578        success: false,
+ 579        message: error.message || '调整积分失败'
+ 580      });
+ 581    }
+ 582  });
+ 583  
+ 584  // 导出用户数据
+ 585  router.get('/users/export', async (req, res) => {
+ 586    try {
+ 587      const users = await db.query(`
+ 588        SELECT 
+ 589          u.id,
+ 590          u.nickname,
+ 591          u.phone,
+ 592          u.created_at,
+ 593          COUNT(DISTINCT b.id) as bill_count,
+ 594          COALESCE(SUM(CASE WHEN b.type = 'expense' THEN b.amount ELSE 0 END), 0) as total_expense,
+ 595          COALESCE(p.points, 0) as points
+ 596        FROM users u
+ 597        LEFT JOIN bills b ON u.id = b.user_id
+ 598        LEFT JOIN user_points p ON u.id = p.user_id
+ 599        GROUP BY u.id
+ 600        ORDER BY u.created_at DESC
+ 601      `);
+ 602      
+ 603      res.json({
+ 604        success: true,
+ 605        data: users
+ 606      });
+ 607    } catch (error) {
+ 608      console.error('导出用户数据失败:', error);
+ 609      res.json({
+ 610        success: false,
+ 611        message: error.message || '导出用户数据失败'
+ 612      });
+ 613    }
+ 614  });
+ 615  
+ 616  // 重置用户密码
+ 617  router.post('/users/:id/reset-password', async (req, res) => {
+ 618    try {
+ 619      const { id } = req.params;
+ 620      
+ 621      // 检查用户是否存在
+ 622      const userResult = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+ 623      if (userResult.length === 0) {
+ 624        return res.json({ success: false, message: '用户不存在' });
+ 625      }
+ 626      
+ 627      // 生成随机密码（6位数字）
+ 628      const newPassword = Math.floor(100000 + Math.random() * 900000).toString();
+ 629      
+ 630      // 加密新密码
+ 631      const bcrypt = require('bcryptjs');
+ 632      const hashedPassword = await bcrypt.hash(newPassword, 10);
+ 633      
+ 634      // 更新密码
+ 635      await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, id]);
+ 636      
+ 637      res.json({
+ 638        success: true,
+ 639        message: '密码重置成功',
+ 640        newPassword: newPassword // 返回明文密码（仅此一次）
+ 641      });
+ 642    } catch (error) {
+ 643      console.error('重置密码失败:', error);
+ 644      res.json({
+ 645        success: false,
+ 646        message: error.message || '重置密码失败'
+ 647      });
+ 648    }
+ 649  });
+ 650  
+ 651  // 删除用户
+ 652  router.delete('/users/:id', async (req, res) => {
+ 653    try {
+ 654      const { id } = req.params;
+ 655      
+ 656      // 删除用户的所有账单
+ 657      await db.query('DELETE FROM bills WHERE user_id = ?', [id]);
+ 658      
+ 659      // 删除用户
+ 660      await db.query('DELETE FROM users WHERE id = ?', [id]);
+ 661      
+ 662      res.json({
+ 663        success: true,
+ 664        message: '删除成功'
+ 665      });
+ 666    } catch (error) {
+ 667      console.error('删除用户失败:', error);
+ 668      res.json({
+ 669        success: false,
+ 670        message: error.message || '删除用户失败'
+ 671      });
+ 672    }
+ 673  });
+ 674  
+ 675  // 获取账单列表（去重）
+ 676  router.get('/bills', async (req, res) => {
+ 677    try {
+ 678      const { 
+ 679        page = 1, 
+ 680        pageSize = 10, 
+ 681        userId, 
+ 682        category, 
+ 683        type,
+ 684        startDate,
+ 685        endDate,
+ 686        minAmount,
+ 687        maxAmount
+ 688      } = req.query;
+ 689      const offset = (page - 1) * pageSize;
+ 690      
+ 691      let whereClause = '1=1';
+ 692      const params = [];
+ 693      
+ 694      if (userId) {
+ 695        whereClause += ' AND user_id = ?';
+ 696        params.push(userId);
+ 697      }
+ 698      
+ 699      if (category) {
+ 700        whereClause += ' AND category_name = ?';
+ 701        params.push(category);
+ 702      }
+ 703      
+ 704      if (type) {
+ 705        whereClause += ' AND type = ?';
+ 706        params.push(type);
+ 707      }
+ 708      
+ 709      if (startDate) {
+ 710        whereClause += ' AND date >= ?';
+ 711        params.push(startDate);
+ 712      }
+ 713      
+ 714      if (endDate) {
+ 715        whereClause += ' AND date <= ?';
+ 716        params.push(endDate);
+ 717      }
+ 718      
+ 719      if (minAmount) {
+ 720        whereClause += ' AND amount >= ?';
+ 721        params.push(parseFloat(minAmount));
+ 722      }
+ 723      
+ 724      if (maxAmount) {
+ 725        whereClause += ' AND amount <= ?';
+ 726        params.push(parseFloat(maxAmount));
+ 727      }
+ 728      
+ 729      // 获取去重后的总数
+ 730      const countResult = await db.query(
+ 731        `SELECT COUNT(*) as count FROM (
+ 732          SELECT MIN(id) as id
+ 733          FROM bills 
+ 734          WHERE ${whereClause}
+ 735          GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 736        ) as unique_bills`,
+ 737        params
+ 738      );
+ 739      const total = countResult[0].count;
+ 740      
+ 741      // 获取去重后的列表
+ 742      const list = await db.query(
+ 743        `SELECT 
+ 744          MIN(id) as id,
+ 745          ANY_VALUE(user_id) as user_id,
+ 746          type,
+ 747          amount,
+ 748          ANY_VALUE(merchant) as merchant,
+ 749          date,
+ 750          ANY_VALUE(category_id) as category_id,
+ 751          ANY_VALUE(category_name) as category_name,
+ 752          ANY_VALUE(note) as note,
+ 753          create_time,
+ 754          MAX(update_time) as update_time
+ 755        FROM bills 
+ 756        WHERE ${whereClause}
+ 757        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 758        ORDER BY create_time DESC 
+ 759        LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
+ 760        params
+ 761      );
+ 762      
+ 763      res.json({
+ 764        success: true,
+ 765        data: {
+ 766          list,
+ 767          total
+ 768        }
+ 769      });
+ 770    } catch (error) {
+ 771      console.error('获取账单列表失败:', error);
+ 772      res.json({
+ 773        success: false,
+ 774        message: error.message || '获取账单列表失败'
+ 775      });
+ 776    }
+ 777  });
+ 778  
+ 779  // 获取账单详情
+ 780  router.get('/bills/:id/detail', async (req, res) => {
+ 781    try {
+ 782      const { id } = req.params;
+ 783      
+ 784      // 账单信息
+ 785      const billResult = await db.query('SELECT * FROM bills WHERE id = ?', [id]);
+ 786      if (billResult.length === 0) {
+ 787        return res.json({ success: false, message: '账单不存在' });
+ 788      }
+ 789      const bill = billResult[0];
+ 790      
+ 791      // 用户信息
+ 792      const userResult = await db.query('SELECT id, nickname, phone FROM users WHERE id = ?', [bill.user_id]);
+ 793      const user = userResult[0] || null;
+ 794      
+ 795      res.json({
+ 796        success: true,
+ 797        data: {
+ 798          bill,
+ 799          user
+ 800        }
+ 801      });
+ 802    } catch (error) {
+ 803      console.error('获取账单详情失败:', error);
+ 804      res.json({
+ 805        success: false,
+ 806        message: error.message || '获取账单详情失败'
+ 807      });
+ 808    }
+ 809  });
+ 810  
+ 811  // 导出账单数据（去重）
+ 812  router.get('/bills/export', async (req, res) => {
+ 813    try {
+ 814      const { 
+ 815        userId, 
+ 816        category, 
+ 817        type,
+ 818        startDate,
+ 819        endDate
+ 820      } = req.query;
+ 821      
+ 822      let whereClause = '1=1';
+ 823      const params = [];
+ 824      
+ 825      if (userId) {
+ 826        whereClause += ' AND user_id = ?';
+ 827        params.push(userId);
+ 828      }
+ 829      
+ 830      if (category) {
+ 831        whereClause += ' AND category_name = ?';
+ 832        params.push(category);
+ 833      }
+ 834      
+ 835      if (type) {
+ 836        whereClause += ' AND type = ?';
+ 837        params.push(type);
+ 838      }
+ 839      
+ 840      if (startDate) {
+ 841        whereClause += ' AND date >= ?';
+ 842        params.push(startDate);
+ 843      }
+ 844      
+ 845      if (endDate) {
+ 846        whereClause += ' AND date <= ?';
+ 847        params.push(endDate);
+ 848      }
+ 849      
+ 850      // 导出去重后的账单
+ 851      const bills = await db.query(
+ 852        `SELECT 
+ 853          MIN(id) as id,
+ 854          ANY_VALUE(user_id) as user_id,
+ 855          type,
+ 856          amount,
+ 857          ANY_VALUE(merchant) as merchant,
+ 858          date,
+ 859          ANY_VALUE(category_id) as category_id,
+ 860          ANY_VALUE(category_name) as category_name,
+ 861          ANY_VALUE(note) as note,
+ 862          create_time,
+ 863          MAX(update_time) as update_time
+ 864        FROM bills 
+ 865        WHERE ${whereClause}
+ 866        GROUP BY type, amount, COALESCE(merchant, ''), date, COALESCE(category_id, 0), COALESCE(category_name, ''), COALESCE(note, ''), create_time
+ 867        ORDER BY create_time DESC 
+ 868        LIMIT 10000`,
+ 869        params
+ 870      );
+ 871      
+ 872      res.json({
+ 873        success: true,
+ 874        data: bills
+ 875      });
+ 876    } catch (error) {
+ 877      console.error('导出账单数据失败:', error);
+ 878      res.json({
+ 879        success: false,
+ 880        message: error.message || '导出账单数据失败'
+ 881      });
+ 882    }
+ 883  });
+ 884  
+ 885  // 删除账单
+ 886  router.delete('/bills/:id', async (req, res) => {
+ 887    try {
+ 888      const { id } = req.params;
+ 889      
+ 890      await db.query('DELETE FROM bills WHERE id = ?', [id]);
+ 891      
+ 892      res.json({
+ 893        success: true,
+ 894        message: '删除成功'
+ 895      });
+ 896    } catch (error) {
+ 897      console.error('删除账单失败:', error);
+ 898      res.json({
+ 899        success: false,
+ 900        message: error.message || '删除账单失败'
+ 901      });
+ 902    }
+ 903  });
+ 904  
+ 905  // 获取系统日志
+ 906  router.get('/logs', async (req, res) => {
+ 907    try {
+ 908      const { page = 1, pageSize = 10 } = req.query;
+ 909      const offset = (page - 1) * pageSize;
+ 910      const limit = parseInt(pageSize);
+ 911      
+ 912      // 检查logs表是否存在
+ 913      try {
+ 914        const countResult = await db.query('SELECT COUNT(*) as count FROM logs');
+ 915        const total = countResult[0]?.count || 0;
+ 916        
+ 917        // 注意：MySQL不支持OFFSET使用占位符，需要直接拼接
+ 918        const list = await db.query(
+ 919          `SELECT * FROM logs ORDER BY create_time DESC LIMIT ${limit} OFFSET ${offset}`
+ 920        );
+ 921        
+ 922        res.json({
+ 923          success: true,
+ 924          data: {
+ 925            list,
+ 926            total
+ 927          }
+ 928        });
+ 929      } catch (tableError) {
+ 930        // 如果logs表不存在，返回空数据
+ 931        console.error('[日志查询] 表查询错误:', tableError.message);
+ 932        res.json({
+ 933          success: true,
+ 934          data: {
+ 935            list: [],
+ 936            total: 0
+ 937          }
+ 938        });
+ 939      }
+ 940    } catch (error) {
+ 941      console.error('[日志查询] 外层错误:', error);
+ 942      res.json({
+ 943        success: true,
+ 944        data: {
+ 945          list: [],
+ 946          total: 0
+ 947        }
+ 948      });
+ 949    }
+ 950  });
+ 951  
+ 952  // ========== 积分系统管理 ==========
+ 953  
+ 954  // 获取用户积分列表
+ 955  router.get('/points/users', async (req, res) => {
+ 956    try {
+ 957      const { page = 1, pageSize = 10, nickname } = req.query;
+ 958      const offset = (page - 1) * pageSize;
+ 959      
+ 960      let whereClause = '1=1';
+ 961      const params = [];
+ 962      
+ 963      if (nickname) {
+ 964        whereClause += ' AND u.nickname LIKE ?';
+ 965        params.push(`%${nickname}%`);
+ 966      }
+ 967      
+ 968      // 获取总数
+ 969      const countResult = await db.query(
+ 970        `SELECT COUNT(*) as count FROM users u WHERE ${whereClause}`,
+ 971        params
+ 972      );
+ 973      const total = countResult[0].count;
+ 974      
+ 975      // 获取列表
+ 976      const list = await db.query(
+ 977        `SELECT 
+ 978          u.id,
+ 979          u.nickname,
+ 980          u.phone,
+ 981          COALESCE(p.points, 0) as points,
+ 982          COALESCE(SUM(ph.points), 0) as total_earned
+ 983        FROM users u
+ 984        LEFT JOIN user_points p ON u.id = p.user_id
+ 985        LEFT JOIN points_history ph ON u.id = ph.user_id AND ph.points > 0
+ 986        WHERE ${whereClause}
+ 987        GROUP BY u.id
+ 988        ORDER BY p.points DESC
+ 989        LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
+ 990        params
+ 991      );
+ 992      
+ 993      res.json({
+ 994        success: true,
+ 995        data: {
+ 996          list,
+ 997          total
+ 998        }
+ 999      });
+1000    } catch (error) {
+1001      console.error('获取用户积分列表失败:', error);
+1002      res.json({
+1003        success: false,
+1004        message: error.message || '获取用户积分列表失败'
+1005      });
+1006    }
+1007  });
+1008  
+1009  // 获取积分发放记录
+1010  router.get('/points/history', async (req, res) => {
+1011    try {
+1012      const { page = 1, pageSize = 10, userId } = req.query;
+1013      const offset = (page - 1) * pageSize;
+1014      
+1015      let whereClause = '1=1';
+1016      const params = [];
+1017      
+1018      if (userId) {
+1019        whereClause += ' AND ph.user_id = ?';
+1020        params.push(userId);
+1021      }
+1022      
+1023      // 获取总数
+1024      const countResult = await db.query(
+1025        `SELECT COUNT(*) as count FROM points_history ph WHERE ${whereClause}`,
+1026        params
+1027      );
+1028      const total = countResult[0].count;
+1029      
+1030      // 获取列表
+1031      const list = await db.query(
+1032        `SELECT 
+1033          ph.*,
+1034          u.nickname,
+1035          u.phone
+1036        FROM points_history ph
+1037        LEFT JOIN users u ON ph.user_id = u.id
+1038        WHERE ${whereClause}
+1039        ORDER BY ph.create_time DESC
+1040        LIMIT ${parseInt(pageSize)} OFFSET ${offset}`,
+1041        params
+1042      );
+1043      
+1044      res.json({
+1045        success: true,
+1046        data: {
+1047          list,
+1048          total
+1049        }
+1050      });
+1051    } catch (error) {
+1052      console.error('获取积分历史失败:', error);
+1053      res.json({
+1054        success: false,
+1055        message: error.message || '获取积分历史失败'
+1056      });
+1057    }
+1058  });
+1059  
+1060  // 手动调整积分
+1061  router.post('/points/adjust', async (req, res) => {
+1062    try {
+1063      const { userId, points, reason } = req.body;
+1064      
+1065      if (!userId || !points || !reason) {
+1066        return res.json({ success: false, message: '参数不完整' });
+1067      }
+1068      
+1069      // 检查用户是否存在
+1070      const userResult = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+1071      if (userResult.length === 0) {
+1072        return res.json({ success: false, message: '用户不存在' });
+1073      }
+1074      
+1075      // 更新或插入积分
+1076      await db.query(`
+1077        INSERT INTO user_points (user_id, points) 
+1078        VALUES (?, ?)
+1079        ON DUPLICATE KEY UPDATE points = points + ?
+1080      `, [userId, points, points]);
+1081      
+1082      // 记录积分历史
+1083      await db.query(
+1084        'INSERT INTO points_history (user_id, points, reason) VALUES (?, ?, ?)',
+1085        [userId, points, reason]
+1086      );
+1087      
+1088      res.json({
+1089        success: true,
+1090        message: '积分调整成功'
+1091      });
+1092    } catch (error) {
+1093      console.error('调整积分失败:', error);
+1094      res.json({
+1095        success: false,
+1096        message: error.message || '调整积分失败'
+1097      });
+1098    }
+1099  });
+1100  
+1101  // 获取意见反馈列表
+1102  router.get('/feedback', async (req, res) => {
+1103    try {
+1104      const { page = 1, pageSize = 20 } = req.query;
+1105      const limit = parseInt(pageSize);
+1106      const offset = (parseInt(page) - 1) * limit;
+1107      
+1108      // 获取反馈列表
+1109      const feedbackList = await db.query(
+1110        `SELECT id, user_id, content, images, user_info, created_at 
+1111         FROM feedback 
+1112         ORDER BY created_at DESC 
+1113         LIMIT ${limit} OFFSET ${offset}`
+1114      );
+1115      
+1116      // 获取总数
+1117      const countResult = await db.query('SELECT COUNT(*) as total FROM feedback');
+1118      
+1119      // 处理数据
+1120      const processedList = feedbackList.map(item => {
+1121        let images = [];
+1122        let userInfo = null;
+1123        
+1124        try {
+1125          if (item.images) {
+1126            const imagesStr = typeof item.images === 'string' ? item.images : item.images.toString();
+1127            if (imagesStr.trim()) {
+1128              images = JSON.parse(imagesStr);
+1129            }
+1130          }
+1131        } catch (e) {
+1132          console.error('解析images失败:', e);
+1133        }
+1134        
+1135        try {
+1136          if (item.user_info) {
+1137            const userInfoStr = typeof item.user_info === 'string' ? item.user_info : item.user_info.toString();
+1138            if (userInfoStr.trim()) {
+1139              userInfo = JSON.parse(userInfoStr);
+1140            }
+1141          }
+1142        } catch (e) {
+1143          console.error('解析user_info失败:', e);
+1144        }
+1145        
+1146        return {
+1147          ...item,
+1148          images,
+1149          user_info: userInfo
+1150        };
+1151      });
+1152      
+1153      res.json({
+1154        success: true,
+1155        data: processedList,
+1156        total: countResult[0].total,
+1157        page: parseInt(page),
+1158        pageSize: limit
+1159      });
+1160    } catch (error) {
+1161      console.error('获取反馈列表失败:', error);
+1162      res.json({
+1163        success: false,
+1164        message: error.message || '获取反馈列表失败'
+1165      });
+1166    }
+1167  });
+1168  
+1169  // 删除反馈
+1170  router.delete('/feedback/:id', async (req, res) => {
+1171    try {
+1172      const { id } = req.params;
+1173      
+1174      await db.query('DELETE FROM feedback WHERE id = ?', [id]);
+1175      
+1176      res.json({
+1177        success: true,
+1178        message: '删除成功'
+1179      });
+1180    } catch (error) {
+1181      console.error('删除反馈失败:', error);
+1182      res.json({
+1183        success: false,
+1184        message: error.message || '删除反馈失败'
+1185      });
+1186    }
+1187  });
+1188  
+1189  // ========== APP版本管理 ==========
+1190  
+1191  // 获取版本列表
+1192  router.get('/app-versions', async (req, res) => {
+1193    try {
+1194      const versions = await db.query(`
+1195        SELECT 
+1196          id,
+1197          platform,
+1198          version,
+1199          update_content as updateContent,
+1200          package_size as packageSize,
+1201          download_url as downloadUrl,
+1202          is_force as isForce,
+1203          DATE_FORMAT(update_time, '%Y-%m-%d') as updateTime,
+1204          created_at
+1205        FROM app_versions
+1206        ORDER BY created_at DESC
+1207      `);
+1208      
+1209      // 解析JSON字段
+1210      const processedVersions = versions.map(v => ({
+1211        ...v,
+1212        updateContent: typeof v.updateContent === 'string' ? JSON.parse(v.updateContent) : v.updateContent,
+1213        isForce: Boolean(v.isForce)
+1214      }));
+1215      
+1216      res.json({
+1217        success: true,
+1218        data: processedVersions
+1219      });
+1220    } catch (error) {
+1221      console.error('获取版本列表失败:', error);
+1222      res.json({
+1223        success: false,
+1224        message: error.message || '获取版本列表失败'
+1225      });
+1226    }
+1227  });
+1228  
+1229  // 创建新版本
+1230  router.post('/app-versions', async (req, res) => {
+1231    try {
+1232      const { platform, version, updateContent, packageSize, downloadUrl, isForce } = req.body;
+1233      
+1234      if (!platform || !version || !updateContent || !packageSize || !downloadUrl) {
+1235        return res.json({
+1236          success: false,
+1237          message: '参数不完整'
+1238        });
+1239      }
+1240      
+1241      // 检查版本号是否已存在
+1242      const existing = await db.query(
+1243        'SELECT id FROM app_versions WHERE platform = ? AND version = ?',
+1244        [platform, version]
+1245      );
+1246      
+1247      if (existing.length > 0) {
+1248        return res.json({
+1249          success: false,
+1250          message: '该版本号已存在'
+1251        });
+1252      }
+1253      
+1254      await db.query(
+1255        `INSERT INTO app_versions 
+1256         (platform, version, update_content, package_size, download_url, is_force, update_time) 
+1257         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+1258        [platform, version, JSON.stringify(updateContent), packageSize, downloadUrl, isForce ? 1 : 0]
+1259      );
+1260      
+1261      res.json({
+1262        success: true,
+1263        message: '发布成功'
+1264      });
+1265    } catch (error) {
+1266      console.error('创建版本失败:', error);
+1267      res.json({
+1268        success: false,
+1269        message: error.message || '创建版本失败'
+1270      });
+1271    }
+1272  });
+1273  
+1274  // 更新版本
+1275  router.put('/app-versions/:id', async (req, res) => {
+1276    try {
+1277      const { id } = req.params;
+1278      const { version, updateContent, packageSize, downloadUrl, isForce } = req.body;
+1279      
+1280      if (!version || !updateContent || !packageSize || !downloadUrl) {
+1281        return res.json({
+1282          success: false,
+1283          message: '参数不完整'
+1284        });
+1285      }
+1286      
+1287      await db.query(
+1288        `UPDATE app_versions 
+1289         SET version = ?, update_content = ?, package_size = ?, download_url = ?, is_force = ?, update_time = NOW()
+1290         WHERE id = ?`,
+1291        [version, JSON.stringify(updateContent), packageSize, downloadUrl, isForce ? 1 : 0, id]
+1292      );
+1293      
+1294      res.json({
+1295        success: true,
+1296        message: '更新成功'
+1297      });
+1298    } catch (error) {
+1299      console.error('更新版本失败:', error);
+1300      res.json({
+1301        success: false,
+1302        message: error.message || '更新版本失败'
+1303      });
+1304    }
+1305  });
+1306  
+1307  // 删除版本
+1308  router.delete('/app-versions/:id', async (req, res) => {
+1309    try {
+1310      const { id } = req.params;
+1311      
+1312      await db.query('DELETE FROM app_versions WHERE id = ?', [id]);
+1313      
+1314      res.json({
+1315        success: true,
+1316        message: '删除成功'
+1317      });
+1318    } catch (error) {
+1319      console.error('删除版本失败:', error);
+1320      res.json({
+1321        success: false,
+1322        message: error.message || '删除版本失败'
+1323      });
+1324    }
+1325  });
+1326  
+1327  // 切换强制更新
+1328  router.put('/app-versions/:id/force', async (req, res) => {
+1329    try {
+1330      const { id } = req.params;
+1331      const { isForce } = req.body;
+1332      
+1333      await db.query(
+1334        'UPDATE app_versions SET is_force = ? WHERE id = ?',
+1335        [isForce ? 1 : 0, id]
+1336      );
+1337      
+1338      res.json({
+1339        success: true,
+1340        message: '更新成功'
+1341      });
+1342    } catch (error) {
+1343      console.error('切换强制更新失败:', error);
+1344      res.json({
+1345        success: false,
+1346        message: error.message || '切换强制更新失败'
+1347      });
+1348    }
+1349  });
+1350  
+1351  // 上传APK文件
+1352  router.post('/upload-apk', async (req, res) => {
+1353    try {
+1354      const multer = require('multer');
+1355      const path = require('path');
+1356      const fs = require('fs');
+1357      
+1358      // 确保上传目录存在
+1359      const uploadDir = path.join(__dirname, '../uploads/apk');
+1360      if (!fs.existsSync(uploadDir)) {
+1361        fs.mkdirSync(uploadDir, { recursive: true });
+1362      }
+1363      
+1364      // 配置multer
+1365      const storage = multer.diskStorage({
+1366        destination: function (req, file, cb) {
+1367          cb(null, uploadDir);
+1368        },
+1369        filename: function (req, file, cb) {
+1370          const timestamp = Date.now();
+1371          const ext = path.extname(file.originalname);
+1372          cb(null, `qiannaqule-${timestamp}${ext}`);
+1373        }
+1374      });
+1375      
+1376      const upload = multer({
+1377        storage: storage,
+1378        limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+1379        fileFilter: function (req, file, cb) {
+1380          if (path.extname(file.originalname).toLowerCase() === '.apk') {
+1381            cb(null, true);
+1382          } else {
+1383            cb(new Error('只能上传APK文件'));
+1384          }
+1385        }
+1386      }).single('file');
+1387      
+1388      upload(req, res, function (err) {
+1389        if (err) {
+1390          return res.json({
+1391            success: false,
+1392            message: err.message || '上传失败'
+1393          });
+1394        }
+1395        
+1396        if (!req.file) {
+1397          return res.json({
+1398            success: false,
+1399            message: '没有文件上传'
+1400          });
+1401        }
+1402        
+1403        // 计算文件大小
+1404        const fileSizeInMB = (req.file.size / (1024 * 1024)).toFixed(2);
+1405        
+1406        res.json({
+1407          success: true,
+1408          url: `https://api.qiannaqule.top/uploads/apk/${req.file.filename}`,
+1409          size: `${fileSizeInMB}MB`,
+1410          message: '上传成功'
+1411        });
+1412      });
+1413    } catch (error) {
+1414      console.error('上传APK失败:', error);
+1415      res.json({
+1416        success: false,
+1417        message: error.message || '上传APK失败'
+1418      });
+1419    }
+1420  });
+1421  
+1422  // ========== 安卓二维码管理 ==========
+1423  
+1424  // 上传安卓二维码
+1425  router.post('/upload-android-qrcode', async (req, res) => {
+1426    try {
+1427      const multer = require('multer');
+1428      const path = require('path');
+1429      const fs = require('fs');
+1430      
+1431      // 确保上传目录存在
+1432      const uploadDir = path.join(__dirname, '../uploads/qrcode');
+1433      if (!fs.existsSync(uploadDir)) {
+1434        fs.mkdirSync(uploadDir, { recursive: true });
+1435      }
+1436      
+1437      // 配置multer
+1438      const storage = multer.diskStorage({
+1439        destination: function (req, file, cb) {
+1440          cb(null, uploadDir);
+1441        },
+1442        filename: function (req, file, cb) {
+1443          const timestamp = Date.now();
+1444          const ext = path.extname(file.originalname);
+1445          cb(null, `android-qrcode-${timestamp}${ext}`);
+1446        }
+1447      });
+1448      
+1449      const upload = multer({
+1450        storage: storage,
+1451        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+1452        fileFilter: function (req, file, cb) {
+1453          const ext = path.extname(file.originalname).toLowerCase();
+1454          if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+1455            cb(null, true);
+1456          } else {
+1457            cb(new Error('只能上传JPG或PNG图片'));
+1458          }
+1459        }
+1460      }).single('file');
+1461      
+1462      upload(req, res, async function (err) {
+1463        if (err) {
+1464          return res.json({
+1465            success: false,
+1466            message: err.message || '上传失败'
+1467          });
+1468        }
+1469        
+1470        if (!req.file) {
+1471          return res.json({
+1472            success: false,
+1473            message: '没有文件上传'
+1474          });
+1475        }
+1476        
+1477        const qrcodeUrl = `https://api.qiannaqule.top/uploads/qrcode/${req.file.filename}`;
+1478        
+1479        // 保存到数据库
+1480        try {
+1481          // 先检查是否已有记录
+1482          const existing = await db.query('SELECT id FROM android_qrcode LIMIT 1');
+1483          
+1484          if (existing.length > 0) {
+1485            // 更新现有记录
+1486            await db.query(
+1487              'UPDATE android_qrcode SET qrcode_url = ?, updated_at = NOW() WHERE id = ?',
+1488              [qrcodeUrl, existing[0].id]
+1489            );
+1490          } else {
+1491            // 插入新记录
+1492            await db.query(
+1493              'INSERT INTO android_qrcode (qrcode_url, created_at, updated_at) VALUES (?, NOW(), NOW())',
+1494              [qrcodeUrl]
+1495            );
+1496          }
+1497          
+1498          res.json({
+1499            success: true,
+1500            url: qrcodeUrl,
+1501            message: '上传成功'
+1502          });
+1503        } catch (dbError) {
+1504          console.error('保存二维码URL失败:', dbError);
+1505          res.json({
+1506            success: false,
+1507            message: '保存失败'
+1508          });
+1509        }
+1510      });
+1511    } catch (error) {
+1512      console.error('上传安卓二维码失败:', error);
+1513      res.json({
+1514        success: false,
+1515        message: error.message || '上传失败'
+1516      });
+1517    }
+1518  });
+1519  
+1520  // 获取安卓二维码
+1521  router.get('/android-qrcode', async (req, res) => {
+1522    try {
+1523      const result = await db.query('SELECT qrcode_url as qrcodeUrl FROM android_qrcode ORDER BY updated_at DESC LIMIT 1');
+1524      
+1525      if (result.length > 0) {
+1526        res.json({
+1527          success: true,
+1528          data: {
+1529            qrcodeUrl: result[0].qrcodeUrl
+1530          }
+1531        });
+1532      } else {
+1533        res.json({
+1534          success: true,
+1535          data: {
+1536            qrcodeUrl: null
+1537          }
+1538        });
+1539      }
+1540    } catch (error) {
+1541      console.error('获取安卓二维码失败:', error);
+1542      res.json({
+1543        success: false,
+1544        message: error.message || '获取失败'
+1545      });
+1546    }
+1547  });
+1548  
+1549  module.exports = router;
+1550  
+
+
+// 文件: backend/middleware/auth.js
+// 共 83 行
+
+   1  const jwt = require('jsonwebtoken');
+   2  
+   3  /**
+   4   * JWT 认证中间件
+   5   * 从 Authorization header 中解析 token，验证并提取 userId
+   6   */
+   7  const authMiddleware = (req, res, next) => {
+   8    try {
+   9      // 从 header 中获取 token
+  10      const authHeader = req.headers.authorization;
+  11      
+  12      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  13        return res.status(401).json({
+  14          success: false,
+  15          message: '未提供认证令牌'
+  16        });
+  17      }
+  18      
+  19      // 提取 token
+  20      const token = authHeader.replace('Bearer ', '');
+  21      
+  22      // 验证 token
+  23      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+  24      
+  25      // 将 userId 添加到 request 对象
+  26      req.userId = decoded.userId;
+  27      req.openid = decoded.openid;
+  28      
+  29      next();
+  30    } catch (error) {
+  31      console.error('Token 验证失败:', error.message);
+  32      
+  33      if (error.name === 'TokenExpiredError') {
+  34        return res.status(401).json({
+  35          success: false,
+  36          message: '认证令牌已过期，请重新登录'
+  37        });
+  38      }
+  39      
+  40      return res.status(401).json({
+  41        success: false,
+  42        message: '无效的认证令牌'
+  43      });
+  44    }
+  45  };
+  46  
+  47  /**
+  48   * 可选的 JWT 认证中间件
+  49   * 如果有 token 则验证并提取用户信息，没有 token 则继续执行（允许匿名访问）
+  50   */
+  51  const optionalAuthMiddleware = (req, res, next) => {
+  52    try {
+  53      const authHeader = req.headers.authorization;
+  54      
+  55      // 没有 token，允许继续（匿名访问）
+  56      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  57        req.userId = null;
+  58        req.openid = null;
+  59        return next();
+  60      }
+  61      
+  62      // 有 token，验证并提取用户信息
+  63      const token = authHeader.replace('Bearer ', '');
+  64      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+  65      req.userId = decoded.userId;
+  66      req.openid = decoded.openid;
+  67      
+  68      next();
+  69    } catch (error) {
+  70      console.error('Token 验证失败:', error.message);
+  71      
+  72      // Token 无效，但允许继续（降级为匿名访问）
+  73      req.userId = null;
+  74      req.openid = null;
+  75      next();
+  76    }
+  77  };
+  78  
+  79  module.exports = {
+  80    authMiddleware,
+  81    optionalAuthMiddleware
+  82  };
+  83  
+
+
+// 文件: backend/services/wechat.js
+// 共 104 行
+
+   1  /**
+   2   * 微信服务 - 处理微信 API 相关功能
+   3   */
+   4  
+   5  const axios = require('axios');
+   6  
+   7  class WeChatService {
+   8    constructor() {
+   9      this.appId = process.env.WX_APPID;
+  10      this.appSecret = process.env.WX_SECRET;
+  11      this.accessToken = null;
+  12      this.tokenExpireTime = 0;
+  13    }
+  14  
+  15    /**
+  16     * 获取微信 access_token
+  17     */
+  18    async getAccessToken() {
+  19      try {
+  20        // 如果 token 还有效，直接返回
+  21        if (this.accessToken && Date.now() < this.tokenExpireTime) {
+  22          return this.accessToken;
+  23        }
+  24  
+  25        // 获取新的 access_token
+  26        const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appId}&secret=${this.appSecret}`;
+  27        const response = await axios.get(url);
+  28  
+  29        if (response.data.access_token) {
+  30          this.accessToken = response.data.access_token;
+  31          // 提前 5 分钟过期，避免边界情况
+  32          this.tokenExpireTime = Date.now() + (response.data.expires_in - 300) * 1000;
+  33          console.log('✅ 获取微信 access_token 成功');
+  34          return this.accessToken;
+  35        } else {
+  36          throw new Error(`获取 access_token 失败: ${JSON.stringify(response.data)}`);
+  37        }
+  38      } catch (error) {
+  39        console.error('❌ 获取微信 access_token 失败:', error.message);
+  40        throw error;
+  41      }
+  42    }
+  43  
+  44    /**
+  45     * 发送订阅消息
+  46     * @param {string} openid - 用户 openid
+  47     * @param {string} templateId - 模板 ID
+  48     * @param {object} data - 消息数据
+  49     * @param {string} page - 跳转页面（可选，不传则跳转到首页）
+  50     */
+  51    async sendSubscribeMessage(openid, templateId, data, page) {
+  52      try {
+  53        const accessToken = await this.getAccessToken();
+  54        const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${accessToken}`;
+  55  
+  56        // 小程序状态：developer(开发版), trial(体验版), formal(正式版)
+  57        // 可以通过环境变量 MINIPROGRAM_STATE 来指定，默认根据 NODE_ENV 判断
+  58        let miniprogramState = process.env.MINIPROGRAM_STATE;
+  59        if (!miniprogramState) {
+  60          // 如果没有指定，根据 NODE_ENV 判断
+  61          // 生产环境使用正式版，其他环境使用 trial（体验版）兼容性最好
+  62          miniprogramState = process.env.NODE_ENV === 'production' ? 'formal' : 'trial';
+  63        }
+  64  
+  65        console.log(`📱 发送订阅消息 - 环境: ${miniprogramState}, 页面: ${page || '默认首页'}`);
+  66  
+  67        const payload = {
+  68          touser: openid,
+  69          template_id: templateId,
+  70          data: data,
+  71          miniprogram_state: miniprogramState
+  72        };
+  73        
+  74        // 只有指定了 page 才添加到 payload 中
+  75        if (page) {
+  76          payload.page = page;
+  77        }
+  78  
+  79        const response = await axios.post(url, payload);
+  80  
+  81        if (response.data.errcode === 0) {
+  82          console.log(`✅ 订阅消息发送成功 - openid: ${openid}`);
+  83          return { success: true, errcode: 0 };
+  84        } else {
+  85          console.error(`❌ 订阅消息发送失败 - openid: ${openid}, errcode: ${response.data.errcode}, errmsg: ${response.data.errmsg}`);
+  86          return { 
+  87            success: false, 
+  88            errcode: response.data.errcode, 
+  89            errmsg: response.data.errmsg 
+  90          };
+  91        }
+  92      } catch (error) {
+  93        console.error(`❌ 订阅消息发送异常 - openid: ${openid}:`, error.message);
+  94        return { 
+  95          success: false, 
+  96          error: error.message 
+  97        };
+  98      }
+  99    }
+ 100  }
+ 101  
+ 102  // 导出单例
+ 103  module.exports = new WeChatService();
+ 104  
+
+
+// 文件: backend/tasks/send-reminders.js
+// 共 163 行
+
+   1  /**
+   2   * 定时任务：发送记账提醒
+   3   * 运行方式：node backend/tasks/send-reminders.js
+   4   */
+   5  
+   6  require('dotenv').config();
+   7  const db = require('../db');
+   8  const wechatService = require('../services/wechat');
+   9  
+  10  async function sendReminders() {
+  11    try {
+  12      console.log('========================================');
+  13      console.log('🔔 开始执行记账提醒推送任务');
+  14      console.log('========================================');
+  15      
+  16      // 获取当前时间（北京时间）
+  17      const now = new Date();
+  18      const currentHour = now.getHours();
+  19      const currentMinute = now.getMinutes();
+  20      const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+  21      
+  22      console.log(`⏰ 当前时间: ${currentTime}`);
+  23      
+  24      // 获取所有已启用的提醒
+  25      const reminders = await db.query(`
+  26        SELECT r.*, r.user_id as openid
+  27        FROM reminders r
+  28        WHERE r.enabled = 1 
+  29        AND r.template_id IS NOT NULL
+  30        AND r.user_id IS NOT NULL
+  31      `);
+  32      
+  33      console.log(`📋 找到 ${reminders.length} 个已订阅用户\n`);
+  34      
+  35      if (reminders.length === 0) {
+  36        console.log('✅ 没有需要推送的用户');
+  37        return;
+  38      }
+  39      
+  40      let successCount = 0;
+  41      let failCount = 0;
+  42      let skipCount = 0;
+  43      
+  44      // 遍历所有提醒
+  45      for (const reminder of reminders) {
+  46        try {
+  47          const reminderTime = reminder.time || '20:00';
+  48          
+  49          // 检查是否到了提醒时间（允许 10 分钟误差）
+  50          if (isTimeMatch(currentTime, reminderTime)) {
+  51            console.log(`⏰ 用户 ${reminder.user_id} (${reminder.openid}) 的提醒时间已到: ${reminderTime}`);
+  52            
+  53            // 检查今天是否已经推送过
+  54            const today = now.toISOString().split('T')[0];
+  55            if (reminder.last_push_date === today) {
+  56              console.log(`   ⏭️  今天已推送过，跳过`);
+  57              skipCount++;
+  58              continue;
+  59            }
+  60            
+  61            // 发送订阅消息
+  62            const result = await sendReminderMessage(reminder);
+  63            
+  64            if (result.success) {
+  65              successCount++;
+  66              
+  67              // 更新最后推送时间
+  68              await db.query(`
+  69                UPDATE reminders 
+  70                SET last_push_date = ?, last_push_time = NOW(), updated_at = NOW()
+  71                WHERE id = ?
+  72              `, [today, reminder.id]);
+  73              
+  74              console.log(`   ✅ 推送成功\n`);
+  75            } else {
+  76              failCount++;
+  77              console.log(`   ❌ 推送失败: ${result.errmsg || result.error}\n`);
+  78              
+  79              // 如果是用户拒绝或订阅过期（errcode: 43101, 47003），禁用提醒
+  80              if (result.errcode === 43101 || result.errcode === 47003) {
+  81                await db.query(`
+  82                  UPDATE reminders 
+  83                  SET enabled = 0, updated_at = NOW()
+  84                  WHERE id = ?
+  85                `, [reminder.id]);
+  86                console.log(`   ⚠️  用户订阅已过期，已禁用提醒\n`);
+  87              }
+  88            }
+  89          } else {
+  90            skipCount++;
+  91          }
+  92        } catch (error) {
+  93          console.error(`❌ 处理用户 ${reminder.user_id} 时出错:`, error.message);
+  94          failCount++;
+  95        }
+  96      }
+  97      
+  98      console.log('========================================');
+  99      console.log('📊 推送统计:');
+ 100      console.log(`   ✅ 成功: ${successCount}`);
+ 101      console.log(`   ❌ 失败: ${failCount}`);
+ 102      console.log(`   ⏭️  跳过: ${skipCount}`);
+ 103      console.log('========================================');
+ 104      
+ 105    } catch (error) {
+ 106      console.error('❌ 定时任务执行失败:', error);
+ 107    } finally {
+ 108      process.exit(0);
+ 109    }
+ 110  }
+ 111  
+ 112  /**
+ 113   * 检查时间是否匹配（当前时间在目标时间之后的 10 分钟内）
+ 114   */
+ 115  function isTimeMatch(currentTime, targetTime) {
+ 116    const [currentHour, currentMinute] = currentTime.split(':').map(v => parseInt(v));
+ 117    const [targetHour, targetMinute] = targetTime.split(':').map(v => parseInt(v));
+ 118    
+ 119    const currentTotalMinutes = currentHour * 60 + currentMinute;
+ 120    const targetTotalMinutes = targetHour * 60 + targetMinute;
+ 121    
+ 122    // 计算时间差（当前时间 - 目标时间）
+ 123    const diff = currentTotalMinutes - targetTotalMinutes;
+ 124    
+ 125    // 如果当前时间在目标时间之后的 0-10 分钟内，则匹配
+ 126    return diff >= 0 && diff <= 10;
+ 127  }
+ 128  
+ 129  /**
+ 130   * 发送提醒消息
+ 131   */
+ 132  async function sendReminderMessage(reminder) {
+ 133    try {
+ 134      const now = new Date();
+ 135      const dateStr = `${now.getFullYear()}年${(now.getMonth() + 1).toString().padStart(2, '0')}月${now.getDate().toString().padStart(2, '0')}日`;
+ 136      const timeStr = reminder.time || '20:00';
+ 137      
+ 138      // 构造消息数据
+ 139      const data = {
+ 140        time1: {
+ 141          value: `${dateStr} ${timeStr}`
+ 142        },
+ 143        thing2: {
+ 144          value: '别忘了记录今天的收支哦~'
+ 145        }
+ 146      };
+ 147      
+ 148      // 发送订阅消息 - 直接跳转到首页
+ 149      return await wechatService.sendSubscribeMessage(
+ 150        reminder.openid,
+ 151        reminder.template_id,
+ 152        data,
+ 153        'pages/tab/index/index'
+ 154      );
+ 155    } catch (error) {
+ 156      console.error('发送提醒消息失败:', error);
+ 157      return { success: false, error: error.message };
+ 158    }
+ 159  }
+ 160  
+ 161  // 执行任务
+ 162  sendReminders();
+ 163  
+
+
+// 文件: admin/src/main.js
+// 共 18 行
+
+   1  import { createApp } from 'vue'
+   2  import ElementPlus from 'element-plus'
+   3  import 'element-plus/dist/index.css'
+   4  import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+   5  import router from './router'
+   6  import App from './App.vue'
+   7  
+   8  const app = createApp(App)
+   9  
+  10  // 注册所有图标
+  11  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  12    app.component(key, component)
+  13  }
+  14  
+  15  app.use(ElementPlus)
+  16  app.use(router)
+  17  app.mount('#app')
+  18  
+
+
+// 文件: admin/src/App.vue
+// 共 24 行
+
+   1  <template>
+   2    <router-view />
+   3  </template>
+   4  
+   5  <script setup>
+   6  </script>
+   7  
+   8  <style>
+   9  * {
+  10    margin: 0;
+  11    padding: 0;
+  12    box-sizing: border-box;
+  13  }
+  14  
+  15  body {
+  16    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  17  }
+  18  
+  19  #app {
+  20    width: 100%;
+  21    height: 100vh;
+  22  }
+  23  </style>
+  24  
+
+
+// 文件: admin/src/views/Dashboard.vue
+// 共 302 行
+
+   1  <template>
+   2    <div class="dashboard">
+   3      <!-- 统计卡片 -->
+   4      <el-row :gutter="20" class="stats-row">
+   5        <el-col :span="6">
+   6          <el-card class="stat-card">
+   7            <div class="stat-content">
+   8              <div class="stat-icon" style="background: #e6f7ff;">
+   9                <el-icon color="#1890ff" :size="32"><User /></el-icon>
+  10              </div>
+  11              <div class="stat-info">
+  12                <div class="stat-value">{{ stats.totalUsers }}</div>
+  13                <div class="stat-label">总用户数</div>
+  14              </div>
+  15            </div>
+  16          </el-card>
+  17        </el-col>
+  18        
+  19        <el-col :span="6">
+  20          <el-card class="stat-card">
+  21            <div class="stat-content">
+  22              <div class="stat-icon" style="background: #f0f9ff;">
+  23                <el-icon color="#52c41a" :size="32"><Tickets /></el-icon>
+  24              </div>
+  25              <div class="stat-info">
+  26                <div class="stat-value">{{ stats.totalBills }}</div>
+  27                <div class="stat-label">总账单数</div>
+  28              </div>
+  29            </div>
+  30          </el-card>
+  31        </el-col>
+  32        
+  33        <el-col :span="6">
+  34          <el-card class="stat-card expense-card">
+  35            <div class="stat-content">
+  36              <div class="stat-icon" style="background: #fff1f0;">
+  37                <el-icon color="#ff4d4f" :size="32"><TrendCharts /></el-icon>
+  38              </div>
+  39              <div class="stat-info">
+  40                <div class="stat-value expense-value">¥{{ stats.totalExpense }}</div>
+  41                <div class="stat-label">总支出</div>
+  42              </div>
+  43            </div>
+  44          </el-card>
+  45        </el-col>
+  46        
+  47        <el-col :span="6">
+  48          <el-card class="stat-card income-card">
+  49            <div class="stat-content">
+  50              <div class="stat-icon" style="background: #f6ffed;">
+  51                <el-icon color="#52c41a" :size="32"><Money /></el-icon>
+  52              </div>
+  53              <div class="stat-info">
+  54                <div class="stat-value income-value">¥{{ stats.totalIncome }}</div>
+  55                <div class="stat-label">总收入</div>
+  56              </div>
+  57            </div>
+  58          </el-card>
+  59        </el-col>
+  60      </el-row>
+  61      
+  62      <!-- 图表区域 -->
+  63      <el-row :gutter="20" class="charts-row">
+  64        <el-col :span="12">
+  65          <el-card>
+  66            <template #header>
+  67              <span>用户增长趋势</span>
+  68            </template>
+  69            <div ref="userChartRef" style="height: 300px;"></div>
+  70          </el-card>
+  71        </el-col>
+  72        
+  73        <el-col :span="12">
+  74          <el-card>
+  75            <template #header>
+  76              <span>账单分类统计</span>
+  77            </template>
+  78            <div ref="billChartRef" style="height: 300px;"></div>
+  79          </el-card>
+  80        </el-col>
+  81      </el-row>
+  82    </div>
+  83  </template>
+  84  
+  85  <script setup>
+  86  import { ref, onMounted } from 'vue'
+  87  import * as echarts from 'echarts'
+  88  import request from '@/utils/request'
+  89  
+  90  const stats = ref({
+  91    totalUsers: 0,
+  92    totalBills: 0,
+  93    totalExpense: '0.00',
+  94    totalIncome: '0.00'
+  95  })
+  96  
+  97  const userChartRef = ref(null)
+  98  const billChartRef = ref(null)
+  99  let userChart = null
+ 100  let billChart = null
+ 101  
+ 102  const fetchStats = async () => {
+ 103    try {
+ 104      const res = await request.get('/admin/stats')
+ 105      if (res.success) {
+ 106        const data = res.data
+ 107        stats.value = {
+ 108          totalUsers: data.totalUsers,
+ 109          totalBills: data.totalBills,
+ 110          totalExpense: data.totalExpense,
+ 111          totalIncome: data.totalIncome
+ 112        }
+ 113      }
+ 114    } catch (error) {
+ 115      console.error('获取统计数据失败:', error)
+ 116    }
+ 117  }
+ 118  
+ 119  const fetchUserGrowth = async () => {
+ 120    try {
+ 121      const res = await request.get('/admin/stats/trend')
+ 122      if (res.success && res.data) {
+ 123        const { days, counts } = res.data
+ 124        initUserChart(days, counts)
+ 125      }
+ 126    } catch (error) {
+ 127      console.error('获取用户增长趋势失败:', error)
+ 128      // 使用默认数据
+ 129      initUserChart(['周一', '周二', '周三', '周四', '周五', '周六', '周日'], [0, 0, 0, 0, 0, 0, 0])
+ 130    }
+ 131  }
+ 132  
+ 133  const fetchCategoryStats = async () => {
+ 134    try {
+ 135      const res = await request.get('/admin/stats/category')
+ 136      if (res.success && res.data) {
+ 137        const data = res.data.map(item => ({
+ 138          value: parseFloat(item.total),
+ 139          name: item.category_name
+ 140        }))
+ 141        initBillChart(data)
+ 142      }
+ 143    } catch (error) {
+ 144      console.error('获取分类统计失败:', error)
+ 145      // 使用默认数据
+ 146      initBillChart([])
+ 147    }
+ 148  }
+ 149  
+ 150  const initUserChart = (days, counts) => {
+ 151    if (!userChartRef.value) return
+ 152    
+ 153    if (!userChart) {
+ 154      userChart = echarts.init(userChartRef.value)
+ 155    }
+ 156    
+ 157    userChart.setOption({
+ 158      tooltip: { 
+ 159        trigger: 'axis',
+ 160        formatter: '{b}: {c}笔账单'
+ 161      },
+ 162      xAxis: {
+ 163        type: 'category',
+ 164        data: days
+ 165      },
+ 166      yAxis: { 
+ 167        type: 'value',
+ 168        minInterval: 1
+ 169      },
+ 170      series: [{
+ 171        data: counts,
+ 172        type: 'line',
+ 173        smooth: true,
+ 174        itemStyle: { color: '#52c41a' },
+ 175        areaStyle: {
+ 176          color: {
+ 177            type: 'linear',
+ 178            x: 0,
+ 179            y: 0,
+ 180            x2: 0,
+ 181            y2: 1,
+ 182            colorStops: [{
+ 183              offset: 0, color: 'rgba(82, 196, 26, 0.3)'
+ 184            }, {
+ 185              offset: 1, color: 'rgba(82, 196, 26, 0.05)'
+ 186            }]
+ 187          }
+ 188        }
+ 189      }]
+ 190    })
+ 191  }
+ 192  
+ 193  const initBillChart = (data) => {
+ 194    if (!billChartRef.value) return
+ 195    
+ 196    if (!billChart) {
+ 197      billChart = echarts.init(billChartRef.value)
+ 198    }
+ 199    
+ 200    if (data.length === 0) {
+ 201      billChart.setOption({
+ 202        title: {
+ 203          text: '暂无数据',
+ 204          left: 'center',
+ 205          top: 'center',
+ 206          textStyle: {
+ 207            color: '#999',
+ 208            fontSize: 14
+ 209          }
+ 210        }
+ 211      })
+ 212      return
+ 213    }
+ 214    
+ 215    billChart.setOption({
+ 216      tooltip: { 
+ 217        trigger: 'item',
+ 218        formatter: '{b}: ¥{c} ({d}%)'
+ 219      },
+ 220      legend: {
+ 221        orient: 'vertical',
+ 222        right: 10,
+ 223        top: 'center'
+ 224      },
+ 225      series: [{
+ 226        type: 'pie',
+ 227        radius: ['40%', '70%'],
+ 228        center: ['40%', '50%'],
+ 229        data: data,
+ 230        emphasis: {
+ 231          itemStyle: {
+ 232            shadowBlur: 10,
+ 233            shadowOffsetX: 0,
+ 234            shadowColor: 'rgba(0, 0, 0, 0.5)'
+ 235          }
+ 236        }
+ 237      }]
+ 238    })
+ 239  }
+ 240  
+ 241  onMounted(() => {
+ 242    fetchStats()
+ 243    fetchUserGrowth()
+ 244    fetchCategoryStats()
+ 245  })
+ 246  </script>
+ 247  
+ 248  <style scoped>
+ 249  .dashboard {
+ 250    width: 100%;
+ 251  }
+ 252  
+ 253  .stats-row {
+ 254    margin-bottom: 20px;
+ 255  }
+ 256  
+ 257  .stat-card {
+ 258    cursor: pointer;
+ 259    transition: all 0.3s;
+ 260  }
+ 261  
+ 262  .stat-card:hover {
+ 263    transform: translateY(-4px);
+ 264    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+ 265  }
+ 266  
+ 267  .stat-content {
+ 268    display: flex;
+ 269    align-items: center;
+ 270    gap: 16px;
+ 271  }
+ 272  
+ 273  .stat-icon {
+ 274    width: 60px;
+ 275    height: 60px;
+ 276    border-radius: 8px;
+ 277    display: flex;
+ 278    align-items: center;
+ 279    justify-content: center;
+ 280  }
+ 281  
+ 282  .stat-info {
+ 283    flex: 1;
+ 284  }
+ 285  
+ 286  .stat-value {
+ 287    font-size: 24px;
+ 288    font-weight: 600;
+ 289    color: #1a1a1a;
+ 290    margin-bottom: 4px;
+ 291  }
+ 292  
+ 293  .stat-label {
+ 294    font-size: 14px;
+ 295    color: #666;
+ 296  }
+ 297  
+ 298  .charts-row {
+ 299    margin-top: 20px;
+ 300  }
+ 301  </style>
+ 302  
+
+
+// 文件: admin/src/views/Users.vue
+// 共 664 行
+
+   1  <template>
+   2    <div class="users-page">
+   3      <el-card>
+   4        <!-- 搜索栏 -->
+   5        <el-form :inline="true" :model="searchForm" class="search-form">
+   6          <el-form-item label="用户昵称">
+   7            <el-input v-model="searchForm.nickname" placeholder="请输入用户昵称" clearable />
+   8          </el-form-item>
+   9          <el-form-item label="手机号">
+  10            <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
+  11          </el-form-item>
+  12          <el-form-item>
+  13            <el-button type="primary" @click="handleSearch">搜索</el-button>
+  14            <el-button @click="handleReset">重置</el-button>
+  15          </el-form-item>
+  16        </el-form>
+  17        
+  18        <!-- 用户列表 -->
+  19        <el-table :data="userList" v-loading="loading" border>
+  20          <el-table-column prop="id" label="ID" width="80" />
+  21          <el-table-column label="头像" width="80">
+  22            <template #default="{ row }">
+  23              <el-avatar :src="row.avatar_url" />
+  24            </template>
+  25          </el-table-column>
+  26          <el-table-column prop="nickname" label="昵称" />
+  27          <el-table-column prop="phone" label="手机号" />
+  28          <el-table-column label="密码状态" width="100">
+  29            <template #default="{ row }">
+  30              <el-tag v-if="row.password" type="success" size="small">已设置</el-tag>
+  31              <el-tag v-else type="info" size="small">未设置</el-tag>
+  32            </template>
+  33          </el-table-column>
+  34          <el-table-column prop="openid" label="OpenID" show-overflow-tooltip />
+  35          <el-table-column label="注册时间" width="180">
+  36            <template #default="{ row }">
+  37              {{ formatDate(row.created_at) }}
+  38            </template>
+  39          </el-table-column>
+  40          <el-table-column label="最后登录" width="180">
+  41            <template #default="{ row }">
+  42              {{ formatDate(row.last_login) }}
+  43            </template>
+  44          </el-table-column>
+  45          <el-table-column label="操作" width="200" fixed="right">
+  46            <template #default="{ row }">
+  47              <el-button type="primary" link @click="viewDetail(row)">详情</el-button>
+  48              <el-button type="warning" link @click="handleResetPassword(row)">重置密码</el-button>
+  49              <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+  50            </template>
+  51          </el-table-column>
+  52        </el-table>
+  53        
+  54        <!-- 分页 -->
+  55        <el-pagination
+  56          v-model:current-page="pagination.page"
+  57          v-model:page-size="pagination.pageSize"
+  58          :total="pagination.total"
+  59          :page-sizes="[10, 20, 50, 100]"
+  60          layout="total, sizes, prev, pager, next, jumper"
+  61          @size-change="fetchUsers"
+  62          @current-change="fetchUsers"
+  63          class="pagination"
+  64        />
+  65      </el-card>
+  66      
+  67      <!-- 用户详情对话框 -->
+  68      <el-dialog
+  69        v-model="detailDialogVisible"
+  70        title="用户详情"
+  71        width="900px"
+  72        :close-on-click-modal="false"
+  73        class="user-detail-dialog"
+  74      >
+  75        <div v-if="currentUserDetail" class="user-detail-content">
+  76          <!-- 用户头部卡片 -->
+  77          <div class="user-header-card">
+  78            <div class="user-avatar">
+  79              <el-avatar :size="64" :src="currentUserDetail.user.avatar_url">
+  80                <el-icon :size="32"><User /></el-icon>
+  81              </el-avatar>
+  82            </div>
+  83            <div class="user-info">
+  84              <div class="user-name">{{ currentUserDetail.user.nickname || '未设置昵称' }}</div>
+  85              <div class="user-meta">
+  86                <span class="meta-item">
+  87                  <el-icon><Iphone /></el-icon>
+  88                  {{ currentUserDetail.user.phone || '未绑定' }}
+  89                </span>
+  90                <span class="meta-item">
+  91                  <el-icon><Calendar /></el-icon>
+  92                  {{ formatDate(currentUserDetail.user.created_at) }}
+  93                </span>
+  94              </div>
+  95            </div>
+  96          </div>
+  97          
+  98          <!-- 统计数据卡片 -->
+  99          <div class="stats-cards">
+ 100            <div class="stat-card expense">
+ 101              <div class="stat-icon">
+ 102                <el-icon><TrendCharts /></el-icon>
+ 103              </div>
+ 104              <div class="stat-content">
+ 105                <div class="stat-label">总支出</div>
+ 106                <div class="stat-value">¥{{ currentUserDetail.stats.total_expense }}</div>
+ 107              </div>
+ 108            </div>
+ 109            <div class="stat-card income">
+ 110              <div class="stat-icon">
+ 111                <el-icon><Money /></el-icon>
+ 112              </div>
+ 113              <div class="stat-content">
+ 114                <div class="stat-label">总收入</div>
+ 115                <div class="stat-value">¥{{ currentUserDetail.stats.total_income }}</div>
+ 116              </div>
+ 117            </div>
+ 118            <div class="stat-card bills">
+ 119              <div class="stat-icon">
+ 120                <el-icon><Tickets /></el-icon>
+ 121              </div>
+ 122              <div class="stat-content">
+ 123                <div class="stat-label">账单数</div>
+ 124                <div class="stat-value">{{ currentUserDetail.stats.bill_count }}笔</div>
+ 125              </div>
+ 126            </div>
+ 127            <div class="stat-card points">
+ 128              <div class="stat-icon">
+ 129                <el-icon><Star /></el-icon>
+ 130              </div>
+ 131              <div class="stat-content">
+ 132                <div class="stat-label">积分</div>
+ 133                <div class="stat-value">{{ currentUserDetail.stats.points }}</div>
+ 134              </div>
+ 135            </div>
+ 136          </div>
+ 137          
+ 138          <!-- 详细信息卡片 -->
+ 139          <div class="info-card">
+ 140            <div class="card-title">详细信息</div>
+ 141            <div class="info-grid">
+ 142              <div class="info-item">
+ 143                <span class="label">手机号</span>
+ 144                <span class="value">{{ currentUserDetail.user.phone || '未绑定' }}</span>
+ 145              </div>
+ 146              <div class="info-item">
+ 147                <span class="label">密码状态</span>
+ 148                <span class="value">
+ 149                  <el-tag v-if="currentUserDetail.user.password" type="success" size="small">已设置</el-tag>
+ 150                  <el-tag v-else type="info" size="small">未设置</el-tag>
+ 151                </span>
+ 152              </div>
+ 153              <div class="info-item">
+ 154                <span class="label">用户ID</span>
+ 155                <span class="value">{{ currentUserDetail.user.id }}</span>
+ 156              </div>
+ 157              <div class="info-item">
+ 158                <span class="label">OpenID</span>
+ 159                <span class="value text-ellipsis">{{ currentUserDetail.user.openid || '-' }}</span>
+ 160              </div>
+ 161              <div class="info-item">
+ 162                <span class="label">最后登录</span>
+ 163                <span class="value">{{ formatDate(currentUserDetail.user.last_login) }}</span>
+ 164              </div>
+ 165            </div>
+ 166          </div>
+ 167          
+ 168          <!-- 最近账单卡片 -->
+ 169          <div class="bills-card">
+ 170            <div class="card-title">
+ 171              <span>账单列表</span>
+ 172              <span class="bill-count">共 {{ currentUserDetail.billTotal || 0 }} 笔</span>
+ 173            </div>
+ 174            <div v-if="currentUserDetail.recentBills.length > 0" class="bills-list">
+ 175              <div 
+ 176                v-for="bill in currentUserDetail.recentBills" 
+ 177                :key="bill.id"
+ 178                class="bill-item"
+ 179              >
+ 180                <div class="bill-left">
+ 181                  <div class="bill-merchant">{{ bill.merchant || '未知商家' }}</div>
+ 182                  <div class="bill-meta">
+ 183                    <span>{{ formatBillDate(bill.date) }}</span>
+ 184                    <span class="divider">·</span>
+ 185                    <span>{{ bill.category_name || '其他' }}</span>
+ 186                    <span class="divider">·</span>
+ 187                    <span class="bill-time">{{ formatBillTime(bill.create_time) }}</span>
+ 188                  </div>
+ 189                </div>
+ 190                <div class="bill-right">
+ 191                  <div :class="['bill-amount', bill.type]">
+ 192                    {{ bill.type === 'expense' ? '-' : '+' }}¥{{ bill.amount }}
+ 193                  </div>
+ 194                </div>
+ 195              </div>
+ 196            </div>
+ 197            <el-empty v-else description="暂无账单记录" :image-size="60" />
+ 198            
+ 199            <!-- 分页 -->
+ 200            <el-pagination
+ 201              v-if="currentUserDetail.billTotal > 0"
+ 202              v-model:current-page="billPagination.page"
+ 203              v-model:page-size="billPagination.pageSize"
+ 204              :total="currentUserDetail.billTotal"
+ 205              :page-sizes="[10, 20, 50]"
+ 206              layout="total, sizes, prev, pager, next"
+ 207              @size-change="handleBillPageChange"
+ 208              @current-change="handleBillPageChange"
+ 209              class="bill-pagination"
+ 210              small
+ 211            />
+ 212          </div>
+ 213        </div>
+ 214      </el-dialog>
+ 215    </div>
+ 216  </template>
+ 217  
+ 218  <script setup>
+ 219  import { ref, reactive, onMounted } from 'vue'
+ 220  import { ElMessage, ElMessageBox } from 'element-plus'
+ 221  import request from '@/utils/request'
+ 222  
+ 223  const loading = ref(false)
+ 224  const userList = ref([])
+ 225  
+ 226  const searchForm = reactive({
+ 227    nickname: '',
+ 228    phone: ''
+ 229  })
+ 230  
+ 231  const pagination = reactive({
+ 232    page: 1,
+ 233    pageSize: 10,
+ 234    total: 0
+ 235  })
+ 236  
+ 237  const fetchUsers = async () => {
+ 238    try {
+ 239      loading.value = true
+ 240      const res = await request.get('/admin/users', {
+ 241        params: {
+ 242          page: pagination.page,
+ 243          pageSize: pagination.pageSize,
+ 244          ...searchForm
+ 245        }
+ 246      })
+ 247      
+ 248      if (res.success) {
+ 249        userList.value = res.data.list
+ 250        pagination.total = res.data.total
+ 251      }
+ 252    } catch (error) {
+ 253      console.error('获取用户列表失败:', error)
+ 254    } finally {
+ 255      loading.value = false
+ 256    }
+ 257  }
+ 258  
+ 259  const handleSearch = () => {
+ 260    pagination.page = 1
+ 261    fetchUsers()
+ 262  }
+ 263  
+ 264  const handleReset = () => {
+ 265    searchForm.nickname = ''
+ 266    searchForm.phone = ''
+ 267    handleSearch()
+ 268  }
+ 269  
+ 270  const detailDialogVisible = ref(false)
+ 271  const currentUserDetail = ref(null)
+ 272  const billPagination = reactive({
+ 273    page: 1,
+ 274    pageSize: 10
+ 275  })
+ 276  
+ 277  const viewDetail = async (row) => {
+ 278    try {
+ 279      billPagination.page = 1
+ 280      billPagination.pageSize = 10
+ 281      await fetchUserDetail(row.id)
+ 282      detailDialogVisible.value = true
+ 283    } catch (error) {
+ 284      console.error('获取用户详情失败:', error)
+ 285      ElMessage.error('获取用户详情失败')
+ 286    }
+ 287  }
+ 288  
+ 289  const fetchUserDetail = async (userId) => {
+ 290    try {
+ 291      const res = await request.get(`/admin/users/${userId}/detail`, {
+ 292        params: {
+ 293          page: billPagination.page,
+ 294          pageSize: billPagination.pageSize
+ 295        }
+ 296      })
+ 297      if (res.success) {
+ 298        currentUserDetail.value = res.data
+ 299      }
+ 300    } catch (error) {
+ 301      console.error('获取用户详情失败:', error)
+ 302      throw error
+ 303    }
+ 304  }
+ 305  
+ 306  const handleBillPageChange = async () => {
+ 307    if (currentUserDetail.value && currentUserDetail.value.user) {
+ 308      await fetchUserDetail(currentUserDetail.value.user.id)
+ 309    }
+ 310  }
+ 311  
+ 312  const handleDelete = (row) => {
+ 313    ElMessageBox.confirm(`确定要删除用户 ${row.nickname} 吗？`, '提示', {
+ 314      confirmButtonText: '确定',
+ 315      cancelButtonText: '取消',
+ 316      type: 'warning'
+ 317    }).then(async () => {
+ 318      try {
+ 319        const res = await request.delete(`/admin/users/${row.id}`)
+ 320        if (res.success) {
+ 321          ElMessage.success('删除成功')
+ 322          fetchUsers()
+ 323        }
+ 324      } catch (error) {
+ 325        console.error('删除失败:', error)
+ 326      }
+ 327    })
+ 328  }
+ 329  
+ 330  const handleResetPassword = (row) => {
+ 331    ElMessageBox.confirm(
+ 332      `确定要重置用户 ${row.nickname || row.phone} 的密码吗？`, 
+ 333      '重置密码', 
+ 334      {
+ 335        confirmButtonText: '确定',
+ 336        cancelButtonText: '取消',
+ 337        type: 'warning'
+ 338      }
+ 339    ).then(async () => {
+ 340      try {
+ 341        const res = await request.post(`/admin/users/${row.id}/reset-password`)
+ 342        if (res.success) {
+ 343          // 显示新密码
+ 344          ElMessageBox.alert(
+ 345            `新密码：${res.newPassword}\n\n请将此密码告知用户，此密码仅显示一次！`, 
+ 346            '密码重置成功', 
+ 347            {
+ 348              confirmButtonText: '我已复制',
+ 349              type: 'success',
+ 350              dangerouslyUseHTMLString: false
+ 351            }
+ 352          )
+ 353        } else {
+ 354          ElMessage.error(res.message || '重置失败')
+ 355        }
+ 356      } catch (error) {
+ 357        console.error('重置密码失败:', error)
+ 358        ElMessage.error('重置密码失败')
+ 359      }
+ 360    })
+ 361  }
+ 362  
+ 363  const formatDate = (date) => {
+ 364    if (!date) return '-'
+ 365    return new Date(date).toLocaleString('zh-CN')
+ 366  }
+ 367  
+ 368  const formatBillDate = (date) => {
+ 369    if (!date) return '-'
+ 370    const d = new Date(date)
+ 371    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+ 372  }
+ 373  
+ 374  const formatBillTime = (timestamp) => {
+ 375    if (!timestamp) return '-'
+ 376    const d = new Date(Number(timestamp))
+ 377    return d.toLocaleString('zh-CN', { 
+ 378      year: 'numeric',
+ 379      month: '2-digit',
+ 380      day: '2-digit',
+ 381      hour: '2-digit',
+ 382      minute: '2-digit'
+ 383    })
+ 384  }
+ 385  
+ 386  onMounted(() => {
+ 387    fetchUsers()
+ 388  })
+ 389  </script>
+ 390  
+ 391  <style scoped>
+ 392  .users-page {
+ 393    width: 100%;
+ 394  }
+ 395  
+ 396  .search-form {
+ 397    margin-bottom: 20px;
+ 398  }
+ 399  
+ 400  .pagination {
+ 401    margin-top: 20px;
+ 402    justify-content: flex-end;
+ 403  }
+ 404  
+ 405  /* 对话框样式 */
+ 406  .user-detail-dialog :deep(.el-dialog__body) {
+ 407    padding: 20px 24px;
+ 408    max-height: 70vh;
+ 409    overflow-y: auto;
+ 410  }
+ 411  
+ 412  .user-detail-content {
+ 413    display: flex;
+ 414    flex-direction: column;
+ 415    gap: 16px;
+ 416  }
+ 417  
+ 418  /* 用户头部卡片 */
+ 419  .user-header-card {
+ 420    display: flex;
+ 421    align-items: center;
+ 422    gap: 20px;
+ 423    padding: 24px;
+ 424    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+ 425    border-radius: 12px;
+ 426    color: white;
+ 427    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+ 428  }
+ 429  
+ 430  .user-avatar {
+ 431    flex-shrink: 0;
+ 432  }
+ 433  
+ 434  .user-avatar :deep(.el-avatar) {
+ 435    border: 3px solid rgba(255, 255, 255, 0.3);
+ 436    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+ 437  }
+ 438  
+ 439  .user-info {
+ 440    flex: 1;
+ 441  }
+ 442  
+ 443  .user-name {
+ 444    font-size: 22px;
+ 445    font-weight: 600;
+ 446    margin-bottom: 8px;
+ 447  }
+ 448  
+ 449  .user-meta {
+ 450    display: flex;
+ 451    gap: 20px;
+ 452    font-size: 14px;
+ 453    opacity: 0.95;
+ 454  }
+ 455  
+ 456  .meta-item {
+ 457    display: flex;
+ 458    align-items: center;
+ 459    gap: 6px;
+ 460  }
+ 461  
+ 462  /* 统计卡片 */
+ 463  .stats-cards {
+ 464    display: grid;
+ 465    grid-template-columns: repeat(4, 1fr);
+ 466    gap: 12px;
+ 467  }
+ 468  
+ 469  .stat-card {
+ 470    display: flex;
+ 471    align-items: center;
+ 472    gap: 12px;
+ 473    padding: 16px;
+ 474    border-radius: 10px;
+ 475    background: white;
+ 476    border: 1px solid #f0f0f0;
+ 477    transition: all 0.3s;
+ 478    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+ 479  }
+ 480  
+ 481  .stat-card:hover {
+ 482    transform: translateY(-2px);
+ 483    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+ 484  }
+ 485  
+ 486  .stat-card .stat-icon {
+ 487    width: 48px;
+ 488    height: 48px;
+ 489    border-radius: 10px;
+ 490    display: flex;
+ 491    align-items: center;
+ 492    justify-content: center;
+ 493    font-size: 24px;
+ 494  }
+ 495  
+ 496  .stat-card.expense .stat-icon {
+ 497    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+ 498    color: white;
+ 499  }
+ 500  
+ 501  .stat-card.income .stat-icon {
+ 502    background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+ 503    color: white;
+ 504  }
+ 505  
+ 506  .stat-card.bills .stat-icon {
+ 507    background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+ 508    color: white;
+ 509  }
+ 510  
+ 511  .stat-card.points .stat-icon {
+ 512    background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
+ 513    color: white;
+ 514  }
+ 515  
+ 516  .stat-content {
+ 517    flex: 1;
+ 518  }
+ 519  
+ 520  .stat-label {
+ 521    font-size: 13px;
+ 522    color: #868e96;
+ 523    margin-bottom: 4px;
+ 524  }
+ 525  
+ 526  .stat-value {
+ 527    font-size: 20px;
+ 528    font-weight: 700;
+ 529    color: #212529;
+ 530  }
+ 531  
+ 532  /* 详细信息卡片 */
+ 533  .info-card {
+ 534    padding: 20px;
+ 535    background: white;
+ 536    border-radius: 10px;
+ 537    border: 1px solid #f0f0f0;
+ 538    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+ 539  }
+ 540  
+ 541  .card-title {
+ 542    font-size: 16px;
+ 543    font-weight: 600;
+ 544    color: #212529;
+ 545    margin-bottom: 16px;
+ 546    padding-bottom: 12px;
+ 547    border-bottom: 2px solid #f1f3f5;
+ 548  }
+ 549  
+ 550  .info-grid {
+ 551    display: grid;
+ 552    grid-template-columns: repeat(3, 1fr);
+ 553    gap: 16px;
+ 554  }
+ 555  
+ 556  .info-item {
+ 557    display: flex;
+ 558    flex-direction: column;
+ 559    gap: 6px;
+ 560  }
+ 561  
+ 562  .info-item .label {
+ 563    font-size: 12px;
+ 564    color: #868e96;
+ 565  }
+ 566  
+ 567  .info-item .value {
+ 568    font-size: 14px;
+ 569    color: #212529;
+ 570    font-weight: 500;
+ 571  }
+ 572  
+ 573  .text-ellipsis {
+ 574    overflow: hidden;
+ 575    text-overflow: ellipsis;
+ 576    white-space: nowrap;
+ 577  }
+ 578  
+ 579  /* 账单卡片 */
+ 580  .bills-card {
+ 581    padding: 20px;
+ 582    background: white;
+ 583    border-radius: 10px;
+ 584    border: 1px solid #f0f0f0;
+ 585    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+ 586  }
+ 587  
+ 588  .bills-list {
+ 589    display: flex;
+ 590    flex-direction: column;
+ 591    gap: 8px;
+ 592  }
+ 593  
+ 594  .bill-item {
+ 595    display: flex;
+ 596    align-items: center;
+ 597    justify-content: space-between;
+ 598    padding: 12px 16px;
+ 599    background: #f8f9fa;
+ 600    border-radius: 8px;
+ 601    border: 1px solid transparent;
+ 602    transition: all 0.2s;
+ 603  }
+ 604  
+ 605  .bill-item:hover {
+ 606    background: #f1f3f5;
+ 607    border-color: #dee2e6;
+ 608  }
+ 609  
+ 610  .bill-left {
+ 611    flex: 1;
+ 612  }
+ 613  
+ 614  .bill-merchant {
+ 615    font-size: 14px;
+ 616    font-weight: 500;
+ 617    color: #212529;
+ 618    margin-bottom: 4px;
+ 619  }
+ 620  
+ 621  .bill-meta {
+ 622    font-size: 12px;
+ 623    color: #868e96;
+ 624  }
+ 625  
+ 626  .bill-meta .divider {
+ 627    margin: 0 6px;
+ 628  }
+ 629  
+ 630  .bill-right {
+ 631    margin-left: 16px;
+ 632  }
+ 633  
+ 634  .bill-amount {
+ 635    font-size: 16px;
+ 636    font-weight: 700;
+ 637  }
+ 638  
+ 639  .bill-amount.expense {
+ 640    color: #ff6b6b;
+ 641  }
+ 642  
+ 643  .bill-amount.income {
+ 644    color: #51cf66;
+ 645  }
+ 646  
+ 647  /* 密码哈希样式 */
+ 648  .password-hash {
+ 649    font-family: 'Courier New', monospace;
+ 650    font-size: 12px;
+ 651    color: #666;
+ 652    word-break: break-all;
+ 653  }
+ 654  
+ 655  .info-item.full-width {
+ 656    grid-column: 1 / -1;
+ 657  }
+ 658  
+ 659  .info-item.full-width .value {
+ 660    max-width: 100%;
+ 661    word-break: break-all;
+ 662  }
+ 663  </style>
+ 664  
+
+
+// 文件: admin/src/views/Bills.vue
+// 共 165 行
+
+   1  <template>
+   2    <div class="bills-page">
+   3      <el-card>
+   4        <!-- 搜索栏 -->
+   5        <el-form :inline="true" :model="searchForm" class="search-form">
+   6          <el-form-item label="用户ID">
+   7            <el-input v-model="searchForm.userId" placeholder="请输入用户ID" clearable />
+   8          </el-form-item>
+   9          <el-form-item label="分类">
+  10            <el-select v-model="searchForm.category" placeholder="请选择分类" clearable>
+  11              <el-option label="餐饮" value="餐饮" />
+  12              <el-option label="交通" value="交通" />
+  13              <el-option label="购物" value="购物" />
+  14              <el-option label="娱乐" value="娱乐" />
+  15            </el-select>
+  16          </el-form-item>
+  17          <el-form-item>
+  18            <el-button type="primary" @click="handleSearch">搜索</el-button>
+  19            <el-button @click="handleReset">重置</el-button>
+  20          </el-form-item>
+  21        </el-form>
+  22        
+  23        <!-- 账单列表 -->
+  24        <el-table :data="billList" v-loading="loading" border>
+  25          <el-table-column prop="id" label="ID" width="80" />
+  26          <el-table-column prop="user_id" label="用户ID" width="100" />
+  27          <el-table-column prop="amount" label="金额" width="120">
+  28            <template #default="{ row }">
+  29              <span :style="{ color: row.type === 'expense' ? '#f5222d' : '#52c41a' }">
+  30                {{ row.type === 'expense' ? '-' : '+' }}¥{{ row.amount }}
+  31              </span>
+  32            </template>
+  33          </el-table-column>
+  34          <el-table-column prop="category" label="分类" width="100" />
+  35          <el-table-column prop="merchant" label="商家" show-overflow-tooltip />
+  36          <el-table-column prop="note" label="备注" show-overflow-tooltip />
+  37          <el-table-column label="记账方式" width="100">
+  38            <template #default="{ row }">
+  39              <el-tag v-if="row.input_method === 'voice'" type="success">语音</el-tag>
+  40              <el-tag v-else-if="row.input_method === 'photo'" type="warning">拍照</el-tag>
+  41              <el-tag v-else>手动</el-tag>
+  42            </template>
+  43          </el-table-column>
+  44          <el-table-column label="创建时间" width="180">
+  45            <template #default="{ row }">
+  46              {{ formatDate(row.created_at) }}
+  47            </template>
+  48          </el-table-column>
+  49          <el-table-column label="操作" width="100" fixed="right">
+  50            <template #default="{ row }">
+  51              <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+  52            </template>
+  53          </el-table-column>
+  54        </el-table>
+  55        
+  56        <!-- 分页 -->
+  57        <el-pagination
+  58          v-model:current-page="pagination.page"
+  59          v-model:page-size="pagination.pageSize"
+  60          :total="pagination.total"
+  61          :page-sizes="[10, 20, 50, 100]"
+  62          layout="total, sizes, prev, pager, next, jumper"
+  63          @size-change="fetchBills"
+  64          @current-change="fetchBills"
+  65          class="pagination"
+  66        />
+  67      </el-card>
+  68    </div>
+  69  </template>
+  70  
+  71  <script setup>
+  72  import { ref, reactive, onMounted } from 'vue'
+  73  import { ElMessage, ElMessageBox } from 'element-plus'
+  74  import request from '@/utils/request'
+  75  
+  76  const loading = ref(false)
+  77  const billList = ref([])
+  78  
+  79  const searchForm = reactive({
+  80    userId: '',
+  81    category: ''
+  82  })
+  83  
+  84  const pagination = reactive({
+  85    page: 1,
+  86    pageSize: 10,
+  87    total: 0
+  88  })
+  89  
+  90  const fetchBills = async () => {
+  91    try {
+  92      loading.value = true
+  93      const res = await request.get('/admin/bills', {
+  94        params: {
+  95          page: pagination.page,
+  96          pageSize: pagination.pageSize,
+  97          ...searchForm
+  98        }
+  99      })
+ 100      
+ 101      if (res.success) {
+ 102        billList.value = res.data.list
+ 103        pagination.total = res.data.total
+ 104      }
+ 105    } catch (error) {
+ 106      console.error('获取账单列表失败:', error)
+ 107    } finally {
+ 108      loading.value = false
+ 109    }
+ 110  }
+ 111  
+ 112  const handleSearch = () => {
+ 113    pagination.page = 1
+ 114    fetchBills()
+ 115  }
+ 116  
+ 117  const handleReset = () => {
+ 118    searchForm.userId = ''
+ 119    searchForm.category = ''
+ 120    handleSearch()
+ 121  }
+ 122  
+ 123  const handleDelete = (row) => {
+ 124    ElMessageBox.confirm('确定要删除这条账单吗？', '提示', {
+ 125      confirmButtonText: '确定',
+ 126      cancelButtonText: '取消',
+ 127      type: 'warning'
+ 128    }).then(async () => {
+ 129      try {
+ 130        const res = await request.delete(`/admin/bills/${row.id}`)
+ 131        if (res.success) {
+ 132          ElMessage.success('删除成功')
+ 133          fetchBills()
+ 134        }
+ 135      } catch (error) {
+ 136        console.error('删除失败:', error)
+ 137      }
+ 138    })
+ 139  }
+ 140  
+ 141  const formatDate = (date) => {
+ 142    if (!date) return '-'
+ 143    return new Date(date).toLocaleString('zh-CN')
+ 144  }
+ 145  
+ 146  onMounted(() => {
+ 147    fetchBills()
+ 148  })
+ 149  </script>
+ 150  
+ 151  <style scoped>
+ 152  .bills-page {
+ 153    width: 100%;
+ 154  }
+ 155  
+ 156  .search-form {
+ 157    margin-bottom: 20px;
+ 158  }
+ 159  
+ 160  .pagination {
+ 161    margin-top: 20px;
+ 162    justify-content: flex-end;
+ 163  }
+ 164  </style>
+ 165  
 
-// ========== backend/server.js - 后端服务器 ==========
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const compression = require('compression'); // 响应压缩
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// 启用响应压缩 - 减少带宽占用
-app.use(compression());
-
-// 中间件 - 更详细的CORS配置
-app.use(cors({
-  origin: '*', // 允许所有来源（开发环境）
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-
-// 处理OPTIONS预检请求
-app.options('*', cors());
-
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-
-// 静态文件服务 - 提供上传文件访问
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
-app.use('/uploads', express.static(uploadDir));
-
-// 初始化数据库
-const db = require('./db');
-db.testConnection().then(success => {
-  if (success) {
-    db.initTables();
-  }
-});
-
-// 中间件
-const { authMiddleware, optionalAuthMiddleware } = require('./middleware/auth');
-const { securityMiddleware, encryptResponse } = require('./middleware/security');
-const { cacheMiddleware } = require('./middleware/cache');
-
-// 全局启用响应加密中间件
-app.use(encryptResponse);
-
-// 全局启用安全验证中间件（可选）
-// app.use(securityMiddleware);
-
-// 路由
-const authRoutes = require('./routes/auth');
-const billRoutes = require('./routes/bills');
-const ocrRoutes = require('./routes/ocr');
-const asrRoutes = require('./routes/asr');
-const uploadRoutes = require('./routes/upload');
-const appRoutes = require('./routes/app');
-const adminRoutes = require('./routes/admin');
-const aiEnhanceRoutes = require('./routes/ai-enhance');
-const aiChatRoutes = require('./routes/ai-chat');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/billManager', optionalAuthMiddleware, billRoutes); // 需要登录才能操作
-app.use('/api/ocrRecognize', authMiddleware, ocrRoutes); // 必须登录才能使用（修复：改用authMiddleware）
-app.use('/api/baiduASR', authMiddleware, asrRoutes); // 必须登录才能使用（修复：改用authMiddleware）
-app.use('/api/upload', authMiddleware, uploadRoutes); // 需要登录才能上传
-app.use('/api/app', appRoutes); // 版本检查不需要认证
-app.use('/api/ai-enhance', optionalAuthMiddleware, aiEnhanceRoutes); // AI 增强接口（可选认证）
-app.use('/api/ai-chat', authMiddleware, aiChatRoutes); // AI 财务助手（需要登录）
-
-// 健康检查 - 添加缓存
-app.get('/health', cacheMiddleware(30000), (req, res) => {
-  res.json({ status: 'ok', message: '服务运行正常' });
-});
-
-// 错误处理
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: err.message || '服务器内部错误'
-  });
-});
-
-// 启动服务器
-app.listen(PORT, () => {
-  console.log(`🚀 服务器启动成功！`);
-  console.log(`📍 地址: http://localhost:${PORT}`);
-  console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`);
-});
-
-// ========== backend/db.js - 数据库连接 ==========
-const mysql = require('mysql2/promise');
-
-// 创建数据库连接池 - 优化配置
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'simplenote',
-  waitForConnections: true,
-  connectionLimit: 20, // 增加连接数（原10）
-  queueLimit: 0,
-  enableKeepAlive: true, // 保持连接活跃
-  keepAliveInitialDelay: 0,
-  maxIdle: 10, // 最大空闲连接数
-  idleTimeout: 60000, // 空闲连接超时（60秒）
-  connectTimeout: 10000 // 连接超时（10秒）
-});
-
-// 查询方法
-async function query(sql, params) {
-  try {
-    const [results] = await pool.execute(sql, params);
-    return results;
-  } catch (error) {
-    console.error('数据库查询错误:', error);
-    throw error;
-  }
-}
-
-// 测试连接
-async function testConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log('✅ 数据库连接成功');
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error('❌ 数据库连接失败:', error.message);
-    return false;
-  }
-}
-
-// 初始化数据库表
-async function initTables() {
-  try {
-    // 用户表
-    await query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        openid VARCHAR(100) UNIQUE,
-        unionid VARCHAR(100),
-        phone VARCHAR(20),
-        nickname VARCHAR(100),
-        avatar_url VARCHAR(500),
-        session_key VARCHAR(100),
-        apple_id VARCHAR(100),
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_login DATETIME,
-        INDEX idx_openid (openid),
-        INDEX idx_unionid (unionid),
-        INDEX idx_apple_id (apple_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    // 账单表
-    await query(`
-      CREATE TABLE IF NOT EXISTS bills (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(100) NOT NULL,
-        type VARCHAR(20) DEFAULT 'expense',
-        amount DECIMAL(10, 2) NOT NULL,
-        merchant VARCHAR(200),
-        date DATE NOT NULL,
-        category_id INT,
-        category_name VARCHAR(50),
-        note TEXT,
-        create_time BIGINT DEFAULT NULL,
-        update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_user_date (user_id, date)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    // 预算表
-    await query(`
-      CREATE TABLE IF NOT EXISTS budgets (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(100) NOT NULL UNIQUE,
-        amount DECIMAL(10, 2) NOT NULL,
-        create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-        update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    // 提醒表
-    await query(`
-      CREATE TABLE IF NOT EXISTS reminders (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(100) NOT NULL UNIQUE,
-        enabled BOOLEAN DEFAULT FALSE,
-        time VARCHAR(10) DEFAULT '21:00',
-        create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-        update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    // APP版本管理表
-    await query(`
-      CREATE TABLE IF NOT EXISTS app_versions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        platform VARCHAR(20) NOT NULL COMMENT '平台: Android/iOS',
-        version VARCHAR(20) NOT NULL COMMENT '版本号',
-        update_content JSON NOT NULL COMMENT '更新内容数组',
-        package_size VARCHAR(20) NOT NULL COMMENT '安装包大小',
-        download_url VARCHAR(500) NOT NULL COMMENT '下载地址',
-        is_force TINYINT(1) DEFAULT 0 COMMENT '是否强制更新',
-        update_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_platform_version (platform, version),
-        INDEX idx_platform (platform)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='APP版本管理表';
-    `);
-
-    // AI对话使用记录表
-    await query(`
-      CREATE TABLE IF NOT EXISTS ai_chat_usage (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(100) NOT NULL COMMENT '用户ID',
-        question TEXT COMMENT '用户问题',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-        INDEX idx_user_date (user_id, created_at)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话使用记录表';
-    `);
-
-    // 安卓二维码表
-    await query(`
-      CREATE TABLE IF NOT EXISTS android_qrcode (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        qrcode_url VARCHAR(500) NOT NULL COMMENT '二维码URL',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='安卓二维码表';
-    `);
-
-    console.log('✅ 数据库表初始化成功');
-  } catch (error) {
-    console.error('❌ 数据库表初始化失败:', error);
-  }
-}
-
-// 导出
-module.exports = {
-  query,
-  testConnection,
-  initTables,
-  pool
-};
-
-// ========== backend/routes/bills.js - 账单接口 ==========
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
-
-// 账单管理路由
-router.post('/', async (req, res) => {
-  try {
-    const { action, data } = req.body;
-    const userId = req.userId; // 从 JWT 中间件获取
-    
-    if (!userId) {
-      return res.json({
-        success: false,
-        message: '请先登录后再使用此功能',
-        needLogin: true
-      });
-    }
-
-    switch (action) {
-      case 'add':
-        return await addBill(req, res, userId, data);
-      case 'list':
-        return await getBills(req, res, userId, data);
-      case 'update':
-        return await updateBill(req, res, userId, data);
-      case 'delete':
-        return await deleteBill(req, res, userId, data);
-      case 'sync':
-        return await syncBills(req, res, userId, data);
-      case 'getBudget':
-        return await getBudget(req, res, userId);
-      case 'setBudget':
-        return await setBudget(req, res, userId, data);
-      case 'getReminder':
-        return await getReminder(req, res, userId);
-      case 'setReminder':
-        return await setReminder(req, res, userId, data);
-      case 'saveReminderSubscription':
-        return await saveReminderSubscription(req, res, userId, data);
-      case 'getRedPacketCount':
-        return await getRedPacketCount(req, res, userId);
-      case 'grabRedPacket':
-        return await grabRedPacket(req, res, userId, data);
-      case 'getPoints':
-        return await getPoints(req, res, userId);
-      case 'addPoints':
-        return await addPoints(req, res, userId, data);
-      case 'getPointsHistory':
-        return await getPointsHistory(req, res, userId, data);
-      case 'syncPoints':
-        return await syncPoints(req, res, userId, data);
-      case 'getUserInfo':
-        return await getUserInfo(req, res, userId);
-      case 'updateUserInfo':
-        return await updateUserInfo(req, res, userId, data);
-      default:
-        res.json({ success: false, message: '未知操作' });
-    }
-  } catch (error) {
-    console.error('账单操作失败:', error);
-    res.json({ success: false, message: error.message });
-  }
-});
-
-// 添加账单
-async function addBill(req, res, userId, billData) {
-  // 确保所有字段都不是 undefined，转换为 null
-  const type = billData.type || 'expense';
-  const amount = parseFloat(billData.amount) || 0;
-  const merchant = billData.merchant || '';
-  const date = billData.date || new Date().toISOString().split('T')[0];
-  const categoryId = billData.categoryId ?? null;
-  const categoryName = billData.categoryName || '其他';
-  // 兼容 remark 和 note 两种字段名
-  const note = billData.note || billData.remark || '';
-  
-  // 使用前端传来的时间戳,如果没有则使用当前时间
-  const createTime = billData.createTime || Date.now();
-  
-  const result = await db.query(
-    'INSERT INTO bills (user_id, type, amount, merchant, date, category_id, category_name, note, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId, type, amount, merchant, date, categoryId, categoryName, note, createTime]
-  );
-  
-  res.json({
-    success: true,
-    _id: result.insertId,
-    id: result.insertId,
-    message: '添加成功'
-  });
-}
-
-// 获取账单列表
-async function getBills(req, res, userId, params = {}) {
-  const { startDate, endDate, limit = 100, skip = 0 } = params;
-  
-  // 确保 limit 和 skip 是安全的整数
-  const safeLimit = Math.max(1, Math.min(1000, parseInt(limit) || 100));
-  const safeSkip = Math.max(0, parseInt(skip) || 0);
-  
-  let query = 'SELECT * FROM bills WHERE user_id = ?';
-  let queryParams = [userId];
-  
-  if (startDate && endDate) {
-    query += ' AND date BETWEEN ? AND ?';
-    queryParams.push(startDate, endDate);
-  }
-  
-  // LIMIT 和 OFFSET 直接拼接（已经过安全验证）
-  query += ` ORDER BY date DESC, create_time DESC LIMIT ${safeLimit} OFFSET ${safeSkip}`;
-  
-  const bills = await db.query(query, queryParams);
-  
-  // 转换数据格式，确保前端兼容
-  const formattedBills = bills.map(bill => {
-    // 转换日期格式: Date对象 -> YYYY-MM-DD
-    let dateStr = bill.date;
-    if (bill.date instanceof Date) {
-      const year = bill.date.getFullYear();
-      const month = String(bill.date.getMonth() + 1).padStart(2, '0');
-      const day = String(bill.date.getDate()).padStart(2, '0');
-      dateStr = `${year}-${month}-${day}`;
-    } else if (typeof bill.date === 'string' && bill.date.includes('T')) {
-      dateStr = bill.date.split('T')[0];
-    }
-    
-    // create_time现在是BIGINT类型,直接使用
-    const createTimeStamp = bill.create_time || null;
-    
-    return {
-      id: bill.id,
-      _id: bill.id, // 云端ID
-      type: bill.type || 'expense',
-      amount: parseFloat(bill.amount) || 0,
-      merchant: bill.merchant || '',
-      date: dateStr,
-      categoryId: bill.category_id,
-      categoryName: bill.category_name || '其他',
-      remark: bill.note || '', // 前端使用 remark 字段
-      note: bill.note || '', // 同时保留 note 字段
-      createTime: createTimeStamp, // 返回时间戳
-      synced: true // 从云端获取的数据标记为已同步
-    };
-  });
-  
-  res.json({
-    success: true,
-    data: formattedBills,
-    total: formattedBills.length
-  });
-}
-
-// 更新账单
-async function updateBill(req, res, userId, data) {
-  const { _id, ...updateData } = data;
-  
-  // 转换字段名：驼峰 -> 下划线
-  const dbFields = {};
-  if (updateData.type !== undefined) dbFields.type = updateData.type;
-  if (updateData.amount !== undefined) dbFields.amount = parseFloat(updateData.amount) || 0;
-  if (updateData.merchant !== undefined) dbFields.merchant = updateData.merchant;
-  if (updateData.date !== undefined) dbFields.date = updateData.date;
-  if (updateData.categoryId !== undefined) dbFields.category_id = updateData.categoryId;
-  if (updateData.categoryName !== undefined) dbFields.category_name = updateData.categoryName;
-  if (updateData.note !== undefined) dbFields.note = updateData.note;
-  if (updateData.remark !== undefined) dbFields.note = updateData.remark;
-  
-  const fields = Object.keys(dbFields).map(key => `${key} = ?`).join(', ');
-  const values = Object.values(dbFields);
-  values.push(_id, userId);
-  
-  await db.query(
-    `UPDATE bills SET ${fields}, update_time = NOW() WHERE id = ? AND user_id = ?`,
-    values
-  );
-  
-  res.json({ success: true, message: '更新成功' });
-}
-
-// 删除账单
-async function deleteBill(req, res, userId, data) {
-  await db.query('DELETE FROM bills WHERE id = ? AND user_id = ?', [data._id, userId]);
-  res.json({ success: true, message: '删除成功' });
-}
-
-// 同步账单
-async function syncBills(req, res, userId, data) {
-  const { bills } = data;
-  
-  if (!bills || bills.length === 0) {
-    return res.json({ success: true, message: '无数据需要同步' });
-  }
-  
-  for (const bill of bills) {
-    const type = bill.type || 'expense';
-    const amount = parseFloat(bill.amount) || 0;
-    const merchant = bill.merchant || '';
-    // 转换日期格式：ISO 8601 -> YYYY-MM-DD
-    let date = bill.date || new Date().toISOString().split('T')[0];
-    if (date.includes('T')) {
-      date = date.split('T')[0];
-    }
-    const categoryId = bill.categoryId ?? bill.category_id ?? null;
-    const categoryName = bill.categoryName || bill.category_name || '其他';
-    const note = bill.note || bill.remark || '';
-    // 转换创建时间格式
-    let createTime = bill.createTime || bill.create_time || new Date();
-    if (typeof createTime === 'string' && createTime.includes('T')) {
-      createTime = createTime.replace('T', ' ').replace('Z', '');
-    }
-    
-    await db.query(
-      'INSERT INTO bills (user_id, type, amount, merchant, date, category_id, category_name, note, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [userId, type, amount, merchant, date, categoryId, categoryName, note, createTime]
-    );
-  }
-  
-  res.json({ success: true, count: bills.length, message: `成功同步${bills.length}条数据` });
-}
-
-// 获取预算
-async function getBudget(req, res, userId) {
-  const result = await db.query('SELECT amount FROM budgets WHERE user_id = ?', [userId]);
-  
-  res.json({
-    success: true,
-    budget: result.length > 0 ? parseFloat(result[0].amount) : 6000
-  });
-}
-
-// 设置预算
-async function setBudget(req, res, userId, data) {
-  const amount = parseFloat(data.amount) || 0;
-  const existing = await db.query('SELECT id FROM budgets WHERE user_id = ?', [userId]);
-  
-  if (existing.length > 0) {
-    await db.query('UPDATE budgets SET amount = ?, update_time = NOW() WHERE user_id = ?', [amount, userId]);
-  } else {
-    await db.query('INSERT INTO budgets (user_id, amount, create_time) VALUES (?, ?, NOW())', [userId, amount]);
-  }
-  
-  res.json({ success: true, message: '预算设置成功' });
-}
-
-// 获取提醒设置
-async function getReminder(req, res, userId) {
-  const result = await db.query('SELECT * FROM reminders WHERE user_id = ?', [userId]);
-  
-  res.json({
-    success: true,
-    reminder: result.length > 0 ? result[0] : { enabled: false, time: '21:00' }
-  });
-}
-
-// 设置提醒
-async function setReminder(req, res, userId, data) {
-  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [userId]);
-  
-  if (existing.length > 0) {
-    await db.query('UPDATE reminders SET enabled = ?, time = ?, update_time = NOW() WHERE user_id = ?', 
-      [data.enabled, data.time, userId]);
-  } else {
-    await db.query('INSERT INTO reminders (user_id, enabled, time, create_time) VALUES (?, ?, ?, NOW())', 
-      [userId, data.enabled, data.time]);
-  }
-  
-  res.json({ success: true, message: data.enabled ? '提醒设置成功' : '提醒已关闭' });
-}
-
-// 保存提醒订阅信息
-async function saveReminderSubscription(req, res, userId, data) {
-  const { subscribed, templateId, reminderTime } = data;
-  
-  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [userId]);
-  
-  if (existing.length > 0) {
-    await db.query(
-      'UPDATE reminders SET enabled = ?, time = ?, template_id = ?, update_time = NOW() WHERE user_id = ?',
-      [subscribed, reminderTime, templateId, userId]
-    );
-  } else {
-    await db.query(
-      'INSERT INTO reminders (user_id, enabled, time, template_id, create_time) VALUES (?, ?, ?, ?, NOW())',
-      [userId, subscribed, reminderTime, templateId]
-    );
-  }
-  
-  res.json({ success: true, message: '订阅信息保存成功' });
-}
-
-// 获取抢红包次数
-async function getRedPacketCount(req, res, userId) {
-  const result = await db.query(
-    'SELECT morning_count, afternoon_count, last_grab_time FROM red_packet_records WHERE user_id = ? AND DATE(last_grab_time) = CURDATE()',
-    [userId]
-  );
-  
-  if (result.length > 0) {
-    res.json({
-      success: true,
-
-// ========== backend/routes/auth.js - 认证接口 ==========
-const express = require('express');
-const router = express.Router();
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
-const db = require('../db');
-const { checkIPLimit, checkSMSLimit, getClientIP } = require('../middleware/rate-limit');
-
-// 微信小程序登录
-router.post('/wxLogin', async (req, res) => {
-  try {
-    const { code } = req.body;
-    
-    if (!code) {
-      return res.json({
-        success: false,
-        message: '缺少code参数'
-      });
-    }
-
-    // 调用微信接口获取openid和session_key
-    const wxUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${process.env.WX_APPID}&secret=${process.env.WX_SECRET}&js_code=${code}&grant_type=authorization_code`;
-    
-    const wxRes = await axios.get(wxUrl);
-    
-    if (wxRes.data.errcode) {
-      return res.json({
-        success: false,
-        message: wxRes.data.errmsg || '微信登录失败'
-      });
-    }
-
-    const { openid, session_key } = wxRes.data;
-
-    // 查询或创建用户
-    const users = await db.query(
-      'SELECT * FROM users WHERE openid = ?',
-      [openid]
-    );
-
-    let userId;
-    if (users.length > 0) {
-      userId = users[0].id;
-      // 更新session_key和登录时间
-      await db.query(
-        'UPDATE users SET session_key = ?, last_login = NOW() WHERE id = ?',
-        [session_key, userId]
-      );
-    } else {
-      // 创建新用户
-      const result = await db.query(
-        'INSERT INTO users (openid, session_key, created_at, last_login) VALUES (?, ?, NOW(), NOW())',
-        [openid, session_key]
-      );
-      userId = result.insertId;
-    }
-
-    // 生成JWT token
-    const token = jwt.sign(
-      { userId, openid },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '30d' }
-    );
-
-    res.json({
-      success: true,
-      data: {
-        token,
-        userId,
-        openid
-      }
-    });
-
-  } catch (error) {
-    console.error('微信登录失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '登录失败'
-    });
-  }
-});
-
-// 微信登录（APP端和小程序通用）
-router.post('/wechat-login', async (req, res) => {
-  try {
-    const { code, nickName, avatarUrl } = req.body;
-    
-    if (!code) {
-      return res.json({
-        success: false,
-        message: '缺少code参数'
-      });
-    }
-
-    // 调用微信接口获取openid和session_key
-    const wxUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${process.env.WX_APPID}&secret=${process.env.WX_SECRET}&js_code=${code}&grant_type=authorization_code`;
-    
-    const wxRes = await axios.get(wxUrl);
-    
-    if (wxRes.data.errcode) {
-      return res.json({
-        success: false,
-        message: wxRes.data.errmsg || '微信登录失败'
-      });
-    }
-
-    const { openid, session_key } = wxRes.data;
-
-    // 查询或创建用户
-    const users = await db.query(
-      'SELECT * FROM users WHERE openid = ?',
-      [openid]
-    );
-
-    let userId, userNickName, userAvatarUrl;
-    if (users.length > 0) {
-      userId = users[0].id;
-      // 老用户：只更新session_key和登录时间，不更新昵称和头像（保留用户修改的值）
-      await db.query(
-        'UPDATE users SET session_key = ?, last_login = NOW() WHERE id = ?',
-        [session_key, userId]
-      );
-      // 从数据库获取用户的昵称和头像
-      userNickName = users[0].nickname || nickName || '微信用户';
-      userAvatarUrl = users[0].avatar_url || avatarUrl || '';
-      
-      console.log('=== 老用户登录 ===');
-      console.log('数据库中的昵称:', users[0].nickname);
-      console.log('数据库中的头像:', users[0].avatar_url);
-      console.log('返回的昵称:', userNickName);
-      console.log('返回的头像:', userAvatarUrl);
-    } else {
-      // 新用户：使用微信的昵称和头像创建账号
-      const result = await db.query(
-        'INSERT INTO users (openid, session_key, nickname, avatar_url, created_at, last_login) VALUES (?, ?, ?, ?, NOW(), NOW())',
-        [openid, session_key, nickName || '微信用户', avatarUrl || '']
-      );
-      userId = result.insertId;
-      userNickName = nickName || '微信用户';
-      userAvatarUrl = avatarUrl || '';
-    }
-
-    // 生成JWT token
-    const token = jwt.sign(
-      { userId, openid },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '30d' }
-    );
-
-    res.json({
-      success: true,
-      token,
-      data: {
-        userId,
-        openid,
-        nickName: userNickName,
-        avatarUrl: userAvatarUrl
-      }
-    });
-
-  } catch (error) {
-    console.error('微信登录失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '登录失败'
-    });
-  }
-});
-
-// 微信APP登录（使用微信开放平台）
-router.post('/wechat-app-login', async (req, res) => {
-  try {
-    console.log('=== 微信APP登录接口被调用 ===');
-    console.log('请求体:', req.body);
-    
-    const { code } = req.body;
-    
-    if (!code) {
-      console.error('❌ 缺少code参数');
-      return res.json({
-        success: false,
-        message: '缺少code参数'
-      });
-    }
-
-    console.log('✅ 收到code:', code);
-
-    // 检查环境变量配置
-    console.log('检查环境变量配置...');
-    console.log('WX_OPEN_APPID:', process.env.WX_OPEN_APPID ? '已配置' : '未配置');
-    console.log('WX_OPEN_SECRET:', process.env.WX_OPEN_SECRET ? '已配置' : '未配置');
-    
-    if (!process.env.WX_OPEN_APPID || !process.env.WX_OPEN_SECRET) {
-      console.error('❌ 微信开放平台配置缺失');
-      return res.json({
-        success: false,
-        message: '微信登录功能暂未配置，请联系管理员'
-      });
-    }
-
-    // 调用微信开放平台接口获取access_token
-
-// ========== backend/routes/admin.js - 管理后台接口 ==========
-    });
-  } catch (error) {
-    console.error('获取积分历史失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '获取积分历史失败'
-    });
-  }
-});
-
-// 手动调整积分
-router.post('/points/adjust', async (req, res) => {
-  try {
-    const { userId, points, reason } = req.body;
-    
-    if (!userId || !points || !reason) {
-      return res.json({ success: false, message: '参数不完整' });
-    }
-    
-    // 检查用户是否存在
-    const userResult = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
-    if (userResult.length === 0) {
-      return res.json({ success: false, message: '用户不存在' });
-    }
-    
-    // 更新或插入积分
-    await db.query(`
-      INSERT INTO user_points (user_id, points) 
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE points = points + ?
-    `, [userId, points, points]);
-    
-    // 记录积分历史
-    await db.query(
-      'INSERT INTO points_history (user_id, points, reason) VALUES (?, ?, ?)',
-      [userId, points, reason]
-    );
-    
-    res.json({
-      success: true,
-      message: '积分调整成功'
-    });
-  } catch (error) {
-    console.error('调整积分失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '调整积分失败'
-    });
-  }
-});
-
-// 获取意见反馈列表
-router.get('/feedback', async (req, res) => {
-  try {
-    const { page = 1, pageSize = 20 } = req.query;
-    const limit = parseInt(pageSize);
-    const offset = (parseInt(page) - 1) * limit;
-    
-    // 获取反馈列表
-    const feedbackList = await db.query(
-      `SELECT id, user_id, content, images, user_info, created_at 
-       FROM feedback 
-       ORDER BY created_at DESC 
-       LIMIT ${limit} OFFSET ${offset}`
-    );
-    
-    // 获取总数
-    const countResult = await db.query('SELECT COUNT(*) as total FROM feedback');
-    
-    // 处理数据
-    const processedList = feedbackList.map(item => {
-      let images = [];
-      let userInfo = null;
-      
-      try {
-        if (item.images) {
-          const imagesStr = typeof item.images === 'string' ? item.images : item.images.toString();
-          if (imagesStr.trim()) {
-            images = JSON.parse(imagesStr);
-          }
-        }
-      } catch (e) {
-        console.error('解析images失败:', e);
-      }
-      
-      try {
-        if (item.user_info) {
-          const userInfoStr = typeof item.user_info === 'string' ? item.user_info : item.user_info.toString();
-          if (userInfoStr.trim()) {
-            userInfo = JSON.parse(userInfoStr);
-          }
-        }
-      } catch (e) {
-        console.error('解析user_info失败:', e);
-      }
-      
-      return {
-        ...item,
-        images,
-        user_info: userInfo
-      };
-    });
-    
-    res.json({
-      success: true,
-      data: processedList,
-      total: countResult[0].total,
-      page: parseInt(page),
-      pageSize: limit
-    });
-  } catch (error) {
-    console.error('获取反馈列表失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '获取反馈列表失败'
-    });
-  }
-});
-
-// 删除反馈
-router.delete('/feedback/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    await db.query('DELETE FROM feedback WHERE id = ?', [id]);
-    
-    res.json({
-      success: true,
-      message: '删除成功'
-    });
-  } catch (error) {
-    console.error('删除反馈失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '删除反馈失败'
-    });
-  }
-});
-
-// ========== APP版本管理 ==========
-
-// 获取版本列表
-router.get('/app-versions', async (req, res) => {
-  try {
-    const versions = await db.query(`
-      SELECT 
-        id,
-        platform,
-        version,
-        update_content as updateContent,
-        package_size as packageSize,
-        download_url as downloadUrl,
-        is_force as isForce,
-        DATE_FORMAT(update_time, '%Y-%m-%d') as updateTime,
-        created_at
-      FROM app_versions
-      ORDER BY created_at DESC
-    `);
-    
-    // 解析JSON字段
-    const processedVersions = versions.map(v => ({
-      ...v,
-      updateContent: typeof v.updateContent === 'string' ? JSON.parse(v.updateContent) : v.updateContent,
-      isForce: Boolean(v.isForce)
-    }));
-    
-    res.json({
-      success: true,
-      data: processedVersions
-    });
-  } catch (error) {
-    console.error('获取版本列表失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '获取版本列表失败'
-    });
-  }
-});
-
-// 创建新版本
-router.post('/app-versions', async (req, res) => {
-  try {
-    const { platform, version, updateContent, packageSize, downloadUrl, isForce } = req.body;
-    
-    if (!platform || !version || !updateContent || !packageSize || !downloadUrl) {
-      return res.json({
-        success: false,
-        message: '参数不完整'
-      });
-    }
-    
-    // 检查版本号是否已存在
-    const existing = await db.query(
-      'SELECT id FROM app_versions WHERE platform = ? AND version = ?',
-      [platform, version]
-    );
-    
-    if (existing.length > 0) {
-      return res.json({
-        success: false,
-        message: '该版本号已存在'
-      });
-    }
-    
-    await db.query(
-      `INSERT INTO app_versions 
-       (platform, version, update_content, package_size, download_url, is_force, update_time) 
-       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [platform, version, JSON.stringify(updateContent), packageSize, downloadUrl, isForce ? 1 : 0]
-    );
-    
-    res.json({
-      success: true,
-      message: '发布成功'
-    });
-  } catch (error) {
-    console.error('创建版本失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '创建版本失败'
-    });
-  }
-});
-
-// 更新版本
-router.put('/app-versions/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { version, updateContent, packageSize, downloadUrl, isForce } = req.body;
-    
-    if (!version || !updateContent || !packageSize || !downloadUrl) {
-      return res.json({
-        success: false,
-        message: '参数不完整'
-      });
-    }
-    
-    await db.query(
-      `UPDATE app_versions 
-       SET version = ?, update_content = ?, package_size = ?, download_url = ?, is_force = ?, update_time = NOW()
-       WHERE id = ?`,
-      [version, JSON.stringify(updateContent), packageSize, downloadUrl, isForce ? 1 : 0, id]
-    );
-    
-    res.json({
-      success: true,
-      message: '更新成功'
-    });
-  } catch (error) {
-    console.error('更新版本失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '更新版本失败'
-    });
-  }
-});
-
-// 删除版本
-router.delete('/app-versions/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    await db.query('DELETE FROM app_versions WHERE id = ?', [id]);
-    
-    res.json({
-      success: true,
-      message: '删除成功'
-    });
-  } catch (error) {
-    console.error('删除版本失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '删除版本失败'
-    });
-  }
-});
-
-// 切换强制更新
-router.put('/app-versions/:id/force', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { isForce } = req.body;
-    
-    await db.query(
-      'UPDATE app_versions SET is_force = ? WHERE id = ?',
-      [isForce ? 1 : 0, id]
-    );
-    
-    res.json({
-      success: true,
-      message: '更新成功'
-    });
-  } catch (error) {
-    console.error('切换强制更新失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '切换强制更新失败'
-    });
-  }
-});
-
-// 上传APK文件
-router.post('/upload-apk', async (req, res) => {
-  try {
-    const multer = require('multer');
-    const path = require('path');
-    const fs = require('fs');
-    
-    // 确保上传目录存在
-    const uploadDir = path.join(__dirname, '../uploads/apk');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    // 配置multer
-    const storage = multer.diskStorage({
-      destination: function (req, file, cb) {
-        cb(null, uploadDir);
-      },
-      filename: function (req, file, cb) {
-        const timestamp = Date.now();
-        const ext = path.extname(file.originalname);
-        cb(null, `qiannaqule-${timestamp}${ext}`);
-      }
-    });
-    
-    const upload = multer({
-      storage: storage,
-      limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
-      fileFilter: function (req, file, cb) {
-        if (path.extname(file.originalname).toLowerCase() === '.apk') {
-          cb(null, true);
-        } else {
-          cb(new Error('只能上传APK文件'));
-        }
-      }
-    }).single('file');
-    
-    upload(req, res, function (err) {
-      if (err) {
-        return res.json({
-          success: false,
-          message: err.message || '上传失败'
-        });
-      }
-      
-      if (!req.file) {
-        return res.json({
-          success: false,
-          message: '没有文件上传'
-        });
-      }
-      
-      // 计算文件大小
-      const fileSizeInMB = (req.file.size / (1024 * 1024)).toFixed(2);
-      
-      res.json({
-        success: true,
-        url: `https://api.qiannaqule.top/uploads/apk/${req.file.filename}`,
-        size: `${fileSizeInMB}MB`,
-        message: '上传成功'
-      });
-    });
-  } catch (error) {
-    console.error('上传APK失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '上传APK失败'
-    });
-  }
-});
-
-// ========== 安卓二维码管理 ==========
-
-// 上传安卓二维码
-router.post('/upload-android-qrcode', async (req, res) => {
-  try {
-    const multer = require('multer');
-    const path = require('path');
-    const fs = require('fs');
-    
-    // 确保上传目录存在
-    const uploadDir = path.join(__dirname, '../uploads/qrcode');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    // 配置multer
-    const storage = multer.diskStorage({
-      destination: function (req, file, cb) {
-        cb(null, uploadDir);
-      },
-      filename: function (req, file, cb) {
-        const timestamp = Date.now();
-        const ext = path.extname(file.originalname);
-        cb(null, `android-qrcode-${timestamp}${ext}`);
-      }
-    });
-    
-    const upload = multer({
-      storage: storage,
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-      fileFilter: function (req, file, cb) {
-        const ext = path.extname(file.originalname).toLowerCase();
-        if (['.jpg', '.jpeg', '.png'].includes(ext)) {
-          cb(null, true);
-        } else {
-          cb(new Error('只能上传JPG或PNG图片'));
-        }
-      }
-    }).single('file');
-    
-    upload(req, res, async function (err) {
-      if (err) {
-        return res.json({
-          success: false,
-          message: err.message || '上传失败'
-        });
-      }
-      
-      if (!req.file) {
-        return res.json({
-          success: false,
-          message: '没有文件上传'
-        });
-      }
-      
-      const qrcodeUrl = `https://api.qiannaqule.top/uploads/qrcode/${req.file.filename}`;
-      
-      // 保存到数据库
-      try {
-        // 先检查是否已有记录
-        const existing = await db.query('SELECT id FROM android_qrcode LIMIT 1');
-        
-        if (existing.length > 0) {
-          // 更新现有记录
-          await db.query(
-            'UPDATE android_qrcode SET qrcode_url = ?, updated_at = NOW() WHERE id = ?',
-            [qrcodeUrl, existing[0].id]
-          );
-        } else {
-          // 插入新记录
-          await db.query(
-            'INSERT INTO android_qrcode (qrcode_url, created_at, updated_at) VALUES (?, NOW(), NOW())',
-            [qrcodeUrl]
-          );
-        }
-        
-        res.json({
-          success: true,
-          url: qrcodeUrl,
-          message: '上传成功'
-        });
-      } catch (dbError) {
-        console.error('保存二维码URL失败:', dbError);
-        res.json({
-          success: false,
-          message: '保存失败'
-        });
-      }
-    });
-  } catch (error) {
-    console.error('上传安卓二维码失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '上传失败'
-    });
-  }
-});
-
-// 获取安卓二维码
-router.get('/android-qrcode', async (req, res) => {
-  try {
-    const result = await db.query('SELECT qrcode_url as qrcodeUrl FROM android_qrcode ORDER BY updated_at DESC LIMIT 1');
-    
-    if (result.length > 0) {
-      res.json({
-        success: true,
-        data: {
-          qrcodeUrl: result[0].qrcodeUrl
-        }
-      });
-    } else {
-      res.json({
-        success: true,
-        data: {
-          qrcodeUrl: null
-        }
-      });
-    }
-  } catch (error) {
-    console.error('获取安卓二维码失败:', error);
-    res.json({
-      success: false,
-      message: error.message || '获取失败'
-    });
-  }
-});
-
-module.exports = router;
-
-// ========== backend/routes/ocr.js - OCR识别接口 ==========
-const express = require('express');
-const router = express.Router();
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-
-// 简单的速率限制（内存存储，生产环境建议用 Redis）
-const rateLimitMap = new Map();
-const RATE_LIMIT = {
-  maxRequests: 20,              // 登录用户：每小时 20 次
-  windowMs: 60 * 60 * 1000,
-  aiEnabled: true               // 登录用户启用 AI
-};
-
-// 速率限制检查
-function checkRateLimit(userId) {
-  const now = Date.now();
-  const key = userId;
-  
-  if (!rateLimitMap.has(key)) {
-    rateLimitMap.set(key, { count: 1, resetTime: now + RATE_LIMIT.windowMs });
-    return { allowed: true, remaining: RATE_LIMIT.maxRequests - 1 };
-  }
-  
-  const record = rateLimitMap.get(key);
-  
-  // 重置计数器
-  if (now > record.resetTime) {
-    record.count = 1;
-    record.resetTime = now + RATE_LIMIT.windowMs;
-    return { allowed: true, remaining: RATE_LIMIT.maxRequests - 1 };
-  }
-  
-  // 检查是否超限
-  if (record.count >= RATE_LIMIT.maxRequests) {
-    return { 
-      allowed: false, 
-      remaining: 0,
-      resetTime: record.resetTime 
-    };
-  }
-  
-  record.count++;
-  return { allowed: true, remaining: RATE_LIMIT.maxRequests - record.count };
-}
-
-// 百度OCR识别
-router.post('/', async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    if (!userId) {
-      return res.json({
-        success: false,
-        error: '请先登录后再使用此功能',
-        needLogin: true
-      });
-    }
-    
-    // 速率限制检查
-    const rateLimit = checkRateLimit(userId);
-    if (!rateLimit.allowed) {
-      const resetDate = new Date(rateLimit.resetTime);
-      return res.json({
-        success: false,
-        error: `请求过于频繁，请稍后再试（重置时间：${resetDate.toLocaleTimeString()})`
-      });
-    }
-    
-    let { fileID, imageBase64, imageUrl, useAI = false } = req.body;
-    
-    // 如果传的是图片 URL，转换为 base64
-    if (imageUrl && !imageBase64) {
-      try {
-        let imagePath;
-        
-        // 判断是完整URL还是相对路径
-        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-          // 完整URL: 提取路径部分 (如 /uploads/xxx.jpg)
-          const urlObj = new URL(imageUrl);
-          // urlObj.pathname 是 /uploads/xxx.jpg
-          // 需要转换为 ./uploads/xxx.jpg
-          imagePath = path.join(__dirname, '..', urlObj.pathname);
-        } else if (imageUrl.startsWith('/uploads/')) {
-          // 绝对路径: /uploads/xxx.jpg
-          imagePath = path.join(__dirname, '..', imageUrl);
-        } else {
-          // 相对路径: uploads/xxx.jpg
-          imagePath = path.join(__dirname, '..', imageUrl);
-        }
-        
-        console.log('原始URL:', imageUrl);
-        console.log('解析后的本地路径:', imagePath);
-        
-        if (fs.existsSync(imagePath)) {
-          const imageBuffer = fs.readFileSync(imagePath);
-          imageBase64 = imageBuffer.toString('base64');
-          console.log('✅ 图片读取成功，大小:', imageBuffer.length, 'bytes');
-        } else {
-          console.error('❌ 图片文件不存在:', imagePath);
-          // 列出uploads目录的文件帮助调试
-          const uploadsDir = path.join(__dirname, '..', 'uploads');
-          if (fs.existsSync(uploadsDir)) {
-            const files = fs.readdirSync(uploadsDir);
-            console.log('uploads目录现有文件:', files.slice(0, 5));
-          }
-          return res.json({
-            success: false,
-            error: '图片文件不存在'
-          });
-        }
-      } catch (error) {
-        console.error('❌ 图片转换失败:', error);
-        return res.json({
-          success: false,
-          error: '图片转换失败: ' + error.message
-        });
-      }
-    }
-    
-    if (!imageBase64 && !fileID) {
-      return res.json({
-        success: false,
-        error: '缺少图片数据'
-      });
-    }
-
-    // 获取百度access_token
-    const tokenUrl = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${process.env.BAIDU_OCR_API_KEY}&client_secret=${process.env.BAIDU_OCR_SECRET_KEY}`;
-    
-    const tokenRes = await axios.post(tokenUrl);
-    const accessToken = tokenRes.data.access_token;
-
-    // 调用票据识别API
-    const ocrUrl = `https://aip.baidubce.com/rest/2.0/ocr/v1/receipt?access_token=${accessToken}`;
-    
-    const ocrRes = await axios.post(ocrUrl, 
-      `image=${encodeURIComponent(imageBase64)}&recognize_granularity=big&probability=true&detect_direction=true`,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }
-    );
-
-    if (ocrRes.data.error_code) {
-      return res.json({
-        success: false,
-        error: ocrRes.data.error_msg || '识别失败'
-      });
-    }
-
-    // 解析OCR结果
-    const billInfo = parseOCRResult(ocrRes.data);
-    
-    // AI 增强已移至前端，后端只做正则解析
-    console.log('后端正则解析完成，AI 增强由前端处理');
-
-    res.json({
-      success: true,
-      text: billInfo.rawText,
-      data: billInfo
-    });
-
-  } catch (error) {
-    console.error('OCR识别失败:', error);
-    res.json({
-      success: false,
-      error: error.message || '识别失败，请重试',
-      data: {
-        amount: 0,
-        merchant: '',
-        date: new Date().toISOString().split('T')[0],
-        categoryId: 12,
-        categoryName: '其他'
-      }
-    });
-  }
-});
-
-// 解析OCR结果（使用旧项目完整识别规则）
-function parseOCRResult(ocrResult) {
-  const words = ocrResult.words_result || [];
-  const allText = words.map(item => item.words).join(' ');
-  
-  console.log('========== OCR 识别原始文本 ==========');
-  console.log(allText);
-  console.log('========== 文本长度:', allText.length, '==========');
-  
-  // 判断收入还是支出
-  const expenseKeywords = ['购买', '消费', '支付', '实付', '应付', '合计', '小票', '订单', '商品', '数量', '单据号', '门店', '零食', '超市', '便利店'];
-  let isDefinitelyExpense = false;
-  for (const keyword of expenseKeywords) {
-    if (allText.includes(keyword)) {
-      isDefinitelyExpense = true;
-      console.log('确认为支出类型，关键词:', keyword);
-      break;
-    }
-  }
-  
-
-// ========== backend/routes/ai-chat.js - AI对话接口 ==========
-/**
- * AI 财务助手对话接口
- * 基于用户真实账单数据提供财务分析和建议
- */
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
-
-// Cloudbase Node SDK
-let cloudbase = null;
-
-// 初始化 Cloudbase
-try {
-  const tcb = require('@cloudbase/node-sdk');
-  const envId = process.env.CLOUDBASE_ENV || "cloud1-8gxevfq393690dfe";
-  
-  cloudbase = tcb.init({
-    env: envId,
-    timeout: 60000
-  });
-  
-  console.log('✅ AI财务助手 - Cloudbase初始化成功');
-} catch (error) {
-  console.warn('⚠️ AI财务助手 - Cloudbase初始化失败:', error.message);
-}
-
-// Agent ID
-const AGENT_ID = 'agent-xiaopiaoshi-2end0lcd9c419f';
-
-/**
- * POST /api/ai-chat
- * AI财务助手对话
- */
-router.post('/', async (req, res) => {
-  try {
-    const { question } = req.body;
-    const userId = req.userId || req.openid;
-    
-    if (!question) {
-      return res.json({
-        success: false,
-        message: '请输入问题'
-      });
-    }
-    
-    if (!userId) {
-      return res.json({
-        success: false,
-        message: '请先登录'
-      });
-    }
-    
-    // 检查今日使用次数（每天限制3次）
-    const today = new Date().toISOString().split('T')[0];
-    const usageCount = await db.query(
-      `SELECT COUNT(*) as count FROM ai_chat_usage 
-       WHERE user_id = ? AND DATE(created_at) = ?`,
-      [userId, today]
-    );
-    
-    const todayCount = usageCount[0]?.count || 0;
-    const dailyLimit = 3;
-    
-    if (todayCount >= dailyLimit) {
-      return res.json({
-        success: false,
-        message: `今日咨询次数已用完（${dailyLimit}次），明天再来吧~`,
-        remainingCount: 0
-      });
-    }
-    
-    // 检查 Cloudbase 是否可用
-    if (!cloudbase) {
-      return res.json({
-        success: false,
-        message: 'AI服务暂时不可用'
-      });
-    }
-    
-    console.log('📤 [AI财务助手] 用户问题:', question);
-    
-    // 1. 查询用户最近3个月的账单数据
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    const threeMonthsAgoStr = threeMonthsAgo.toISOString().split('T')[0];
-    
-    const bills = await db.query(
-      `SELECT * FROM bills 
-       WHERE user_id = ? AND date >= ? 
-       ORDER BY date DESC`,
-      [userId, threeMonthsAgoStr]
-    );
-    
-    console.log(`📊 查询到 ${bills.length} 笔账单`);
-    
-    // 2. 统计数据
-    const stats = {
-      totalExpense: 0,
-      totalIncome: 0,
-      categoryStats: {},
-      monthlyStats: {},
-      billCount: bills.length
-    };
-    
-    bills.forEach(bill => {
-      const amount = parseFloat(bill.amount);
-      // 将Date对象转换为字符串 YYYY-MM-DD
-      const dateStr = bill.date instanceof Date 
-        ? bill.date.toISOString().split('T')[0] 
-        : bill.date;
-      const month = dateStr.substring(0, 7); // YYYY-MM
-      
-      if (bill.type === 'expense') {
-        stats.totalExpense += amount;
-        
-        // 按分类统计
-        const category = bill.category_name || '其他';
-        stats.categoryStats[category] = (stats.categoryStats[category] || 0) + amount;
-      } else {
-        stats.totalIncome += amount;
-      }
-      
-      // 按月统计
-      if (!stats.monthlyStats[month]) {
-        stats.monthlyStats[month] = { expense: 0, income: 0 };
-      }
-      if (bill.type === 'expense') {
-        stats.monthlyStats[month].expense += amount;
-      } else {
-        stats.monthlyStats[month].income += amount;
-      }
-    });
-    
-    // 找出支出最多的分类（前3名）
-    const topCategories = Object.entries(stats.categoryStats)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([name, amount]) => `${name}(${amount.toFixed(2)}元)`)
-      .join('、');
-    
-    // 计算月均支出
-    const monthCount = Object.keys(stats.monthlyStats).length || 1;
-    const avgMonthlyExpense = (stats.totalExpense / monthCount).toFixed(2);
-    
-    console.log('📊 统计数据:', {
-      totalExpense: stats.totalExpense.toFixed(2),
-      totalIncome: stats.totalIncome.toFixed(2),
-      topCategories,
-      avgMonthlyExpense
-    });
-    
-    // 3. 构建prompt
-    const prompt = `你是一个专业、友好的AI财务顾问助手，名字叫"小财"。
-
-【用户问题】
-${question}
-
-【用户最近3个月的财务数据】
-- 总支出：${stats.totalExpense.toFixed(2)}元
-- 总收入：${stats.totalIncome.toFixed(2)}元
-- 账单笔数：${stats.billCount}笔
-- 月均支出：${avgMonthlyExpense}元
-- 支出最多的分类：${topCategories || '暂无数据'}
-
-【按月统计】
-${Object.entries(stats.monthlyStats).map(([month, data]) => 
-  `${month}: 支出${data.expense.toFixed(2)}元，收入${data.income.toFixed(2)}元`
-).join('\n')}
-
-【你的任务】
-1. 用简洁、友好的语气回答用户的问题
-2. 基于真实数据给出分析和建议
-3. 如果用户问的问题与财务无关，礼貌地引导回财务话题
-4. 回答要具体、实用，避免空洞的建议
-5. 适当使用emoji让回答更生动
-6. 回答控制在200字以内
-
-【回答格式】
-直接回答，不要加"小财："等前缀，不要使用markdown格式。`;
-    
-    // 4. 调用 AI Agent
-    let aiAnswer = '抱歉，我暂时无法回答这个问题。';
-    
-    try {
-      const ai = cloudbase.ai();
-      
-      console.log('📤 [AI财务助手] 调用 bot.sendMessage...');
-      const aiRes = await ai.bot.sendMessage({
-        botId: AGENT_ID,
-        threadId: `chat-${userId}-${Date.now()}`,
-        runId: `run-${Date.now()}`,
-        messages: [
-          {
-            id: `msg-${Date.now()}`,
-            role: 'user',
-            content: prompt
-          }
-        ],
-        tools: [],
-        context: [],
-
-// ========== pages/tab/bills/bills.vue - 账单列表页 ==========
-<template>
-	<view class="page">
-		<view class="container">
-			<!-- 顶部搜索栏 -->
-			<view class="header-bar">
-				<view class="search-input-wrapper">
-					<text class="search-icon">🔍</text>
-					<input 
-						class="search-input" 
-						type="text" 
-						v-model="data.searchKeyword" 
-						placeholder="搜索商家、分类"
-						@input="handleSearch"
-					/>
-					<text class="clear-icon" v-if="data.searchKeyword" @click="clearSearch">✕</text>
-				</view>
-			</view>
-			
-			<!-- 统计卡片 -->
-			<view class="summary-card">
-				<view class="summary-header">
-					<view class="month-selector" @click="showMonthPicker">
-						<text class="month-text">{{ data.selectedMonth || '全部账单' }}</text>
-						<text class="month-arrow">▼</text>
-					</view>
-				</view>
-				<view class="summary-amounts">
-					<view class="amount-item">
-						<text class="amount-label">收入</text>
-						<text class="amount-value income">{{ formatAmount(data.totalIncome) }}</text>
-					</view>
-					<view class="amount-divider"></view>
-					<view class="amount-item">
-						<text class="amount-label">支出</text>
-						<text class="amount-value expense">-{{ formatAmount(data.totalExpense) }}</text>
-					</view>
-					<view class="amount-divider"></view>
-					<view class="amount-item">
-						<text class="amount-label">结余</text>
-						<text class="amount-value" :class="data.balance >= 0 ? 'income' : 'expense'">
-							{{ data.balance >= 0 ? '+' : '-' }}{{ formatAmount(data.balance) }}
-						</text>
-					</view>
-				</view>
-			</view>
-			
-			<!-- 自定义月份选择器弹窗 -->
-			<view class="custom-picker-modal" v-if="data.showCustomPicker" @click="closeMonthPicker">
-				<view class="picker-content" @click.stop>
-					<view class="picker-header">
-						<text class="picker-cancel" @click="closeMonthPicker">取消</text>
-						<text class="picker-title">选择月份</text>
-						<text class="picker-confirm" @click="confirmMonthPicker">完成</text>
-					</view>
-					<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange" indicator-style="height: 50px">
-						<picker-view-column>
-							<view 
-								class="picker-item" 
-								:class="{ 'picker-item-selected': index === data.pickerValue[0] }"
-								v-for="(year, index) in data.years" 
-								:key="year"
-							>
-								{{ year }}
-							</view>
-						</picker-view-column>
-						<picker-view-column>
-							<view 
-								class="picker-item" 
-								:class="{ 'picker-item-selected': index === data.pickerValue[1] }"
-								v-for="(item, index) in data.availableMonths" 
-								:key="item"
-							>
-								{{ item }}
-							</view>
-						</picker-view-column>
-					</picker-view>
-				</view>
-			</view>
-			
-			<!-- 筛选标签 - 横向滚动 -->
-			<scroll-view class="filter-scroll" scroll-x show-scrollbar="false">
-				<view class="filter-tags">
-					<view class="filter-tag" :class="{ 'active': !data.selectedType }" @click="selectType(null)">
-						<text class="tag-text">全部</text>
-					</view>
-					<view class="filter-tag" :class="{ 'active': data.selectedType === 'income' }" @click="selectType('income')">
-						<text class="tag-text">收入</text>
-					</view>
-					<view class="filter-tag" :class="{ 'active': data.selectedType === 'expense' }" @click="selectType('expense')">
-						<text class="tag-text">支出</text>
-					</view>
-					<view class="filter-tag export-tag" @click="exportBills">
-						<text class="tag-text">导出</text>
-					</view>
-				</view>
-			</scroll-view>
-			
-			<!-- 账单列表 -->
-			<view class="bills-list">
-				<view class="date-group" v-for="(group, index) in data.groupedBills" :key="index">
-					<!-- 日期头部 -->
-					<view class="date-header">
-						<text class="date-text">{{ group.date }}</text>
-						<view class="date-summary">
-							<text class="date-income" v-if="group.income > 0">+{{ group.income.toFixed(2) }}</text>
-							<text class="date-expense" v-if="group.expense > 0">-{{ group.expense.toFixed(2) }}</text>
-						</view>
-					</view>
-					
-					<!-- 账单项 -->
-					<view class="bill-items">
-						<view 
-							class="bill-item" 
-							v-for="bill in group.bills" 
-							:key="bill.id"
-							@click="goToDetail(bill)"
-						>
-							<view class="bill-icon-wrapper">
-								<text class="bill-icon">{{ bill.categoryIcon }}</text>
-							</view>
-							<view class="bill-content">
-								<view class="bill-main">
-									<text class="bill-merchant">{{ bill.merchant }}</text>
-									<text class="bill-category">{{ bill.categoryName }}</text>
-								</view>
-								<text class="bill-time">{{ bill.timeText }}</text>
-							</view>
-							<view class="bill-amount-wrapper">
-								<text class="bill-amount" :class="bill.type === 'income' ? 'income' : 'expense'">
-									{{ bill.type === 'income' ? '+' : '-' }}¥{{ bill.amount.toFixed(2) }}
-								</text>
-							</view>
-							<view class="bill-delete-icon" @click.stop="confirmDeleteBill(bill)">
-								<text class="delete-icon">🗑️</text>
-							</view>
-						</view>
-					</view>
-				</view>
-				
-				<!-- 空状态 -->
-				<view class="empty-state" v-if="data.filteredBills.length === 0">
-					<text class="empty-icon">📝</text>
-					<text class="empty-text">暂无账单记录</text>
-					<text class="empty-tip">快去记一笔吧~</text>
-				</view>
-			</view>
-		</view>
-	</view>
-</template>
-
-<script setup>
-import { reactive, computed } from 'vue'
-import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
-import billStorage from '@/utils/billStorage.js'
-import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
-
-const data = reactive({
-	allBills: [],
-	filteredBills: [],
-	groupedBills: [],
-	categories: [],
-	searchKeyword: '',
-	selectedType: null,
-	selectedMonth: null,
-	totalAmount: 0,
-	totalIncome: 0,
-	totalExpense: 0,
-	balance: 0,
-	// 日期选择器相关
-	currentMonth: '',
-	// 自定义月份选择器
-	showCustomPicker: false,
-	years: [],
-	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-	monthsWithAll: ['全部', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-	availableMonths: ['全部'], // 当前可用的月份列表（根据年份动态变化）
-	pickerValue: [0, 0],
-	tempYear: '',
-	tempMonth: 0
-})
-
-const loadData = async () => {
-	// 检查登录状态
-	if (!checkLogin()) {
-		// 未登录时显示空状态
-		data.allBills = []
-		data.filteredBills = []
-		data.groupedBills = []
-		data.totalIncome = 0
-		data.totalExpense = 0
-		data.balance = 0
-		data.billCount = 0
-		data.categories = uni.getStorageSync('categories') || []
-		
-		// 初始化当前月份
-		const now = new Date()
-		const year = now.getFullYear()
-		const month = (now.getMonth() + 1).toString().padStart(2, '0')
-		data.currentMonth = `${year}-${month}`
-		data.selectedMonth = `${year}年${month}月` // 默认选中当前年月
-		
-		// 初始化年份列表（第一项为"全部"）
-		data.years = ['全部']
-		for (let i = year - 5; i <= year + 5; i++) {
-			data.years.push(i)
-		}
-		
-		return
-	}
-	
-	uni.showLoading({ title: '加载中...' })
-	try {
-		const bills = await billStorage.getFromAPI() // 直接从API获取
-		data.allBills = bills || []
-		data.categories = uni.getStorageSync('categories') || []
-		
-		// 初始化当前月份
-		const now = new Date()
-		const year = now.getFullYear()
-		const month = (now.getMonth() + 1).toString().padStart(2, '0')
-		data.currentMonth = `${year}-${month}`
-		data.selectedMonth = `${year}年${month}月` // 默认选中当前年月
-		
-		// 初始化年份列表（第一项为"全部"）
-		data.years = ['全部']
-		for (let i = year - 5; i <= year + 5; i++) {
-			data.years.push(i)
-		}
-		
-		// 应用筛选
-		applyFilters()
-	} catch (error) {
-		console.error('加载账单失败:', error)
-		uni.showToast({
-			title: '加载失败',
-			icon: 'none'
-		})
-	} finally {
-		uni.hideLoading()
-	}
-}
-
-// 静默加载数据（不显示loading）
-const loadDataQuietly = async () => {
-	try {
-		const bills = await billStorage.getFromAPI()
-		data.allBills = bills || []
-		data.categories = uni.getStorageSync('categories') || []
-		
-		// 应用筛选
-		applyFilters()
-	} catch (error) {
-		console.error('静默加载账单失败:', error)
-		// 静默失败，不显示错误提示
-	}
-}
-
-// 月份选择器改变事件
-const onMonthChange = (e) => {
-	const selectedMonth = e.detail.value // 格式: YYYY-MM
-	data.currentMonth = selectedMonth
-	
-	const [year, month] = selectedMonth.split('-')
-	data.selectedMonth = `${year}年${month}月`
-	
-	applyFilters()
-}
-
-// 显示月份选择器
-const showMonthPicker = () => {
-	data.showCustomPicker = true
-	uni.hideTabBar() // 隐藏tabbar
-	
-	// 设置当前选中值
-	if (data.selectedMonth) {
-		// 如果已选择月份，定位到该月份
-		const [yearStr, monthStr] = data.selectedMonth.replace('年', '-').replace('月', '').split('-')
-		const year = parseInt(yearStr)
-		const month = parseInt(monthStr)
-		const yearIndex = data.years.indexOf(year)
-		
-		// 设置可用月份为1-12月
-		data.availableMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-		const monthIndex = month - 1 // 1月对应索引0
-		
-		data.pickerValue = [yearIndex, monthIndex]
-		data.tempYear = year
-		data.tempMonth = month
-	} else {
-		// 如果未选择（显示全部），定位到"全部"
-		data.availableMonths = ['全部'] // 左边选全部，右边只能选全部
-		data.pickerValue = [0, 0]
-		data.tempYear = '全部'
-		data.tempMonth = '全部'
-	}
-}
-
-// 关闭月份选择器
-const closeMonthPicker = () => {
-	data.showCustomPicker = false
-
-// ========== pages/tab/statistics/statistics.vue - 统计页面 ==========
-<template>
-	<view class="page">
-		<view class="container">
-			<!-- 时间筛选 -->
-			<view class="filter-wrapper">
-				<view class="time-filter">
-					<view 
-						class="filter-item" 
-						v-for="(item, index) in data.timeFilters" 
-						:key="index"
-						:class="{ 'active': data.currentFilter === item.value }"
-						@click="changeFilter(item.value)"
-					>
-						{{ item.label }}
-					</view>
-					<view 
-						class="filter-item custom-filter" 
-						:class="{ 'active': data.currentFilter === 'custom' }"
-						@click="openCustomPicker"
-					>
-						自定义
-					</view>
-				</view>
-			</view>
-		
-		<!-- 收支总览 -->
-		<view class="overview-card">
-			<view class="overview-header">
-				<view class="overview-title-wrapper">
-					<text class="overview-title">收支总览</text>
-					<text class="overview-subtitle">{{ getFilterLabel() }}数据</text>
-				</view>
-				<!-- 生成海报按钮 - 只在12月显示（年度账单） -->
-				<view class="poster-btn-mini" v-if="data.billCount > 0 && isDecember()" @click="generatePoster">
-					<text class="poster-icon-mini">📸</text>
-					<text class="poster-label">年度账单</text>
-				</view>
-			</view>
-			<view class="overview-row">
-				<view class="overview-item income-item">
-					<view class="overview-label-row">
-						<text class="overview-label">总收入</text>
-						<image class="eye-icon-img" :src="data.hideIncome ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
-					</view>
-					<text class="overview-amount income-color" v-if="!data.hideIncome">+¥{{ formatAmount(data.totalIncome) }}</text>
-					<text class="overview-amount income-color" v-else>****</text>
-				</view>
-				<view class="overview-item expense-item">
-					<view class="overview-label-row">
-						<text class="overview-label">总支出</text>
-						<image class="eye-icon-img" :src="data.hideExpense ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
-					</view>
-					<text class="overview-amount expense-color" v-if="!data.hideExpense">-¥{{ formatAmount(data.totalExpense) }}</text>
-					<text class="overview-amount expense-color" v-else>****</text>
-				</view>
-			</view>
-			<view class="overview-divider"></view>
-			<view class="overview-row balance-row">
-				<view class="overview-item">
-					<view class="overview-label-row">
-						<text class="overview-label">结余</text>
-						<image class="eye-icon-img" :src="data.hideBalance ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
-					</view>
-					<text class="overview-amount" :class="data.balance >= 0 ? 'income-color' : 'expense-color'" v-if="!data.hideBalance">
-						{{ data.balance >= 0 ? '+' : '-' }}¥{{ formatAmount(data.balance) }}
-					</text>
-					<text class="overview-amount" :class="data.balance >= 0 ? 'income-color' : 'expense-color'" v-else>****</text>
-				</view>
-				<view class="overview-item">
-					<text class="overview-label">笔数</text>
-					<text class="overview-count">{{ data.billCount }}</text>
-				</view>
-			</view>
-		</view>
-		
-		<!-- 类型切换 -->
-		<view class="type-tabs">
-			<view 
-				class="type-tab" 
-				:class="{ 'active': data.currentType === 'expense' }"
-				@click="switchType('expense')"
-			>
-				<text class="tab-icon">💸</text>
-				<text class="tab-text">支出分析</text>
-			</view>
-			<view 
-				class="type-tab" 
-				:class="{ 'active': data.currentType === 'income' }"
-				@click="switchType('income')"
-			>
-				<text class="tab-icon">💰</text>
-				<text class="tab-text">收入分析</text>
-			</view>
-		</view>
-		
-		<!-- 环形图 -->
-		<view class="chart-card">
-			<view class="card-title">{{ data.currentType === 'income' ? '收入' : '支出' }}构成</view>
-			<view class="chart-wrapper" v-if="data.chartData.length > 0">
-				<!-- 顶部标签 -->
-				<view class="label-top" v-if="data.chartData[0]">
-					<view class="label-dot" :style="{ backgroundColor: data.chartData[0].color }"></view>
-					<view class="label-info">
-						<text class="label-text">{{ data.chartData[0].icon }} {{ data.chartData[0].name }}</text>
-						<text class="label-value">¥{{ data.chartData[0].amount.toFixed(0) }} ({{ data.chartData[0].percent }}%)</text>
-					</view>
-				</view>
-				
-				<view class="chart-row">
-					<!-- 左侧标签 -->
-					<view class="label-left" v-if="data.chartData[3]">
-						<view class="label-dot" :style="{ backgroundColor: data.chartData[3].color }"></view>
-						<view class="label-info">
-							<text class="label-text">{{ data.chartData[3].icon }} {{ data.chartData[3].name }}</text>
-							<text class="label-value">¥{{ data.chartData[3].amount.toFixed(0) }}</text>
-							<text class="label-percent">{{ data.chartData[3].percent }}%</text>
-						</view>
-					</view>
-					
-					<!-- 中间图表 -->
-					<view class="chart-center">
-						<canvas 
-							v-if="!data.showCustomPicker"
-							canvas-id="pieChart" 
-							id="pieChart"
-							class="chart-canvas"
-							@touchstart="handleChartTouch"
-						></canvas>
-					</view>
-					
-					<!-- 右侧标签 -->
-					<view class="label-right" v-if="data.chartData[1]">
-						<view class="label-info">
-							<text class="label-text">{{ data.chartData[1].icon }} {{ data.chartData[1].name }}</text>
-							<text class="label-value">¥{{ data.chartData[1].amount.toFixed(0) }}</text>
-							<text class="label-percent">{{ data.chartData[1].percent }}%</text>
-						</view>
-						<view class="label-dot" :style="{ backgroundColor: data.chartData[1].color }"></view>
-					</view>
-				</view>
-				
-				<!-- 底部标签 -->
-				<view class="label-bottom" v-if="data.chartData[2]">
-					<view class="label-dot" :style="{ backgroundColor: data.chartData[2].color }"></view>
-					<view class="label-info">
-						<text class="label-text">{{ data.chartData[2].icon }} {{ data.chartData[2].name }}</text>
-						<text class="label-value">¥{{ data.chartData[2].amount.toFixed(0) }} ({{ data.chartData[2].percent }}%)</text>
-					</view>
-				</view>
-			</view>
-			<view class="chart-empty" v-else>
-				<text class="empty-icon">📊</text>
-				<text class="empty-text">暂无{{ data.currentType === 'income' ? '收入' : '支出' }}数据</text>
-				<view class="empty-action" @click="goToHome">快去记账</view>
-			</view>
-		</view>
-		
-		<!-- 消费分析 -->
-		<view class="analysis-card" v-if="data.insights.length > 0">
-			<view class="card-title">财务分析</view>
-			<view class="insights-list">
-				<view 
-					class="insight-item" 
-					v-for="(insight, index) in data.insights" 
-					:key="index"
-					:class="insight.type"
-				>
-					<view class="insight-icon">{{ insight.icon }}</view>
-					<view class="insight-content">
-						<text class="insight-text">{{ insight.text }}</text>
-						<text class="insight-tip" v-if="insight.tip">{{ insight.tip }}</text>
-					</view>
-				</view>
-			</view>
-		</view>
-		
-		<!-- 自定义时间选择弹窗 -->
-		<view class="custom-time-modal" v-if="data.showCustomPicker" @click="closeCustomPicker">
-			<view class="calendar-picker" @click.stop>
-				<view class="calendar-header">
-					<view class="calendar-nav">
-						<text class="nav-arrow" @click="prevMonth">‹</text>
-						<text class="calendar-title">{{ data.calendarYear }}年{{ data.calendarMonth }}月</text>
-						<text class="nav-arrow" @click="nextMonth">›</text>
-					</view>
-					<text class="calendar-close" @click="closeCustomPicker">✕</text>
-				</view>
-				
-				<view class="date-range-display">
-					<view class="date-input" :class="{ 'active': data.selectingStart }" @click="data.selectingStart = true">
-						<text class="input-label">开始日期</text>
-						<text class="input-value">{{ data.customStartDate || '请选择' }}</text>
-					</view>
-					<text class="date-separator">-</text>
-					<view class="date-input" :class="{ 'active': !data.selectingStart }" @click="data.selectingStart = false">
-						<text class="input-label">结束日期</text>
-						<text class="input-value">{{ data.customEndDate || '请选择' }}</text>
-					</view>
-				</view>
-				
-				<view class="calendar-weekdays">
-					<text class="weekday">日</text>
-					<text class="weekday">一</text>
-					<text class="weekday">二</text>
-					<text class="weekday">三</text>
-					<text class="weekday">四</text>
-					<text class="weekday">五</text>
-					<text class="weekday">六</text>
-				</view>
-				
-				<view class="calendar-days">
-					<view 
-						v-for="(day, index) in data.calendarDays" 
-						:key="index"
-						class="calendar-day"
-						:class="{
-							'other-month': !day.isCurrentMonth,
-							'start-date': day.isStart,
-							'end-date': day.isEnd,
-							'in-range': day.inRange,
-							'today': day.isToday
-						}"
-						@click="selectDate(day)"
-					>
-						<text class="day-text">{{ day.day }}</text>
-					</view>
-				</view>
-				
-				<view class="calendar-footer">
-					<view class="footer-btn cancel-btn" @click="closeCustomPicker">取消</view>
-					<view class="footer-btn confirm-btn" @click="confirmCustomTime">确认</view>
-				</view>
-			</view>
-		</view>
-</view>
-	</view>
-</template>
-
-<script setup>
-import { reactive, nextTick } from 'vue'
-import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
-import billStorage from '@/utils/billStorage.js'
-
-const data = reactive({
-	currentFilter: 'month',
-	currentType: 'expense', // 当前查看的类型：expense 或 income
-	timeFilters: [
-		{ label: '本月', value: 'month' },
-		{ label: '本季', value: 'quarter' },
-		{ label: '本年', value: 'year' }
-	],
-	totalExpense: 0,
-	totalIncome: 0,
-	balance: 0,
-	billCount: 0,
-	chartData: [],
-	categories: [],
-	colors: ['#52C41A', '#1890FF', '#FAAD14', '#F5222D', '#722ED1', '#13C2C2', '#EB2F96', '#FA8C16'],
-	allBills: [], // 缓存所有账单数据
-	insights: [], // 消费分析洞察
-	showCustomPicker: false,
-	customStartDate: null,
-	customEndDate: null,
-	calendarYear: new Date().getFullYear(),
-	calendarMonth: new Date().getMonth() + 1,
-	calendarDays: [],
-	selectingStart: true, // true表示正在选择开始日期，false表示选择结束日期
-	// 隐藏金额状态
-	hideIncome: false,
-	hideExpense: false,
-	hideBalance: false
-})
-
-const handleBillSaved = async () => {
-	console.log('统计页收到账单保存事件，立即刷新数据')
-	try {
-		// 直接从API获取最新数据
-		data.allBills = await billStorage.getFromAPI()
-		recalculateData()
-		console.log('统计页数据刷新完成')
-	} catch (error) {
-		console.error('统计页刷新失败:', error)
-	}
-}
-
-const changeFilter = async (value) => {
-	if (data.currentFilter === value) return
-	
-	data.currentFilter = value
-	uni.showLoading({ title: '加载中...' })
-	
-	try {
-		const bills = await billStorage.getFromAPI()
-		data.allBills = Array.isArray(bills) ? bills : []
-	} catch (error) {
-		console.error('获取数据失败:', error)
-	} finally {
-		recalculateData()
-		uni.hideLoading()
-	}
-
-// ========== pages/settings/settings.vue - 设置页面 ==========
-<template>
-	<view class="page">
-		<view class="container">
-			<!-- 功能列表 -->
-			<view class="function-list">
-				<!-- 关于我们 -->
-				<view class="function-item" @click="showAbout">
-					<view class="function-left">
-						<view class="function-icon about-icon">
-							<text class="icon-text">ℹ️</text>
-						</view>
-						<text class="function-title">{{ $t('settings.about') }}</text>
-					</view>
-					<view class="function-right">
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				
-				<!-- 意见反馈 -->
-				<view class="function-item" @click="goToFeedback">
-					<view class="function-left">
-						<view class="function-icon feedback-icon">
-							<text class="icon-text">💬</text>
-						</view>
-						<text class="function-title">{{ $t('settings.feedback') }}</text>
-					</view>
-					<view class="function-right">
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				
-				<!-- 检查更新（仅APP） -->
-				<!-- #ifdef APP-PLUS -->
-				<view class="function-item" @click="checkAppUpdate">
-					<view class="function-left">
-						<view class="function-icon update-icon">
-							<text class="icon-text">🔄</text>
-						</view>
-						<text class="function-title">检查更新</text>
-					</view>
-					<view class="function-right">
-						<text class="function-desc">v{{ data.appVersion }}</text>
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				<!-- #endif -->
-				
-				<!-- 用户注销（仅登录后显示） -->
-				<view class="function-item danger-item" @click="handleDeleteAccount" v-if="data.isLogin">
-					<view class="function-left">
-						<view class="function-icon delete-icon">
-							<text class="icon-text">⚠️</text>
-						</view>
-						<text class="function-title danger-text">注销账号</text>
-					</view>
-					<view class="function-right">
-						<text class="arrow">›</text>
-					</view>
-				</view>
-			</view>
-			
-			<!-- 注销说明（仅登录后显示） -->
-			<view class="warning-tips" v-if="data.isLogin">
-				<text class="warning-title">⚠️ 注销账号说明</text>
-				<text class="warning-item">• 注销后将清除所有账单数据</text>
-				<text class="warning-item">• 注销后将清除所有积分记录</text>
-				<text class="warning-item">• 注销操作不可恢复，请谨慎操作</text>
-			</view>
-			
-			<!-- 退出登录按钮（仅登录后显示） -->
-			<view class="logout-button-wrapper" v-if="data.isLogin">
-				<view class="logout-button" @click="handleLogout">
-					<text class="logout-button-text">退出登录</text>
-				</view>
-			</view>
-		</view>
-		
-		<!-- 版本更新弹窗 -->
-		<!-- #ifdef APP-PLUS -->
-		<UpdateModal 
-			:visible="data.showUpdateModal"
-			:newVersion="data.updateInfo.newVersion"
-			:currentVersion="data.updateInfo.currentVersion"
-			:updateContent="data.updateInfo.updateContent"
-			:packageSize="data.updateInfo.packageSize"
-			:updateTime="data.updateInfo.updateTime"
-			:downloadUrl="data.updateInfo.downloadUrl"
-			:isForce="data.updateInfo.isForce"
-			:updateType="data.updateInfo.updateType"
-			:markets="data.updateInfo.markets"
-			@cancel="closeUpdateModal"
-			@confirm="handleUpdate"
-			@downloadComplete="handleDownloadComplete"
-		/>
-		<!-- #endif -->
-	</view>
-</template>
-
-<script setup>
-import { reactive, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
-import { useI18n } from 'vue-i18n'
-import billStorage from '@/utils/billStorage.js'
-import request from '@/utils/request.js'
-// #ifdef APP-PLUS
-import { checkUpdate } from '@/utils/appUpdate.js'
-import UpdateModal from '@/components/UpdateModal.vue'
-// #endif
-
-const { t, locale } = useI18n()
-
-const data = reactive({
-	isLogin: false,
-	appVersion: '',
-	showUpdateModal: false,
-	updateInfo: {
-		newVersion: '',
-		currentVersion: '',
-		updateContent: [],
-		packageSize: '',
-		updateTime: '',
-		downloadUrl: '',
-		isForce: false,
-		updateType: 'server',
-		markets: {}
-	}
-})
-
-// 检查登录状态
-const checkLogin = () => {
-	const userInfo = uni.getStorageSync('userInfo')
-	data.isLogin = userInfo && userInfo.isLogin
-}
-
-// 获取APP版本号
-const getAppVersion = () => {
-	// #ifdef APP-PLUS
-	const appInfo = plus.runtime
-	data.appVersion = appInfo.version || '1.0.0'
-	// #endif
-}
-
-// 检查APP更新
-// #ifdef APP-PLUS
-const checkAppUpdate = async () => {
-	try {
-		uni.showLoading({ title: '检查中...' })
-		const updateInfo = await checkUpdate()
-		uni.hideLoading()
-		
-		if (updateInfo.hasUpdate) {
-			data.updateInfo = updateInfo
-			data.showUpdateModal = true
-		} else {
-			uni.showToast({
-				title: '已是最新版本',
-				icon: 'success'
-			})
-		}
-	} catch (error) {
-		uni.hideLoading()
-		console.error('检查更新失败:', error)
-		uni.showToast({
-			title: '检查更新失败',
-			icon: 'none'
-		})
-	}
-}
-
-// 关闭更新弹窗
-const closeUpdateModal = () => {
-	if (!data.updateInfo.isForce) {
-		data.showUpdateModal = false
-	}
-}
-
-// 确认更新
-const handleUpdate = () => {
-	console.log('开始更新')
-}
-
-// 下载完成
-const handleDownloadComplete = () => {
-	console.log('下载完成')
-	data.showUpdateModal = false
-}
-// #endif
-
-// 关于我们
-const showAbout = () => {
-	uni.navigateTo({
-		url: '/pages/settings/about'
-	})
-}
-
-// 跳转到意见反馈页面
-const goToFeedback = () => {
-	uni.navigateTo({
-		url: '/pages/settings/feedback'
-	})
 
