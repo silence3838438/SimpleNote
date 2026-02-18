@@ -292,11 +292,10 @@ const startRecord = async () => {
 	}
 	
 	try {
-		// 检查并请求录音权限
+		// #ifdef APP-PLUS
+		// APP端：检查并请求录音权限（应用商店审核需要）
 		console.log('🔐 检查录音权限...')
 		
-		// #ifdef APP-PLUS
-		// APP端：先检查权限状态，再决定是否请求
 		const permissionResult = await new Promise((resolve) => {
 			// 如果已经记录过权限授权，直接返回
 			if (data.permissionGranted) {
@@ -323,7 +322,6 @@ const startRecord = async () => {
 						console.log('📋 权限请求结果:', result)
 						if (result.granted && result.granted.length > 0) {
 							console.log('✅ 录音权限授权成功（刚刚授权）')
-							// 记录权限已授权，但这次是刚授权的
 							data.permissionGranted = true
 							resolve({ hasPermission: true, justGranted: true })
 						} else {
@@ -353,50 +351,9 @@ const startRecord = async () => {
 			})
 			return
 		}
-		
-		// 如果是刚刚授权的，不提示，直接开始录音
-		if (permissionResult.justGranted) {
-			console.log('✅ 刚刚授权，直接开始录音')
-			// 不提示，继续执行录音逻辑
-		}
 		// #endif
 		
-		// #ifdef MP-WEIXIN
-		// 小程序端：检查录音权限
-		const settingRes = await uni.getSetting()
-		console.log('📋 当前权限设置:', settingRes)
-		
-		if (settingRes.authSetting['scope.record'] === false) {
-			uni.showModal({
-				title: '需要录音权限',
-				content: '请在设置中开启录音权限',
-				confirmText: '去设置',
-				cancelText: '取消',
-				success: (res) => {
-					if (res.confirm) {
-						uni.openSetting()
-					}
-				}
-			})
-			return
-		}
-		
-		if (settingRes.authSetting['scope.record'] === undefined) {
-			try {
-				await uni.authorize({ scope: 'scope.record' })
-				console.log('✅ 录音权限授权成功')
-			} catch (err) {
-				console.log('❌ 用户拒绝授权:', err)
-				uni.showToast({
-					title: '需要录音权限才能使用',
-					icon: 'none'
-				})
-				return
-			}
-		}
-		// #endif
-		
-		console.log('✅ 权限检查通过，准备开始录音')
+		console.log('✅ 准备开始录音')
 		
 		// 提示用户：按住按钮，等待震动后再说话
 		uni.showToast({
@@ -418,7 +375,6 @@ const startRecord = async () => {
 			sampleRate: 8000,  // AMR格式使用8000Hz采样率
 			numberOfChannels: 1,
 			encodeBitRate: 12200  // AMR标准比特率
-			// 注意：APP端不支持 frameSize 参数，不要设置
 		}
 		
 		console.log('🎙️ [录音启动] 立即启动录音器，参数:', recorderOptions)
@@ -428,6 +384,8 @@ const startRecord = async () => {
 		// #endif
 		
 		// #ifdef MP-WEIXIN
+		// 小程序端：直接开始录音，让微信自动处理授权
+		// 首次使用会自动弹出系统授权弹窗，用户授权后后续不再弹窗
 		data.recorderManager.start({
 			duration: 60000,
 			format: 'wav',  // 改为wav格式，百度ASR支持
@@ -436,7 +394,7 @@ const startRecord = async () => {
 			encodeBitRate: 48000,
 			frameSize: 50  // 小程序支持 frameSize
 		})
-		console.log('✅ 小程序端录音已启动')
+		console.log('✅ 小程序端录音已启动（微信会自动处理授权）')
 		// #endif
 		
 	} catch (error) {
@@ -808,9 +766,39 @@ const extractBillInfo = (text) => {
 		}
 	}
 	
+	// 中文数字转阿拉伯数字
+	const chineseToNumber = (chineseNum) => {
+		const chineseMap = {
+			'零': 0, '一': 1, '二': 2, '两': 2, '三': 3, '四': 4,
+			'五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+			'百': 100, '千': 1000, '万': 10000
+		}
+		
+		// 处理特殊情况：十几、几十
+		if (chineseNum === '十') return 10
+		if (/^十[一二三四五六七八九]$/.test(chineseNum)) {
+			return 10 + chineseMap[chineseNum[1]]
+		}
+		if (/^[一二三四五六七八九]十$/.test(chineseNum)) {
+			return chineseMap[chineseNum[0]] * 10
+		}
+		if (/^[一二三四五六七八九]十[一二三四五六七八九]$/.test(chineseNum)) {
+			return chineseMap[chineseNum[0]] * 10 + chineseMap[chineseNum[2]]
+		}
+		
+		// 简单的一位数
+		if (chineseMap[chineseNum] !== undefined) {
+			return chineseMap[chineseNum]
+		}
+		
+		return null
+	}
+	
 	// 提取金额 - 支持多种表达方式
 	let amount = 0
 	const amountPatterns = [
+		/([零一二两三四五六七八九十百千万]+)\s*(?:元|块钱|块|毛|角|分|钱)/,  // 三元、三块钱
+		/花了?\s*([零一二两三四五六七八九十百千万]+)/,  // 花了三、花三
 		/花了?\s*(\d+\.?\d*)\s*元/,      // 花了36元、花36元
 		/(\d+\.?\d*)\s*元/,              // 36元
 		/(\d+\.?\d*)\s*块钱/,            // 36块钱
@@ -826,9 +814,19 @@ const extractBillInfo = (text) => {
 	for (const pattern of amountPatterns) {
 		const match = text.match(pattern)
 		if (match && match[1]) {
-			amount = parseFloat(match[1])
-			console.log('✅ 匹配到金额:', amount, '使用模式:', pattern)
-			break
+			// 判断是中文数字还是阿拉伯数字
+			if (/^[零一二两三四五六七八九十百千万]+$/.test(match[1])) {
+				const num = chineseToNumber(match[1])
+				if (num !== null) {
+					amount = num
+					console.log('✅ 匹配到中文金额:', match[1], '→', amount, '使用模式:', pattern)
+					break
+				}
+			} else {
+				amount = parseFloat(match[1])
+				console.log('✅ 匹配到金额:', amount, '使用模式:', pattern)
+				break
+			}
 		}
 	}
 	

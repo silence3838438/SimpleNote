@@ -149,7 +149,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
 const data = reactive({
-	agreed: false,
+	agreed: true, // 默认勾选隐私协议
 	isIOS: false,
 	account: '',
 	password: '',

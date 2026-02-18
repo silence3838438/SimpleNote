@@ -222,6 +222,19 @@
 				</picker-view>
 			</view>
 		</view>
+		
+		<!-- 拍照识别加载遮罩 -->
+		<view class="loading-mask" v-if="data.isLoading">
+			<view class="loading-card">
+				<view class="loading-spinner">
+					<view class="spinner-ring"></view>
+					<view class="spinner-ring"></view>
+					<view class="spinner-ring"></view>
+				</view>
+				<text class="loading-title">智能识别中</text>
+				<text class="loading-text">正在识别小票信息...</text>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -269,7 +282,9 @@ const data = reactive({
 	originalBillData: null,
 	// 淡入动画标记
 	merchantUpdated: false,
-	remarkUpdated: false
+	remarkUpdated: false,
+	// 拍照识别加载状态
+	isLoading: false
 })
 
 onLoad((options) => {
@@ -308,6 +323,16 @@ onLoad((options) => {
 	
 	// 监听 AI 增强完成事件
 	uni.$on('aiEnhanced', handleAIEnhanced)
+	
+	// 监听 OCR 识别完成事件（拍照识别）
+	uni.$on('ocrRecognized', handleOCRRecognized)
+	
+	// 检查是否为加载状态（拍照识别）
+	if (options.loading === 'true') {
+		console.log('📸 拍照识别模式：显示加载状态')
+		data.isLoading = true
+		// 其他初始化逻辑照常执行
+	}
 	
 	// 检查是否为编辑模式
 	if (options.editMode === 'true' && options.billId) {
@@ -415,11 +440,57 @@ onLoad((options) => {
 // 页面卸载时移除事件监听
 onUnmounted(() => {
 	uni.$off('aiEnhanced', handleAIEnhanced)
+	uni.$off('ocrRecognized', handleOCRRecognized)
 })
+
+// 处理 OCR 识别完成（拍照识别）
+const handleOCRRecognized = (ocrResult) => {
+	console.log('📸 收到 OCR 识别结果:', ocrResult)
+	
+	// 关闭加载状态
+	data.isLoading = false
+	
+	// 如果识别失败，显示错误提示
+	if (ocrResult.error) {
+		uni.showToast({
+			title: ocrResult.error,
+			icon: 'none',
+			duration: 2000
+		})
+	}
+	
+	// 更新账单数据
+	const dataType = ocrResult.type || 'expense'
+	data.categories = dataType === 'income' ? getIncomeCategories() : getExpenseCategories()
+	
+	data.billData = {
+		...data.billData,
+		...ocrResult,
+		amount: ocrResult.amount || 0,
+		type: dataType
+	}
+	
+	// 更新分类显示
+	updateSelectedCategory()
+	
+	// 智能推荐分类
+	if (!data.billData.categoryId) {
+		recommendCategory()
+	}
+	
+	// 加载历史商家
+	loadRecentMerchants()
+}
 
 // 处理 AI 增强完成
 const handleAIEnhanced = (aiResult) => {
 	console.log('🎯 收到 AI 增强结果:', aiResult)
+	
+	// 【修复】AI 提取的金额优先（如果 AI 提取到了且大于0）
+	if (aiResult.amount && aiResult.amount > 0 && aiResult.amount !== data.billData.amount) {
+		console.log('📝 更新金额:', data.billData.amount, '->', aiResult.amount)
+		data.billData.amount = aiResult.amount
+	}
 	
 	// 平滑更新，只更新更准确的字段
 	if (aiResult.merchant && aiResult.merchant !== data.billData.merchant) {
@@ -432,20 +503,16 @@ const handleAIEnhanced = (aiResult) => {
 		}, 600)
 	}
 	
-	// AI备注增强：只有当后端正则提取的备注为空时，才使用AI增强的备注
+	// AI备注增强：AI提取的备注更完整，优先使用AI备注
 	if (aiResult.remark && aiResult.remark !== data.billData.remark) {
-		// 如果后端备注为空，使用AI备注
-		if (!data.billData.remark || data.billData.remark.trim() === '') {
-			console.log('📝 后端备注为空，使用AI备注:', aiResult.remark)
-			data.billData.remark = aiResult.remark
-			// 触发淡入动画
-			data.remarkUpdated = true
-			setTimeout(() => {
-				data.remarkUpdated = false
-			}, 600)
-		} else {
-			console.log('⚠️ 后端已有备注，保留后端正则提取的备注:', data.billData.remark)
-		}
+		// AI备注通常更完整，直接使用
+		console.log('📝 更新备注:', data.billData.remark, '->', aiResult.remark)
+		data.billData.remark = aiResult.remark
+		// 触发淡入动画
+		data.remarkUpdated = true
+		setTimeout(() => {
+			data.remarkUpdated = false
+		}, 600)
 	}
 	
 	if (aiResult.categoryId && aiResult.categoryId !== data.billData.categoryId) {
@@ -1825,5 +1892,93 @@ export default {
 			opacity: 1;
 			transform: translateY(0);
 		}
+	}
+	
+	/* 拍照识别加载遮罩 */
+	.loading-mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.6);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 9999;
+		backdrop-filter: blur(8rpx);
+	}
+	
+	.loading-card {
+		background: $bg-white;
+		border-radius: 24rpx;
+		padding: 60rpx 80rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: $spacing-lg;
+		box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+		animation: scaleIn 0.3s ease-out;
+	}
+	
+	@keyframes scaleIn {
+		0% {
+			opacity: 0;
+			transform: scale(0.8);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+	
+	.loading-spinner {
+		width: 80rpx;
+		height: 80rpx;
+		position: relative;
+	}
+	
+	.spinner-ring {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		border: 6rpx solid transparent;
+		border-top-color: $primary-color;
+		border-radius: $radius-round;
+		animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+	}
+	
+	.spinner-ring:nth-child(1) {
+		animation-delay: -0.45s;
+	}
+	
+	.spinner-ring:nth-child(2) {
+		animation-delay: -0.3s;
+		border-top-color: $success-color;
+	}
+	
+	.spinner-ring:nth-child(3) {
+		animation-delay: -0.15s;
+		border-top-color: $warning-color;
+	}
+	
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	
+	.loading-title {
+		font-size: $font-size-xl;
+		color: $text-primary;
+		font-weight: $font-weight-bold;
+	}
+	
+	.loading-text {
+		font-size: $font-size-sm;
+		color: $text-tertiary;
 	}
 </style>

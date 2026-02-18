@@ -613,6 +613,41 @@ router.get('/users/export', async (req, res) => {
   }
 });
 
+// 重置用户密码
+router.post('/users/:id/reset-password', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // 检查用户是否存在
+    const userResult = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+    if (userResult.length === 0) {
+      return res.json({ success: false, message: '用户不存在' });
+    }
+    
+    // 生成随机密码（6位数字）
+    const newPassword = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // 加密新密码
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // 更新密码
+    await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, id]);
+    
+    res.json({
+      success: true,
+      message: '密码重置成功',
+      newPassword: newPassword // 返回明文密码（仅此一次）
+    });
+  } catch (error) {
+    console.error('重置密码失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '重置密码失败'
+    });
+  }
+});
+
 // 删除用户
 router.delete('/users/:id', async (req, res) => {
   try {

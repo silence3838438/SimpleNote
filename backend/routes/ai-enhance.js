@@ -73,29 +73,34 @@ ${ocrText}
 【你的任务】
 请智能推断以下信息（以JSON格式返回，无需解释）：
 
-1. **备注(remark)** - 这是最重要的字段！
+1. **金额(amount)** - 这是最重要的字段！
+   - 从OCR文本中提取实际支付金额
+   - 优先识别：实付金额、实收金额、合计、总计、小计、应付金额、支付金额
+   - 排除：订单号（通常是8-10位数字）、商品编号、单号、流水号
+   - 排除：优惠金额、折扣金额、税额
+   - 如果后端已正确提取（amount > 0且合理），返回后端的值
+   - 如果后端未提取到或明显错误，你必须从文本中重新提取
+   - 返回纯数字，不要单位（如：7.19、25.62、123.5）
+   - 如果实在提取不到，返回0
+
+2. **备注(remark)** - 提取小票上的商品信息
    - 如果是餐饮：提取菜品名（如"红烧鸡腿、素菜"）
    - 如果是超市：提取商品名（如"可乐、薯片、面包"，最多3个，用顿号分隔）
-   - 如果是交通：提取行程信息（如"上班通勤"）
    - 如果是其他：提取关键消费内容
    - 如果实在没有：留空字符串""
 
-2. **商家优化(merchant)** - 仅在后端识别不准确时优化
-   - 识别知名品牌（星巴克、麦当劳、海底捞、美团、饿了么等）
-   - 保留分店信息（如"星巴克国贸店"）
-   - 如果后端已正确识别，返回原值
-   - 如果识别不出，返回空字符串""
-
-3. **分类优化(categoryName)** - 根据商家和内容智能判断
+4. **分类优化(categoryName)** - 根据商家和内容智能判断
    支出分类：餐饮/交通/购物/娱乐/住房/医疗/通讯/服饰/美容/学习/社交/零食/数码/家居/汽车/宠物/其他
    收入分类：工资/兼职/奖金/红包/退款/报销/投资/礼金/出售/其他
 
 【返回格式】
-{"remark":"","merchant":"","categoryName":""}
+{"amount":0,"remark":"","merchant":"","categoryName":""}
 
 注意：
-- remark是核心，必须尽力提取有价值的信息
-- 如果某个字段无法优化，返回空字符串""
+- amount是核心，必须尽力从文本中提取正确的实付金额
+- 如果后端提取的金额明显错误（如561元但文本中实付7.19元），你必须纠正
+- remark也很重要，必须尽力提取有价值的信息
+- 如果某个字段无法优化，返回空字符串""（amount返回0）
 - 不要编造信息，不确定就留空`;
     
     // 调用 AI Agent（使用 dataStream）
@@ -181,6 +186,8 @@ ${ocrText}
     // 合并结果
     const finalResult = {
       ...baseInfo,
+      // 【修改】AI 提取的金额优先（如果 AI 提取到了且大于0）
+      amount: (aiResult.amount && aiResult.amount > 0) ? aiResult.amount : baseInfo.amount,
       remark: aiResult.remark || baseInfo.remark || '',
       merchant: aiResult.merchant || baseInfo.merchant || '',
       categoryName: aiResult.categoryName || baseInfo.categoryName || '其他'
@@ -190,6 +197,7 @@ ${ocrText}
     finalResult.categoryId = getCategoryIdByName(finalResult.categoryName, finalResult.type);
     
     console.log('✅ [AI增强] 完成');
+    console.log('后端金额:', baseInfo.amount, 'AI金额:', aiResult.amount, '最终金额:', finalResult.amount);
     
     res.json({
       success: true,
@@ -252,29 +260,42 @@ ${voiceText}
 【你的任务】
 请智能推断以下信息（以JSON格式返回，无需解释）：
 
-1. **备注(remark)** - 这是最重要的字段！
-   - 如果是餐饮：提取菜品名（如"红烧鸡腿、素菜"）
-   - 如果是超市：提取商品名（如"可乐、薯片、面包"，最多3个，用顿号分隔）
-   - 如果是交通：提取行程信息（如"上班通勤"）
-   - 如果是其他：提取关键消费内容
+1. **金额(amount)** - 这是最重要的字段！
+   - 从语音文本中提取金额数字
+   - 支持中文数字：三、三十六、一百二十三、三块五等
+   - 支持阿拉伯数字：3、36、123、3.5等
+   - 支持各种表达：三块钱、36元、一百二十三块、三块五毛等
+   - 如果前端已正确提取（amount > 0），返回前端的值
+   - 如果前端未提取到（amount = 0），你必须从文本中提取
+   - 返回纯数字，不要单位（如：3、36、123.5）
+   - 如果实在提取不到，返回0
+
+2. **备注(remark)** - 提取用户说的关键信息
+   - **不要过度推理**：用户说什么就记录什么，不要猜测用户的意图
+   - 如果用户说"滴滴打车"，备注就是"滴滴打车"，不要推理成"上班通勤"
+   - 如果用户说"麦当劳吃汉堡"，备注就是"汉堡"
+   - 如果用户说"买了一件衣服"，备注就是"衣服"
+   - 提取用户明确说出的消费内容，不要添加额外信息
    - 如果实在没有：留空字符串""
 
-2. **商家/来源优化(merchant)** - 仅在前端识别不准确时优化
+3. **商家/来源优化(merchant)** - 仅在前端识别不准确时优化
    支出：识别知名品牌（星巴克、麦当劳、海底捞、美团、饿了么等）
    收入：识别具体来源（公司名、平台名等）
    - 如果前端已正确识别，返回原值
    - 如果识别不出，返回空字符串""
 
-3. **分类优化(categoryName)** - 根据商家和内容智能判断
+4. **分类优化(categoryName)** - 根据商家和内容智能判断
    支出分类：餐饮/交通/购物/娱乐/住房/医疗/通讯/服饰/美容/学习/社交/零食/数码/家居/汽车/宠物/其他
    收入分类：工资/兼职/奖金/红包/退款/报销/投资/礼金/出售/其他
 
 【返回格式】
-{"remark":"","merchant":"","categoryName":""}
+{"amount":0,"remark":"","merchant":"","categoryName":""}
 
 注意：
-- remark是核心，必须尽力提取有价值的信息
-- 如果某个字段无法优化，返回空字符串""
+- amount是核心，必须尽力从文本中提取金额
+- 中文数字转换示例：三→3、三十六→36、一百二十三→123、三块五→3.5
+- remark也很重要，必须尽力提取有价值的信息
+- 如果某个字段无法优化，返回空字符串""（amount返回0）
 - 不要编造信息，不确定就留空`;
     
     // 调用 AI Agent（使用 dataStream）
@@ -360,6 +381,8 @@ ${voiceText}
     // 合并结果
     const finalResult = {
       ...baseInfo,
+      // AI 提取的金额优先（如果 AI 提取到了且大于0）
+      amount: (aiResult.amount && aiResult.amount > 0) ? aiResult.amount : baseInfo.amount,
       remark: aiResult.remark || baseInfo.remark || '',
       merchant: aiResult.merchant || baseInfo.merchant || '',
       categoryName: aiResult.categoryName || baseInfo.categoryName || '其他'
@@ -368,7 +391,7 @@ ${voiceText}
     // 根据分类名称匹配分类ID
     finalResult.categoryId = getCategoryIdByName(finalResult.categoryName, finalResult.type);
     
-    console.log('✅ [AI增强-语音] 完成');
+    console.log('✅ [AI增强-语音] 完成，最终金额:', finalResult.amount);
     
     res.json({
       success: true,

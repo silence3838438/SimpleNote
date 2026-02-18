@@ -341,15 +341,24 @@
 					<text class="privacy-text">和</text>
 					<text class="privacy-link" @click.stop="openPrivacyFromModal">《隐私政策》</text>
 					<text class="privacy-text">，了解我们如何收集、使用和保护您的个人信息。</text>
-					<text class="privacy-text privacy-highlight">点击"同意并登录"即表示您已阅读并同意上述协议。</text>
+					
+					<!-- 同意checkbox -->
+					<view class="privacy-checkbox-wrapper">
+						<checkbox-group @change="onAgreeChange">
+							<label class="privacy-checkbox-label">
+								<checkbox :checked="data.agreed" color="#52C41A" />
+								<text class="privacy-checkbox-text">我已阅读并同意上述协议</text>
+							</label>
+						</checkbox-group>
+					</view>
 				</view>
 				
 				<view class="privacy-footer">
 					<view class="privacy-btn cancel-btn" @click="closePrivacyModal">
-						<text class="privacy-btn-text">暂不登录</text>
+						<text class="privacy-btn-text">取消</text>
 					</view>
-					<view class="privacy-btn confirm-btn" @click="agreeAndLogin">
-						<text class="privacy-btn-text">同意并登录</text>
+					<view class="privacy-btn confirm-btn" :class="{ 'disabled': !data.agreed }" @click="agreeAndLogin">
+						<text class="privacy-btn-text">确定</text>
 					</view>
 				</view>
 			</view>
@@ -393,6 +402,7 @@ const data = reactive({
 	todayPoints: 0, // 今日获得积分
 	showLevelModal: false, // 是否显示等级详情弹框
 	showPrivacyModal: false, // 是否显示隐私协议弹框
+	agreed: true, // 隐私协议是否同意（默认勾选）
 	showShareModal: false, // 是否显示分享弹框
 	showNicknameModal: false, // 是否显示昵称修改弹框
 	tempNickname: '', // 临时昵称
@@ -1039,8 +1049,9 @@ const goToLogin = () => {
 	}
 	
 	// #ifdef MP-WEIXIN
-	console.log('=== 小程序环境，显示隐私协议弹框 ===')
-	// 显示自定义隐私协议弹框
+	console.log('=== 小程序环境，显示隐私弹框 ===')
+	// 显示隐私协议弹框（默认勾选）
+	data.agreed = true
 	data.showPrivacyModal = true
 	// #endif
 	
@@ -1053,6 +1064,11 @@ const goToLogin = () => {
 	// #endif
 }
 
+// checkbox变化
+const onAgreeChange = (e) => {
+	data.agreed = e.detail.value.length > 0
+}
+
 // 关闭隐私协议弹框
 const closePrivacyModal = () => {
 	data.showPrivacyModal = false
@@ -1060,6 +1076,15 @@ const closePrivacyModal = () => {
 
 // 同意隐私协议并登录
 const agreeAndLogin = () => {
+	// 检查是否同意协议
+	if (!data.agreed) {
+		uni.showToast({
+			title: '请先同意用户协议和隐私政策',
+			icon: 'none'
+		})
+		return
+	}
+	
 	data.showPrivacyModal = false
 	
 	// #ifdef MP-WEIXIN
@@ -2521,6 +2546,25 @@ const handleDownloadComplete = () => {
 	font-weight: bold;
 }
 
+.privacy-checkbox-wrapper {
+	margin-top: 24rpx;
+	padding: 16rpx;
+	background: #F0FFF4;
+	border-radius: $radius-md;
+}
+
+.privacy-checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+}
+
+.privacy-checkbox-text {
+	font-size: 28rpx;
+	color: #52C41A;
+	font-weight: bold;
+}
+
 .privacy-footer {
 	display: flex;
 	gap: 16rpx;
@@ -2538,6 +2582,11 @@ const handleDownloadComplete = () => {
 
 .privacy-btn:active {
 	transform: scale(0.96);
+}
+
+.privacy-btn.disabled {
+	opacity: 0.5;
+	pointer-events: none;
 }
 
 .cancel-btn {

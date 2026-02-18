@@ -4,6 +4,70 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
+// 商家标准化映射表（参考主流记账应用）
+const MERCHANT_NORMALIZATION = {
+  // 咖啡品牌
+  '星巴克': ['星巴克', 'Starbucks', 'STARBUCKS', '星巴克咖啡', 'starbucks'],
+  '瑞幸咖啡': ['瑞幸', 'luckin', 'Luckin Coffee', 'LUCKIN', '瑞幸咖啡'],
+  'Costa': ['Costa', 'COSTA', 'costa', 'Costa Coffee'],
+  '太平洋咖啡': ['太平洋咖啡', 'Pacific Coffee'],
+  
+  // 快餐品牌
+  '麦当劳': ['麦当劳', "McDonald's", 'McDonalds', 'MCDONALDS', '金拱门', 'mcdonald'],
+  '肯德基': ['肯德基', 'KFC', 'Kentucky', 'kfc'],
+  '汉堡王': ['汉堡王', 'Burger King', 'BURGER KING'],
+  '必胜客': ['必胜客', 'Pizza Hut', 'PIZZA HUT'],
+  '德克士': ['德克士', 'Dicos', 'DICOS'],
+  
+  // 茶饮品牌
+  '喜茶': ['喜茶', 'HEYTEA', 'HeyTea'],
+  '奈雪的茶': ['奈雪', '奈雪的茶', 'NAYUKI'],
+  '蜜雪冰城': ['蜜雪冰城', 'MIXUE'],
+  'CoCo都可': ['CoCo', 'COCO', 'coco', 'CoCo都可'],
+  
+  // 火锅品牌
+  '海底捞': ['海底捞', 'Haidilao', 'HAIDILAO'],
+  '呷哺呷哺': ['呷哺', '呷哺呷哺'],
+  '小龙坎': ['小龙坎'],
+  
+  // 超市品牌
+  '沃尔玛': ['沃尔玛', 'Walmart', 'WAL-MART', 'WALMART'],
+  '家乐福': ['家乐福', 'Carrefour', 'CARREFOUR'],
+  '大润发': ['大润发', 'RT-MART'],
+  '永辉超市': ['永辉', '永辉超市', 'Yonghui'],
+  '华润万家': ['华润万家', 'CR Vanguard'],
+  '苏果超市': ['苏果', '苏果超市'],
+  '盒马鲜生': ['盒马', '盒马鲜生', 'HEMA', 'Freshippo'],
+  
+  // 便利店
+  '7-11': ['7-11', '7-ELEVEN', '711', '7-ELEVEn'],
+  '全家': ['全家', 'FamilyMart', 'FAMILYMART'],
+  '罗森': ['罗森', 'LAWSON', 'Lawson'],
+  '便利蜂': ['便利蜂', 'BingoBox'],
+  
+  // 外卖平台
+  '美团外卖': ['美团', '美团外卖', 'Meituan', 'MEITUAN'],
+  '饿了么': ['饿了么', 'ele.me', 'Eleme', 'ELEME'],
+  
+  // 打车平台
+  '滴滴出行': ['滴滴', '滴滴出行', 'DiDi', 'Didi', 'DIDI'],
+  '享道出行': ['享道', '享道出行'],
+  '曹操出行': ['曹操', '曹操出行'],
+  '高德打车': ['高德', '高德打车'],
+  
+  // 电商平台
+  '淘宝': ['淘宝', 'Taobao', 'TAOBAO', '淘宝网', '淘宝闪购'],
+  '天猫': ['天猫', 'Tmall', 'TMALL'],
+  '京东': ['京东', 'JD', 'JD.COM', 'jd', '京东商城'],
+  '拼多多': ['拼多多', 'Pinduoduo', 'PDD', 'pinduoduo'],
+  '唯品会': ['唯品会', 'VIP', 'vip.com'],
+  
+  // 生活服务
+  '美团': ['美团', 'Meituan', 'MEITUAN'],
+  '大众点评': ['大众点评', 'Dianping'],
+  '饿了么': ['饿了么', 'ele.me']
+};
+
 // 简单的速率限制（内存存储，生产环境建议用 Redis）
 const rateLimitMap = new Map();
 const RATE_LIMIT = {
@@ -181,11 +245,35 @@ router.post('/', async (req, res) => {
 // 解析OCR结果（使用旧项目完整识别规则）
 function parseOCRResult(ocrResult) {
   const words = ocrResult.words_result || [];
-  const allText = words.map(item => item.words).join(' ');
+  let allText = words.map(item => item.words).join(' ');
   
   console.log('========== OCR 识别原始文本 ==========');
   console.log(allText);
   console.log('========== 文本长度:', allText.length, '==========');
+  
+  // 【新增】清理干扰文字：移除网页元素、代码关键词等
+  const interferenceKeywords = [
+    'Rc-app', 'index', 'htn', 'Simplenote', 'onf', 'builder', 'oscoda',
+    'html', 'css', 'javascript', 'vue', 'react', 'angular', 'webpack',
+    'node_modules', 'package', 'import', 'export', 'function', 'const', 'let', 'var',
+    'div', 'span', 'class', 'style', 'script', 'body', 'head', 'meta',
+    'http', 'https', 'www', 'com', 'cn', 'net', 'org',
+    'localhost', 'port', 'api', 'router', 'component'
+  ];
+  
+  // 移除干扰关键词（保留中文内容）
+  for (const keyword of interferenceKeywords) {
+    // 使用正则移除关键词及其前后的空格
+    const regex = new RegExp(`\\s*${keyword}\\s*`, 'gi');
+    allText = allText.replace(regex, ' ');
+  }
+  
+  // 清理多余空格
+  allText = allText.replace(/\s+/g, ' ').trim();
+  
+  console.log('========== 清理后的文本 ==========');
+  console.log(allText);
+  console.log('========== 清理后长度:', allText.length, '==========');
   
   // 判断收入还是支出
   const expenseKeywords = ['购买', '消费', '支付', '实付', '应付', '合计', '小票', '订单', '商品', '数量', '单据号', '门店', '零食', '超市', '便利店'];
@@ -250,6 +338,7 @@ function parseOCRResult(ocrResult) {
   for (const pattern of keywordPatterns) {
     const match = allText.match(pattern);
     if (match && match[1]) {
+      console.log(`尝试匹配模式: ${pattern}, 匹配结果: ${match[0]}, 金额: ${match[1]}`);
       const parsedAmount = parseFloat(match[1]);
       if (parsedAmount > 0 && parsedAmount < 100000) {
         // 检查金额前后文，排除无关金额
@@ -257,18 +346,28 @@ function parseOCRResult(ocrResult) {
         const beforeText = allText.substring(Math.max(0, matchIndex - 15), matchIndex);
         const afterText = allText.substring(matchIndex + match[0].length, Math.min(allText.length, matchIndex + match[0].length + 15));
         
-        // 排除：门禁密码、放XX元、存XX元等无关金额
+        console.log(`金额前文: "${beforeText}", 金额后文: "${afterText}"`);
+        
+        // 排除：门禁密码、放XX元、存XX元、订单号、商品编号等无关金额
         if (beforeText.includes('门禁') || beforeText.includes('密码') || 
             beforeText.includes('放') || beforeText.includes('存') ||
-            beforeText.includes('输入') || beforeText.includes('开门')) {
-          console.log('跳过无关金额（门禁/密码相关）:', parsedAmount);
+            beforeText.includes('输入') || beforeText.includes('开门') ||
+            beforeText.includes('订单号') || beforeText.includes('编号') ||
+            beforeText.includes('单号') || beforeText.includes('流水号')) {
+          console.log('跳过无关金额（门禁/密码/订单号相关）:', parsedAmount);
+          continue;
+        }
+        
+        // 【新增】排除明显不合理的金额（外卖订单号通常是8-10位数字）
+        if (parsedAmount > 10000 && !match[1].includes('.')) {
+          console.log('跳过疑似订单号的大数字:', parsedAmount);
           continue;
         }
         
         if (match[1].includes('.')) {
           amount = parsedAmount;
           foundWithKeyword = true;
-          console.log('【优先级1】匹配到关键词金额（有小数点）:', amount);
+          console.log('【优先级1】匹配到关键词金额（有小数点）:', amount, '匹配文本:', match[0]);
           break;
         } else {
           const numStr = match[1];
@@ -276,10 +375,15 @@ function parseOCRResult(ocrResult) {
             console.log('跳过可能是时间的数字:', parsedAmount);
             continue;
           }
+          // 【新增】如果是3位以上的整数且没有关键词，可能是订单号
+          if (numStr.length >= 3 && !beforeText.match(/实付|合计|总计|小计|应付|金额|支付/)) {
+            console.log('跳过疑似订单号的数字（无关键词）:', parsedAmount);
+            continue;
+          }
           if (parsedAmount >= 10) {
             amount = parsedAmount;
             foundWithKeyword = true;
-            console.log('【优先级1】匹配到关键词金额（>=10）:', amount);
+            console.log('【优先级1】匹配到关键词金额（>=10）:', amount, '匹配文本:', match[0]);
             break;
           }
         }
@@ -287,84 +391,90 @@ function parseOCRResult(ocrResult) {
     }
   }
   
-  // 【优先级2】商品列表识别
+  // 【优先级2】商品列表识别（仅在没有找到关键词金额时使用）
   if (!foundWithKeyword) {
     console.log('【优先级2】未通过关键词找到金额，尝试识别商品列表');
     
-    // OCR错误修正：*115.89 可能是 *1 15.89
-    let correctedText = allText;
-    const ocrErrorPattern = /\*1(\d{2,3}\.\d+)/g;
-    let ocrMatch;
-    const corrections = [];
-    
-    while ((ocrMatch = ocrErrorPattern.exec(allText)) !== null) {
-      const fullMatch = ocrMatch[0];
-      const priceStr = ocrMatch[1];
-      const price = parseFloat(priceStr);
+    // 先检查是否有"合计"、"总计"等关键词，如果有则跳过商品列表累加
+    const hasTotalKeyword = /合计|总计|小计|实付|应付/.test(allText);
+    if (hasTotalKeyword) {
+      console.log('⚠️ 检测到合计关键词，但未匹配到金额，跳过商品列表累加（避免错误累加）');
+    } else {
+      // OCR错误修正：*115.89 可能是 *1 15.89
+      let correctedText = allText;
+      const ocrErrorPattern = /\*1(\d{2,3}\.\d+)/g;
+      let ocrMatch;
+      const corrections = [];
       
-      if (price > 0 && price < 1000) {
-        const corrected = `*1 ${priceStr}`;
-        corrections.push({ original: fullMatch, corrected, price });
-        console.log(`OCR错误修正: ${fullMatch} → ${corrected}`);
-      }
-    }
-    
-    if (corrections.length > 0) {
-      for (const correction of corrections) {
-        correctedText = correctedText.replace(correction.original, correction.corrected);
-      }
-      
-      // 如果只有一个商品且修正成功，直接使用修正后的价格
-      if (corrections.length === 1) {
-        amount = corrections[0].price;
-        foundWithKeyword = true;
-        console.log('【优先级2】使用OCR修正后的单商品价格:', amount);
-      }
-    }
-    
-    // 格式1：*数量 单价 小计
-    if (!foundWithKeyword) {
-      const itemWithSubtotalPattern = /\*(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/g;
-      let subtotals = [];
-      let match;
-      while ((match = itemWithSubtotalPattern.exec(correctedText)) !== null) {
-        const quantity = parseInt(match[1]);
-        const unitPrice = parseFloat(match[2]);
-        const subtotal = parseFloat(match[3]);
+      while ((ocrMatch = ocrErrorPattern.exec(allText)) !== null) {
+        const fullMatch = ocrMatch[0];
+        const priceStr = ocrMatch[1];
+        const price = parseFloat(priceStr);
         
-        if (subtotal > 0 && subtotal < 10000 && Math.abs(subtotal - quantity * unitPrice) < 0.1) {
-          subtotals.push(subtotal);
-          console.log(`找到商品小计: *${quantity} ${unitPrice} ${subtotal}`);
+        if (price > 0 && price < 1000) {
+          const corrected = `*1 ${priceStr}`;
+          corrections.push({ original: fullMatch, corrected, price });
+          console.log(`OCR错误修正: ${fullMatch} → ${corrected}`);
         }
       }
       
-      if (subtotals.length > 0) {
-        amount = subtotals.reduce((sum, val) => sum + val, 0);
-        foundWithKeyword = true;
-        console.log('【优先级2】累加商品小计作为金额:', amount);
-      }
-    }
-    
-    // 格式2：*数量 单价
-    if (!foundWithKeyword) {
-      const itemPattern = /\*(\d+)\s+(\d+\.?\d*)/g;
-      let calculatedAmounts = [];
-      let match;
-      while ((match = itemPattern.exec(correctedText)) !== null) {
-        const quantity = parseInt(match[1]);
-        const unitPrice = parseFloat(match[2]);
-        const calculated = quantity * unitPrice;
+      if (corrections.length > 0) {
+        for (const correction of corrections) {
+          correctedText = correctedText.replace(correction.original, correction.corrected);
+        }
         
-        if (calculated > 0 && calculated < 10000) {
-          calculatedAmounts.push(calculated);
-          console.log(`计算商品金额: *${quantity} × ${unitPrice} = ${calculated}`);
+        // 如果只有一个商品且修正成功，直接使用修正后的价格
+        if (corrections.length === 1) {
+          amount = corrections[0].price;
+          foundWithKeyword = true;
+          console.log('【优先级2】使用OCR修正后的单商品价格:', amount);
         }
       }
       
-      if (calculatedAmounts.length > 0) {
-        amount = calculatedAmounts.reduce((sum, val) => sum + val, 0);
-        foundWithKeyword = true;
-        console.log('【优先级2】累加计算金额:', amount);
+      // 格式1：*数量 单价 小计
+      if (!foundWithKeyword) {
+        const itemWithSubtotalPattern = /\*(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/g;
+        let subtotals = [];
+        let match;
+        while ((match = itemWithSubtotalPattern.exec(correctedText)) !== null) {
+          const quantity = parseInt(match[1]);
+          const unitPrice = parseFloat(match[2]);
+          const subtotal = parseFloat(match[3]);
+          
+          if (subtotal > 0 && subtotal < 10000 && Math.abs(subtotal - quantity * unitPrice) < 0.1) {
+            subtotals.push(subtotal);
+            console.log(`找到商品小计: *${quantity} ${unitPrice} ${subtotal}`);
+          }
+        }
+        
+        if (subtotals.length > 0) {
+          amount = subtotals.reduce((sum, val) => sum + val, 0);
+          foundWithKeyword = true;
+          console.log('【优先级2】累加商品小计作为金额:', amount);
+        }
+      }
+      
+      // 格式2：*数量 单价
+      if (!foundWithKeyword) {
+        const itemPattern = /\*(\d+)\s+(\d+\.?\d*)/g;
+        let calculatedAmounts = [];
+        let match;
+        while ((match = itemPattern.exec(correctedText)) !== null) {
+          const quantity = parseInt(match[1]);
+          const unitPrice = parseFloat(match[2]);
+          const calculated = quantity * unitPrice;
+          
+          if (calculated > 0 && calculated < 10000) {
+            calculatedAmounts.push(calculated);
+            console.log(`计算商品金额: *${quantity} × ${unitPrice} = ${calculated}`);
+          }
+        }
+        
+        if (calculatedAmounts.length > 0) {
+          amount = calculatedAmounts.reduce((sum, val) => sum + val, 0);
+          foundWithKeyword = true;
+          console.log('【优先级2】累加计算金额:', amount);
+        }
       }
     }
   }
@@ -875,6 +985,15 @@ function parseOCRResult(ocrResult) {
       merchant = tempMerchant;
     }
     console.log('最终商家识别结果:', merchant || '(空)');
+    
+    // 【新增】商家标准化
+    if (merchant) {
+      const originalMerchant = merchant;
+      merchant = normalizeMerchant(merchant);
+      if (merchant !== originalMerchant) {
+        console.log(`✨ 商家已标准化: "${originalMerchant}" → "${merchant}"`);
+      }
+    }
   }
 
   // 提取日期
@@ -917,9 +1036,15 @@ function parseOCRResult(ocrResult) {
     }
   }
   
-  // 智能分类
-  const categoryInfo = smartClassify(allText, merchant, type);
+  // 智能分类（支持二级分类）
+  const categoryInfo = smartClassifyWithSubCategory(allText, merchant, type, date);
   console.log('智能分类结果:', categoryInfo);
+  
+  // 【新增】提取结构化备注
+  let structuredRemark = '';
+  if (categoryInfo.name) {
+    structuredRemark = extractStructuredRemark(allText, merchant, categoryInfo.name);
+  }
   
   // 提取备注 - 全面优化版
   let remark = '';
@@ -1199,6 +1324,12 @@ function parseOCRResult(ocrResult) {
     console.log('最终备注:', remark || '(空)');
   }
   
+  // 【新增】如果结构化备注提取成功，优先使用
+  if (structuredRemark && structuredRemark.length > 0) {
+    console.log('✨ 使用结构化备注:', structuredRemark);
+    remark = structuredRemark;
+  }
+  
   console.log('最终解析结果:', { type, amount, merchant, date, categoryInfo, remark });
   
   // 构建返回结果
@@ -1215,6 +1346,12 @@ function parseOCRResult(ocrResult) {
   if (categoryInfo.id !== null && categoryInfo.name) {
     result.categoryId = categoryInfo.id;
     result.categoryName = categoryInfo.name;
+    
+    // 【新增】添加二级分类
+    if (categoryInfo.subCategory) {
+      result.subCategory = categoryInfo.subCategory;
+      console.log('✨ 二级分类:', categoryInfo.subCategory);
+    }
   }
   
   return result;
@@ -1586,6 +1723,243 @@ function smartClassify(text, merchant, type) {
     console.log('未匹配到支出分类，返回空');
     return { id: null, name: '' };
   }
+}
+
+/**
+ * 商家标准化函数
+ * 将各种商家名称变体统一为标准名称
+ */
+function normalizeMerchant(merchant) {
+  if (!merchant) return '';
+  
+  // 移除常见后缀（保留核心品牌名）
+  const suffixesToRemove = [
+    '店', '分店', '门店', '专卖店', '旗舰店', '直营店',
+    '超市', '便利店', '购物中心', '商场', '广场',
+    '（', '(', '）', ')'
+  ];
+  
+  let cleanMerchant = merchant;
+  for (const suffix of suffixesToRemove) {
+    const index = cleanMerchant.indexOf(suffix);
+    if (index > 0) {
+      cleanMerchant = cleanMerchant.substring(0, index);
+    }
+  }
+  
+  // 匹配标准化映射表
+  for (const [standardName, variants] of Object.entries(MERCHANT_NORMALIZATION)) {
+    for (const variant of variants) {
+      if (cleanMerchant.toLowerCase().includes(variant.toLowerCase()) ||
+          merchant.toLowerCase().includes(variant.toLowerCase())) {
+        console.log(`商家标准化: "${merchant}" → "${standardName}"`);
+        return standardName;
+      }
+    }
+  }
+  
+  // 如果没有匹配到，返回清理后的商家名
+  return cleanMerchant.trim() || merchant;
+}
+
+/**
+ * 结构化备注提取函数
+ * 从OCR文本中提取商品明细、数量等结构化信息
+ */
+function extractStructuredRemark(ocrText, merchant, categoryName) {
+  const items = [];
+  let remark = '';
+  
+  console.log('========== 开始提取结构化备注 ==========');
+  console.log('分类:', categoryName);
+  
+  // 餐饮类：提取菜品明细
+  if (categoryName === '餐饮') {
+    // 格式1: 菜品名 *数量 单价 小计
+    // 例如: 红烧鸡腿 *1 15.00 15.00
+    const pattern1 = /([^\*\d\n]{2,15})\s*\*(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/g;
+    let match;
+    while ((match = pattern1.exec(ocrText)) !== null) {
+      const itemName = match[1].trim();
+      const quantity = parseInt(match[2]);
+      const unitPrice = parseFloat(match[3]);
+      const subtotal = parseFloat(match[4]);
+      
+      // 过滤无效商品名
+      if (!itemName.includes('合计') && !itemName.includes('小计') && 
+          !itemName.includes('总计') && !itemName.includes('数量') &&
+          itemName.length >= 2 && itemName.length <= 15) {
+        items.push({
+          name: itemName,
+          quantity: quantity,
+          price: unitPrice
+        });
+        console.log(`提取到菜品: ${itemName} ×${quantity} ¥${unitPrice}`);
+      }
+    }
+    
+    // 格式2: 菜品名 *数量 单价（没有小计）
+    if (items.length === 0) {
+      const pattern2 = /([^\*\d\n]{2,15})\s*\*(\d+)\s+(\d+\.?\d*)/g;
+      while ((match = pattern2.exec(ocrText)) !== null) {
+        const itemName = match[1].trim();
+        const quantity = parseInt(match[2]);
+        const unitPrice = parseFloat(match[3]);
+        
+        if (!itemName.includes('合计') && !itemName.includes('小计') && 
+            !itemName.includes('总计') && !itemName.includes('数量') &&
+            itemName.length >= 2 && itemName.length <= 15) {
+          items.push({
+            name: itemName,
+            quantity: quantity,
+            price: unitPrice
+          });
+          console.log(`提取到菜品: ${itemName} ×${quantity} ¥${unitPrice}`);
+        }
+      }
+    }
+    
+    // 生成备注：最多显示3个商品
+    if (items.length > 0) {
+      const displayItems = items.slice(0, 3);
+      remark = displayItems.map(item => {
+        if (item.quantity > 1) {
+          return `${item.name}×${item.quantity}`;
+        }
+        return item.name;
+      }).join('、');
+      
+      if (items.length > 3) {
+        remark += `等${items.length}项`;
+      }
+      
+      console.log('生成餐饮备注:', remark);
+    }
+  }
+  
+  // 购物类：提取商品明细
+  else if (categoryName === '购物' || categoryName === '零食') {
+    // 同样的商品提取逻辑
+    const pattern = /([^\*\d\n]{2,15})\s*\*(\d+)\s+(\d+\.?\d*)/g;
+    let match;
+    while ((match = pattern.exec(ocrText)) !== null) {
+      const itemName = match[1].trim();
+      const quantity = parseInt(match[2]);
+      const unitPrice = parseFloat(match[3]);
+      
+      if (!itemName.includes('合计') && !itemName.includes('小计') && 
+          !itemName.includes('总计') && !itemName.includes('数量') &&
+          itemName.length >= 2 && itemName.length <= 15) {
+        items.push({
+          name: itemName,
+          quantity: quantity,
+          price: unitPrice
+        });
+        console.log(`提取到商品: ${itemName} ×${quantity} ¥${unitPrice}`);
+      }
+    }
+    
+    if (items.length > 0) {
+      const displayItems = items.slice(0, 3);
+      remark = displayItems.map(item => {
+        if (item.quantity > 1) {
+          return `${item.name}×${item.quantity}`;
+        }
+        return item.name;
+      }).join('、');
+      
+      if (items.length > 3) {
+        remark += `等${items.length}项`;
+      }
+      
+      console.log('生成购物备注:', remark);
+    }
+  }
+  
+  // 交通类：提取行程信息
+  else if (categoryName === '交通') {
+    // 提取起点终点
+    const routeMatch = ocrText.match(/从(.{2,10}?)到(.{2,10}?)[，。\s]/);
+    if (routeMatch) {
+      remark = `${routeMatch[1]} → ${routeMatch[2]}`;
+      console.log('提取到行程:', remark);
+    } else {
+      // 提取常见交通场景
+      if (ocrText.includes('上班') || ocrText.includes('通勤')) {
+        remark = '上班通勤';
+      } else if (ocrText.includes('回家')) {
+        remark = '回家';
+      } else if (ocrText.includes('机场')) {
+        remark = '去机场';
+      } else if (ocrText.includes('车站') || ocrText.includes('火车站') || ocrText.includes('高铁站')) {
+        remark = '去车站';
+      }
+    }
+  }
+  
+  console.log('========== 结构化备注提取完成 ==========');
+  console.log('最终备注:', remark || '(空)');
+  
+  return remark;
+}
+
+/**
+ * 智能分类（支持二级分类）
+ * 根据时间、商家、文本内容进行更精细的分类
+ */
+function smartClassifyWithSubCategory(text, merchant, type, date) {
+  // 先获取一级分类
+  const baseCategory = smartClassify(text, merchant, type);
+  
+  // 如果是餐饮类，根据时间细分
+  if (baseCategory.name === '餐饮' && date) {
+    const hour = new Date(date).getHours();
+    let subCategory = '';
+    
+    if (hour >= 6 && hour < 10) {
+      subCategory = '早餐';
+    } else if (hour >= 10 && hour < 14) {
+      subCategory = '午餐';
+    } else if (hour >= 14 && hour < 17) {
+      subCategory = '下午茶';
+    } else if (hour >= 17 && hour < 21) {
+      subCategory = '晚餐';
+    } else {
+      subCategory = '夜宵';
+    }
+    
+    console.log(`餐饮二级分类: ${subCategory} (时间: ${hour}点)`);
+    
+    return {
+      ...baseCategory,
+      subCategory: subCategory
+    };
+  }
+  
+  // 如果是交通类，根据商家细分
+  if (baseCategory.name === '交通') {
+    let subCategory = '';
+    
+    if (merchant.includes('滴滴') || merchant.includes('出租') || merchant.includes('打车')) {
+      subCategory = '打车';
+    } else if (merchant.includes('地铁') || merchant.includes('公交')) {
+      subCategory = '公交地铁';
+    } else if (merchant.includes('加油')) {
+      subCategory = '加油';
+    } else if (merchant.includes('停车')) {
+      subCategory = '停车';
+    }
+    
+    if (subCategory) {
+      console.log(`交通二级分类: ${subCategory}`);
+      return {
+        ...baseCategory,
+        subCategory: subCategory
+      };
+    }
+  }
+  
+  return baseCategory;
 }
 
 module.exports = router;

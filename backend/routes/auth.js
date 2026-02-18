@@ -459,6 +459,59 @@ router.post('/appLogin', async (req, res) => {
   }
 });
 
+// 验证token有效性
+router.get('/verify-token', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.json({
+        success: false,
+        message: 'token不存在'
+      });
+    }
+
+    // 验证token
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const userId = decoded.userId;
+      
+      // 检查用户是否存在
+      const users = await db.query('SELECT id, nickname, avatar_url FROM users WHERE id = ?', [userId]);
+      
+      if (users.length === 0) {
+        return res.json({
+          success: false,
+          message: '用户不存在'
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: 'token有效',
+        data: {
+          userId: users[0].id,
+          nickName: users[0].nickname,
+          avatarUrl: users[0].avatar_url
+        }
+      });
+    } catch (error) {
+      // token无效或过期
+      res.json({
+        success: false,
+        message: 'token无效或已过期'
+      });
+    }
+
+  } catch (error) {
+    console.error('验证token失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '验证失败'
+    });
+  }
+});
+
 // 退出登录
 router.post('/logout', async (req, res) => {
   try {

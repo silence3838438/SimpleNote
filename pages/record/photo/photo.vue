@@ -1,7 +1,7 @@
 <template>
 	<view class="container">
 		<!-- 相机预览区域 -->
-		<view class="camera-container" v-if="!data.imageUrl">
+		<view class="camera-container">
 			<!-- #ifdef MP-WEIXIN -->
 			<!-- 小程序端使用camera组件 -->
 			<view class="camera-placeholder" v-if="!data.cameraReady">
@@ -24,7 +24,7 @@
 						<text class="tip-icon">💡</text>
 						<view class="tip-content">
 							<text class="tip-title">智能识别小票</text>
-							<text class="tip-desc">长小票可拍摄关键部分（金额和商家名）</text>
+							<text class="tip-desc">拍照后自动识别，长小票可拍摄关键部分</text>
 						</view>
 					</view>
 				</view>
@@ -69,7 +69,7 @@
 				<view class="placeholder-content">
 					<view class="placeholder-icon">📷</view>
 					<text class="placeholder-title">拍照记账</text>
-					<text class="placeholder-desc">点击下方按钮开始拍照或选择图片</text>
+					<text class="placeholder-desc">拍照后自动识别小票信息</text>
 				</view>
 				
 				<!-- 底部操作栏 -->
@@ -94,45 +94,6 @@
 				</view>
 			</view>
 			<!-- #endif -->
-		</view>
-		
-		<!-- 图片预览区域 -->
-		<view class="preview-container" v-else>
-			<view class="preview-header">
-				<text class="preview-title">确认图片</text>
-				<text class="preview-subtitle">请确认小票清晰可见</text>
-			</view>
-			
-			<view class="preview-image-wrapper">
-				<image :src="data.imageUrl" mode="aspectFit" class="preview-image"></image>
-			</view>
-			
-			<view class="preview-actions">
-				<button class="btn-secondary" @click="retake">
-					<text class="btn-icon">🔄</text>
-					<text>重新拍摄</text>
-				</button>
-				<button class="btn-primary" @click="recognizeImage" :loading="data.recognizing">
-					<text class="btn-icon" v-if="!data.recognizing">✨</text>
-					<text>{{ data.recognizing ? '智能识别中...' : '开始识别' }}</text>
-				</button>
-			</view>
-		</view>
-		
-		<!-- 加载遮罩 -->
-		<view class="loading-mask" v-if="data.recognizing">
-			<view class="loading-card">
-				<view class="loading-spinner">
-					<view class="spinner-ring"></view>
-					<view class="spinner-ring"></view>
-					<view class="spinner-ring"></view>
-				</view>
-				<text class="loading-title">智能识别中</text>
-				<text class="loading-text">正在智能识别小票信息...</text>
-				<view class="loading-progress">
-					<view class="progress-bar"></view>
-				</view>
-			</view>
 		</view>
 	</view>
 </template>
@@ -264,25 +225,57 @@ const chooseImage = () => {
 	})
 }
 
-// 压缩图片
-const compressImage = (imagePath) => {
-	uni.compressImage({
-		src: imagePath,
-		quality: 70, // 压缩质量 70%
-		success: (res) => {
-			console.log('图片压缩成功，原始:', imagePath, '压缩后:', res.tempFilePath)
-			data.imageUrl = res.tempFilePath
-		},
-		fail: () => {
-			// 压缩失败，使用原图
-			console.log('图片压缩失败，使用原图')
-			data.imageUrl = imagePath
-		}
-	})
+// 压缩图片并立即识别
+const compressImage = async (imagePath) => {
+	try {
+		// 压缩图片
+		const compressRes = await uni.compressImage({
+			src: imagePath,
+			quality: 70
+		})
+		console.log('图片压缩成功')
+		
+		// 立即跳转到确认页面并开始识别
+		await recognizeAndNavigate(compressRes.tempFilePath)
+	} catch (error) {
+		console.log('图片压缩失败，使用原图')
+		// 压缩失败，使用原图
+		await recognizeAndNavigate(imagePath)
+	}
 }
 
 const retake = () => {
 	data.imageUrl = ''
+}
+
+// 识别并跳转到确认页面
+const recognizeAndNavigate = async (imagePath) => {
+	// 先跳转到确认页面，显示加载状态
+	uni.navigateTo({
+		url: `/pages/record/confirm/confirm?loading=true`
+	})
+	
+	try {
+		// 后台识别
+		const result = await callOCRCloudFunction(imagePath)
+		
+		// 识别成功，通知确认页面更新数据
+		uni.$emit('ocrRecognized', result)
+	} catch (error) {
+		console.error('识别失败:', error)
+		
+		// 识别失败，通知确认页面显示空数据
+		const emptyData = {
+			amount: 0,
+			merchant: '',
+			date: new Date().toISOString().split('T')[0],
+			categoryId: null,
+			categoryName: '',
+			type: 'expense',
+			error: error.message || '识别失败'
+		}
+		uni.$emit('ocrRecognized', emptyData)
+	}
 }
 
 const recognizeImage = async () => {
@@ -346,13 +339,13 @@ const recognizeImage = async () => {
 	}
 }
 
-const callOCRCloudFunction = async () => {
+const callOCRCloudFunction = async (imagePath) => {
 	const startTime = Date.now()
 	console.log('⏱️ [拍照识别] 开始时间:', new Date().toLocaleTimeString())
 	
 	// 直接读取图片转base64,不上传
 	const base64StartTime = Date.now()
-	const imageBase64 = await getImageBase64(data.imageUrl)
+	const imageBase64 = await getImageBase64(imagePath)
 	const base64EndTime = Date.now()
 	console.log('⏱️ [拍照识别] 图片转base64耗时:', base64EndTime - base64StartTime, 'ms')
 	
@@ -398,19 +391,19 @@ const callOCRCloudFunction = async () => {
 	
 	if (needAI) {
 		console.log('🤖 [AI策略] 识别质量较低，启动AI增强')
-		// 后台启动 AI 增强（不阻塞返回）
-		enhanceWithAI(ocrText, startTime, quickResult).then(aiResult => {
-			console.log('🎯 AI 增强完成，通知页面更新')
-			// 通过全局事件通知确认页面更新
-			uni.$emit('aiEnhanced', aiResult)
-		}).catch(err => {
-			console.log('⚠️ AI 增强失败，保持快速解析结果:', err.message)
-		})
+		// 【修改】等待 AI 增强完成后再返回结果（避免显示错误数据）
+		try {
+			const aiResult = await enhanceWithAI(ocrText, startTime, quickResult)
+			console.log('✅ [AI策略] AI增强完成，返回最终结果')
+			return aiResult
+		} catch (err) {
+			console.log('⚠️ AI 增强失败，返回快速解析结果:', err.message)
+			return quickResult
+		}
 	} else {
 		console.log('✅ [AI策略] 识别质量良好，跳过AI增强（节省token）')
+		return quickResult
 	}
-	
-	return quickResult
 }
 
 // 读取图片转base64
@@ -493,65 +486,9 @@ const enhanceWithAI = async (ocrText, startTime, quickResult) => {
  * @returns {Boolean} 是否需要AI增强
  */
 const shouldUseAI = (quickResult, ocrText) => {
-	// 策略1: 如果金额为0或未识别，需要AI
-	if (!quickResult.amount || quickResult.amount === 0) {
-		console.log('💡 [AI策略] 金额未识别，需要AI')
-		return true
-	}
-	
-	// 策略2: 如果商家为空或太短（可能识别不准），需要AI
-	if (!quickResult.merchant || quickResult.merchant.length < 2) {
-		console.log('💡 [AI策略] 商家未识别，需要AI')
-		return true
-	}
-	
-	// 策略3: 如果分类是"其他"，可能需要AI优化
-	if (quickResult.categoryName === '其他') {
-		console.log('💡 [AI策略] 分类为"其他"，需要AI优化')
-		return true
-	}
-	
-	// 策略4: 检查是否是知名品牌（已经很准确，不需要AI）
-	const knownBrands = [
-		'星巴克', '麦当劳', '肯德基', 'KFC', '必胜客', '海底捞',
-		'美团', '饿了么', '盒马', '永辉', '沃尔玛', '家乐福',
-		'屈臣氏', '万宁', '7-11', '全家', '罗森',
-		'中国移动', '中国联通', '中国电信',
-		'滴滴', '高德', '曹操'
-	]
-	
-	const merchantLower = quickResult.merchant.toLowerCase()
-	const isKnownBrand = knownBrands.some(brand => 
-		merchantLower.includes(brand.toLowerCase()) || 
-		quickResult.merchant.includes(brand)
-	)
-	
-	if (isKnownBrand) {
-		console.log('💡 [AI策略] 识别到知名品牌，跳过AI（节省token）')
-		return false
-	}
-	
-	// 策略5: 如果OCR文本很短（<20字符），可能信息不足，跳过AI
-	if (ocrText.length < 20) {
-		console.log('💡 [AI策略] OCR文本过短，跳过AI')
-		return false
-	}
-	
-	// 策略6: 如果OCR文本很长（>500字符），可能是复杂小票，需要AI
-	if (ocrText.length > 500) {
-		console.log('💡 [AI策略] OCR文本较长，需要AI提取关键信息')
-		return true
-	}
-	
-	// 策略7: 如果备注为空，可能需要AI提取商品信息
-	if (!quickResult.remark || quickResult.remark.trim() === '') {
-		console.log('💡 [AI策略] 备注为空，需要AI提取商品信息')
-		return true
-	}
-	
-	// 默认：识别质量良好，跳过AI（节省token）
-	console.log('💡 [AI策略] 识别质量良好，跳过AI（节省token）')
-	return false
+	// 【修改】金额识别很复杂，始终启用AI来确保准确性
+	console.log('💡 [AI策略] 金额识别复杂，启用AI确保准确性');
+	return true;
 }
 </script>
 

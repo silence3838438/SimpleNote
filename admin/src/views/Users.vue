@@ -25,6 +25,12 @@
         </el-table-column>
         <el-table-column prop="nickname" label="昵称" />
         <el-table-column prop="phone" label="手机号" />
+        <el-table-column label="密码状态" width="100">
+          <template #default="{ row }">
+            <el-tag v-if="row.password" type="success" size="small">已设置</el-tag>
+            <el-tag v-else type="info" size="small">未设置</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="openid" label="OpenID" show-overflow-tooltip />
         <el-table-column label="注册时间" width="180">
           <template #default="{ row }">
@@ -36,9 +42,10 @@
             {{ formatDate(row.last_login) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="viewDetail(row)">详情</el-button>
+            <el-button type="warning" link @click="handleResetPassword(row)">重置密码</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -132,6 +139,17 @@
         <div class="info-card">
           <div class="card-title">详细信息</div>
           <div class="info-grid">
+            <div class="info-item">
+              <span class="label">手机号</span>
+              <span class="value">{{ currentUserDetail.user.phone || '未绑定' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">密码状态</span>
+              <span class="value">
+                <el-tag v-if="currentUserDetail.user.password" type="success" size="small">已设置</el-tag>
+                <el-tag v-else type="info" size="small">未设置</el-tag>
+              </span>
+            </div>
             <div class="info-item">
               <span class="label">用户ID</span>
               <span class="value">{{ currentUserDetail.user.id }}</span>
@@ -305,6 +323,39 @@ const handleDelete = (row) => {
       }
     } catch (error) {
       console.error('删除失败:', error)
+    }
+  })
+}
+
+const handleResetPassword = (row) => {
+  ElMessageBox.confirm(
+    `确定要重置用户 ${row.nickname || row.phone} 的密码吗？`, 
+    '重置密码', 
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      const res = await request.post(`/admin/users/${row.id}/reset-password`)
+      if (res.success) {
+        // 显示新密码
+        ElMessageBox.alert(
+          `新密码：${res.newPassword}\n\n请将此密码告知用户，此密码仅显示一次！`, 
+          '密码重置成功', 
+          {
+            confirmButtonText: '我已复制',
+            type: 'success',
+            dangerouslyUseHTMLString: false
+          }
+        )
+      } else {
+        ElMessage.error(res.message || '重置失败')
+      }
+    } catch (error) {
+      console.error('重置密码失败:', error)
+      ElMessage.error('重置密码失败')
     }
   })
 }
@@ -591,5 +642,22 @@ onMounted(() => {
 
 .bill-amount.income {
   color: #51cf66;
+}
+
+/* 密码哈希样式 */
+.password-hash {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #666;
+  word-break: break-all;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-item.full-width .value {
+  max-width: 100%;
+  word-break: break-all;
 }
 </style>

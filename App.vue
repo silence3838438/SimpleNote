@@ -148,6 +148,103 @@
 		}, 800)
 	}
 	
+	// 自动登录（小程序和APP通用）
+	const autoLogin = async () => {
+		try {
+			// 检查本地是否有用户信息和token
+			const userInfo = uni.getStorageSync('userInfo')
+			const token = uni.getStorageSync('token')
+			
+			console.log('=== 检查自动登录 ===')
+			console.log('本地userInfo:', userInfo)
+			console.log('本地token:', token ? '存在' : '不存在')
+			
+			// 如果本地有用户信息且已登录，说明之前登录过
+			if (userInfo && userInfo.isLogin && token) {
+				console.log('✅ 检测到之前的登录状态')
+				
+				// #ifdef MP-WEIXIN
+				// 小程序：静默登录，获取新的code换取token
+				console.log('小程序环境：尝试静默登录')
+				const loginRes = await uni.login()
+				console.log('uni.login返回:', loginRes)
+				
+				if (loginRes.code) {
+					// 调用后端接口，使用code换取新token
+					const result = await uni.request({
+						url: 'https://api.qiannaqule.top/auth/wechat-login',
+						method: 'POST',
+						data: {
+							code: loginRes.code,
+							nickName: userInfo.nickName,
+							avatarUrl: userInfo.avatarUrl
+						},
+						header: {
+							'Content-Type': 'application/json'
+						}
+					})
+					
+					console.log('静默登录接口返回:', result)
+					
+					if (result.statusCode === 200 && result.data.success) {
+						// 更新token和用户信息
+						const newUserInfo = {
+							nickName: result.data.data?.nickName || userInfo.nickName,
+							avatarUrl: result.data.data?.avatarUrl || userInfo.avatarUrl,
+							isLogin: true
+						}
+						
+						uni.setStorageSync('userInfo', newUserInfo)
+						uni.setStorageSync('token', result.data.token)
+						
+						console.log('✅ 小程序自动登录成功')
+					} else {
+						console.log('❌ 静默登录失败，清除本地登录状态')
+						uni.removeStorageSync('userInfo')
+						uni.removeStorageSync('token')
+					}
+				}
+				// #endif
+				
+				// #ifdef APP-PLUS
+				// APP：验证token是否有效
+				console.log('APP环境：验证token有效性')
+				try {
+					const result = await uni.request({
+						url: 'https://api.qiannaqule.top/auth/verify-token',
+						method: 'GET',
+						header: {
+							'Authorization': `Bearer ${token}`
+						}
+					})
+					
+					console.log('token验证返回:', result)
+					
+					if (result.statusCode === 200 && result.data.success) {
+						console.log('✅ APP token有效，保持登录状态')
+						// token有效，保持登录状态
+					} else {
+						console.log('❌ token无效，清除本地登录状态')
+						// token无效，清除登录状态
+						uni.removeStorageSync('userInfo')
+						uni.removeStorageSync('token')
+					}
+				} catch (error) {
+					console.error('验证token失败:', error)
+					// 验证失败，保守起见清除登录状态
+					uni.removeStorageSync('userInfo')
+					uni.removeStorageSync('token')
+				}
+				// #endif
+			} else {
+				console.log('ℹ️ 本地无登录信息，等待用户手动登录')
+			}
+		} catch (error) {
+			console.error('自动登录失败:', error)
+			// 失败不影响应用启动
+		}
+	}
+	
 	onLaunch(async () => {
 		console.log('App Launch')
 		// 初始化云开发环境
@@ -169,6 +266,9 @@
 		setTimeout(() => {
 			updateTabBarText()
 		}, 100)
+		
+		// 自动登录（小程序和APP通用，在加载提醒设置之前）
+		await autoLogin()
 		
 		// 从云端加载提醒设置（等待加载完成）
 		await loadReminderSettingsFromCloud()
