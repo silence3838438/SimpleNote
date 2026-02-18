@@ -136,14 +136,11 @@ const loadReminderFromCloud = async () => {
 			action: 'getReminder'
 		})
 		
-		console.log('获取提醒设置返回:', res)
-		
 		uni.hideLoading()
 		
 		if (res.success && res.reminder) {
 			// 后端返回的是 reminder 对象，可能包含 time 或 reminder_time 字段
 			const savedTime = res.reminder.reminder_time || res.reminder.time || ''
-			console.log('提醒时间:', savedTime)
 			
 			if (savedTime) {
 				// 云端有设置，使用云端数据
@@ -245,8 +242,6 @@ const saveAndSubscribe = async () => {
 		uni.requestSubscribeMessage({
 			tmplIds: ['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'],
 			success: async (res) => {
-				console.log('订阅结果:', res)
-				
 				if (res['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'] === 'accept') {
 					// 订阅成功，保存到云端
 					try {
@@ -308,9 +303,6 @@ const saveAndSubscribe = async () => {
 }
 
 const saveSubscriptionToCloud = async () => {
-	console.log('开始调用API保存订阅信息')
-	console.log('提醒时间:', data.selectedTime)
-	
 	const res = await request.call('billManager', {
 		action: 'saveReminderSubscription',
 		data: {
@@ -321,7 +313,6 @@ const saveSubscriptionToCloud = async () => {
 	})
 	
 	if (res.success) {
-		console.log('✅ 订阅信息保存成功')
 		return res
 	} else {
 		console.error('❌ 订阅信息保存失败:', res.message)

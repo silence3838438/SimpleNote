@@ -46,7 +46,6 @@ class Request {
 				header: headers,
 				timeout: 10000, // 10秒超时
 				success: (res) => {
-					console.log(`API请求成功 [${path}]:`, res)
 					if (res.statusCode === 200) {
 						let responseData = res.data
 						
@@ -79,62 +78,48 @@ class Request {
 	 * 上传文件
 	 */
 	async uploadFile(filePath) {
-		console.log('📤 [上传] 开始上传文件:', filePath)
-		
-		return new Promise((resolve, reject) => {
-			const token = uni.getStorageSync('token') || ''
-			
-			const headers = {}
-			
-			// 只有在有 token 时才添加 Authorization 头
-			if (token) {
-				headers['Authorization'] = `Bearer ${token}`
-			}
-			
-			// APP端需要转换文件路径为绝对路径
-			let uploadPath = filePath
-			
-			// #ifdef APP-PLUS
-			// 如果是相对路径，转换为绝对路径
-			if (!filePath.startsWith('/') && !filePath.startsWith('file://')) {
-				// 获取临时文件目录
-				uploadPath = plus.io.convertLocalFileSystemURL(filePath)
-				console.log('📤 [上传] 转换后的路径:', uploadPath)
-			}
-			// #endif
-			
-			console.log('📤 [上传] 上传配置:', {
-				url: `${apiConfig.apiBaseUrl}/upload`,
-				filePath: uploadPath,
-				name: 'file',
-				hasToken: !!token
-			})
-			
-			uni.uploadFile({
-				url: `${apiConfig.apiBaseUrl}/upload`,
-				filePath: uploadPath,
-				name: 'file',
-				header: headers,
-				success: (res) => {
-					console.log('📤 [上传] 上传成功，响应状态:', res.statusCode)
-					console.log('📤 [上传] 响应数据:', res.data)
-					
-					try {
-						const data = JSON.parse(res.data)
-						console.log('📤 [上传] 解析后的数据:', data)
-						resolve(data)
-					} catch (error) {
-						console.error('📤 [上传] JSON解析失败:', error)
-						reject(new Error('响应数据解析失败'))
-					}
-				},
-				fail: (err) => {
-					console.error('📤 [上传] 上传失败:', err)
-					reject(new Error('文件上传失败：' + (err.errMsg || '网络错误')))
+			return new Promise((resolve, reject) => {
+				const token = uni.getStorageSync('token') || ''
+
+				const headers = {}
+
+				// 只有在有 token 时才添加 Authorization 头
+				if (token) {
+					headers['Authorization'] = `Bearer ${token}`
 				}
+
+				// APP端需要转换文件路径为绝对路径
+				let uploadPath = filePath
+
+				// #ifdef APP-PLUS
+				// 如果是相对路径，转换为绝对路径
+				if (!filePath.startsWith('/') && !filePath.startsWith('file://')) {
+					// 获取临时文件目录
+					uploadPath = plus.io.convertLocalFileSystemURL(filePath)
+				}
+				// #endif
+
+				uni.uploadFile({
+					url: `${apiConfig.apiBaseUrl}/upload`,
+					filePath: uploadPath,
+					name: 'file',
+					header: headers,
+					success: (res) => {
+						try {
+							const data = JSON.parse(res.data)
+							resolve(data)
+						} catch (error) {
+							console.error('📤 [上传] JSON解析失败:', error)
+							reject(new Error('响应数据解析失败'))
+						}
+					},
+					fail: (err) => {
+						console.error('📤 [上传] 上传失败:', err)
+						reject(new Error('文件上传失败：' + (err.errMsg || '网络错误')))
+					}
+				})
 			})
-		})
-	}
+		}
 }
 
 export default new Request()

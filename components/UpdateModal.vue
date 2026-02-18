@@ -180,7 +180,6 @@ const jumpToMarket = () => {
 	try {
 		// 获取手机品牌
 		const brand = plus.device.vendor.toLowerCase()
-		console.log('手机品牌:', brand)
 		
 		let marketUrl = ''
 		
@@ -199,8 +198,6 @@ const jumpToMarket = () => {
 			// 其他品牌使用通用market链接
 			marketUrl = 'market://details?id=com.qiannaqule.money'
 		}
-		
-		console.log('跳转链接:', marketUrl)
 		
 		// 打开应用市场
 		plus.runtime.openURL(marketUrl, (error) => {

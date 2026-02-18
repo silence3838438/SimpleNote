@@ -265,7 +265,7 @@ const openPrivacy = () => {
 	
 	// #ifdef MP-WEIXIN
 	uni.navigateTo({
-		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/privacy.html')
+		url: '/pages/privacy/privacy'
 	})
 	// #endif
 }
@@ -278,7 +278,7 @@ const openUserAgreement = () => {
 	
 	// #ifdef MP-WEIXIN
 	uni.navigateTo({
-		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/user-agreement.html')
+		url: '/pages/agreement/agreement'
 	})
 	// #endif
 }

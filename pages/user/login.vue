@@ -301,9 +301,6 @@ const wechatLogin = () => {
 			try {
 				// 获取微信登录凭证
 				const loginRes = await uni.login()
-				console.log('=== 微信登录流程开始 ===')
-				console.log('1. 获取到微信code:', loginRes.code)
-				console.log('2. 用户信息:', res.userInfo)
 				
 				// 准备请求数据
 				const requestData = {
@@ -311,13 +308,9 @@ const wechatLogin = () => {
 					nickName: res.userInfo.nickName,
 					avatarUrl: res.userInfo.avatarUrl
 				}
-				console.log('3. 准备发送的数据:', requestData)
-				console.log('4. 请求URL: https://api.qiannaqule.top/api/auth/wechat-login')
 				
 				// 调用后端登录接口
 				const result = await request.call('auth/wechat-login', requestData)
-				
-				console.log('5. 后端返回结果:', result)
 				
 				if (result.success) {
 					// 保存用户信息(优先使用后端返回的数据,后端会从数据库读取老用户的昵称头像)
@@ -327,9 +320,6 @@ const wechatLogin = () => {
 						isLogin: true
 					}
 					
-					console.log('6. 保存用户信息:', userInfo)
-					console.log('7. 保存token:', result.token)
-					
 					uni.setStorageSync('userInfo', userInfo)
 					uni.setStorageSync('token', result.token)
 					
@@ -338,8 +328,6 @@ const wechatLogin = () => {
 						title: '登录成功',
 						icon: 'success'
 					})
-					
-					console.log('=== 登录成功 ===')
 					
 					// 返回上一页或首页
 					setTimeout(() => {
@@ -396,10 +384,6 @@ const wechatAppLogin = () => {
 		provider: 'weixin',
 		scopes: 'snsapi_userinfo', // 明确指定scope
 		success: async (loginRes) => {
-			console.log('=== APP微信登录流程开始 ===')
-			console.log('1. 获取到微信code:', loginRes.code)
-			console.log('1.1 完整登录响应:', JSON.stringify(loginRes))
-			
 			// 弹框1：显示获取到的code
 			uni.showModal({
 				title: '调试1: 获取微信code',
@@ -408,14 +392,9 @@ const wechatAppLogin = () => {
 				success: async () => {
 					try {
 						// 调用后端登录接口
-						console.log('2. 准备调用后端接口: auth/wechat-app-login')
-						console.log('2.1 请求参数:', { code: loginRes.code })
-						
 						const result = await request.call('auth/wechat-app-login', {
 							code: loginRes.code
 						})
-						
-						console.log('3. 后端返回结果:', JSON.stringify(result))
 						
 						// 弹框2：显示后端返回结果
 						if (result.success) {
@@ -433,9 +412,6 @@ const wechatAppLogin = () => {
 										isLogin: true
 									}
 									
-									console.log('4. 保存用户信息:', userInfo)
-									console.log('5. 保存token:', result.token)
-									
 									uni.setStorageSync('userInfo', userInfo)
 									uni.setStorageSync('token', result.token)
 									
@@ -443,8 +419,6 @@ const wechatAppLogin = () => {
 										title: '登录成功',
 										icon: 'success'
 									})
-									
-									console.log('=== 登录成功 ===')
 									
 									// 返回上一页或首页
 									setTimeout(() => {
@@ -605,7 +579,7 @@ const openPrivacy = () => {
 	
 	// #ifdef MP-WEIXIN
 	uni.navigateTo({
-		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/privacy.html')
+		url: '/pages/privacy/privacy'
 	})
 	// #endif
 }
@@ -618,7 +592,7 @@ const openUserAgreement = () => {
 	
 	// #ifdef MP-WEIXIN
 	uni.navigateTo({
-		url: '/pages/webview/webview?url=' + encodeURIComponent('https://api.qiannaqule.top/user-agreement.html')
+		url: '/pages/agreement/agreement'
 	})
 	// #endif
 }

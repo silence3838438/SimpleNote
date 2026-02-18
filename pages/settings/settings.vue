@@ -218,12 +218,10 @@ const closeUpdateModal = () => {
 
 // 确认更新
 const handleUpdate = () => {
-	console.log('开始更新')
 }
 
 // 下载完成
 const handleDownloadComplete = () => {
-	console.log('下载完成')
 	data.showUpdateModal = false
 }
 // #endif
@@ -258,7 +256,6 @@ const handleLogout = () => {
 					// 1. 先同步本地数据到云端
 					try {
 						await billStorage.syncToAPI()
-						console.log('退出前数据已同步到云端')
 					} catch (syncError) {
 						console.error('同步数据失败:', syncError)
 					}

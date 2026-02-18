@@ -530,7 +530,6 @@ const subscribeReminder = () => {
 	uni.requestSubscribeMessage({
 		tmplIds: ['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'],
 		success: (res) => {
-			console.log('订阅结果:', res)
 			// 检查是否订阅成功
 			if (res['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'] === 'accept') {
 				uni.setStorageSync('hasSubscribedReminder', true)
@@ -573,7 +572,6 @@ const saveSubscription = async () => {
 		})
 		
 		if (res.success) {
-			console.log('订阅信息保存成功')
 		} else {
 			console.error('订阅信息保存失败:', res.message)
 		}
@@ -592,7 +590,6 @@ const syncData = async () => {
 			recalculateData()
 		}
 	} catch (error) {
-		console.log('同步失败:', error)
 	}
 }
 
@@ -843,7 +840,6 @@ const promptLogin = () => {
 const goToPhoto = () => {
 	// 防止点击穿透
 	if (data.isPickerClosing) {
-		console.log('⚠️ 选择器正在关闭，忽略拍照操作')
 		return
 	}
 	
@@ -982,13 +978,11 @@ const toggleAmountVisibility = () => {
 // 处理提醒弹框确认
 const handleReminderConfirm = () => {
 	// 不记录已提醒，让用户记账后自动停止提醒
-	console.log('用户点击去记账')
 }
 
 // 处理提醒弹框取消
 const handleReminderCancel = () => {
 	// 不记录已提醒，下次打开继续提醒
-	console.log('用户点击稍后')
 }
 
 // 检查APP更新
@@ -1016,7 +1010,6 @@ const closeUpdateModal = () => {
 
 // 确认更新
 const handleUpdateConfirm = () => {
-	console.log('开始下载更新')
 }
 
 // 下载完成
@@ -1089,13 +1082,9 @@ onLoad((options) => {
 	
 	// 监听显示提醒弹框事件
 	uni.$on('showReminderModal', () => {
-		console.log('收到显示提醒弹框事件')
-		console.log('reminderModalRef.value:', reminderModalRef.value)
-		
 		// 使用 nextTick 确保组件已经挂载
 		nextTick(() => {
 			if (reminderModalRef.value && typeof reminderModalRef.value.showModal === 'function') {
-				console.log('调用 showModal 方法')
 				reminderModalRef.value.showModal()
 			} else {
 				console.error('reminderModalRef 未准备好或 showModal 方法不存在')
@@ -1108,10 +1097,8 @@ onLoad((options) => {
 					success: (res) => {
 						if (res.confirm) {
 							// 用户点击去记账，不做任何操作（已在首页）
-							console.log('用户点击去记账')
 						} else {
 							// 用户点击稍后，不做任何操作
-							console.log('用户点击稍后')
 						}
 					}
 				})
@@ -1147,14 +1134,12 @@ onShow(() => {
 		uni.showLoading({ title: '刷新中...' })
 		// 直接从API获取最新数据并刷新
 		billStorage.getFromAPI().then(bills => {
-			console.log('从API获取到的账单数量:', bills ? bills.length : 0)
 			data.allBills = bills || []
 			// 重新加载预算
 			loadBudget()
 			// 重新计算所有数据
 			recalculateData()
 			uni.hideLoading()
-			console.log('数据刷新完成')
 		}).catch(error => {
 			console.error('刷新失败:', error)
 			uni.showToast({

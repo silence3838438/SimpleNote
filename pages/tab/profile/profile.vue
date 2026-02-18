@@ -326,43 +326,6 @@
 			</view>
 		</view>
 		
-		<!-- 隐私协议弹框 -->
-		<view class="privacy-modal" v-if="data.showPrivacyModal" @click="closePrivacyModal">
-			<view class="privacy-modal-content" @click.stop>
-				<view class="privacy-header">
-					<text class="privacy-title">用户协议和隐私政策</text>
-				</view>
-				
-				<view class="privacy-body">
-					<text class="privacy-text">欢迎使用钱哪去了！</text>
-					<text class="privacy-text">我们非常重视您的隐私保护和个人信息安全。</text>
-					<text class="privacy-text">请您仔细阅读</text>
-					<text class="privacy-link" @click.stop="openUserAgreementFromModal">《用户协议》</text>
-					<text class="privacy-text">和</text>
-					<text class="privacy-link" @click.stop="openPrivacyFromModal">《隐私政策》</text>
-					<text class="privacy-text">，了解我们如何收集、使用和保护您的个人信息。</text>
-					
-					<!-- 同意checkbox -->
-					<view class="privacy-checkbox-wrapper">
-						<checkbox-group @change="onAgreeChange">
-							<label class="privacy-checkbox-label">
-								<checkbox :checked="data.agreed" color="#52C41A" />
-								<text class="privacy-checkbox-text">我已阅读并同意上述协议</text>
-							</label>
-						</checkbox-group>
-					</view>
-				</view>
-				
-				<view class="privacy-footer">
-					<view class="privacy-btn cancel-btn" @click="closePrivacyModal">
-						<text class="privacy-btn-text">取消</text>
-					</view>
-					<view class="privacy-btn confirm-btn" :class="{ 'disabled': !data.agreed }" @click="agreeAndLogin">
-						<text class="privacy-btn-text">确定</text>
-					</view>
-				</view>
-			</view>
-		</view>
 		
 		<!-- #ifdef APP-PLUS -->
 		<!-- 分享弹框 -->
@@ -401,8 +364,6 @@ const data = reactive({
 	memberLevel: getMemberLevel(0), // 初始化为0积分的等级
 	todayPoints: 0, // 今日获得积分
 	showLevelModal: false, // 是否显示等级详情弹框
-	showPrivacyModal: false, // 是否显示隐私协议弹框
-	agreed: true, // 隐私协议是否同意（默认勾选）
 	showShareModal: false, // 是否显示分享弹框
 	showNicknameModal: false, // 是否显示昵称修改弹框
 	tempNickname: '', // 临时昵称
@@ -466,11 +427,8 @@ const getUserInfo = () => {
 					avatarUrl: avatarUrl
 				})
 				
-				console.log('登录接口返回:', result)
-				
 				if (result.success) {
 					// 3. 保存用户信息和token
-					console.log('准备保存用户信息')
 					
 					const newUserInfo = {
 						avatarUrl: result.data?.avatarUrl || avatarUrl,
@@ -479,14 +437,9 @@ const getUserInfo = () => {
 						token: result.token
 					}
 					
-					console.log('newUserInfo:', newUserInfo)
-					
 					data.userInfo = newUserInfo
 					uni.setStorageSync('userInfo', newUserInfo)
 					uni.setStorageSync('token', result.token)
-					
-					console.log('用户信息已保存')
-					console.log('data.userInfo:', data.userInfo)
 					
 					uni.hideLoading()
 					uni.showToast({
@@ -967,20 +920,13 @@ const getTodayPointsFromCloud = async () => {
 			const today = new Date().toDateString()
 			let todayTotal = 0
 			
-			console.log('=== 今日积分计算 ===')
-			console.log('今天日期:', today)
-			console.log('积分历史记录数:', history.length)
-			
 			history.forEach(record => {
 				const recordDate = new Date(record.createTime).toDateString()
-				console.log('记录日期:', recordDate, '积分:', record.points, '原因:', record.reason)
 				if (recordDate === today) {
 					todayTotal += record.points
-					console.log('✓ 今日记录，累加积分:', record.points, '当前总计:', todayTotal)
 				}
 			})
 			
-			console.log('今日积分总计:', todayTotal)
 			return todayTotal
 		}
 		return 0
@@ -1040,55 +986,14 @@ const goToSettings = () => {
 // 跳转到登录页面
 let isShowingModal = false // 防止重复弹窗
 const goToLogin = () => {
-	console.log('=== goToLogin 被调用 ===')
 	
 	// 防止重复弹窗
 	if (isShowingModal) {
-		console.log('=== 已有弹窗显示中，忽略 ===')
 		return
 	}
 	
 	// #ifdef MP-WEIXIN
-	console.log('=== 小程序环境，显示隐私弹框 ===')
-	// 显示隐私协议弹框（默认勾选）
-	data.agreed = true
-	data.showPrivacyModal = true
-	// #endif
-	
-	// #ifdef APP-PLUS
-	console.log('=== APP环境，跳转到登录页面 ===')
-	// APP跳转到登录页面
-	uni.navigateTo({
-		url: '/pages/user/login'
-	})
-	// #endif
-}
-
-// checkbox变化
-const onAgreeChange = (e) => {
-	data.agreed = e.detail.value.length > 0
-}
-
-// 关闭隐私协议弹框
-const closePrivacyModal = () => {
-	data.showPrivacyModal = false
-}
-
-// 同意隐私协议并登录
-const agreeAndLogin = () => {
-	// 检查是否同意协议
-	if (!data.agreed) {
-		uni.showToast({
-			title: '请先同意用户协议和隐私政策',
-			icon: 'none'
-		})
-		return
-	}
-	
-	data.showPrivacyModal = false
-	
-	// #ifdef MP-WEIXIN
-	// 调用一键登录
+	// 直接调用微信授权，不显示额外的隐私弹框
 	uni.getUserProfile({
 		desc: '用于完善用户资料',
 		success: async (res) => {
@@ -1146,20 +1051,13 @@ const agreeAndLogin = () => {
 		}
 	})
 	// #endif
-}
-
-// 打开用户协议
-const openUserAgreementFromModal = () => {
+	
+	// #ifdef APP-PLUS
+	// APP跳转到登录页面
 	uni.navigateTo({
-		url: '/pages/agreement/agreement'
+		url: '/pages/user/login'
 	})
-}
-
-// 打开隐私政策
-const openPrivacyFromModal = () => {
-	uni.navigateTo({
-		url: '/pages/privacy/privacy'
-	})
+	// #endif
 }
 
 // 显示分享弹框
@@ -1209,9 +1107,7 @@ const handleLogout = () => {
 					// 1. 先同步本地数据到云端（确保数据不丢失）
 					try {
 						await billStorage.syncToAPI()
-						console.log('退出前数据已同步到云端')
 					} catch (syncError) {
-						console.error('同步数据失败:', syncError)
 						// 继续退出流程，不阻塞
 					}
 					
@@ -1219,7 +1115,6 @@ const handleLogout = () => {
 					try {
 						await request.call('auth/logout')
 					} catch (logoutError) {
-						console.error('调用退出接口失败:', logoutError)
 						// 继续退出流程，不阻塞
 					}
 					
@@ -1388,11 +1283,8 @@ const loadReminderTime = async () => {
 			action: 'getReminder'
 		})
 		
-		console.log('获取提醒设置返回:', res)
-		
 		if (res.success && res.reminder) {
 			const reminderTime = res.reminder.reminder_time || res.reminder.time || ''
-			console.log('云端提醒时间:', reminderTime)
 			
 			// 如果云端数据与本地不同，更新本地和显示
 			if (reminderTime && reminderTime !== data.reminderTime) {
@@ -1540,12 +1432,10 @@ const closeUpdateModal = () => {
 
 // 确认更新
 const handleUpdate = () => {
-	console.log('开始更新')
 }
 
 // 下载完成
 const handleDownloadComplete = () => {
-	console.log('下载完成')
 	data.showUpdateModal = false
 }
 // #endif
@@ -2474,140 +2364,6 @@ const handleDownloadComplete = () => {
 .modal-btn-text {
 	font-size: 30rpx;
 	font-weight: bold;
-	color: #FFFFFF;
-}
-
-/* 隐私协议弹框 */
-.privacy-modal {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.6);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10000;
-	animation: fadeIn 0.3s ease;
-	padding: 80rpx;
-}
-
-.privacy-modal-content {
-	width: 100%;
-	max-width: 640rpx; /* 从560rpx增加到640rpx，让弹框更宽 */
-	background: #FFFFFF;
-	border-radius: $radius-xl;
-	overflow: hidden;
-	animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.privacy-header {
-	padding: 48rpx 32rpx 24rpx;
-	text-align: center;
-	background: linear-gradient(180deg, #F0FFF4 0%, #FFFFFF 100%);
-	border-bottom: 2rpx solid #F0F0F0;
-}
-
-.privacy-title {
-	font-size: 32rpx;
-	font-weight: bold;
-	color: #333;
-}
-
-.privacy-body {
-	padding: 32rpx;
-	line-height: 1.8;
-	max-height: 400rpx;
-	overflow-y: auto;
-}
-
-.privacy-text {
-	font-size: 28rpx;
-	color: #666;
-	line-height: 1.8;
-}
-
-.privacy-link {
-	font-size: 28rpx;
-	color: #52C41A;
-	font-weight: bold;
-	text-decoration: underline;
-	line-height: 1.8;
-}
-
-.privacy-highlight {
-	display: block;
-	margin-top: 24rpx;
-	padding: 16rpx;
-	background: #F0FFF4;
-	border-radius: $radius-md;
-	color: #52C41A;
-	font-weight: bold;
-}
-
-.privacy-checkbox-wrapper {
-	margin-top: 24rpx;
-	padding: 16rpx;
-	background: #F0FFF4;
-	border-radius: $radius-md;
-}
-
-.privacy-checkbox-label {
-	display: flex;
-	align-items: center;
-	gap: 12rpx;
-}
-
-.privacy-checkbox-text {
-	font-size: 28rpx;
-	color: #52C41A;
-	font-weight: bold;
-}
-
-.privacy-footer {
-	display: flex;
-	gap: 16rpx;
-	padding: 24rpx 32rpx 32rpx;
-	border-top: 2rpx solid #F0F0F0;
-}
-
-.privacy-btn {
-	flex: 1;
-	padding: 24rpx;
-	border-radius: $radius-lg;
-	text-align: center;
-	transition: all 0.3s ease;
-}
-
-.privacy-btn:active {
-	transform: scale(0.96);
-}
-
-.privacy-btn.disabled {
-	opacity: 0.5;
-	pointer-events: none;
-}
-
-.cancel-btn {
-	background: #F5F5F5;
-}
-
-.confirm-btn {
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
-}
-
-.privacy-btn-text {
-	font-size: 28rpx;
-	font-weight: bold;
-}
-
-.cancel-btn .privacy-btn-text {
-	color: #666;
-}
-
-.confirm-btn .privacy-btn-text {
 	color: #FFFFFF;
 }
 

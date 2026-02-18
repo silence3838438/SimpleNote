@@ -327,7 +327,6 @@ const loadAndroidQrcode = async () => {
     }
   } catch (error) {
     // 静默处理错误，表不存在时不显示错误
-    console.log('安卓二维码功能暂未启用')
   }
 }
 

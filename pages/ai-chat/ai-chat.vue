@@ -172,13 +172,8 @@ const sendMessage = async () => {
 				time: formatTime(new Date())
 			})
 			
-			// 调试日志
-			console.log('📊 [财务顾问] API返回数据:', JSON.stringify(result))
-			console.log('📊 [财务顾问] remainingCount:', result.remainingCount)
-			
 			// 显示剩余次数提示
 			if (result.remainingCount !== undefined) {
-				console.log('📊 [财务顾问] 显示剩余次数提示')
 				if (result.remainingCount === 0) {
 					uni.showToast({
 						title: '今日咨询次数已用完',
@@ -192,8 +187,6 @@ const sendMessage = async () => {
 						duration: 2000
 					})
 				}
-			} else {
-				console.log('⚠️ [财务顾问] remainingCount 未定义')
 			}
 		} else {
 			throw new Error(result.message || 'AI回复失败')

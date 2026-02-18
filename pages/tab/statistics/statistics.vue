@@ -272,12 +272,10 @@ const data = reactive({
 })
 
 const handleBillSaved = async () => {
-	console.log('统计页收到账单保存事件，立即刷新数据')
 	try {
 		// 直接从API获取最新数据
 		data.allBills = await billStorage.getFromAPI()
 		recalculateData()
-		console.log('统计页数据刷新完成')
 	} catch (error) {
 		console.error('统计页刷新失败:', error)
 	}

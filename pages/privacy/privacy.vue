@@ -69,7 +69,7 @@
 				<view class="section">
 					<text class="text">如您对本隐私政策有任何疑问、意见或建议，可通过以下方式联系我们：</text>
 					<text class="list-item">• APP内客服反馈</text>
-					<text class="list-item">• 邮箱：support@qiannaqule.top</text>
+					<text class="list-item">• 邮箱：951123604@qq.com</text>
 					<text class="text">我们将在15个工作日内回复您的请求。</text>
 				</view>
 				

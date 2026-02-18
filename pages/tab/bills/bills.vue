@@ -551,7 +551,6 @@ const formatAmount = (amount) => {
 const exportBills = async () => {
 	// 防止点击穿透
 	if (data.isPickerClosing) {
-		console.log('⚠️ 选择器正在关闭，忽略导出操作')
 		return
 	}
 	
@@ -603,7 +602,6 @@ const exportBills = async () => {
 									filePath: filePath,
 									fileType: 'xlsx',
 									success: () => {
-										console.log('打开文档成功')
 									},
 									fail: (err) => {
 										console.error('打开文档失败:', err)

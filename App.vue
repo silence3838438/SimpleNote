@@ -25,7 +25,6 @@
 		try {
 			const token = uni.getStorageSync('token')
 			if (!token) {
-				console.log('未登录，跳过加载提醒设置')
 				return
 			}
 			
@@ -39,7 +38,6 @@
 			
 			if (result.statusCode === 200 && result.data.success && result.data.reminder) {
 				const reminder = result.data.reminder
-				console.log('从云端加载提醒设置:', reminder)
 				
 				// 同步到本地存储
 				uni.setStorageSync('reminderEnabled', reminder.enabled || false)
@@ -54,32 +52,23 @@
 	// 检查是否需要提醒记账
 	const checkReminderAndNotify = () => {
 		try {
-			console.log('=== 开始检查提醒 ===')
-			
 			// 1. 检查是否开启了提醒
 			const reminderEnabled = uni.getStorageSync('reminderEnabled')
-			console.log('1. 提醒开关:', reminderEnabled)
 			if (!reminderEnabled) {
-				console.log('❌ 提醒未开启')
 				return
 			}
 			
 			// 2. 获取提醒时间
 			const reminderTime = uni.getStorageSync('reminderTime')
-			console.log('2. 提醒时间:', reminderTime)
 			if (!reminderTime) {
-				console.log('❌ 未设置提醒时间')
 				return
 			}
 			
 			// 3. 检查今天是否已经提醒过（每天只提醒一次）
 			const today = new Date().toDateString()
 			const lastReminderDate = uni.getStorageSync('lastReminderDate')
-			console.log('3. 今天日期:', today)
-			console.log('3. 上次提醒日期:', lastReminderDate)
 			
 			if (lastReminderDate === today) {
-				console.log('❌ 今天已经提醒过了')
 				return
 			}
 			
@@ -92,11 +81,7 @@
 			const [reminderHour, reminderMinute] = reminderTime.split(':').map(Number)
 			const reminderTimeInMinutes = reminderHour * 60 + reminderMinute
 			
-			console.log('4. 当前时间:', `${currentHour}:${currentMinute}`, '(', currentTime, '分钟)')
-			console.log('4. 提醒时间:', reminderTime, '(', reminderTimeInMinutes, '分钟)')
-			
 			if (currentTime < reminderTimeInMinutes) {
-				console.log('❌ 还没到提醒时间')
 				return
 			}
 			
@@ -107,10 +92,7 @@
 				return billDate === today
 			})
 			
-			console.log('5. 今天的账单数:', todayBills.length)
-			
 			if (todayBills.length > 0) {
-				console.log('❌ 今天已经记过账了，自动停止提醒')
 				return
 			}
 			
@@ -120,7 +102,6 @@
 			
 			// 如果距离上次显示不到30秒，不弹窗（避免频繁切换应用时重复弹窗）
 			if (timeSinceLastShow < 30000) {
-				console.log('❌ 应用刚显示不久，避免频繁弹窗')
 				return
 			}
 			
@@ -128,12 +109,10 @@
 			uni.setStorageSync('lastAppShowTime', Date.now())
 			
 			// 7. 显示提醒弹窗（使用自定义弹框）
-			console.log('✅ 满足所有条件，显示提醒弹框')
 			showReminderModal()
 			
 			// 记录今天已提醒，避免重复弹窗
 			uni.setStorageSync('lastReminderDate', today)
-			console.log('已触发提醒事件并记录提醒日期')
 		} catch (error) {
 			console.error('检查提醒失败:', error)
 		}
@@ -143,7 +122,6 @@
 	const showReminderModal = () => {
 		// 延迟触发，确保首页已经加载完成
 		setTimeout(() => {
-			console.log('触发显示提醒弹框事件')
 			uni.$emit('showReminderModal')
 		}, 800)
 	}
@@ -155,19 +133,13 @@
 			const userInfo = uni.getStorageSync('userInfo')
 			const token = uni.getStorageSync('token')
 			
-			console.log('=== 检查自动登录 ===')
-			console.log('本地userInfo:', userInfo)
-			console.log('本地token:', token ? '存在' : '不存在')
 			
 			// 如果本地有用户信息且已登录，说明之前登录过
 			if (userInfo && userInfo.isLogin && token) {
-				console.log('✅ 检测到之前的登录状态')
 				
 				// #ifdef MP-WEIXIN
 				// 小程序：静默登录，获取新的code换取token
-				console.log('小程序环境：尝试静默登录')
 				const loginRes = await uni.login()
-				console.log('uni.login返回:', loginRes)
 				
 				if (loginRes.code) {
 					// 调用后端接口，使用code换取新token
@@ -184,7 +156,6 @@
 						}
 					})
 					
-					console.log('静默登录接口返回:', result)
 					
 					if (result.statusCode === 200 && result.data.success) {
 						// 更新token和用户信息
@@ -197,9 +168,7 @@
 						uni.setStorageSync('userInfo', newUserInfo)
 						uni.setStorageSync('token', result.data.token)
 						
-						console.log('✅ 小程序自动登录成功')
 					} else {
-						console.log('❌ 静默登录失败，清除本地登录状态')
 						uni.removeStorageSync('userInfo')
 						uni.removeStorageSync('token')
 					}
@@ -208,36 +177,38 @@
 				
 				// #ifdef APP-PLUS
 				// APP：验证token是否有效
-				console.log('APP环境：验证token有效性')
 				try {
 					const result = await uni.request({
-						url: 'https://api.qiannaqule.top/auth/verify-token',
+						url: 'https://api.qiannaqule.top/api/auth/verify-token',
 						method: 'GET',
 						header: {
 							'Authorization': `Bearer ${token}`
 						}
 					})
 					
-					console.log('token验证返回:', result)
 					
 					if (result.statusCode === 200 && result.data.success) {
-						console.log('✅ APP token有效，保持登录状态')
-						// token有效，保持登录状态
+						// token有效，更新用户信息（可能昵称头像有变化）
+						if (result.data.data) {
+							const updatedUserInfo = {
+								nickName: result.data.data.nickName || userInfo.nickName,
+								avatarUrl: result.data.data.avatarUrl || userInfo.avatarUrl,
+								isLogin: true
+							}
+							uni.setStorageSync('userInfo', updatedUserInfo)
+						}
 					} else {
-						console.log('❌ token无效，清除本地登录状态')
 						// token无效，清除登录状态
 						uni.removeStorageSync('userInfo')
 						uni.removeStorageSync('token')
 					}
 				} catch (error) {
-					console.error('验证token失败:', error)
-					// 验证失败，保守起见清除登录状态
-					uni.removeStorageSync('userInfo')
-					uni.removeStorageSync('token')
+					console.error('验证token异常:', error)
+					// 验证失败，但不清除登录状态，让用户继续使用
+					// 只有在明确token无效时才清除
 				}
 				// #endif
 			} else {
-				console.log('ℹ️ 本地无登录信息，等待用户手动登录')
 			}
 		} catch (error) {
 			console.error('自动登录失败:', error)
@@ -246,7 +217,6 @@
 	}
 	
 	onLaunch(async () => {
-		console.log('App Launch')
 		// 初始化云开发环境
 		// #ifdef MP-WEIXIN
 		if (!wx.cloud) {
@@ -275,7 +245,6 @@
 	})
 	
 	onShow(() => {
-		console.log('App Show')
 		// 延迟检查，确保云端数据已加载
 		setTimeout(() => {
 			checkReminderAndNotify()
@@ -283,7 +252,6 @@
 	})
 	
 	onHide(() => {
-		console.log('App Hide')
 	})
 </script>
 

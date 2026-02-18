@@ -110,7 +110,7 @@
 				<view class="section">
 					<text class="text">如您对本协议有任何疑问，可通过以下方式联系我们：</text>
 					<text class="list-item">• APP内客服反馈</text>
-					<text class="list-item">• 邮箱：support@qiannaqule.top</text>
+					<text class="list-item">• 邮箱：951123604@qq.com</text>
 				</view>
 				
 				<view class="footer">

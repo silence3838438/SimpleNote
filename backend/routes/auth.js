@@ -1147,5 +1147,53 @@ router.post('/delete-account', async (req, res) => {
   }
 });
 
+// 获取用户绑定的手机号
+router.post('/get-phone', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.json({
+        success: false,
+        message: '未登录'
+      });
+    }
+
+    // 验证token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const userId = decoded.userId;
+
+    // 查询用户手机号
+    const users = await db.query(
+      'SELECT phone FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+
+    const phone = users[0].phone;
+
+    res.json({
+      success: true,
+      data: {
+        phone: phone || null,
+        hasPhone: !!phone
+      }
+    });
+
+  } catch (error) {
+    console.error('获取手机号失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '获取失败'
+    });
+  }
+});
+
 
 module.exports = router;

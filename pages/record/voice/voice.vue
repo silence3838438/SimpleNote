@@ -134,6 +134,7 @@ const data = reactive({
 	recordTimer: null,
 	permissionGranted: false, // 记录权限是否已授权
 	recorderStarted: false, // 录音器是否已真正启动
+	isFirstTimeAuth: false, // 标记是否正在进行首次授权
 	examples: [
 		'"午餐35元"',
 		'"网购衣服268元"',
@@ -177,6 +178,15 @@ onLoad(() => {
 	data.recorderManager.onStart(() => {
 		const startTime = new Date().toLocaleTimeString()
 		console.log('✅ [录音器回调] onStart 触发，时间:', startTime)
+		console.log('✅ [录音器回调] 当前 isRecording 状态:', data.isRecording)
+		console.log('✅ [录音器回调] 当前 isFirstTimeAuth 状态:', data.isFirstTimeAuth)
+		
+		// 如果是首次授权，忽略此次 onStart
+		if (data.isFirstTimeAuth) {
+			console.log('⚠️ [录音器回调] 这是首次授权触发的 onStart，忽略')
+			return
+		}
+		
 		console.log('✅ [录音器回调] 录音器已真正启动，现在可以说话了！')
 		
 		// 录音器启动后，标记为已启动
@@ -208,16 +218,33 @@ onLoad(() => {
 	
 	// 监听录音停止
 	data.recorderManager.onStop((res) => {
-		console.log('✅ 录音已停止')
+		console.log('✅ [录音器回调] onStop 触发')
+		console.log('📋 [录音器回调] 当前 isFirstTimeAuth 状态:', data.isFirstTimeAuth)
 		console.log('API返回时长:', res.duration, 'ms')
 		console.log('计时器记录时长:', data.recordTime, '秒')
+		
+		// 如果是首次授权，忽略此次 onStop
+		if (data.isFirstTimeAuth) {
+			console.log('⚠️ [录音器回调] 这是首次授权触发的 onStop，忽略处理')
+			return
+		}
+		
 		handleRecordStop(res)
 	})
 	
 	// 监听录音错误
 	data.recorderManager.onError((err) => {
-		console.error('❌ 录音错误:', err)
+		console.error('❌ [录音器回调] onError 触发:', err)
+		console.log('📋 [录音器回调] 当前 isFirstTimeAuth 状态:', data.isFirstTimeAuth)
+		
+		// 如果是首次授权，忽略此次错误
+		if (data.isFirstTimeAuth) {
+			console.log('⚠️ [录音器回调] 这是首次授权触发的错误，忽略处理')
+			return
+		}
+		
 		data.isRecording = false
+		data.recorderStarted = false
 		if (data.recordTimer) {
 			clearInterval(data.recordTimer)
 			data.recordTimer = null
@@ -283,13 +310,24 @@ onUnload(() => {
 })
 
 const startRecord = async () => {
-	console.log('🎙️ 开始录音，当前状态:', data.isRecording)
+	console.log('🎙️ 开始录音，当前状态:', data.isRecording, '录音器已启动:', data.recorderStarted)
 	
 	// 防止重复启动
-	if (data.isRecording) {
+	if (data.isRecording || data.recorderStarted) {
 		console.log('⚠️ 录音已在进行中，忽略重复启动')
 		return
 	}
+	
+	// 先尝试停止可能存在的录音（清理状态）
+	try {
+		data.recorderManager.stop()
+		console.log('✅ 清理了可能存在的录音状态')
+	} catch (e) {
+		// 忽略停止失败的错误
+	}
+	
+	// 等待一小段时间，确保录音器完全停止
+	await new Promise(resolve => setTimeout(resolve, 100))
 	
 	try {
 		// #ifdef APP-PLUS
@@ -353,6 +391,110 @@ const startRecord = async () => {
 		}
 		// #endif
 		
+		// #ifdef MP-WEIXIN
+		// 小程序端：先检查录音权限
+		console.log('🔐 检查小程序录音权限...')
+		const authResult = await new Promise((resolve) => {
+			uni.getSetting({
+				success: (res) => {
+					console.log('当前权限状态:', res.authSetting)
+					if (res.authSetting['scope.record'] === false) {
+						// 用户之前拒绝过，需要引导去设置
+						console.log('❌ 用户已拒绝录音权限')
+						resolve({ hasPermission: false, needOpenSetting: true, isFirstTime: false })
+					} else if (res.authSetting['scope.record'] === true) {
+						// 已授权
+						console.log('✅ 用户已授权录音权限')
+						resolve({ hasPermission: true, needOpenSetting: false, isFirstTime: false })
+					} else {
+						// 未授权，首次请求（微信会自动弹窗）
+						console.log('⚠️ 首次请求录音权限，微信将弹出授权弹框')
+						resolve({ hasPermission: 'first_time', needOpenSetting: false, isFirstTime: true })
+					}
+				},
+				fail: () => {
+					resolve({ hasPermission: 'first_time', needOpenSetting: false, isFirstTime: true })
+				}
+			})
+		})
+		
+		if (authResult.hasPermission === false && authResult.needOpenSetting) {
+			// 用户之前拒绝过，引导去设置
+			uni.showModal({
+				title: '需要录音权限',
+				content: '请在设置中开启录音权限',
+				confirmText: '去设置',
+				cancelText: '取消',
+				success: (res) => {
+					if (res.confirm) {
+						uni.openSetting()
+					}
+				}
+			})
+			return
+		}
+		
+		// 首次授权特殊处理：提示用户授权后需要再次长按
+		if (authResult.isFirstTime) {
+			console.log('⚠️ 首次授权：将提示用户授权后再次长按')
+			
+			// 设置首次授权标记
+			data.isFirstTimeAuth = true
+			
+			uni.showToast({
+				title: '请授权后再次长按录音',
+				icon: 'none',
+				duration: 2000
+			})
+			
+			// 尝试触发授权弹框（调用start会触发授权，但立即stop避免实际录音）
+			try {
+				data.recorderManager.start({
+					duration: 60000,
+					format: 'wav',
+					sampleRate: 16000,
+					numberOfChannels: 1,
+					encodeBitRate: 48000,
+					frameSize: 50
+				})
+				
+				// 立即停止，只是为了触发授权弹框
+				setTimeout(() => {
+					try {
+						data.recorderManager.stop()
+						console.log('✅ 已触发授权弹框并停止录音器')
+						// 重置状态，避免影响下次录音
+						data.isRecording = false
+						data.recorderStarted = false
+						// 延长清除首次授权标记的时间，确保所有回调都能被忽略
+						setTimeout(() => {
+							data.isFirstTimeAuth = false
+							console.log('✅ 已清除首次授权标记')
+						}, 2000)  // 从 500ms 改为 2000ms
+					} catch (e) {
+						console.log('停止录音器失败（预期行为）:', e)
+						// 即使停止失败，也要重置状态
+						data.isRecording = false
+						data.recorderStarted = false
+						setTimeout(() => {
+							data.isFirstTimeAuth = false
+						}, 2000)
+					}
+				}, 100)
+			} catch (e) {
+				console.log('触发授权失败:', e)
+				// 触发失败也要重置状态
+				data.isRecording = false
+				data.recorderStarted = false
+				setTimeout(() => {
+					data.isFirstTimeAuth = false
+				}, 2000)
+			}
+			
+			return // 首次授权时不继续执行录音，让用户授权后再次长按
+		}
+		// #endif
+		
 		console.log('✅ 准备开始录音')
 		
 		// 提示用户：按住按钮，等待震动后再说话
@@ -400,6 +542,7 @@ const startRecord = async () => {
 	} catch (error) {
 		console.error('❌ 录音启动失败:', error)
 		data.isRecording = false
+		data.recorderStarted = false
 		uni.showToast({
 			title: '录音启动失败',
 			icon: 'none'
@@ -624,15 +767,63 @@ const handleRecordStop = async (res) => {
 		const quickResult = extractBillInfo(result.text)
 		console.log('📦 快速解析结果:', JSON.stringify(quickResult, null, 2))
 		
-		// 立即跳转到确认页面
-		data.parsing = false
-		uni.navigateTo({
-			url: `/pages/record/confirm/confirm?data=${encodeURIComponent(JSON.stringify(quickResult))}`
-		})
+		// 判断正则识别质量，决定是否需要 AI 兜底
+		const needAIFallback = (
+			!quickResult.amount || quickResult.amount === 0 ||  // 金额识别失败
+			!quickResult.merchant || quickResult.merchant.length < 2 || quickResult.merchant === '未知商家' ||  // 商家识别失败
+			!quickResult.categoryName || quickResult.categoryName === '其他'  // 分类识别失败
+		)
 		
-		// 后台异步执行 AI 增强识别
-		console.log('⏱️ [AI增强] 开始后台增强识别')
-		enhanceWithAI(result.text, startTime)
+		if (needAIFallback) {
+			console.log('⚠️ 正则识别质量较差，启用 AI 兜底模式')
+			console.log('⚠️ 识别问题:', {
+				金额: quickResult.amount || 0,
+				商家: quickResult.merchant || '无',
+				分类: quickResult.categoryName || '无'
+			})
+			
+			// 等待 AI 识别完成后再跳转
+			try {
+				const aiStartTime = Date.now()
+				console.log('🤖 [AI兜底] 开始 AI 识别...')
+				
+				const aiResult = await cloudbaseAI.enhanceVoice(result.text, quickResult)
+				
+				const aiEndTime = Date.now()
+				console.log('⏱️ [AI兜底] AI识别耗时:', aiEndTime - aiStartTime, 'ms')
+				console.log('🎯 [AI兜底] AI识别结果:', aiResult)
+				
+				// 使用 AI 结果（如果 AI 识别成功）
+				const finalResult = aiResult || quickResult
+				
+				data.parsing = false
+				uni.navigateTo({
+					url: `/pages/record/confirm/confirm?data=${encodeURIComponent(JSON.stringify(finalResult))}`
+				})
+				
+				console.log('✅ [AI兜底] 使用 AI 增强结果跳转')
+			} catch (aiError) {
+				console.error('❌ [AI兜底] AI 识别失败，使用正则结果:', aiError)
+				
+				// AI 失败，使用正则结果
+				data.parsing = false
+				uni.navigateTo({
+					url: `/pages/record/confirm/confirm?data=${encodeURIComponent(JSON.stringify(quickResult))}`
+				})
+			}
+		} else {
+			console.log('✅ 正则识别质量良好，立即跳转')
+			
+			// 立即跳转到确认页面
+			data.parsing = false
+			uni.navigateTo({
+				url: `/pages/record/confirm/confirm?data=${encodeURIComponent(JSON.stringify(quickResult))}`
+			})
+			
+			// 后台异步执行 AI 增强识别（优化结果）
+			console.log('⏱️ [AI增强] 开始后台增强识别')
+			enhanceWithAI(result.text, startTime)
+		}
 	} catch (error) {
 		console.error('识别失败:', error)
 		console.error('错误详情:', error.message)
@@ -1035,13 +1226,24 @@ const extractBillInfo = (text) => {
 		}
 	}
 	
-	// 如果没有匹配到品牌关键词，尝试"在XX"模式
+	// 如果没有匹配到品牌关键词，尝试"在XX"或"去XX"模式
 	if (!merchant) {
-		const atMatch = text.match(/在(.+?)(?:吃|喝|买|花|消费|支付|玩|看|逛|购|订|充|交|缴|付|办|做|理|剪|洗|修|换|加|停|打|坐|乘|租|住|住宿|入住|预订|预约|报名|学|培训|上课|治疗|检查|体检|挂号|拿药|配药|取药)/);
+		// 尝试"在XX"模式
+		const atMatch = text.match(/在(.+?)(?:吃|喝|买|花|消费|支付|玩|看|逛|购|订|充|交|缴|付|办|做|理|剪|洗|修|换|加|停|打|坐|乘|租|住|住宿|入住|预订|预约|报名|学|培训|上课|治疗|检查|体检|挂号|拿药|配药|取药|挂水)/);
 		
 		if (atMatch && atMatch[1]) {
 			merchant = atMatch[1].trim()
 			console.log('✅ 从"在XX"模式提取商家:', merchant)
+		}
+		
+		// 如果"在XX"没匹配到，尝试"去XX"模式
+		if (!merchant) {
+			const goMatch = text.match(/去(.+?)(?:吃|喝|买|花|消费|支付|玩|看|逛|购|订|充|交|缴|付|办|做|理|剪|洗|修|换|加|停|打|坐|乘|租|住|住宿|入住|预订|预约|报名|学|培训|上课|治疗|检查|体检|挂号|拿药|配药|取药|挂水)/);
+			
+			if (goMatch && goMatch[1]) {
+				merchant = goMatch[1].trim()
+				console.log('✅ 从"去XX"模式提取商家:', merchant)
+			}
 		}
 	}
 	
@@ -1058,9 +1260,11 @@ const extractBillInfo = (text) => {
 	// 如果还是没有，尝试移除无关词汇后的剩余内容
 	if (!merchant) {
 		let cleanedText = text
-			.replace(/\d+\.?\d*\s*元/g, '')  // 移除金额
-			.replace(/\d+\.?\d*\s*块钱/g, '')  // 移除"块钱"
-			.replace(/\d+\.?\d*\s*块/g, '')  // 移除"块"
+			.replace(/\d+\.?\d*\s*元/g, '')  // 移除"数字+元"
+			.replace(/\d+\.?\d*\s*块钱/g, '')  // 移除"数字+块钱"
+			.replace(/\d+\.?\d*\s*块/g, '')  // 移除"数字+块"
+			.replace(/花了\s*\d+\.?\d*/g, '')  // 移除"花了+数字"
+			.replace(/\d+\.?\d*/g, '')  // 移除剩余的数字
 			.replace(/今天|昨天|前天/g, '')   // 移除日期词
 			.replace(/花了|支付|消费|买了|吃了|喝了|收到|赚了|挣了|发了/g, '')  // 移除动词
 			.trim()

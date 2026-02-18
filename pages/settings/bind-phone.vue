@@ -11,7 +11,7 @@
 			</view>
 		</view>
 		
-		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 44 + 20) + 'px' }">
 			<!-- 绑定状态卡片 -->
 			<view class="status-card">
 				<view class="status-icon" :class="{ 'bound': data.isBound }">
@@ -173,7 +173,6 @@ const sendCode = async () => {
 			
 			// 开发环境直接回显验证码到输入框
 			if (res.code) {
-				console.log('验证码:', res.code)
 				data.code = res.code
 			}
 			
@@ -390,8 +389,7 @@ onLoad(() => {
 
 .container {
 	min-height: 100vh;
-	padding: $spacing-lg;
-	padding-bottom: 100rpx;
+	padding: 40rpx $spacing-lg 100rpx;
 }
 
 /* 绑定状态卡片 */

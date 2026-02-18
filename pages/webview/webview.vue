@@ -13,7 +13,6 @@ const url = ref('')
 onLoad((options) => {
 	if (options.url) {
 		url.value = decodeURIComponent(options.url)
-		console.log('加载URL:', url.value)
 	}
 })
 </script>
