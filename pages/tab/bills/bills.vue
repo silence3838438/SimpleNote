@@ -732,25 +732,25 @@ const deleteBill = async (bill) => {
 	try {
 		const result = await billStorage.deleteBill(bill.id, bill._id)
 		if (result.success) {
+			uni.hideLoading()
 			uni.showToast({
 				title: '删除成功',
 				icon: 'success'
 			})
-			// 重新加载数据
-			await loadData()
-			// 通知其他页面刷新
+			// 静默重新加载数据（不显示loading）
+			await loadDataQuietly()
+			// 通知其他页面静默刷新
 			uni.$emit('billSaved')
 		} else {
 			throw new Error('删除失败')
 		}
 	} catch (error) {
 		console.error('删除账单失败:', error)
+		uni.hideLoading()
 		uni.showToast({
 			title: '删除失败',
 			icon: 'none'
 		})
-	} finally {
-		uni.hideLoading()
 	}
 }
 

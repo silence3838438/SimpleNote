@@ -467,11 +467,10 @@ const recalculateData = () => {
 }
 
 const handleBillSaved = async () => {
-	uni.showLoading({ title: '刷新中...' })
 	try {
-		// 并行执行数据获取和预算加载
+		// 静默刷新，不显示loading
 		const [bills] = await Promise.all([
-			billStorage.getFromAPI(), // 直接从API获取
+			billStorage.getFromAPI(),
 			loadBudget()
 		])
 		
@@ -487,7 +486,7 @@ const handleBillSaved = async () => {
 		]).catch(err => console.error('奖励检查失败:', err))
 		
 	} catch (error) {
-		console.error('刷新失败:', error)
+		console.error('静默刷新失败:', error)
 	} finally {
 		uni.hideLoading()
 	}
