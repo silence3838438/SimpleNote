@@ -99,10 +99,19 @@
 				<text class="btn-icon-compact">📸</text>
 				<text class="btn-text-compact">拍照记账</text>
 			</view>
-			<view class="action-btn-compact voice-btn-compact" v-if="data.appConfig.show_voice_record" @click="goToVoice">
+			<!-- 小程序端使用show_ai_advisor_wechat控制，APP端直接显示 -->
+			<!-- #ifdef MP-WEIXIN -->
+			<view class="action-btn-compact voice-btn-compact" v-if="data.appConfig.show_ai_advisor_wechat" @click="goToVoice">
 				<text class="btn-icon-compact">🎤</text>
 				<text class="btn-text-compact">语音记账</text>
 			</view>
+			<!-- #endif -->
+			<!-- #ifdef APP-PLUS -->
+			<view class="action-btn-compact voice-btn-compact" @click="goToVoice">
+				<text class="btn-icon-compact">🎤</text>
+				<text class="btn-text-compact">语音记账</text>
+			</view>
+			<!-- #endif -->
 		</view>
 
 		<!-- 预算进度（简化版） -->
@@ -328,7 +337,8 @@ const data = reactive({
 	tempMonth: 0,
 	// 应用配置
 	appConfig: {
-		show_voice_record: false // 默认隐藏，等待配置加载
+		show_voice_record: false, // APP端语音记账开关
+		show_ai_advisor_wechat: false // 小程序端功能总开关
 	}
 })
 

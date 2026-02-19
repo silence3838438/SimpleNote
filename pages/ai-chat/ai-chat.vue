@@ -233,8 +233,8 @@ onLoad(async () => {
 	try {
 		const res = await request.call('config/public', {}, 'GET')
 		if (res.success && res.data) {
-			// 检查AI财务顾问配置
-			const showAiAdvisor = res.data.show_ai_advisor || false
+			// 检查AI财务顾问配置（小程序端使用show_ai_advisor_wechat字段）
+			const showAiAdvisor = res.data.show_ai_advisor_wechat || false
 			if (!showAiAdvisor) {
 				uni.showModal({
 					title: '功能提示',

@@ -149,9 +149,9 @@ onLoad(async () => {
 	try {
 		const res = await request.call('config/public', {}, 'GET')
 		if (res.success && res.data) {
-			// 检查语音记账配置
-			const showVoiceRecord = res.data.show_voice_record || false
-			if (!showVoiceRecord) {
+			// 统一使用show_ai_advisor_wechat字段判断
+			const showFeature = res.data.show_ai_advisor_wechat || false
+			if (!showFeature) {
 				uni.showModal({
 					title: '功能提示',
 					content: '该功能暂未开放，敬请期待',

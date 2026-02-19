@@ -111,21 +111,47 @@ const data = reactive({
 })
 
 // 页面加载时检查平台
-onLoad(() => {
+onLoad(async () => {
+	// 小程序端检查配置
 	// #ifdef MP-WEIXIN
-	// 小程序端不支持注册，直接返回
-	uni.showModal({
-		title: '提示',
-		content: '暂不支持注册功能',
-		showCancel: false,
-		success: () => {
-			uni.navigateBack({
-				fail: () => {
-					uni.switchTab({ url: '/pages/tab/index/index' })
-				}
-			})
+	try {
+		const res = await request.call('config/public', {}, 'GET')
+		if (res.success && res.data) {
+			// 统一使用show_ai_advisor_wechat字段判断
+			const showFeature = res.data.show_ai_advisor_wechat || false
+			if (!showFeature) {
+				uni.showModal({
+					title: '提示',
+					content: '暂不支持注册功能',
+					showCancel: false,
+					success: () => {
+						uni.navigateBack({
+							fail: () => {
+								uni.switchTab({ url: '/pages/tab/index/index' })
+							}
+						})
+					}
+				})
+				return
+			}
 		}
-	})
+	} catch (error) {
+		console.error('加载配置失败:', error)
+		// 配置加载失败，默认不允许访问
+		uni.showModal({
+			title: '提示',
+			content: '暂不支持注册功能',
+			showCancel: false,
+			success: () => {
+				uni.navigateBack({
+					fail: () => {
+						uni.switchTab({ url: '/pages/tab/index/index' })
+					}
+				})
+			}
+		})
+		return
+	}
 	// #endif
 })
 
