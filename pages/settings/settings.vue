@@ -45,7 +45,8 @@
 				</view>
 				<!-- #endif -->
 				
-				<!-- 绑定手机号（仅登录后显示） -->
+				<!-- 绑定手机号（仅APP端且登录后显示） -->
+				<!-- #ifdef APP-PLUS -->
 				<view class="function-item" @click="goToBindPhone" v-if="data.isLogin">
 					<view class="function-left">
 						<view class="function-icon phone-icon">
@@ -59,6 +60,7 @@
 						<text class="arrow">›</text>
 					</view>
 				</view>
+				<!-- #endif -->
 				
 				<!-- 用户注销（仅登录后显示） -->
 				<view class="function-item danger-item" @click="handleDeleteAccount" v-if="data.isLogin">

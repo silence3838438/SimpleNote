@@ -98,6 +98,7 @@
 
 <script setup>
 import { reactive } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
 
 const data = reactive({
@@ -107,6 +108,25 @@ const data = reactive({
 	showPassword: false,
 	countdown: 0,
 	agreed: false
+})
+
+// 页面加载时检查平台
+onLoad(() => {
+	// #ifdef MP-WEIXIN
+	// 小程序端不支持注册，直接返回
+	uni.showModal({
+		title: '提示',
+		content: '暂不支持注册功能',
+		showCancel: false,
+		success: () => {
+			uni.navigateBack({
+				fail: () => {
+					uni.switchTab({ url: '/pages/tab/index/index' })
+				}
+			})
+		}
+	})
+	// #endif
 })
 
 // 切换密码显示
