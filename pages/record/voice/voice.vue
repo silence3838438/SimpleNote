@@ -143,7 +143,49 @@ const data = reactive({
 	]
 })
 
-onLoad(() => {
+onLoad(async () => {
+	// 小程序端检查配置
+	// #ifdef MP-WEIXIN
+	try {
+		const res = await request.call('config/public', {}, 'GET')
+		if (res.success && res.data) {
+			// 检查语音记账配置
+			const showVoiceRecord = res.data.show_voice_record || false
+			if (!showVoiceRecord) {
+				uni.showModal({
+					title: '功能提示',
+					content: '该功能暂未开放，敬请期待',
+					showCancel: false,
+					success: () => {
+						uni.navigateBack({
+							fail: () => {
+								uni.switchTab({ url: '/pages/tab/index/index' })
+							}
+						})
+					}
+				})
+				return
+			}
+		}
+	} catch (error) {
+		console.error('加载配置失败:', error)
+		// 配置加载失败，默认不允许访问
+		uni.showModal({
+			title: '功能提示',
+			content: '该功能暂未开放，敬请期待',
+			showCancel: false,
+			success: () => {
+				uni.navigateBack({
+					fail: () => {
+						uni.switchTab({ url: '/pages/tab/index/index' })
+					}
+				})
+			}
+		})
+		return
+	}
+	// #endif
+	
 	// 检查登录状态
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {

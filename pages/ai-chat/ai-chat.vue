@@ -227,7 +227,49 @@ const formatTime = (date) => {
 	return `${hours}:${minutes}`
 }
 
-onLoad(() => {
+onLoad(async () => {
+	// 小程序端检查配置
+	// #ifdef MP-WEIXIN
+	try {
+		const res = await request.call('config/public', {}, 'GET')
+		if (res.success && res.data) {
+			// 检查AI财务顾问配置
+			const showAiAdvisor = res.data.show_ai_advisor || false
+			if (!showAiAdvisor) {
+				uni.showModal({
+					title: '功能提示',
+					content: '该功能暂未开放，敬请期待',
+					showCancel: false,
+					success: () => {
+						uni.navigateBack({
+							fail: () => {
+								uni.switchTab({ url: '/pages/tab/profile/profile' })
+							}
+						})
+					}
+				})
+				return
+			}
+		}
+	} catch (error) {
+		console.error('加载配置失败:', error)
+		// 配置加载失败，默认不允许访问
+		uni.showModal({
+			title: '功能提示',
+			content: '该功能暂未开放，敬请期待',
+			showCancel: false,
+			success: () => {
+				uni.navigateBack({
+					fail: () => {
+						uni.switchTab({ url: '/pages/tab/profile/profile' })
+					}
+				})
+			}
+		})
+		return
+	}
+	// #endif
+	
 	getSystemInfo()
 	
 	// 获取用户头像
