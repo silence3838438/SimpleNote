@@ -99,7 +99,7 @@
 				<text class="btn-icon-compact">📸</text>
 				<text class="btn-text-compact">拍照记账</text>
 			</view>
-			<view class="action-btn-compact voice-btn-compact" @click="goToVoice">
+			<view class="action-btn-compact voice-btn-compact" v-if="data.appConfig.show_voice_record" @click="goToVoice">
 				<text class="btn-icon-compact">🎤</text>
 				<text class="btn-text-compact">语音记账</text>
 			</view>
@@ -325,7 +325,11 @@ const data = reactive({
 	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 	pickerValue: [0, 0],
 	tempYear: 0,
-	tempMonth: 0
+	tempMonth: 0,
+	// 应用配置
+	appConfig: {
+		show_voice_record: false // 默认隐藏，等待配置加载
+	}
 })
 
 const initData = () => {
@@ -1065,6 +1069,21 @@ const formatAmount = (amount) => {
 	}
 }
 
+// 加载应用配置
+const loadAppConfig = async () => {
+	try {
+		const res = await request.call('config/public', {}, 'GET')
+		if (res.success && res.data) {
+			data.appConfig = {
+				...data.appConfig,
+				...res.data
+			}
+		}
+	} catch (error) {
+		console.error('加载配置失败:', error)
+	}
+}
+
 onLoad((options) => {
 	// 先初始化悬浮按钮位置（在其他初始化之前）
 	const systemInfo = uni.getSystemInfoSync()
@@ -1117,6 +1136,9 @@ onLoad((options) => {
 })
 
 onShow(() => {
+	// 优先加载配置
+	loadAppConfig()
+	
 	// 页面显示时滚动到顶部
 	uni.pageScrollTo({
 		scrollTop: 0,

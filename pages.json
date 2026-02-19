@@ -102,6 +102,7 @@
 						"navigationBarTextStyle": "white"
 					}
 				},
+				// #ifdef APP-PLUS
 				{
 					"path": "register",
 					"style": {
@@ -116,6 +117,7 @@
 						"navigationBarTextStyle": "white"
 					}
 				}
+				// #endif
 			]
 		},
 		{
