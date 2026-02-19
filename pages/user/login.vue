@@ -21,9 +21,8 @@
 				<text class="card-title">欢迎回来</text>
 				<text class="card-subtitle">选择你喜欢的方式登录</text>
 				
-				<!-- 微信小程序登录 -->
 				<!-- #ifdef MP-WEIXIN -->
-				<!-- 隐私协议 -->
+				<!-- 
 				<view class="privacy-section-inline">
 					<checkbox-group @change="onAgreeChange">
 						<label class="checkbox-label-inline">
@@ -45,6 +44,7 @@
 						</view>
 					</button>
 				</view>
+				-->
 				<!-- #endif -->
 				
 				<!-- APP登录 -->

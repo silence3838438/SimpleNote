@@ -95,6 +95,7 @@
 			"root": "pages/user",
 			"name": "user",
 			"pages": [
+				// #ifdef APP-PLUS
 				{
 					"path": "login",
 					"style": {
@@ -102,7 +103,6 @@
 						"navigationBarTextStyle": "white"
 					}
 				},
-				// #ifdef APP-PLUS
 				{
 					"path": "register",
 					"style": {
