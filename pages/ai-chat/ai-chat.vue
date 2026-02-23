@@ -1,4 +1,5 @@
 <template>
+	<page-meta :page-style="'overflow: hidden;'"></page-meta>
 	<view class="page">
 		<!-- 自定义导航栏 -->
 		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
@@ -93,6 +94,8 @@
 						v-model="inputText" 
 						placeholder="问我任何财务问题..."
 						:disabled="isLoading"
+						:adjust-position="false"
+						:hold-keyboard="false"
 						@confirm="sendMessage"
 					/>
 					<view 
@@ -189,13 +192,27 @@ const sendMessage = async () => {
 				}
 			}
 		} else {
-			throw new Error(result.message || 'AI回复失败')
+			// 处理失败情况
+			let errorMessage = '抱歉，我暂时无法回答这个问题 😅 请稍后再试~'
+			
+			// 如果是次数用完的错误，显示特定提示
+			if (result.message && result.message.includes('今日咨询次数已用完')) {
+				errorMessage = result.message
+			} else if (result.message) {
+				errorMessage = result.message
+			}
+			
+			messages.push({
+				role: 'ai',
+				content: errorMessage,
+				time: formatTime(new Date())
+			})
 		}
 	} catch (error) {
 		console.error('AI对话失败:', error)
 		messages.push({
 			role: 'ai',
-			content: '抱歉，我暂时无法回答这个问题 😅 请稍后再试~',
+			content: '抱歉，网络连接失败 😅 请检查网络后重试~',
 			time: formatTime(new Date())
 		})
 	} finally {
@@ -289,6 +306,11 @@ onLoad(async () => {
 	background: #F5F5F5;
 	display: flex;
 	flex-direction: column;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 }
 
 /* 自定义导航栏 */
@@ -336,7 +358,8 @@ onLoad(async () => {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
+	height: 100%;
+	overflow: hidden;
 }
 
 /* 对话区域 */
@@ -513,6 +536,7 @@ onLoad(async () => {
 	background: $bg-white;
 	border-top: 1rpx solid $border-light;
 	box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.05);
+	flex-shrink: 0;
 }
 
 .input-wrapper {

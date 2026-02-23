@@ -134,7 +134,8 @@ const data = reactive({
 	recordTimer: null,
 	permissionGranted: false, // 记录权限是否已授权
 	recorderStarted: false, // 录音器是否已真正启动
-	isFirstTimeAuth: false, // 标记是否正在进行首次授权
+	isAuthorizing: false, // 是否正在授权中（首次授权时为true）
+	lastStartTime: 0, // 上次启动录音的时间戳（防抖）
 	examples: [
 		'"午餐35元"',
 		'"网购衣服268元"',
@@ -221,28 +222,15 @@ onLoad(async () => {
 		const startTime = new Date().toLocaleTimeString()
 		console.log('✅ [录音器回调] onStart 触发，时间:', startTime)
 		console.log('✅ [录音器回调] 当前 isRecording 状态:', data.isRecording)
-		console.log('✅ [录音器回调] 当前 isFirstTimeAuth 状态:', data.isFirstTimeAuth)
-		
-		// 如果是首次授权，忽略此次 onStart
-		if (data.isFirstTimeAuth) {
-			console.log('⚠️ [录音器回调] 这是首次授权触发的 onStart，忽略')
-			return
-		}
 		
 		console.log('✅ [录音器回调] 录音器已真正启动，现在可以说话了！')
 		
-		// 录音器启动后，标记为已启动
+		// 录音器启动后，标记为已启动，并重置授权标记
 		data.recorderStarted = true
+		data.isAuthorizing = false  // 重置授权标记（授权成功，录音已开始）
 		
 		// 强烈提示用户：现在可以开始说话了
 		uni.vibrateShort()  // 震动反馈
-		
-		// 播放提示音（如果可以的话）
-		uni.showToast({
-			title: '开始说话',
-			icon: 'none',
-			duration: 500
-		})
 		
 		// 在录音真正开始时才启动计时器
 		if (data.recordTimer) {
@@ -261,15 +249,8 @@ onLoad(async () => {
 	// 监听录音停止
 	data.recorderManager.onStop((res) => {
 		console.log('✅ [录音器回调] onStop 触发')
-		console.log('📋 [录音器回调] 当前 isFirstTimeAuth 状态:', data.isFirstTimeAuth)
 		console.log('API返回时长:', res.duration, 'ms')
 		console.log('计时器记录时长:', data.recordTime, '秒')
-		
-		// 如果是首次授权，忽略此次 onStop
-		if (data.isFirstTimeAuth) {
-			console.log('⚠️ [录音器回调] 这是首次授权触发的 onStop，忽略处理')
-			return
-		}
 		
 		handleRecordStop(res)
 	})
@@ -277,16 +258,10 @@ onLoad(async () => {
 	// 监听录音错误
 	data.recorderManager.onError((err) => {
 		console.error('❌ [录音器回调] onError 触发:', err)
-		console.log('📋 [录音器回调] 当前 isFirstTimeAuth 状态:', data.isFirstTimeAuth)
-		
-		// 如果是首次授权，忽略此次错误
-		if (data.isFirstTimeAuth) {
-			console.log('⚠️ [录音器回调] 这是首次授权触发的错误，忽略处理')
-			return
-		}
 		
 		data.isRecording = false
 		data.recorderStarted = false
+		data.isAuthorizing = false  // 重置授权标记
 		if (data.recordTimer) {
 			clearInterval(data.recordTimer)
 			data.recordTimer = null
@@ -295,12 +270,15 @@ onLoad(async () => {
 		// 根据错误类型给出不同提示
 		let errorMsg = '录音失败'
 		if (err.errMsg) {
-			if (err.errMsg.includes('auth')) {
+			if (err.errMsg.includes('auth') || err.errMsg.includes('authorize')) {
 				errorMsg = '请授权录音权限'
 			} else if (err.errMsg.includes('busy')) {
 				errorMsg = '录音器忙碌，请稍后重试'
 			} else if (err.errMsg.includes('timeout')) {
 				errorMsg = '录音超时'
+			} else if (err.errMsg.includes('fail')) {
+				// 通用失败，不显示具体错误信息
+				errorMsg = '录音失败，请重试'
 			}
 		}
 		
@@ -352,11 +330,25 @@ onUnload(() => {
 })
 
 const startRecord = async () => {
-	console.log('🎙️ 开始录音，当前状态:', data.isRecording, '录音器已启动:', data.recorderStarted)
+	const now = Date.now()
+	console.log('🎙️ 开始录音，当前状态:', data.isRecording, '录音器已启动:', data.recorderStarted, '正在授权:', data.isAuthorizing)
+	
+	// 防抖：避免短时间内多次触发（300ms内只允许一次）
+	if (now - data.lastStartTime < 300) {
+		console.log('⚠️ 防抖：距离上次启动不足300ms，忽略')
+		return
+	}
+	data.lastStartTime = now
 	
 	// 防止重复启动
 	if (data.isRecording || data.recorderStarted) {
 		console.log('⚠️ 录音已在进行中，忽略重复启动')
+		return
+	}
+	
+	// 如果正在授权中，忽略（避免授权弹框期间重复触发）
+	if (data.isAuthorizing) {
+		console.log('⚠️ 正在授权中，忽略重复启动')
 		return
 	}
 	
@@ -476,75 +468,14 @@ const startRecord = async () => {
 			return
 		}
 		
-		// 首次授权特殊处理：提示用户授权后需要再次长按
+		// 首次授权特殊处理：标记为授权中
 		if (authResult.isFirstTime) {
-			console.log('⚠️ 首次授权：将提示用户授权后再次长按')
-			
-			// 设置首次授权标记
-			data.isFirstTimeAuth = true
-			
-			uni.showToast({
-				title: '请授权后再次长按录音',
-				icon: 'none',
-				duration: 2000
-			})
-			
-			// 尝试触发授权弹框（调用start会触发授权，但立即stop避免实际录音）
-			try {
-				data.recorderManager.start({
-					duration: 60000,
-					format: 'wav',
-					sampleRate: 16000,
-					numberOfChannels: 1,
-					encodeBitRate: 48000,
-					frameSize: 50
-				})
-				
-				// 立即停止，只是为了触发授权弹框
-				setTimeout(() => {
-					try {
-						data.recorderManager.stop()
-						console.log('✅ 已触发授权弹框并停止录音器')
-						// 重置状态，避免影响下次录音
-						data.isRecording = false
-						data.recorderStarted = false
-						// 延长清除首次授权标记的时间，确保所有回调都能被忽略
-						setTimeout(() => {
-							data.isFirstTimeAuth = false
-							console.log('✅ 已清除首次授权标记')
-						}, 2000)  // 从 500ms 改为 2000ms
-					} catch (e) {
-						console.log('停止录音器失败（预期行为）:', e)
-						// 即使停止失败，也要重置状态
-						data.isRecording = false
-						data.recorderStarted = false
-						setTimeout(() => {
-							data.isFirstTimeAuth = false
-						}, 2000)
-					}
-				}, 100)
-			} catch (e) {
-				console.log('触发授权失败:', e)
-				// 触发失败也要重置状态
-				data.isRecording = false
-				data.recorderStarted = false
-				setTimeout(() => {
-					data.isFirstTimeAuth = false
-				}, 2000)
-			}
-			
-			return // 首次授权时不继续执行录音，让用户授权后再次长按
+			console.log('⚠️ 首次授权：微信将自动弹出授权弹框，标记为授权中')
+			data.isAuthorizing = true  // 标记为授权中
 		}
 		// #endif
 		
 		console.log('✅ 准备开始录音')
-		
-		// 提示用户：按住按钮，等待震动后再说话
-		uni.showToast({
-			title: '按住不松手，等震动后说话',
-			icon: 'none',
-			duration: 1500
-		})
 		
 		// 设置录音状态
 		data.isRecording = true
@@ -585,6 +516,7 @@ const startRecord = async () => {
 		console.error('❌ 录音启动失败:', error)
 		data.isRecording = false
 		data.recorderStarted = false
+		data.isAuthorizing = false  // 重置授权标记
 		uni.showToast({
 			title: '录音启动失败',
 			icon: 'none'
@@ -593,7 +525,15 @@ const startRecord = async () => {
 }
 
 const stopRecord = () => {
-	console.log('🎙️ 停止录音，当前状态:', data.isRecording, '录音器已启动:', data.recorderStarted)
+	console.log('🎙️ 停止录音，当前状态:', data.isRecording, '录音器已启动:', data.recorderStarted, '正在授权:', data.isAuthorizing)
+	
+	// 如果正在授权中（首次授权弹框期间），忽略停止操作
+	if (data.isAuthorizing) {
+		console.log('⚠️ 正在授权中，忽略停止操作（等待用户授权）')
+		// 不重置 isRecording，让用户授权后录音自动开始
+		return
+	}
+	
 	if (!data.isRecording) {
 		console.log('⚠️ 录音未启动，忽略停止操作')
 		return
@@ -601,13 +541,11 @@ const stopRecord = () => {
 	
 	// 检查录音器是否已真正启动
 	if (!data.recorderStarted) {
-		console.warn('⚠️ 录音器还未真正启动就被停止了，请长按至少1秒')
+		console.warn('⚠️ 录音器还未真正启动就被停止了（可能松手太快）')
 		data.isRecording = false
-		uni.showToast({
-			title: '请长按至少1秒再松手',
-			icon: 'none',
-			duration: 2000
-		})
+		
+		// 不显示任何提示，静默处理
+		// 用户体验：如果松手太快，什么都不发生，用户可以重新长按
 		
 		// 尝试停止录音器（防止后台继续录音）
 		try {
@@ -639,6 +577,13 @@ const stopRecord = () => {
 
 const cancelRecord = () => {
 	console.log('🎙️ 取消录音')
+	
+	// 如果正在授权中，也要重置授权标记
+	if (data.isAuthorizing) {
+		console.log('⚠️ 取消授权中的录音')
+		data.isAuthorizing = false
+	}
+	
 	if (!data.isRecording) {
 		console.log('⚠️ 录音未启动，忽略取消操作')
 		return
@@ -678,6 +623,7 @@ const handleRecordStop = async (res) => {
 	
 	// 确保状态已重置
 	data.isRecording = false
+	data.isAuthorizing = false  // 重置授权标记
 	if (data.recordTimer) {
 		clearInterval(data.recordTimer)
 		data.recordTimer = null
@@ -708,27 +654,27 @@ const handleRecordStop = async (res) => {
 		console.error('❌ 获取文件信息失败:', e)
 	}
 	
-	// 不限制最短录音时长，用户说多久就多久
-	// if (actualDuration < 1) {
-	// 	console.warn('⚠️ 录音时间太短:', actualDuration, '秒')
-	// 	uni.showToast({
-	// 		title: '录音时间太短，请重新录制',
-	// 		icon: 'none',
-	// 		duration: 2000
-	// 	})
-	// 	return
-	// }
+	// 检查录音时长：如果时长为0或太短（小于0.3秒），提示用户
+	if (actualDuration === 0) {
+		console.warn('⚠️ 录音时长为0秒（可能在授权过程中松手了）')
+		uni.showToast({
+			title: '录音时间太短，请重新录制',
+			icon: 'none',
+			duration: 2000
+		})
+		return
+	}
 	
-	// 不限制文件大小，只要有内容就识别
-	// if (fileSize < 5000) {
-	// 	console.warn('⚠️ 录音文件太小:', fileSize, 'bytes')
-	// 	uni.showToast({
-	// 		title: '录音内容太少，请重新录制',
-	// 		icon: 'none',
-	// 		duration: 2000
-	// 	})
-	// 	return
-	// }
+	// 检查文件大小：如果文件太小（小于1KB），可能是空文件
+	if (fileSize > 0 && fileSize < 1000) {
+		console.warn('⚠️ 录音文件太小:', fileSize, 'bytes（可能是空文件）')
+		uni.showToast({
+			title: '录音内容太少，请重新录制',
+			icon: 'none',
+			duration: 2000
+		})
+		return
+	}
 	
 	console.log('✅ 录音文件有效，准备上传识别')
 	
@@ -880,6 +826,9 @@ const handleRecordStop = async (res) => {
 			errorMsg = '未识别到内容，请说清楚一些'
 		} else if (error.message.includes('网络')) {
 			errorMsg = '网络连接失败，请检查网络'
+		} else if (error.message.includes('qps') || error.message.includes('QPS')) {
+			// 百度API请求频率超限
+			errorMsg = '请求太频繁，请稍后再试'
 		} else if (error.message) {
 			// 如果有具体错误信息，显示简化版本
 			errorMsg = error.message.length > 20 ? '识别失败，请重试' : error.message

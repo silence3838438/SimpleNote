@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
     if (todayCount >= dailyLimit) {
       return res.json({
         success: false,
-        message: `今日咨询次数已用完（${dailyLimit}次），明天再来吧~`,
+        message: `今日咨询次数已用完（${dailyLimit}/${dailyLimit}次）💤\n明天0点重置，期待与你再次相遇~`,
         remainingCount: 0
       });
     }
@@ -179,7 +179,7 @@ ${Object.entries(stats.monthlyStats).map(([month, data]) =>
 直接回答，不要加"小财："等前缀，不要使用markdown格式。`;
     
     // 4. 调用 AI Agent
-    let aiAnswer = '抱歉，我暂时无法回答这个问题。';
+    let aiAnswer = '抱歉，我现在有点忙 😅 请稍后再试~';
     
     try {
       const ai = cloudbase.ai();

@@ -215,7 +215,9 @@
 					"path": "ai-chat",
 					"style": {
 						"navigationStyle": "custom",
-						"navigationBarTextStyle": "white"
+						"navigationBarTextStyle": "white",
+						"disableScroll": true,
+						"softinputMode": "adjustResize"
 					}
 				}
 			]

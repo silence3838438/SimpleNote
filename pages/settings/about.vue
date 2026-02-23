@@ -55,37 +55,50 @@
 			<!-- 联系我们 -->
 			<view class="contact-section">
 				<view class="section-title">联系我们</view>
+				
+				<!-- 微信公众号 -->
+				<view class="qrcode-card">
+					<view class="qrcode-header">
+						<view class="wechat-logo-single"></view>
+						<view class="qrcode-title">微信公众号</view>
+					</view>
+					<view class="qrcode-wrapper">
+						<image 
+							class="qrcode-img" 
+							src="/static/gzhhao.jpg" 
+							mode="aspectFit"
+							@click="previewQRCode"
+						></image>
+					</view>
+					<view class="qrcode-desc">长按识别二维码关注</view>
+					<view class="qrcode-tips">获取最新功能 · 使用技巧 · 活动福利</view>
+				</view>
+				
+				<!-- 客服邮箱 -->
 				<view class="contact-card">
-					<view class="contact-item" @click="callPhone">
-						<view class="contact-icon phone-icon">
-							<view class="icon-symbol">📞</view>
-						</view>
-						<view class="contact-content">
-							<view class="contact-label">联系电话</view>
-							<view class="contact-value">17682824692 <text class="copy-hint">（点击拨打）</text></view>
-						</view>
-					</view>
-					<view class="contact-item">
+					<view class="contact-item" @click="copyEmail">
 						<view class="contact-icon email-icon">
-							<view class="icon-symbol">@</view>
-						</view>
-						<view class="contact-content">
-							<view class="contact-label">邮箱</view>
-							<view class="contact-value">951123604@qq.com</view>
-						</view>
-					</view>
-					<view class="contact-item" @click="copyWechat">
-						<view class="contact-icon wechat-icon">
-							<view class="icon-symbol wechat-symbol">
-								<view class="wechat-bubble wechat-bubble-1"></view>
-								<view class="wechat-bubble wechat-bubble-2"></view>
+							<view class="email-envelope">
+								<view class="envelope-flap"></view>
+								<view class="envelope-body"></view>
 							</view>
 						</view>
 						<view class="contact-content">
-							<view class="contact-label">微信</view>
-							<view class="contact-value">silenceA15 <text class="copy-hint">（点击复制）</text></view>
+							<view class="contact-label">客服邮箱</view>
+							<view class="contact-value">951123604@qq.com</view>
+							<view class="contact-hint">点击复制 · 24小时内回复</view>
 						</view>
 					</view>
+				</view>
+				
+				<!-- 意见反馈 -->
+				<view class="feedback-card" @click="goToFeedback">
+					<view class="feedback-icon">💡</view>
+					<view class="feedback-content">
+						<view class="feedback-title">意见反馈</view>
+						<view class="feedback-desc">有任何建议或问题？点击反馈</view>
+					</view>
+					<view class="feedback-arrow">›</view>
 				</view>
 			</view>
 			
@@ -108,45 +121,40 @@
 </template>
 
 <script setup>
-const callPhone = () => {
-	uni.makePhoneCall({
-		phoneNumber: '17682824692',
-		fail: () => {
-			uni.showToast({
-				title: '拨号失败',
-				icon: 'none'
-			})
-		}
-	})
-}
-
-const copyWechat = () => {
+const copyEmail = () => {
 	uni.setClipboardData({
-		data: 'silenceA15',
+		data: '951123604@qq.com',
 		success: () => {
 			uni.showToast({
-				title: '微信号已复制',
+				title: '邮箱已复制',
 				icon: 'success'
 			})
 		}
 	})
 }
 
+const previewQRCode = () => {
+	uni.previewImage({
+		urls: ['/static/gzhhao.jpg'],
+		current: '/static/gzhhao.jpg'
+	})
+}
+
+const goToFeedback = () => {
+	uni.navigateTo({
+		url: '/pages/settings/feedback'
+	})
+}
+
 const openUserAgreement = () => {
-	uni.showModal({
-		title: '用户协议',
-		content: '感谢您使用钱哪去了小程序。使用本服务即表示您同意遵守相关服务条款。我们承诺保护您的隐私和数据安全。',
-		showCancel: false,
-		confirmText: '知道了'
+	uni.navigateTo({
+		url: '/pages/agreement/agreement'
 	})
 }
 
 const openPrivacyPolicy = () => {
-	uni.showModal({
-		title: '隐私政策',
-		content: '我们重视您的隐私保护。您的记账数据仅用于为您提供服务，不会用于其他用途。所有数据均加密存储，未经授权不会分享给第三方。',
-		showCancel: false,
-		confirmText: '知道了'
+	uni.navigateTo({
+		url: '/pages/privacy/privacy'
 	})
 }
 </script>
@@ -291,104 +299,156 @@ const openPrivacyPolicy = () => {
 }
 
 .contact-card {
-	display: flex;
-	flex-direction: column;
-	gap: $spacing-md;
+	margin-bottom: $spacing-lg;
 }
 
 .contact-item {
 	display: flex;
 	align-items: center;
 	gap: $spacing-md;
-	padding: $spacing-md;
-	background: $bg-light;
+	padding: $spacing-lg;
+	background: linear-gradient(135deg, #F0FFF4 0%, #FFFFFF 100%);
 	border-radius: $radius-xl;
+	border: 2rpx solid rgba(82, 196, 26, 0.1);
 	transition: all $transition-fast;
 }
 
 .contact-item:active {
 	transform: scale(0.98);
-	background: #E8E8E8;
+	background: #E8F5E9;
 }
 
 .contact-icon {
-	width: 64rpx;
-	height: 64rpx;
+	width: 80rpx;
+	height: 80rpx;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.2);
 	position: relative;
+	overflow: hidden;
 }
 
 .email-icon {
 	background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
 }
 
-.phone-icon {
-	background: linear-gradient(135deg, #4CAF50 0%, #52C41A 100%);
-}
-
 .wechat-icon {
 	background: linear-gradient(135deg, #07C160 0%, #2AAE67 100%);
 }
 
-.icon-symbol {
-	font-size: 36rpx;
-	font-weight: bold;
-	color: #FFFFFF;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-}
-
-/* 微信图标 - 两个对话气泡 */
-.wechat-symbol {
-	width: 36rpx;
+/* 邮件信封图标 */
+.email-envelope {
+	width: 48rpx;
 	height: 36rpx;
 	position: relative;
 }
 
-.wechat-bubble {
-	position: absolute;
+.envelope-body {
+	width: 100%;
+	height: 100%;
 	background: #FFFFFF;
-	border-radius: 50%;
+	border-radius: 4rpx;
+	position: relative;
 }
 
-.wechat-bubble-1 {
-	width: 28rpx;
-	height: 28rpx;
+.envelope-flap {
+	position: absolute;
 	top: 0;
-	right: 0;
-}
-
-.wechat-bubble-1::after {
-	content: '';
-	position: absolute;
-	width: 6rpx;
-	height: 6rpx;
-	background: #FFFFFF;
-	border-radius: 50%;
-	bottom: -4rpx;
-	right: 4rpx;
-}
-
-.wechat-bubble-2 {
-	width: 32rpx;
-	height: 32rpx;
-	bottom: 0;
 	left: 0;
+	width: 0;
+	height: 0;
+	border-left: 24rpx solid transparent;
+	border-right: 24rpx solid transparent;
+	border-top: 18rpx solid #FFE5E5;
+	z-index: 1;
 }
 
-.wechat-bubble-2::after {
+/* 微信公众号二维码卡片 */
+.qrcode-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: $spacing-xl;
+	background: linear-gradient(135deg, #F0FFF4 0%, #FFFFFF 100%);
+	border-radius: $radius-xl;
+	border: 2rpx solid rgba(82, 196, 26, 0.1);
+	margin-bottom: $spacing-lg;
+}
+
+.qrcode-header {
+	display: flex;
+	align-items: center;
+	gap: $spacing-md;
+	margin-bottom: $spacing-lg;
+}
+
+/* 微信Logo - 单个圆形带眼睛 */
+.wechat-logo-single {
+	width: 48rpx;
+	height: 48rpx;
+	background: #07C160;
+	border-radius: 50%;
+	position: relative;
+	box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.3);
+}
+
+.wechat-logo-single::before {
 	content: '';
 	position: absolute;
 	width: 8rpx;
 	height: 8rpx;
 	background: #FFFFFF;
 	border-radius: 50%;
-	top: -4rpx;
-	left: 6rpx;
+	top: 16rpx;
+	left: 12rpx;
+}
+
+.wechat-logo-single::after {
+	content: '';
+	position: absolute;
+	width: 8rpx;
+	height: 8rpx;
+	background: #FFFFFF;
+	border-radius: 50%;
+	top: 16rpx;
+	right: 12rpx;
+}
+
+.qrcode-title {
+	font-size: $font-size-lg;
+	font-weight: $font-weight-bold;
+	color: $text-primary;
+}
+
+.qrcode-wrapper {
+	width: 320rpx;
+	height: 320rpx;
+	padding: $spacing-md;
+	background: $bg-white;
+	border-radius: $radius-xl;
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.15);
+	margin-bottom: $spacing-lg;
+}
+
+.qrcode-img {
+	width: 100%;
+	height: 100%;
+	border-radius: $radius-lg;
+}
+
+.qrcode-desc {
+	font-size: $font-size-base;
+	color: $text-secondary;
+	margin-bottom: $spacing-xs;
+}
+
+.qrcode-tips {
+	font-size: $font-size-xs;
+	color: $text-tertiary;
+	text-align: center;
 }
 
 .contact-content {
@@ -399,20 +459,65 @@ const openPrivacyPolicy = () => {
 }
 
 .contact-label {
-	font-size: $font-size-sm;
-	color: $text-tertiary;
-}
-
-.contact-value {
 	font-size: $font-size-base;
-	color: $text-primary;
+	color: $text-secondary;
 	font-weight: $font-weight-medium;
 }
 
-.copy-hint {
+.contact-value {
+	font-size: $font-size-lg;
+	color: $text-primary;
+	font-weight: $font-weight-bold;
+}
+
+.contact-hint {
 	font-size: $font-size-xs;
 	color: $primary-color;
-	font-weight: $font-weight-normal;
+}
+
+/* 意见反馈卡片 */
+.feedback-card {
+	display: flex;
+	align-items: center;
+	gap: $spacing-md;
+	padding: $spacing-lg;
+	background: linear-gradient(135deg, #FFF7E6 0%, #FFFFFF 100%);
+	border-radius: $radius-xl;
+	border: 2rpx solid rgba(250, 173, 20, 0.2);
+	transition: all $transition-fast;
+}
+
+.feedback-card:active {
+	transform: scale(0.98);
+	background: #FFF3D9;
+}
+
+.feedback-icon {
+	font-size: 48rpx;
+}
+
+.feedback-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: $spacing-xs;
+}
+
+.feedback-title {
+	font-size: $font-size-base;
+	font-weight: $font-weight-bold;
+	color: $text-primary;
+}
+
+.feedback-desc {
+	font-size: $font-size-sm;
+	color: $text-secondary;
+}
+
+.feedback-arrow {
+	font-size: 48rpx;
+	color: $text-tertiary;
+	font-weight: $font-weight-light;
 }
 
 /* 法律链接 */
