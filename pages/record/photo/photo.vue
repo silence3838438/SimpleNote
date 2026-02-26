@@ -114,6 +114,8 @@ const data = reactive({
 
 // 检查登录状态
 onLoad(() => {
+	// #ifdef APP-PLUS
+	// APP端：检查登录状态
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {
 		uni.showModal({
@@ -123,15 +125,7 @@ onLoad(() => {
 			cancelText: '返回',
 			success: (res) => {
 				if (res.confirm) {
-					// 小程序跳转到个人中心
-					// #ifdef MP-WEIXIN
-					uni.switchTab({ url: '/pages/tab/profile/profile' })
-					// #endif
-					
-					// APP跳转到登录页
-					// #ifdef APP-PLUS
 					uni.navigateTo({ url: '/pages/user/login' })
-					// #endif
 				} else {
 					uni.navigateBack()
 				}
@@ -139,6 +133,11 @@ onLoad(() => {
 		})
 		return
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：已自动登录，无需检查
+	// #endif
 })
 
 onShow(() => {

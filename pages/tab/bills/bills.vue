@@ -663,8 +663,16 @@ const showActionSheet = (bill) => {
 
 // 检查登录状态
 const checkLogin = () => {
+	// #ifdef APP-PLUS
+	// APP端：检查登录状态
 	const userInfo = uni.getStorageSync('userInfo')
 	return userInfo && userInfo.isLogin
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：始终返回true（已自动登录）
+	return true
+	// #endif
 }
 
 // 提示登录

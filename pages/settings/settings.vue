@@ -63,6 +63,8 @@
 				<!-- #endif -->
 				
 				<!-- 用户注销（仅登录后显示） -->
+				<!-- #ifdef APP-PLUS -->
+				<!-- APP端：需要登录才显示 -->
 				<view class="function-item danger-item" @click="handleDeleteAccount" v-if="data.isLogin">
 					<view class="function-left">
 						<view class="function-icon delete-icon">
@@ -74,22 +76,51 @@
 						<text class="arrow">›</text>
 					</view>
 				</view>
+				<!-- #endif -->
+				<!-- #ifdef MP-WEIXIN -->
+				<!-- 小程序端：始终显示注销 -->
+				<view class="function-item danger-item" @click="handleDeleteAccount">
+					<view class="function-left">
+						<view class="function-icon delete-icon">
+							<text class="icon-text">⚠️</text>
+						</view>
+						<text class="function-title danger-text">注销账号</text>
+					</view>
+					<view class="function-right">
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				<!-- #endif -->
 			</view>
 			
-			<!-- 注销说明（仅登录后显示） -->
+			<!-- 注销说明 -->
+			<!-- #ifdef APP-PLUS -->
+			<!-- APP端：仅登录后显示 -->
 			<view class="warning-tips" v-if="data.isLogin">
 				<text class="warning-title">⚠️ 注销账号说明</text>
 				<text class="warning-item">• 注销后将清除所有账单数据</text>
 				<text class="warning-item">• 注销后将清除所有积分记录</text>
 				<text class="warning-item">• 注销操作不可恢复，请谨慎操作</text>
 			</view>
+			<!-- #endif -->
+			<!-- #ifdef MP-WEIXIN -->
+			<!-- 小程序端：始终显示 -->
+			<view class="warning-tips">
+				<text class="warning-title">⚠️ 注销账号说明</text>
+				<text class="warning-item">• 注销后将清除所有账单数据</text>
+				<text class="warning-item">• 注销后将清除所有积分记录</text>
+				<text class="warning-item">• 注销操作不可恢复，请谨慎操作</text>
+			</view>
+			<!-- #endif -->
 			
-			<!-- 退出登录按钮（仅登录后显示） -->
+			<!-- 退出登录按钮（仅APP端登录后显示） -->
+			<!-- #ifdef APP-PLUS -->
 			<view class="logout-button-wrapper" v-if="data.isLogin">
 				<view class="logout-button" @click="handleLogout">
 					<text class="logout-button-text">退出登录</text>
 				</view>
 			</view>
+			<!-- #endif -->
 		</view>
 		
 		<!-- 版本更新弹窗 -->
@@ -315,26 +346,14 @@ const handleLogout = () => {
 // 注销账号
 const handleDeleteAccount = () => {
 	uni.showModal({
-		title: '⚠️ 注销账号',
+		title: '⚠️ 确认注销',
 		content: '注销后将清除所有数据且不可恢复，确定要注销吗？',
 		confirmText: '确定注销',
 		cancelText: '取消',
 		confirmColor: '#FF4D4F',
 		success: (res) => {
 			if (res.confirm) {
-				// 二次确认
-				uni.showModal({
-					title: '最后确认',
-					content: '您真的要注销账号吗？此操作不可撤销！',
-					confirmText: '确定注销',
-					cancelText: '我再想想',
-					confirmColor: '#FF4D4F',
-					success: async (confirmRes) => {
-						if (confirmRes.confirm) {
-							await performDeleteAccount()
-						}
-					}
-				})
+				performDeleteAccount()
 			}
 		}
 	})

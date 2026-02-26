@@ -1,6 +1,7 @@
 <script setup>
 	import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 	import { updateTabBarText } from '@/utils/i18nHelper'
+	import request from '@/utils/request.js'
 	
 	const initCategories = () => {
 		const categories = [
@@ -28,16 +29,13 @@
 				return
 			}
 			
-			const result = await uni.request({
-				url: 'https://api.qiannaqule.top/bills/reminder',
-				method: 'GET',
-				header: {
-					'Authorization': `Bearer ${token}`
-				}
+			// 使用request.call调用billManager的getReminder action
+			const result = await request.call('billManager', {
+				action: 'getReminder'
 			})
 			
-			if (result.statusCode === 200 && result.data.success && result.data.reminder) {
-				const reminder = result.data.reminder
+			if (result.success && result.reminder) {
+				const reminder = result.reminder
 				
 				// 同步到本地存储
 				uni.setStorageSync('reminderEnabled', reminder.enabled || false)
@@ -133,50 +131,60 @@
 			const userInfo = uni.getStorageSync('userInfo')
 			const token = uni.getStorageSync('token')
 			
-			
-			// 如果本地有用户信息且已登录，说明之前登录过
-			if (userInfo && userInfo.isLogin && token) {
+			// #ifdef MP-WEIXIN
+			// 小程序端：始终自动登录（无论是否有本地token）
+			try {
+				console.log('🔄 小程序自动登录开始...')
+				console.log('📦 本地用户信息:', userInfo)
 				
-				// #ifdef MP-WEIXIN
-				// 小程序：静默登录，获取新的code换取token
+				// 获取微信登录凭证
 				const loginRes = await uni.login()
 				
 				if (loginRes.code) {
-					// 调用后端接口，使用code换取新token
+					// 调用后端接口，使用code换取token
+					// 注意：这里传递本地的昵称和头像，后端会优先使用数据库中的数据
 					const result = await uni.request({
-						url: 'https://api.qiannaqule.top/auth/wechat-login',
+						url: 'https://api.qiannaqule.top/api/auth/wechat-login',
 						method: 'POST',
 						data: {
 							code: loginRes.code,
-							nickName: userInfo.nickName,
-							avatarUrl: userInfo.avatarUrl
+							nickName: userInfo?.nickName || '微信用户',
+							avatarUrl: userInfo?.avatarUrl || ''
 						},
 						header: {
 							'Content-Type': 'application/json'
 						}
 					})
 					
-					
 					if (result.statusCode === 200 && result.data.success) {
-						// 更新token和用户信息
+						// 后端返回的数据优先级：
+						// 1. 如果后端返回了用户信息（数据库中有记录），使用后端返回的
+						// 2. 如果后端没有返回，使用本地存储的
+						// 3. 如果本地也没有，使用默认值
 						const newUserInfo = {
-							nickName: result.data.data?.nickName || userInfo.nickName,
-							avatarUrl: result.data.data?.avatarUrl || userInfo.avatarUrl,
+							nickName: result.data.data?.nickName || userInfo?.nickName || '微信用户',
+							avatarUrl: result.data.data?.avatarUrl || userInfo?.avatarUrl || '',
 							isLogin: true
 						}
 						
 						uni.setStorageSync('userInfo', newUserInfo)
 						uni.setStorageSync('token', result.data.token)
 						
+						console.log('✅ 小程序自动登录成功')
+						console.log('📦 更新后的用户信息:', newUserInfo)
 					} else {
-						uni.removeStorageSync('userInfo')
-						uni.removeStorageSync('token')
+						console.error('❌ 小程序自动登录失败:', result.data.message)
 					}
 				}
-				// #endif
-				
-				// #ifdef APP-PLUS
-				// APP：验证token是否有效
+			} catch (error) {
+				console.error('❌ 小程序自动登录异常:', error)
+				// 失败不影响应用启动，用户可以继续使用
+			}
+			// #endif
+			
+			// #ifdef APP-PLUS
+			// APP端：只有已登录用户才验证token
+			if (userInfo && userInfo.isLogin && token) {
 				try {
 					const result = await uni.request({
 						url: 'https://api.qiannaqule.top/api/auth/verify-token',
@@ -185,7 +193,6 @@
 							'Authorization': `Bearer ${token}`
 						}
 					})
-					
 					
 					if (result.statusCode === 200 && result.data.success) {
 						// token有效，更新用户信息（可能昵称头像有变化）
@@ -205,11 +212,9 @@
 				} catch (error) {
 					console.error('验证token异常:', error)
 					// 验证失败，但不清除登录状态，让用户继续使用
-					// 只有在明确token无效时才清除
 				}
-				// #endif
-			} else {
 			}
+			// #endif
 		} catch (error) {
 			console.error('自动登录失败:', error)
 			// 失败不影响应用启动

@@ -12,7 +12,8 @@
 		<view class="container" :style="{ paddingTop: (statusBarHeight + 24) + 'px' }">
 			<!-- 用户信息卡片 -->
 			<view class="user-card">
-				<!-- 未登录状态 -->
+				<!-- #ifdef APP-PLUS -->
+				<!-- APP端：未登录状态 -->
 				<view class="user-header" v-if="!data.userInfo.isLogin" @click="goToLogin">
 					<view class="avatar-wrapper">
 						<image 
@@ -29,9 +30,10 @@
 						<text class="user-tip">登录后可同步数据、查看积分等级</text>
 					</view>
 				</view>
+				<!-- #endif -->
 				
-				<!-- 已登录状态 -->
-				<view class="user-header" v-else>
+				<!-- 已登录状态（小程序端始终显示此状态） -->
+				<view class="user-header" v-if="data.userInfo.isLogin">
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
@@ -56,8 +58,34 @@
 					</view>
 				</view>
 				
+				<!-- #ifdef MP-WEIXIN -->
+				<!-- 小程序端：未登录时也显示已登录状态（使用默认信息） -->
+				<view class="user-header" v-if="!data.userInfo.isLogin">
+					<view class="avatar-wrapper">
+						<image 
+							class="avatar" 
+							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
+							mode="aspectFill"
+						></image>
+						<view class="level-badge" :style="{ background: data.memberLevel.gradient }">
+							<text class="level-icon">{{ data.memberLevel.icon }}</text>
+						</view>
+					</view>
+					<view class="user-info">
+						<view class="nickname-row">
+							<text class="nickname">微信用户</text>
+						</view>
+						<view class="level-row" @click="showLevelDetail">
+							<text class="level-name">{{ data.memberLevel.name }}</text>
+							<text class="level-arrow">›</text>
+						</view>
+						<text class="user-tip">正在加载数据...</text>
+					</view>
+				</view>
+				<!-- #endif -->
+				
 				<!-- 会员等级进度卡片 -->
-				<view class="level-progress-card" @click="data.userInfo.isLogin ? showLevelDetail() : goToLogin()">
+				<view class="level-progress-card" @click="showLevelDetail">
 					<view class="progress-header">
 						<view class="progress-title">
 							<text class="title-icon">🌱</text>
@@ -69,21 +97,8 @@
 						</view>
 					</view>
 					
-					<!-- 未登录状态 -->
-					<view class="progress-bar-wrapper" v-if="!data.userInfo.isLogin">
-						<view class="progress-bar">
-							<view class="progress-fill" style="width: 0%; background: #d9d9d9;">
-								<view class="progress-glow"></view>
-							</view>
-						</view>
-						<view class="progress-labels">
-							<text class="current-level"></text>
-							<text class="next-level">登录后查看</text>
-						</view>
-					</view>
-					
-					<!-- 已登录状态 -->
-					<view class="progress-bar-wrapper" v-else>
+					<!-- 进度条（小程序端始终显示） -->
+					<view class="progress-bar-wrapper">
 						<view class="progress-bar">
 							<view 
 								class="progress-fill" 
@@ -104,17 +119,11 @@
 						</view>
 					</view>
 					
-					<!-- 未登录提示 -->
-					<view class="progress-tip" v-if="!data.userInfo.isLogin">
-						<text class="tip-text">登录后开启记账成长之旅</text>
-						<text class="tip-icon">🚀</text>
-					</view>
-					<!-- 已登录-有下一等级 -->
-					<view class="progress-tip" v-else-if="data.memberLevel.nextLevel">
+					<!-- 进度提示 -->
+					<view class="progress-tip" v-if="data.memberLevel.nextLevel">
 						<text class="tip-text">再获得 {{ data.memberLevel.progress?.pointsNeeded || 0 }} 积分即可升级</text>
 						<text class="tip-icon">✨</text>
 					</view>
-					<!-- 已登录-已满级 -->
 					<view class="progress-tip max-tip" v-else>
 						<text class="tip-text">恭喜达到最高等级</text>
 						<text class="tip-icon">🎉</text>
@@ -132,7 +141,7 @@
 							<text class="stat-label">记账笔数</text>
 						</view>
 						<view class="stat-divider"></view>
-						<view class="stat-item" @click.stop="data.userInfo.isLogin ? showPointsDetail() : goToLogin()">
+						<view class="stat-item" @click.stop="showPointsDetail">
 							<text class="stat-value">{{ getTodayPoints() }}</text>
 							<text class="stat-label">今日积分</text>
 						</view>
@@ -186,9 +195,10 @@
 				</button>
 				<!-- #endif -->
 				
-				<!-- AI财务顾问 - 小程序端使用show_ai_advisor_wechat控制，APP端直接显示 -->
+				<!-- AI财务顾问 - 小程序端使用show_ai_advisor_wechat控制，APP端需要登录 -->
+				<!-- 暂时隐藏：云开发环境资源可能已释放，等恢复后再打开 -->
 				<!-- #ifdef MP-WEIXIN -->
-				<view class="function-item" v-if="data.appConfig.show_ai_advisor_wechat && data.userInfo.isLogin" @click="goToAIChat">
+				<!-- <view class="function-item" v-if="data.appConfig.show_ai_advisor_wechat" @click="goToAIChat">
 					<view class="function-left">
 						<view class="function-icon ai-icon">
 							<text class="icon-text">🤖</text>
@@ -199,7 +209,7 @@
 						<text class="function-desc">智能分析</text>
 						<text class="arrow">›</text>
 					</view>
-				</view>
+				</view> -->
 				<!-- #endif -->
 				<!-- #ifdef APP-PLUS -->
 				<view class="function-item" v-if="data.userInfo.isLogin" @click="goToAIChat">
@@ -703,7 +713,8 @@ const getUserInfoFromCloud = async () => {
 
 // 加载统计数据（不显示升级提示）
 const loadStatsWithoutLevelUpNotification = async () => {
-	// 检查登录状态
+	// #ifdef APP-PLUS
+	// APP端：检查登录状态
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {
 		// 未登录时显示默认值
@@ -714,6 +725,11 @@ const loadStatsWithoutLevelUpNotification = async () => {
 		data.memberLevel = getMemberLevel(0)
 		return
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：始终加载数据（已自动登录）
+	// #endif
 	
 	try {
 		const bills = await billStorage.getFromAPI() // 改为从API获取
@@ -789,7 +805,8 @@ const loadStatsWithoutLevelUpNotification = async () => {
 
 // 静默加载统计数据（不显示loading，用于onShow刷新）
 const loadStatsQuietly = async () => {
-	// 检查登录状态
+	// #ifdef APP-PLUS
+	// APP端：检查登录状态
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {
 		// 未登录时显示默认值
@@ -800,6 +817,11 @@ const loadStatsQuietly = async () => {
 		data.memberLevel = getMemberLevel(0)
 		return
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：始终加载数据（已自动登录）
+	// #endif
 	
 	try {
 		const bills = await billStorage.getFromAPI() // 改为从API获取
@@ -843,7 +865,8 @@ const loadStatsQuietly = async () => {
 
 // 加载统计数据
 const loadStats = async () => {
-	// 检查登录状态
+	// #ifdef APP-PLUS
+	// APP端：检查登录状态
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {
 		// 未登录时显示默认值
@@ -854,6 +877,11 @@ const loadStats = async () => {
 		data.memberLevel = getMemberLevel(0)
 		return
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：始终加载数据（已自动登录）
+	// #endif
 	
 	try {
 		const bills = await billStorage.getFromAPI() // 改为从API获取
@@ -1204,7 +1232,8 @@ const handleLogout = () => {
 
 // 跳转到提醒设置
 const goToReminderSettings = () => {
-	// 检查登录
+	// #ifdef APP-PLUS
+	// APP端：检查登录
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {
 		uni.showModal({
@@ -1220,6 +1249,11 @@ const goToReminderSettings = () => {
 		})
 		return
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：直接跳转（已自动登录）
+	// #endif
 	
 	uni.navigateTo({
 		url: '/pages/settings/reminder'
@@ -1228,7 +1262,8 @@ const goToReminderSettings = () => {
 
 // 跳转到财务顾问
 const goToAIChat = () => {
-	// 检查登录
+	// #ifdef APP-PLUS
+	// APP端：检查登录
 	const userInfo = uni.getStorageSync('userInfo')
 	if (!userInfo || !userInfo.isLogin) {
 		uni.showModal({
@@ -1244,6 +1279,11 @@ const goToAIChat = () => {
 		})
 		return
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：直接跳转（已自动登录）
+	// #endif
 	
 	uni.navigateTo({
 		url: '/pages/ai-chat/ai-chat'
@@ -1375,7 +1415,8 @@ onLoad(() => {
 })
 
 onShow(() => {
-	// 重新加载用户信息（检查登录状态）
+	// #ifdef APP-PLUS
+	// APP端：重新加载用户信息（检查登录状态）
 	const userInfo = uni.getStorageSync('userInfo')
 	if (userInfo && userInfo.isLogin) {
 		data.userInfo = userInfo
@@ -1387,6 +1428,15 @@ onShow(() => {
 			isLogin: false
 		}
 	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：始终加载用户信息（已自动登录）
+	const userInfo = uni.getStorageSync('userInfo')
+	if (userInfo) {
+		data.userInfo = userInfo
+	}
+	// #endif
 	
 	// 重新加载应用配置（实时获取最新配置）
 	loadAppConfig()
