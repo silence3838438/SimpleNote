@@ -218,18 +218,6 @@
 	
 	onLaunch(async () => {
 		// #ifdef MP-WEIXIN
-		// 处理隐私授权（微信小程序2023年9月后的强制要求）
-		if (wx.onNeedPrivacyAuthorization) {
-			wx.onNeedPrivacyAuthorization((resolve) => {
-				// 需要用户同意隐私协议时触发
-				// 这里直接resolve，让微信自动弹出隐私弹窗
-				resolve({
-					event: 'agree', // 同意
-					buttonId: 'agree-btn' // 同意按钮id
-				})
-			})
-		}
-		
 		// 初始化云开发环境
 		if (!wx.cloud) {
 			console.error('请使用 2.2.3 或以上的基础库以使用云能力')
