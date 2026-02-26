@@ -352,17 +352,6 @@ const startRecord = async () => {
 		return
 	}
 	
-	// 先尝试停止可能存在的录音（清理状态）
-	try {
-		data.recorderManager.stop()
-		console.log('✅ 清理了可能存在的录音状态')
-	} catch (e) {
-		// 忽略停止失败的错误
-	}
-	
-	// 等待一小段时间，确保录音器完全停止
-	await new Promise(resolve => setTimeout(resolve, 100))
-	
 	try {
 		// #ifdef APP-PLUS
 		// APP端：检查并请求录音权限（应用商店审核需要）
