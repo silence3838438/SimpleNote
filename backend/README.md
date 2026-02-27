@@ -13,6 +13,16 @@
 
 ---
 
+## 数据库连接
+
+详细的数据库连接配置请查看：[DATABASE-CONNECTION.md](./DATABASE-CONNECTION.md)
+
+**快速连接（Navicat）：**
+- 主机：`127.0.0.1`，端口：`3306`，用户：`root`，密码：`Simplenote@123`
+- SSH：主机`8.218.209.109`，端口`22`，用户`root`，密码`520silenceW`
+
+---
+
 ## 快速部署
 
 ### 完整部署（推荐）
