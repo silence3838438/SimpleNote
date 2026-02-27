@@ -29,6 +29,21 @@
 					</view>
 				</view>
 				
+				<!-- 联系客服（仅小程序） -->
+				<!-- #ifdef MP-WEIXIN -->
+				<button class="function-item contact-button" open-type="contact">
+					<view class="function-left">
+						<view class="function-icon service-icon">
+							<text class="icon-text">👨‍💼</text>
+						</view>
+						<text class="function-title">联系客服</text>
+					</view>
+					<view class="function-right">
+						<text class="arrow">›</text>
+					</view>
+				</button>
+				<!-- #endif -->
+				
 				<!-- 检查更新（仅APP） -->
 				<!-- #ifdef APP-PLUS -->
 				<view class="function-item" @click="checkAppUpdate">
@@ -479,6 +494,10 @@ onLoad(() => {
 	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
 }
 
+.service-icon {
+	background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
+}
+
 .logout-icon {
 	background: linear-gradient(135deg, #FA8C16 0%, #FFA940 100%);
 }
@@ -564,6 +583,31 @@ onLoad(() => {
 	font-size: $font-size-3xl;
 	color: $text-tertiary;
 	font-weight: $font-weight-light;
+}
+
+/* 联系客服按钮样式重置 */
+.contact-button {
+	background: transparent;
+	border: none;
+	padding: $spacing-lg;
+	margin: 0 0 $spacing-xs 0;
+	line-height: normal;
+	text-align: left;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-radius: $radius-lg;
+	transition: all $transition-fast;
+}
+
+.contact-button::after {
+	border: none;
+}
+
+.contact-button:active {
+	background: $bg-light;
+	transform: scale(0.98);
 }
 
 /* 警告提示 */
