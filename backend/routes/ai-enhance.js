@@ -15,9 +15,17 @@ try {
   console.log('� DeepSeek API Key:', apiKey ? '已配置' : '未配置');
   
   if (apiKey) {
+    // Node.js 16 需要提供 fetch 和 FormData polyfill
+    const fetch = require('node-fetch');
+    const { FormData } = require('formdata-node');
+    
+    // 设置全局 FormData
+    global.FormData = FormData;
+    
     deepseekClient = new OpenAI({
       apiKey: apiKey,
-      baseURL: 'https://api.deepseek.com'
+      baseURL: 'https://api.deepseek.com',
+      fetch: fetch  // 提供 fetch 实现
     });
     console.log('✅ DeepSeek API 初始化成功');
   } else {

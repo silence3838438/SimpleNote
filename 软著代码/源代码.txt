@@ -1,0 +1,3000 @@
+// ========================================
+// 文件: App.vue
+// ========================================
+<script setup>
+	import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
+	import { updateTabBarText } from '@/utils/i18nHelper'
+	import request from '@/utils/request.js'
+	
+	const initCategories = () => {
+		const categories = [
+			{ id: 1, name: '餐饮', icon: '🍜', keywords: ['餐厅', '饭店', '食堂', '外卖', '麦当劳', '肯德基', '星巴克', '咖啡'] },
+			{ id: 2, name: '交通', icon: '🚗', keywords: ['滴滴', '出租', '地铁', '公交', '加油', '停车'] },
+			{ id: 3, name: '购物', icon: '🛒', keywords: ['超市', '商场', '淘宝', '京东', '拼多多'] },
+			{ id: 4, name: '娱乐', icon: '🎮', keywords: ['电影', '游戏', 'KTV', '健身'] },
+			{ id: 5, name: '住房', icon: '🏠', keywords: ['房租', '物业', '水电', '燃气'] },
+			{ id: 6, name: '医疗', icon: '💊', keywords: ['医院', '药店', '体检'] },
+			{ id: 7, name: '通讯', icon: '📱', keywords: ['话费', '流量', '宽带'] },
+			{ id: 8, name: '服饰', icon: '👔', keywords: ['衣服', '鞋子', '包包'] },
+			{ id: 9, name: '美容', icon: '💄', keywords: ['美发', '美甲', '化妆品'] },
+			{ id: 10, name: '学习', icon: '📚', keywords: ['书籍', '课程', '培训'] },
+			{ id: 11, name: '社交', icon: '👥', keywords: ['聚餐', '礼物', '红包'] },
+			{ id: 12, name: '其他', icon: '📦', keywords: [] }
+		]
+		uni.setStorageSync('categories', categories)
+	}
+	
+	// 从云端加载提醒设置
+	const loadReminderSettingsFromCloud = async () => {
+		try {
+			const token = uni.getStorageSync('token')
+			if (!token) {
+				return
+			}
+			
+			// 使用request.call调用billManager的getReminder action
+			const result = await request.call('billManager', {
+				action: 'getReminder'
+			})
+			
+			if (result.success && result.reminder) {
+				const reminder = result.reminder
+				
+				// 同步到本地存储
+				uni.setStorageSync('reminderEnabled', reminder.enabled || false)
+				uni.setStorageSync('reminderTime', reminder.time || '20:00')
+			}
+		} catch (error) {
+			console.error('加载提醒设置失败:', error)
+			// 加载失败不影响应用启动，使用本地缓存
+		}
+	}
+	
+	// 检查是否需要提醒记账
+	const checkReminderAndNotify = () => {
+		try {
+			// 1. 检查是否开启了提醒
+			const reminderEnabled = uni.getStorageSync('reminderEnabled')
+			if (!reminderEnabled) {
+				return
+			}
+			
+			// 2. 获取提醒时间
+			const reminderTime = uni.getStorageSync('reminderTime')
+			if (!reminderTime) {
+				return
+			}
+			
+			// 3. 检查今天是否已经提醒过（每天只提醒一次）
+			const today = new Date().toDateString()
+			const lastReminderDate = uni.getStorageSync('lastReminderDate')
+			
+			if (lastReminderDate === today) {
+				return
+			}
+			
+			// 4. 检查当前时间是否已经过了提醒时间
+			const now = new Date()
+			const currentHour = now.getHours()
+			const currentMinute = now.getMinutes()
+			const currentTime = currentHour * 60 + currentMinute // 转换为分钟数
+			
+			const [reminderHour, reminderMinute] = reminderTime.split(':').map(Number)
+			const reminderTimeInMinutes = reminderHour * 60 + reminderMinute
+			
+			if (currentTime < reminderTimeInMinutes) {
+				return
+			}
+			
+			// 5. 检查今天是否已经记过账
+			const bills = uni.getStorageSync('bills') || []
+			const todayBills = bills.filter(bill => {
+				const billDate = new Date(bill.date).toDateString()
+				return billDate === today
+			})
+			
+			if (todayBills.length > 0) {
+				return
+			}
+			
+			// 6. 检查应用是否刚启动（避免频繁弹窗）
+			const lastShowTime = uni.getStorageSync('lastAppShowTime') || 0
+			const timeSinceLastShow = Date.now() - lastShowTime
+			
+			// 如果距离上次显示不到30秒，不弹窗（避免频繁切换应用时重复弹窗）
+			if (timeSinceLastShow < 30000) {
+				return
+			}
+			
+			// 记录本次显示时间
+			uni.setStorageSync('lastAppShowTime', Date.now())
+			
+			// 7. 显示提醒弹窗（使用自定义弹框）
+			showReminderModal()
+			
+			// 记录今天已提醒，避免重复弹窗
+			uni.setStorageSync('lastReminderDate', today)
+		} catch (error) {
+			console.error('检查提醒失败:', error)
+		}
+	}
+	
+	// 显示精美的提醒弹框
+	const showReminderModal = () => {
+		// 延迟触发，确保首页已经加载完成
+		setTimeout(() => {
+			uni.$emit('showReminderModal')
+		}, 800)
+	}
+	
+	// 自动登录（小程序和APP通用）
+	const autoLogin = async () => {
+		try {
+			// 检查本地是否有用户信息和token
+			const userInfo = uni.getStorageSync('userInfo')
+			const token = uni.getStorageSync('token')
+			
+			// #ifdef MP-WEIXIN
+			// 小程序端：始终自动登录（无论是否有本地token）
+			try {
+				console.log('🔄 小程序自动登录开始...')
+				console.log('📦 本地用户信息:', userInfo)
+				
+				// 获取微信登录凭证
+				const loginRes = await uni.login()
+				
+				if (loginRes.code) {
+					// 调用后端接口，使用code换取token
+					// 注意：这里传递本地的昵称和头像，后端会优先使用数据库中的数据
+					const result = await uni.request({
+						url: 'https://api.qiannaqule.top/api/auth/wechat-login',
+						method: 'POST',
+						data: {
+							code: loginRes.code,
+							nickName: userInfo?.nickName || '微信用户',
+							avatarUrl: userInfo?.avatarUrl || ''
+						},
+						header: {
+							'Content-Type': 'application/json'
+						}
+					})
+					
+					if (result.statusCode === 200 && result.data.success) {
+						// 后端返回的数据优先级：
+						// 1. 如果后端返回了用户信息（数据库中有记录），使用后端返回的
+						// 2. 如果后端没有返回，使用本地存储的
+						// 3. 如果本地也没有，使用默认值
+						const newUserInfo = {
+							nickName: result.data.data?.nickName || userInfo?.nickName || '微信用户',
+							avatarUrl: result.data.data?.avatarUrl || userInfo?.avatarUrl || '',
+							isLogin: true
+						}
+						
+						uni.setStorageSync('userInfo', newUserInfo)
+						uni.setStorageSync('token', result.data.token)
+						
+						console.log('✅ 小程序自动登录成功')
+						console.log('📦 更新后的用户信息:', newUserInfo)
+					} else {
+						console.error('❌ 小程序自动登录失败:', result.data.message)
+					}
+				}
+			} catch (error) {
+				console.error('❌ 小程序自动登录异常:', error)
+				// 失败不影响应用启动，用户可以继续使用
+			}
+			// #endif
+			
+			// #ifdef APP-PLUS
+			// APP端：只有已登录用户才验证token
+			if (userInfo && userInfo.isLogin && token) {
+				try {
+					const result = await uni.request({
+						url: 'https://api.qiannaqule.top/api/auth/verify-token',
+						method: 'GET',
+						header: {
+							'Authorization': `Bearer ${token}`
+						}
+					})
+					
+					if (result.statusCode === 200 && result.data.success) {
+						// token有效，更新用户信息（可能昵称头像有变化）
+						if (result.data.data) {
+							const updatedUserInfo = {
+								nickName: result.data.data.nickName || userInfo.nickName,
+								avatarUrl: result.data.data.avatarUrl || userInfo.avatarUrl,
+								isLogin: true
+							}
+							uni.setStorageSync('userInfo', updatedUserInfo)
+						}
+					} else {
+						// token无效，清除登录状态
+						uni.removeStorageSync('userInfo')
+						uni.removeStorageSync('token')
+					}
+				} catch (error) {
+					console.error('验证token异常:', error)
+					// 验证失败，但不清除登录状态，让用户继续使用
+				}
+			}
+			// #endif
+		} catch (error) {
+			console.error('自动登录失败:', error)
+			// 失败不影响应用启动
+		}
+	}
+	
+	onLaunch(async () => {
+		// #ifdef MP-WEIXIN
+		// 初始化云开发环境
+		if (!wx.cloud) {
+			console.error('请使用 2.2.3 或以上的基础库以使用云能力')
+		} else {
+			wx.cloud.init({
+				env: 'cloud1-8gxevfq393690dfe',
+				traceUser: true
+			})
+		}
+		// #endif
+		
+		// 初始化分类数据
+		initCategories()
+		
+		// 更新 tabBar 文字（支持国际化）- 延迟执行确保 tabBar 已准备好
+		setTimeout(() => {
+			updateTabBarText()
+		}, 100)
+		
+		// 自动登录（小程序和APP通用，在加载提醒设置之前）
+		await autoLogin()
+		
+		// 从云端加载提醒设置（等待加载完成）
+		await loadReminderSettingsFromCloud()
+	})
+	
+	onShow(() => {
+		// 延迟检查，确保云端数据已加载
+		setTimeout(() => {
+			checkReminderAndNotify()
+		}, 500)
+	})
+	
+	onHide(() => {
+	})
+</script>
+
+<style lang="scss">
+@import "@/styles/variables.scss";
+
+page {
+	background-color: $bg-page;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 隐藏导航栏下边框 */
+page::before {
+	display: none !important;
+}
+
+/* 隐藏TabBar上边框 */
+uni-tabbar .uni-tabbar-border {
+	display: none !important;
+	height: 0 !important;
+	background-color: transparent !important;
+}
+
+/* 通用样式类 */
+.flex {
+	display: flex;
+}
+
+.flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.flex-between {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.flex-column {
+	display: flex;
+	flex-direction: column;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.text-right {
+	text-align: right;
+}
+
+.ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ellipsis-2 {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+</style>
+
+
+// ========================================
+// 文件: admin/src/App.vue
+// ========================================
+<template>
+  <router-view />
+</template>
+
+<script setup>
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+}
+</style>
+
+
+// ========================================
+// 文件: admin/src/layout/index.vue
+// ========================================
+<template>
+  <el-container class="layout-container">
+    <el-aside width="200px" class="sidebar">
+      <div class="logo">
+        <h2>💰 管理后台</h2>
+      </div>
+      
+      <el-menu
+        :default-active="activeMenu"
+        router
+        background-color="#001529"
+        text-color="#fff"
+        active-text-color="#52C41A"
+      >
+        <el-menu-item
+          v-for="route in routes"
+          :key="route.path"
+          :index="route.path"
+        >
+          <el-icon><component :is="route.meta.icon" /></el-icon>
+          <span>{{ route.meta.title }}</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+    
+    <el-container>
+      <el-header class="header">
+        <div class="header-left">
+          <h3>{{ currentTitle }}</h3>
+        </div>
+        <div class="header-right">
+          <el-dropdown @command="handleCommand">
+            <span class="user-info">
+              <el-icon><User /></el-icon>
+              <span>管理员</span>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </el-header>
+      
+      <el-main class="main-content">
+        <router-view />
+      </el-main>
+    </el-container>
+  </el-container>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
+
+const router = useRouter()
+const route = useRoute()
+
+const routes = [
+  { path: '/dashboard', meta: { title: '数据概览', icon: 'DataAnalysis' } },
+  { path: '/users', meta: { title: '用户管理', icon: 'User' } },
+  { path: '/bills', meta: { title: '账单管理', icon: 'Tickets' } },
+  { path: '/feedback', meta: { title: '意见反馈', icon: 'ChatDotRound' } },
+  { path: '/app-version', meta: { title: '版本管理', icon: 'Upload' } },
+  { path: '/app-config', meta: { title: '配置管理', icon: 'Setting' } }
+]
+
+const activeMenu = computed(() => route.path)
+const currentTitle = computed(() => {
+  const current = routes.find(r => r.path === route.path)
+  return current?.meta.title || ''
+})
+
+const handleCommand = (command) => {
+  if (command === 'logout') {
+    ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      localStorage.removeItem('admin_token')
+      router.push('/login')
+    })
+  }
+}
+</script>
+
+<style scoped>
+.layout-container {
+  height: 100vh;
+}
+
+.sidebar {
+  background-color: #001529;
+  overflow-x: hidden;
+}
+
+.logo {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.header-left h3 {
+  font-size: 18px;
+  color: #1a1a1a;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.user-info:hover {
+  background: #f5f5f5;
+}
+
+.main-content {
+  background: #f0f2f5;
+  padding: 24px;
+}
+</style>
+
+
+// ========================================
+// 文件: admin/src/main.js
+// ========================================
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import router from './router'
+import App from './App.vue'
+
+const app = createApp(App)
+
+// 注册所有图标
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
+app.use(ElementPlus)
+app.use(router)
+app.mount('#app')
+
+
+// ========================================
+// 文件: admin/src/router/index.js
+// ========================================
+import { createRouter, createWebHashHistory } from 'vue-router'
+
+const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue')
+  },
+  {
+    path: '/',
+    component: () => import('@/layout/index.vue'),
+    redirect: '/dashboard',
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/Dashboard.vue'),
+        meta: { title: '数据概览', icon: 'DataAnalysis' }
+      },
+      {
+        path: 'users',
+        name: 'Users',
+        component: () => import('@/views/Users.vue'),
+        meta: { title: '用户管理', icon: 'User' }
+      },
+      {
+        path: 'bills',
+        name: 'Bills',
+        component: () => import('@/views/Bills.vue'),
+        meta: { title: '账单管理', icon: 'Tickets' }
+      },
+      {
+        path: 'feedback',
+        name: 'Feedback',
+        component: () => import('@/views/Feedback.vue'),
+        meta: { title: '意见反馈', icon: 'ChatDotRound' }
+      },
+      {
+        path: 'app-version',
+        name: 'AppVersion',
+        component: () => import('@/views/AppVersion.vue'),
+        meta: { title: '版本管理', icon: 'Upload' }
+      },
+      {
+        path: 'app-config',
+        name: 'AppConfig',
+        component: () => import('@/views/AppConfig.vue'),
+        meta: { title: '配置管理', icon: 'Setting' }
+      }
+    ]
+  }
+]
+
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes
+})
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('admin_token')
+  
+  if (to.path === '/login') {
+    next()
+  } else {
+    if (token) {
+      next()
+    } else {
+      next('/login')
+    }
+  }
+})
+
+export default router
+
+
+// ========================================
+// 文件: admin/src/utils/request.js
+// ========================================
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+
+const request = axios.create({
+  baseURL: '/api',
+  timeout: 10000
+})
+
+// 请求拦截器
+request.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('admin_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
+
+// 响应拦截器
+request.interceptors.response.use(
+  response => {
+    const res = response.data
+    
+    if (res.success === false) {
+      ElMessage.error(res.message || '请求失败')
+      return Promise.reject(new Error(res.message || '请求失败'))
+    }
+    
+    return res
+  },
+  error => {
+    ElMessage.error(error.message || '网络错误')
+    return Promise.reject(error)
+  }
+)
+
+export default request
+
+
+// ========================================
+// 文件: admin/src/views/AppConfig.vue
+// ========================================
+<template>
+  <div class="app-config-container">
+    <el-card class="header-card">
+      <div class="header">
+        <h2>配置管理</h2>
+        <el-button type="primary" @click="showAddDialog">
+          <el-icon><Plus /></el-icon>
+          添加配置
+        </el-button>
+      </div>
+    </el-card>
+
+    <el-card class="table-card">
+      <el-table :data="configList" v-loading="loading" stripe>
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="config_key" label="配置键" width="200" />
+        <el-table-column label="配置值" width="150">
+          <template #default="{ row }">
+            <el-tag v-if="row.config_type === 'boolean'" :type="row.config_value === 'true' ? 'success' : 'danger'">
+              {{ row.config_value === 'true' ? '开启' : '关闭' }}
+            </el-tag>
+            <span v-else>{{ row.config_value }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="config_type" label="类型" width="100">
+          <template #default="{ row }">
+            <el-tag size="small">{{ row.config_type }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" min-width="200" />
+        <el-table-column prop="updated_at" label="更新时间" width="180" />
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" @click="editConfig(row)">编辑</el-button>
+            <el-button type="danger" size="small" @click="deleteConfig(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <el-dialog 
+      v-model="dialogVisible" 
+      :title="dialogTitle"
+      width="500px"
+    >
+      <el-form :model="formData" label-width="100px">
+        <el-form-item label="配置键">
+          <el-input v-model="formData.config_key" :disabled="isEdit" placeholder="例如: show_ai_advisor" />
+        </el-form-item>
+        <el-form-item label="配置类型">
+          <el-select v-model="formData.config_type" :disabled="isEdit">
+            <el-option label="布尔值" value="boolean" />
+            <el-option label="字符串" value="string" />
+            <el-option label="数字" value="number" />
+            <el-option label="JSON" value="json" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="配置值">
+          <el-switch 
+            v-if="formData.config_type === 'boolean'"
+            v-model="booleanValue"
+            active-text="开启"
+            inactive-text="关闭"
+          />
+          <el-input-number 
+            v-else-if="formData.config_type === 'number'"
+            v-model="formData.config_value"
+            style="width: 100%"
+          />
+          <el-input 
+            v-else
+            v-model="formData.config_value"
+            :type="formData.config_type === 'json' ? 'textarea' : 'text'"
+            :rows="4"
+            placeholder="请输入配置值"
+          />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入配置描述" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveConfig">保存</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import request from '../utils/request'
+
+const loading = ref(false)
+const configList = ref([])
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const formData = ref({
+  id: null,
+  config_key: '',
+  config_value: '',
+  config_type: 'string',
+  description: ''
+})
+
+const dialogTitle = computed(() => isEdit.value ? '编辑配置' : '添加配置')
+
+const booleanValue = computed({
+  get: () => formData.value.config_value === 'true',
+  set: (val) => {
+    formData.value.config_value = val ? 'true' : 'false'
+  }
+})
+
+const fetchConfigList = async () => {
+  loading.value = true
+  try {
+    const res = await request.get('/config/admin/list')
+    if (res.success) {
+      configList.value = res.data
+    }
+  } catch (error) {
+    ElMessage.error('获取配置列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const showAddDialog = () => {
+  isEdit.value = false
+  formData.value = {
+    id: null,
+    config_key: '',
+    config_value: '',
+    config_type: 'string',
+    description: ''
+  }
+  dialogVisible.value = true
+}
+
+const editConfig = (row) => {
+  isEdit.value = true
+  formData.value = { ...row }
+  dialogVisible.value = true
+}
+
+const saveConfig = async () => {
+  try {
+    if (isEdit.value) {
+      const res = await request.put(`/config/admin/${formData.value.id}`, {
+        config_value: formData.value.config_value,
+        description: formData.value.description
+      })
+      if (res.success) {
+        ElMessage.success('配置更新成功')
+        dialogVisible.value = false
+        fetchConfigList()
+      }
+    } else {
+      const res = await request.post('/config/admin', formData.value)
+      if (res.success) {
+        ElMessage.success('配置添加成功')
+        dialogVisible.value = false
+        fetchConfigList()
+      }
+    }
+  } catch (error) {
+    ElMessage.error(error.message || '操作失败')
+  }
+}
+
+const deleteConfig = async (row) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这个配置吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const res = await request.delete(`/config/admin/${row.id}`)
+    if (res.success) {
+      ElMessage.success('删除成功')
+      fetchConfigList()
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+onMounted(() => {
+  fetchConfigList()
+})
+</script>
+
+<style scoped>
+.app-config-container {
+  padding: 20px;
+}
+
+.header-card {
+  margin-bottom: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #303133;
+}
+
+.table-card {
+  min-height: 400px;
+}
+</style>
+
+
+// ========================================
+// 文件: admin/src/views/AppVersion.vue
+// ========================================
+<template>
+  <div class="app-version-container">
+    <el-card class="header-card">
+      <div class="header-content">
+        <div>
+          <h2>APP版本管理</h2>
+          <p class="subtitle">管理Android和iOS应用版本更新</p>
+        </div>
+        <el-button type="primary" @click="showAddDialog">
+          <el-icon><Plus /></el-icon>
+          发布新版本
+        </el-button>
+      </div>
+    </el-card>
+
+    <!-- 平台切换 -->
+    <el-tabs v-model="activePlatform" class="platform-tabs">
+      <el-tab-pane label="Android" name="Android">
+        <version-list 
+          :versions="androidVersions" 
+          platform="Android"
+          @edit="handleEdit"
+          @delete="handleDelete"
+          @toggle-force="handleToggleForce"
+        />
+      </el-tab-pane>
+      <el-tab-pane label="iOS" name="iOS">
+        <version-list 
+          :versions="iosVersions" 
+          platform="iOS"
+          @edit="handleEdit"
+          @delete="handleDelete"
+          @toggle-force="handleToggleForce"
+        />
+      </el-tab-pane>
+    </el-tabs>
+
+    <!-- 添加/编辑版本对话框 -->
+    <el-dialog 
+      v-model="dialogVisible" 
+      :title="dialogTitle"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
+        <el-form-item label="平台" prop="platform">
+          <el-select v-model="form.platform" placeholder="请选择平台" :disabled="isEdit">
+            <el-option label="Android" value="Android" />
+            <el-option label="iOS" value="iOS" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="版本号" prop="version">
+          <el-input v-model="form.version" placeholder="如: 1.0.1" />
+          <div class="form-tip">格式: 主版本号.次版本号.修订号</div>
+        </el-form-item>
+
+        <el-form-item label="更新内容" prop="updateContent">
+          <el-input 
+            v-model="updateContentText" 
+            type="textarea" 
+            :rows="4"
+            placeholder="每行一条更新内容"
+          />
+          <div class="form-tip">每行一条更新内容,自动分行显示</div>
+        </el-form-item>
+
+        <el-form-item label="安装包大小" prop="packageSize" v-if="form.platform === 'Android'">
+          <el-input v-model="form.packageSize" placeholder="如: 15.8MB" />
+        </el-form-item>
+
+        <el-form-item label="更新方式" v-if="form.platform === 'Android'">
+          <el-radio-group v-model="form.updateType">
+            <el-radio label="server">服务器下载</el-radio>
+            <el-radio label="market">应用市场</el-radio>
+          </el-radio-group>
+          <div class="form-tip">
+            服务器下载：用户直接从服务器下载APK安装<br/>
+            应用市场：根据手机品牌跳转到对应应用市场更新
+          </div>
+        </el-form-item>
+
+        <el-form-item label="下载地址" prop="downloadUrl" v-if="form.platform === 'Android' && form.updateType === 'server'">
+          <el-input v-model="form.downloadUrl" placeholder="APK下载地址" />
+          <div class="form-tip">
+            服务器APK文件地址,用户点击更新后会下载此文件
+          </div>
+        </el-form-item>
+
+        <!-- 应用市场配置 -->
+        <el-card v-if="form.platform === 'Android' && form.updateType === 'market'" class="market-config-card">
+          <template #header>
+            <div class="card-header">
+              <span>应用市场配置</span>
+              <el-tag size="small" type="info">根据手机品牌自动跳转</el-tag>
+            </div>
+          </template>
+          
+          <el-form-item label="华为应用市场">
+            <el-input v-model="form.markets.huawei" placeholder="appmarket://details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="小米应用商店">
+            <el-input v-model="form.markets.xiaomi" placeholder="https://app.mi.com/details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="VIVO应用商店">
+            <el-input v-model="form.markets.vivo" placeholder="vivomarket://details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="OPPO软件商店">
+            <el-input v-model="form.markets.oppo" placeholder="market://details?id=com.qiannaqule.money" />
+          </el-form-item>
+          
+          <el-form-item label="荣耀应用市场">
+            <el-input v-model="form.markets.honor" placeholder="market://details?id=com.qiannaqule.money" />
+          </el-form-item>
+
+          <el-alert 
+            title="应用市场链接说明" 
+            type="info" 
+            :closable="false"
+            style="margin-top: 12px"
+          >
+            <ul style="margin: 8px 0; padding-left: 20px; line-height: 1.8;">
+              <li>华为：appmarket://details?id=包名</li>
+              <li>小米：https://app.mi.com/details?id=包名</li>
+              <li>VIVO：vivomarket://details?id=包名</li>
+              <li>OPPO/荣耀：market://details?id=包名</li>
+              <li>当前包名：com.qiannaqule.money</li>
+            </ul>
+          </el-alert>
+        </el-card>
+        
+        <el-alert 
+          v-if="form.platform === 'iOS'" 
+          title="iOS版本更新说明" 
+          type="info" 
+          :closable="false"
+          style="margin-bottom: 16px"
+        >
+          iOS应用更新通过App Store进行,用户点击更新后会自动跳转到App Store
+        </el-alert>
+
+        <el-form-item label="强制更新">
+          <el-switch v-model="form.isForce" />
+          <div class="form-tip">开启后用户必须更新才能使用APP</div>
+        </el-form-item>
+
+        <el-form-item label="上传APK" v-if="form.platform === 'Android' && form.updateType === 'server'">
+          <el-upload
+            class="upload-demo"
+            :action="uploadUrl"
+            :headers="uploadHeaders"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :before-upload="beforeUpload"
+            accept=".apk"
+            :limit="1"
+          >
+            <el-button type="primary">点击上传APK</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                只能上传APK文件,且不超过100MB
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
+
+        <el-form-item label="安卓二维码" v-if="form.platform === 'Android'">
+          <el-upload
+            class="upload-demo"
+            :action="qrcodeUploadUrl"
+            :headers="uploadHeaders"
+            :on-success="handleQrcodeUploadSuccess"
+            :on-error="handleQrcodeUploadError"
+            :before-upload="beforeQrcodeUpload"
+            accept=".jpg,.jpeg,.png"
+            :limit="1"
+            :show-file-list="false"
+          >
+            <el-button type="success" size="small">上传二维码图片</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                上传安卓应用下载二维码（非必填），支持JPG/PNG，不超过5MB
+              </div>
+            </template>
+          </el-upload>
+          <div v-if="androidQrcodeUrl" class="qrcode-preview">
+            <img :src="androidQrcodeUrl" alt="安卓二维码" />
+            <p>当前二维码（官网显示）</p>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitting">
+          {{ isEdit ? '保存' : '发布' }}
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import VersionList from './components/VersionList.vue'
+import request from '@/utils/request'
+
+const activePlatform = ref('Android')
+const androidVersions = ref([])
+const iosVersions = ref([])
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const submitting = ref(false)
+const formRef = ref(null)
+const androidQrcodeUrl = ref('')
+
+const form = reactive({
+  id: null,
+  platform: 'Android',
+  version: '',
+  updateContent: [],
+  packageSize: '',
+  downloadUrl: '',
+  isForce: false,
+  updateType: 'server', // server: 服务器下载, market: 应用市场
+  markets: {
+    huawei: 'appmarket://details?id=com.qiannaqule.money',
+    xiaomi: 'https://app.mi.com/details?id=com.qiannaqule.money',
+    vivo: 'vivomarket://details?id=com.qiannaqule.money',
+    oppo: 'market://details?id=com.qiannaqule.money',
+    honor: 'market://details?id=com.qiannaqule.money'
+  }
+})
+
+const updateContentText = ref('')
+
+const rules = {
+  platform: [{ required: true, message: '请选择平台', trigger: 'change' }],
+  version: [
+    { required: true, message: '请输入版本号', trigger: 'blur' },
+    { pattern: /^\d+\.\d+\.\d+$/, message: '版本号格式不正确', trigger: 'blur' }
+  ],
+  updateContent: [
+    { 
+      required: true, 
+      validator: (rule, value, callback) => {
+        const content = updateContentText.value.trim()
+        if (!content) {
+          callback(new Error('请输入更新内容'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur' 
+    }
+  ],
+  packageSize: [
+    { 
+      required: true, 
+      validator: (rule, value, callback) => {
+        if (form.platform === 'Android' && !value) {
+          callback(new Error('请输入安装包大小'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur' 
+    }
+  ],
+  downloadUrl: [
+    { 
+      required: true, 
+      validator: (rule, value, callback) => {
+        if (form.platform === 'Android' && form.updateType === 'server' && !value) {
+          callback(new Error('请输入下载地址'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur' 
+    }
+  ]
+}
+
+const dialogTitle = computed(() => {
+  return isEdit.value ? '编辑版本' : '发布新版本'
+})
+
+const uploadUrl = computed(() => {
+  return 'https://api.qiannaqule.top/api/admin/upload-apk'
+})
+
+const qrcodeUploadUrl = computed(() => {
+  return 'https://api.qiannaqule.top/api/admin/upload-android-qrcode'
+})
+
+const uploadHeaders = computed(() => {
+  return {
+    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+  }
+})
+
+// 加载版本列表
+const loadVersions = async () => {
+  try {
+    const res = await request.get('/admin/app-versions')
+    if (res.success) {
+      androidVersions.value = res.data.filter(v => v.platform === 'Android')
+      iosVersions.value = res.data.filter(v => v.platform === 'iOS')
+    }
+  } catch (error) {
+    ElMessage.error('加载版本列表失败')
+  }
+}
+
+// 加载安卓二维码
+const loadAndroidQrcode = async () => {
+  try {
+    const res = await request.get('/admin/android-qrcode')
+    if (res.success && res.data.qrcodeUrl) {
+      androidQrcodeUrl.value = res.data.qrcodeUrl
+    }
+  } catch (error) {
+    // 静默处理错误，表不存在时不显示错误
+  }
+}
+
+// 显示添加对话框
+const showAddDialog = () => {
+  isEdit.value = false
+  resetForm()
+  form.platform = activePlatform.value
+  dialogVisible.value = true
+}
+
+// 编辑版本
+const handleEdit = (version) => {
+  isEdit.value = true
+  Object.assign(form, version)
+  updateContentText.value = version.updateContent.join('\n')
+  dialogVisible.value = true
+}
+
+// 删除版本
+const handleDelete = async (version) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除版本 ${version.version} 吗？`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const res = await request.delete(`/admin/app-versions/${version.id}`)
+    if (res.success) {
+      ElMessage.success('删除成功')
+      loadVersions()
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 切换强制更新
+const handleToggleForce = async (version) => {
+  try {
+    const res = await request.put(`/admin/app-versions/${version.id}/force`, {
+      isForce: !version.isForce
+    })
+    if (res.success) {
+      ElMessage.success('更新成功')
+      loadVersions()
+    }
+  } catch (error) {
+    ElMessage.error('更新失败')
+  }
+}
+
+// 提交表单
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate()
+    
+    // 处理更新内容
+    form.updateContent = updateContentText.value
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => line.trim())
+
+    if (form.updateContent.length === 0) {
+      ElMessage.error('请输入至少一条更新内容')
+      return
+    }
+
+    // iOS平台不需要下载地址和包大小
+    if (form.platform === 'iOS') {
+      form.downloadUrl = 'https://apps.apple.com'
+      form.packageSize = '-'
+      form.updateType = 'market'
+    }
+
+    // Android应用市场模式不需要下载地址
+    if (form.platform === 'Android' && form.updateType === 'market') {
+      form.downloadUrl = 'market'
+    }
+
+    submitting.value = true
+
+    const url = isEdit.value 
+      ? `/admin/app-versions/${form.id}` 
+      : '/admin/app-versions'
+    
+    const method = isEdit.value ? 'put' : 'post'
+    
+    const res = await request[method](url, form)
+    
+    if (res.success) {
+      ElMessage.success(isEdit.value ? '保存成功' : '发布成功')
+      dialogVisible.value = false
+      loadVersions()
+    }
+  } catch (error) {
+    if (error !== false) {
+      ElMessage.error(isEdit.value ? '保存失败' : '发布失败')
+    }
+  } finally {
+    submitting.value = false
+  }
+}
+
+// 重置表单
+const resetForm = () => {
+  Object.assign(form, {
+    id: null,
+    platform: 'Android',
+    version: '',
+    updateContent: [],
+    packageSize: '',
+    downloadUrl: '',
+    isForce: false,
+    updateType: 'server',
+    markets: {
+      huawei: 'appmarket://details?id=com.qiannaqule.money',
+      xiaomi: 'https://app.mi.com/details?id=com.qiannaqule.money',
+      vivo: 'vivomarket://details?id=com.qiannaqule.money',
+      oppo: 'market://details?id=com.qiannaqule.money',
+      honor: 'market://details?id=com.qiannaqule.money'
+    }
+  })
+  updateContentText.value = ''
+  formRef.value?.clearValidate()
+}
+
+// 上传前检查
+const beforeUpload = (file) => {
+  const isAPK = file.name.endsWith('.apk')
+  const isLt100M = file.size / 1024 / 1024 < 100
+
+  if (!isAPK) {
+    ElMessage.error('只能上传APK文件!')
+    return false
+  }
+  if (!isLt100M) {
+    ElMessage.error('APK文件大小不能超过100MB!')
+    return false
+  }
+  return true
+}
+
+// 上传成功
+const handleUploadSuccess = (response) => {
+  if (response.success) {
+    form.downloadUrl = response.url
+    form.packageSize = response.size
+    ElMessage.success('上传成功')
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+// 上传失败
+const handleUploadError = () => {
+  ElMessage.error('上传失败，请重试')
+}
+
+// 上传二维码前检查
+const beforeQrcodeUpload = (file) => {
+  const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)
+  const isLt5M = file.size / 1024 / 1024 < 5
+
+  if (!isImage) {
+    ElMessage.error('只能上传JPG或PNG图片!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB!')
+    return false
+  }
+  return true
+}
+
+// 二维码上传成功
+const handleQrcodeUploadSuccess = (response) => {
+  if (response.success) {
+    androidQrcodeUrl.value = response.url
+    ElMessage.success('二维码上传成功')
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+// 二维码上传失败
+const handleQrcodeUploadError = () => {
+  ElMessage.error('二维码上传失败，请重试')
+}
+
+onMounted(() => {
+  loadVersions()
+  loadAndroidQrcode()
+})
+</script>
+
+<style scoped>
+.app-version-container {
+  padding: 20px;
+}
+
+.header-card {
+  margin-bottom: 20px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: #303133;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #909399;
+}
+
+.platform-tabs {
+  background: white;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.upload-demo {
+  width: 100%;
+}
+
+.market-config-card {
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.market-config-card :deep(.el-card__body) {
+  padding-top: 0;
+}
+
+.qrcode-preview {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.qrcode-preview img {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  border: 1px solid #dcdfe6;
+}
+
+.qrcode-preview p {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
+}
+</style>
+
+
+// ========================================
+// 文件: admin/src/views/Bills.vue
+// ========================================
+	
+	/**
+	 * 根据分类名称获取分类ID
+	 * @param {String} categoryName - 分类名称
+	 * @param {String} type - 类型（expense/income）
+	 * @returns {Number} 分类ID
+	 */
+	getCategoryIdByName(categoryName, type) {
+		// 支出分类映射
+		const expenseCategories = {
+			'餐饮': 1,
+			'交通': 2,
+			'购物': 3,
+			'娱乐': 4,
+			'住房': 5,
+			'医疗': 6,
+			'通讯': 7,
+			'服饰': 8,
+			'美容': 9,
+			'学习': 10,
+			'社交': 11,
+			'零食': 13,
+			'数码': 14,
+			'家居': 15,
+			'汽车': 16,
+			'宠物': 17,
+			'其他': 12
+		}
+		
+		// 收入分类映射
+		const incomeCategories = {
+			'工资': 101,
+			'兼职': 102,
+			'奖金': 103,
+			'红包': 104,
+			'退款': 105,
+			'报销': 106,
+			'投资': 107,
+			'礼金': 109,
+			'出售': 110,
+			'其他': 108
+		}
+		
+		const categories = type === 'income' ? incomeCategories : expenseCategories
+		return categories[categoryName] || (type === 'income' ? 108 : 12)
+	}
+}
+
+// 导出单例
+export default new CloudbaseAI()
+
+
+// ========================================
+// 文件: utils/date.js
+// ========================================
+// 日期工具类
+
+// 格式化日期
+export function formatDate(date, format = 'YYYY-MM-DD') {
+	const d = new Date(date)
+	const year = d.getFullYear()
+	const month = String(d.getMonth() + 1).padStart(2, '0')
+	const day = String(d.getDate()).padStart(2, '0')
+	const hour = String(d.getHours()).padStart(2, '0')
+	const minute = String(d.getMinutes()).padStart(2, '0')
+	const second = String(d.getSeconds()).padStart(2, '0')
+	
+	return format
+		.replace('YYYY', year)
+		.replace('MM', month)
+		.replace('DD', day)
+		.replace('HH', hour)
+		.replace('mm', minute)
+		.replace('ss', second)
+}
+
+// 获取相对时间描述
+export function getRelativeTime(date) {
+	const d = new Date(date)
+	const now = new Date()
+	const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24))
+	
+	if (diff === 0) return '今天'
+	if (diff === 1) return '昨天'
+	if (diff === 2) return '前天'
+	if (diff < 7) return `${diff}天前`
+	if (diff < 30) return `${Math.floor(diff / 7)}周前`
+	if (diff < 365) return `${Math.floor(diff / 30)}月前`
+	return `${Math.floor(diff / 365)}年前`
+}
+
+// 解析自然语言日期
+export function parseNaturalDate(text) {
+	const now = new Date()
+	
+	if (text.includes('今天') || text.includes('今日')) {
+		return formatDate(now)
+	}
+	
+	if (text.includes('昨天') || text.includes('昨日')) {
+		const yesterday = new Date(now)
+		yesterday.setDate(yesterday.getDate() - 1)
+		return formatDate(yesterday)
+	}
+	
+	if (text.includes('前天')) {
+		const dayBefore = new Date(now)
+		dayBefore.setDate(dayBefore.getDate() - 2)
+		return formatDate(dayBefore)
+	}
+	
+	// 匹配具体日期格式
+	const dateMatch = text.match(/(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/)
+	if (dateMatch) {
+		const year = dateMatch[1]
+		const month = dateMatch[2].padStart(2, '0')
+		const day = dateMatch[3].padStart(2, '0')
+		return `${year}-${month}-${day}`
+	}
+	
+	return formatDate(now)
+}
+
+// 获取月份范围
+export function getMonthRange(year, month) {
+	const startDate = new Date(year, month - 1, 1)
+	const endDate = new Date(year, month, 0)
+	
+	return {
+		start: formatDate(startDate),
+		end: formatDate(endDate)
+	}
+}
+
+// 获取季度范围
+export function getQuarterRange(year, quarter) {
+	const startMonth = (quarter - 1) * 3
+	const endMonth = startMonth + 2
+	
+	const startDate = new Date(year, startMonth, 1)
+	const endDate = new Date(year, endMonth + 1, 0)
+	
+	return {
+		start: formatDate(startDate),
+		end: formatDate(endDate)
+	}
+}
+
+// 获取年份范围
+export function getYearRange(year) {
+	const startDate = new Date(year, 0, 1)
+	const endDate = new Date(year, 11, 31)
+	
+	return {
+		start: formatDate(startDate),
+		end: formatDate(endDate)
+	}
+}
+
+
+// ========================================
+// 文件: utils/excelExport.js
+// ========================================
+// Excel导出工具
+// 使用 xlsx 库生成Excel文件
+
+/**
+ * 导出账单为Excel
+ * @param {Array} bills - 账单数组
+ * @returns {Promise} - 返回文件路径
+ */
+export const exportBillsToExcel = async (bills) => {
+  // 由于小程序环境限制，我们使用云函数来生成Excel
+  // 这里先返回数据，由云函数处理
+  
+  // 准备数据
+  const data = bills.map(bill => ({
+    日期: bill.date,
+    类型: bill.type === 'income' ? '收入' : '支出',
+    分类: bill.categoryName || '其他',
+    商家备注: bill.merchant || '-',
+    金额: bill.type === 'income' ? bill.amount : -bill.amount
+  }))
+  
+  // 计算统计
+  const totalIncome = bills.filter(b => b.type === 'income').reduce((sum, b) => sum + b.amount, 0)
+  const totalExpense = bills.filter(b => b.type === 'expense').reduce((sum, b) => sum + b.amount, 0)
+  const balance = totalIncome - totalExpense
+  
+  return {
+    data,
+    summary: {
+      totalIncome,
+      totalExpense,
+      balance,
+      count: bills.length
+    }
+  }
+}
+
+
+// ========================================
+// 文件: utils/i18nHelper.js
+// ========================================
+// i18n 辅助函数
+import i18n from '../locale/index.js'
+
+/**
+ * 更新 tabBar 文字（解决 uni-app tabBar 不支持动态国际化的问题）
+ */
+export const updateTabBarText = () => {
+  try {
+    if (!i18n || !i18n.global) {
+      console.log('i18n 未初始化')
+      return
+    }
+    
+    const { t } = i18n.global
+    
+    uni.setTabBarItem({
+      index: 0,
+      text: t('tabbar.home')
+    })
+    
+    uni.setTabBarItem({
+      index: 1,
+      text: t('tabbar.bills')
+    })
+    
+    uni.setTabBarItem({
+      index: 2,
+      text: t('tabbar.statistics')
+    })
+    
+    uni.setTabBarItem({
+      index: 3,
+      text: t('tabbar.profile')
+    })
+  } catch (e) {
+    console.log('更新 tabBar 失败', e)
+  }
+}
+
+/**
+ * 获取当前语言
+ */
+export const getCurrentLanguage = () => {
+  return i18n.global.locale.value
+}
+
+/**
+ * 切换语言
+ */
+export const changeLanguage = (lang) => {
+  i18n.global.locale.value = lang
+  uni.setStorageSync('app_language', lang)
+  updateTabBarText()
+}
+
+/**
+ * 格式化货币
+ */
+export const formatCurrency = (amount) => {
+  const locale = getCurrentLanguage()
+  const symbol = locale === 'zh-CN' ? '¥' : '$'
+  return `${symbol}${amount.toFixed(2)}`
+}
+
+export default {
+  updateTabBarText,
+  getCurrentLanguage,
+  changeLanguage,
+  formatCurrency
+}
+
+
+// ========================================
+// 文件: utils/memberLevel.js
+// ========================================
+// 会员等级配置（简化版 - 纯展示，无实际权益）
+const MEMBER_LEVELS = [
+	{
+		level: 1,
+		name: '记账新手',
+		icon: 'Lv1',
+		color: '#95DE64',
+		gradient: 'linear-gradient(135deg, #95DE64 0%, #73D13D 100%)',
+		requiredPoints: 0,
+		desc: '开启记账之旅，迈出理财第一步'
+	},
+	{
+		level: 2,
+		name: '记账达人',
+		icon: 'Lv2',
+		color: '#73D13D',
+		gradient: 'linear-gradient(135deg, #73D13D 0%, #52C41A 100%)',
+		requiredPoints: 100,
+		desc: '坚持记账，养成良好习惯'
+	},
+	{
+		level: 3,
+		name: '理财能手',
+		icon: 'Lv3',
+		color: '#52C41A',
+		gradient: 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)',
+		requiredPoints: 300,
+		desc: '精打细算，收支清晰明了'
+	},
+	{
+		level: 4,
+		name: '财务专家',
+		icon: 'Lv4',
+		color: '#389E0D',
+		gradient: 'linear-gradient(135deg, #389E0D 0%, #237804 100%)',
+		requiredPoints: 600,
+		desc: '掌控财务，规划有条不紊'
+	},
+	{
+		level: 5,
+		name: '理财高手',
+		icon: 'Lv5',
+		color: '#237804',
+		gradient: 'linear-gradient(135deg, #237804 0%, #135200 100%)',
+		requiredPoints: 1000,
+		desc: '财富管理，游刃有余'
+	},
+	{
+		level: 6,
+		name: '记账大师',
+		icon: 'Lv6',
+		color: '#135200',
+		gradient: 'linear-gradient(135deg, #135200 0%, #092B00 100%)',
+		requiredPoints: 2000,
+		desc: '财务自由，人生赢家'
+	}
+]
+
+/**
+ * 根据积分计算会员等级
+ * @param {number} points - 用户积分
+ * @returns {object} 会员等级信息
+ */
+export const getMemberLevel = (points = 0) => {
+	// 从高到低遍历等级，找到第一个满足条件的等级
+	for (let i = MEMBER_LEVELS.length - 1; i >= 0; i--) {
+		const level = MEMBER_LEVELS[i]
+		if (points >= level.requiredPoints) {
+			return {
+				...level,
+				currentPoints: points,
+				// 计算到下一等级的进度
+				nextLevel: i < MEMBER_LEVELS.length - 1 ? MEMBER_LEVELS[i + 1] : null,
+				progress: calculateProgress(points, level, MEMBER_LEVELS[i + 1])
+			}
+		}
+	}
+	
+	// 默认返回第一级
+	return {
+		...MEMBER_LEVELS[0],
+		currentPoints: points,
+		nextLevel: MEMBER_LEVELS[1],
+		progress: calculateProgress(points, MEMBER_LEVELS[0], MEMBER_LEVELS[1])
+	}
+}
+
+/**
+ * 计算升级进度
+ * @param {number} points - 当前积分
+ * @param {object} currentLevel - 当前等级
+ * @param {object} nextLevel - 下一等级
+ * @returns {object} 进度信息
+ */
+const calculateProgress = (points, currentLevel, nextLevel) => {
+	if (!nextLevel) {
+		return {
+			pointsProgress: 100,
+			pointsNeeded: 0,
+			isMaxLevel: true
+		}
+	}
+	
+	// 计算积分进度
+	const pointsRange = nextLevel.requiredPoints - currentLevel.requiredPoints
+	const pointsGained = points - currentLevel.requiredPoints
+	const pointsProgress = pointsRange > 0 ? Math.min(Math.round((pointsGained / pointsRange) * 100), 100) : 100
+	const pointsNeeded = Math.max(nextLevel.requiredPoints - points, 0)
+	
+	return {
+		pointsProgress,
+		pointsNeeded,
+		isMaxLevel: false
+	}
+}
+
+/**
+ * 获取所有等级列表
+ * @returns {array} 等级列表
+ */
+export const getAllLevels = () => {
+	return MEMBER_LEVELS
+}
+
+/**
+ * 检查是否升级
+ * @param {number} oldPoints - 旧积分
+ * @param {number} newPoints - 新积分
+ * @returns {object|null} 如果升级返回新等级信息，否则返回null
+ */
+export const checkLevelUp = (oldPoints, newPoints) => {
+	const oldLevel = getMemberLevel(oldPoints)
+	const newLevel = getMemberLevel(newPoints)
+	
+	if (newLevel.level > oldLevel.level) {
+		return {
+			oldLevel,
+			newLevel,
+			isLevelUp: true
+		}
+	}
+	
+	return null
+}
+
+export default {
+	getMemberLevel,
+	getAllLevels,
+	checkLevelUp,
+	MEMBER_LEVELS
+}
+
+
+// ========================================
+// 文件: utils/platform.js
+// ========================================
+// 平台判断工具
+import request from './request.js'
+
+export const isWeixin = () => {
+	// #ifdef MP-WEIXIN
+	return true
+	// #endif
+	// #ifndef MP-WEIXIN
+	return false
+	// #endif
+}
+
+export const isApp = () => {
+	// #ifdef APP-PLUS
+	return true
+	// #endif
+	// #ifndef APP-PLUS
+	return false
+	// #endif
+}
+
+export const isH5 = () => {
+	// #ifdef H5
+	return true
+	// #endif
+	// #ifndef H5
+	return false
+	// #endif
+}
+
+// 获取平台名称
+export const getPlatform = () => {
+	// #ifdef MP-WEIXIN
+	return 'weixin'
+	// #endif
+	// #ifdef APP-PLUS
+	return 'app'
+	// #endif
+	// #ifdef H5
+	return 'h5'
+	// #endif
+	return 'unknown'
+}
+
+// 上传图片（兼容不同平台）
+export const uploadImage = async (tempFilePath) => {
+	// #ifdef MP-WEIXIN
+	// 小程序使用云存储
+	return new Promise((resolve, reject) => {
+		const cloudPath = `ocr/${Date.now()}-${Math.random().toString(36).substr(2)}.jpg`
+		wx.cloud.uploadFile({
+			cloudPath: cloudPath,
+			filePath: tempFilePath,
+			success: (res) => {
+				resolve(res.fileID)
+			},
+			fail: reject
+		})
+	})
+	// #endif
+	
+	// #ifdef APP-PLUS
+	// APP端直接返回本地路径，后续直接读取
+	return Promise.resolve(tempFilePath)
+	// #endif
+	
+	// #ifdef H5
+	// H5端上传到服务器
+	const result = await request.uploadFile(tempFilePath, `ocr/${Date.now()}.jpg`)
+	return result.url
+	// #endif
+}
+
+// 语音识别（兼容不同平台）
+export const recognizeVoice = async (tempFilePath, duration) => {
+	// #ifdef MP-WEIXIN
+	// 小程序使用云函数
+	const cloudPath = `voice/${Date.now()}-${Math.random().toString(36).substr(2)}.mp3`
+	const uploadRes = await wx.cloud.uploadFile({
+		cloudPath: cloudPath,
+		filePath: tempFilePath
+	})
+	
+	const result = await wx.cloud.callFunction({
+		name: 'baiduASR',
+		data: {
+			fileID: uploadRes.fileID,
+			duration: duration
+		}
+	})
+	
+	return result.result
+	// #endif
+	
+	// #ifdef APP-PLUS
+	// APP端直接调用百度API
+	return request.call('baiduASR', {
+		filePath: tempFilePath,
+		duration: duration
+	})
+	// #endif
+}
+
+export default {
+	isWeixin,
+	isApp,
+	isH5,
+	getPlatform,
+	uploadImage,
+	recognizeVoice
+}
+
+
+// ========================================
+// 文件: utils/pointsRules.js
+// ========================================
+// 积分获取规则配置
+import { addPointsHybrid } from './pointsSync.js'
+
+const POINTS_RULES = {
+	// 记账换算规则
+	recordConversion: {
+		pointsPerRecord: 2, // 每记一笔账获得2积分
+		desc: '每记一笔账可获得2积分'
+	},
+	
+	// 春节活动
+	festivalTasks: {
+		grabRedPacket: {
+			name: '抢红包',
+			points: '1-10',
+			icon: '🧧',
+			desc: '红包雨抢红包随机获得1-10积分'
+		}
+	},
+	
+	// 成就任务（纯荣誉展示，不给积分）
+	achievementTasks: {
+		record10: {
+			name: '记账新手',
+			icon: '🎯',
+			desc: '累计记账10笔',
+			target: 10,
+			key: 'achievement_record10'
+		},
+		record50: {
+			name: '记账达人',
+			icon: '🏆',
+			desc: '累计记账50笔',
+			target: 50,
+			key: 'achievement_record50'
+		},
+		record100: {
+			name: '记账专家',
+			icon: '💎',
+			desc: '累计记账100笔',
+			target: 100,
+			key: 'achievement_record100'
+		},
+		record500: {
+			name: '记账大师',
+			icon: '👑',
+			desc: '累计记账500笔',
+			target: 500,
+			key: 'achievement_record500'
+		},
+		continuous7: {
+			name: '坚持一周',
+			icon: '📅',
+			desc: '连续记账7天',
+			target: 7,
+			key: 'achievement_continuous7'
+		},
+		continuous30: {
+			name: '坚持一月',
+			icon: '🌙',
+			desc: '连续记账30天',
+			target: 30,
+			key: 'achievement_continuous30'
+		},
+		continuous100: {
+			name: '百日坚持',
+			icon: '⭐',
+			desc: '连续记账100天',
+			target: 100,
+			key: 'achievement_continuous100'
+		}
+	},
+	
+	// 特殊任务（一次性奖励）
+	specialTasks: {
+		setBudget: {
+			name: '设置预算',
+			points: 5,
+			icon: '💰',
+			desc: '首次设置月预算可获得5积分',
+			limit: 1,
+			key: 'setBudget'
+		},
+		setReminder: {
+			name: '设置提醒',
+			points: 5,
+			icon: '⏰',
+			desc: '设置记账提醒可获得5积分',
+			limit: 1,
+			key: 'setReminder'
+		}
+	}
+}
+
+/**
+ * 检查成就任务是否已完成
+ * @param {string} taskKey - 任务key
+ * @returns {boolean}
+ */
+const isAchievementCompleted = (taskKey) => {
+	return uni.getStorageSync(taskKey) === true
+}
+
+/**
+ * 标记成就任务为已完成
+ * @param {string} taskKey - 任务key
+ */
+const markAchievementCompleted = (taskKey) => {
+	uni.setStorageSync(taskKey, true)
+}
+
+/**
+ * 添加积分（混合模式：本地+云端）
+ * @param {number} points - 积分数量
+ * @param {string} reason - 获得原因
+ * @returns {object} 结果信息
+ */
+const addPoints = async (points, reason = '') => {
+	// 使用混合模式添加积分
+	return await addPointsHybrid(points, reason)
+}
+
+/**
+ * 记账奖励（每笔2积分）
+ * @returns {Promise<object>}
+ */
+export const rewardRecord = async () => {
+	const recordPoints = POINTS_RULES.recordConversion.pointsPerRecord
+	return await addPoints(recordPoints, '记账')
+}
+
+/**
+ * 抢红包奖励（已在抢红包逻辑中处理）
+ * @param {number} points - 获得的积分
+ * @returns {Promise<object>}
+ */
+export const rewardGrabRedPacket = async (points) => {
+	return await addPoints(points, '抢红包')
+}
+
+/**
+ * 分享给好友奖励
+ * @returns {Promise<null>}
+ */
+export const rewardShareToFriend = async () => {
+	// 分享功能暂未配置积分奖励
+	return null
+}
+
+/**
+ * 分享到朋友圈奖励
+ * @returns {Promise<null>}
+ */
+export const rewardShareToTimeline = async () => {
+	// 分享功能暂未配置积分奖励
+	return null
+}
+
+/**
+ * 邀请好友奖励
+ * @returns {Promise<null>}
+ */
+export const rewardInviteFriend = async () => {
+	// 邀请功能暂未配置积分奖励
+	return null
+}
+
+/**
+ * 检查并解锁记账成就（不给积分，纯荣誉）
+ * @param {number} totalBills - 总记账笔数
+ * @returns {Promise<array>} 解锁的成就列表
+ */
+export const checkRecordAchievements = async (totalBills) => {
+	const achievements = []
+	const tasks = POINTS_RULES.achievementTasks
+	
+	// 检查记账笔数成就
+	const recordTasks = [tasks.record10, tasks.record50, tasks.record100, tasks.record500]
+	for (const task of recordTasks) {
+		if (totalBills >= task.target && !isAchievementCompleted(task.key)) {
+			markAchievementCompleted(task.key)
+			achievements.push({
+				...task,
+				unlocked: true
+			})
+		}
+	}
+	
+	return achievements
+}
+
+/**
+ * 检查并解锁连续记账成就（不给积分，纯荣誉）
+ * @param {number} continuousDays - 连续记账天数
+ * @returns {Promise<array>} 解锁的成就列表
+ */
+export const checkContinuousAchievements = async (continuousDays) => {
+	const achievements = []
+	const tasks = POINTS_RULES.achievementTasks
+	
+	// 检查连续记账成就
+	const continuousTasks = [tasks.continuous7, tasks.continuous30, tasks.continuous100]
+	for (const task of continuousTasks) {
+		if (continuousDays >= task.target && !isAchievementCompleted(task.key)) {
+			markAchievementCompleted(task.key)
+			achievements.push({
+				...task,
+				unlocked: true
+			})
+		}
+	}
+	
+	return achievements
+}
+
+/**
+ * 设置预算奖励
+ * @returns {Promise<object|null>}
+ */
+export const rewardSetBudget = async () => {
+	const task = POINTS_RULES.specialTasks.setBudget
+	if (!isAchievementCompleted(task.key)) {
+		markAchievementCompleted(task.key)
+		return await addPoints(task.points, task.name)
+	}
+	return null
+}
+
+/**
+ * 设置提醒奖励
+ * @returns {Promise<object|null>}
+ */
+export const rewardSetReminder = async () => {
+	const task = POINTS_RULES.specialTasks.setReminder
+	if (!isAchievementCompleted(task.key)) {
+		markAchievementCompleted(task.key)
+		return await addPoints(task.points, task.name)
+	}
+	return null
+}
+
+/**
+ * 获取所有积分规则
+ * @returns {object}
+ */
+export const getAllPointsRules = () => {
+	return POINTS_RULES
+}
+
+/**
+ * 获取积分历史记录
+ * @returns {array}
+ */
+export const getPointsHistory = () => {
+	return uni.getStorageSync('pointsHistory') || []
+}
+
+/**
+ * 获取今日已完成的任务
+ * @returns {object}
+ */
+export const getTodayCompletedTasks = () => {
+	// 简化后只需要记录抢红包次数
+	const grabRedPacketCount = uni.getStorageSync('todayGrabCount') || 0
+	
+	return {
+		grabRedPacket: grabRedPacketCount
+	}
+}
+
+export default {
+	POINTS_RULES,
+	rewardRecord,
+	rewardGrabRedPacket,
+	checkRecordAchievements,
+	checkContinuousAchievements,
+	rewardSetBudget,
+	rewardSetReminder,
+	getAllPointsRules,
+	getPointsHistory,
+	getTodayCompletedTasks
+}
+
+
+// ========================================
+// 文件: utils/pointsSync.js
+// ========================================
+// 积分云端同步管理
+import { checkLevelUp } from './memberLevel.js'
+import request from './request.js'
+
+/**
+ * 从云端获取积分
+ * @returns {Promise<number>}
+ */
+export const getPointsFromCloud = async () => {
+	try {
+		const res = await request.call('billManager', {
+			action: 'getPoints'
+		})
+		
+		if (res.success) {
+			return res.points || 0
+		}
+		return 0
+	} catch (error) {
+		console.error('获取云端积分失败:', error)
+		return 0
+	}
+}
+
+/**
+ * 添加积分到云端
+ * @param {number} points - 积分数量
+ * @param {string} reason - 获得原因
+ * @param {object} metadata - 额外元数据
+ * @returns {Promise<object>}
+ */
+export const addPointsToCloud = async (points, reason, metadata = {}) => {
+	try {
+		const res = await request.call('billManager', {
+			action: 'addPoints',
+			data: {
+				points,
+				reason,
+				metadata
+			}
+		})
+		
+		if (res.success) {
+			return {
+				success: true,
+				totalPoints: res.points,
+				addedPoints: res.addedPoints
+			}
+		}
+		return { success: false }
+	} catch (error) {
+		console.error('添加云端积分失败:', error)
+		return { success: false, error }
+	}
+}
+
+/**
+ * 同步本地积分到云端
+ * @returns {Promise<boolean>}
+ */
+export const syncPointsToCloud = async () => {
+	try {
+		const localPoints = uni.getStorageSync('userPoints') || 0
+		const pointsHistory = uni.getStorageSync('pointsHistory') || []
+		
+		const res = await request.call('billManager', {
+			action: 'syncPoints',
+			data: {
+				totalPoints: localPoints,
+				pointsHistory: pointsHistory
+			}
+		})
+		
+		return res.success
+	} catch (error) {
+		console.error('同步积分到云端失败:', error)
+		return false
+	}
+}
+
+/**
+ * 从云端拉取积分并更新本地
+ * @returns {Promise<object>}
+ */
+export const pullPointsFromCloud = async () => {
+	try {
+		const res = await request.call('billManager', {
+			action: 'getPoints'
+		})
+		
+		if (res.success) {
+			const cloudPoints = res.points || 0
+			const localPoints = uni.getStorageSync('userPoints') || 0
+			
+			// 使用云端数据（云端为准）
+			uni.setStorageSync('userPoints', cloudPoints)
+			
+			// 检查是否升级
+			let levelUpInfo = checkLevelUp(localPoints, cloudPoints)
+			
+			// 如果升级了，检查是否已经提示过这个等级
+			if (levelUpInfo && levelUpInfo.isLevelUp) {
+				const notifiedLevel = uni.getStorageSync('notifiedLevel') || 0
+				const newLevel = levelUpInfo.newLevel.level
+				
+				// 如果已经提示过这个等级，不再提示
+				if (notifiedLevel >= newLevel) {
+					console.log('该等级已提示过，不再重复提示')
+					levelUpInfo = null
+				} else {
+					// 记录已提示的等级
+					uni.setStorageSync('notifiedLevel', newLevel)
+					console.log('首次升级到等级', newLevel, '，显示提示')
+				}
+			}
+			
+			console.log('从云端拉取积分成功:', cloudPoints)
+			
+			return {
+				success: true,
+				points: cloudPoints,
+				levelUpInfo
+			}
+		}
+		
+		console.error('从云端拉取积分失败:', res)
+		return { success: false }
+	} catch (error) {
+		console.error('拉取云端积分失败:', error)
+		return { success: false, error }
+	}
+}
+
+/**
+ * 获取积分历史记录
+ * @param {number} limit - 限制数量
+ * @param {number} skip - 跳过数量
+ * @returns {Promise<array>}
+ */
+export const getPointsHistoryFromCloud = async (limit = 50, skip = 0) => {
+	try {
+		const res = await request.call('billManager', {
+			action: 'getPointsHistory',
+			data: { limit, skip }
+		})
+		
+		if (res.success) {
+			return res.data || []
+		}
+		return []
+	} catch (error) {
+		console.error('获取积分历史失败:', error)
+		return []
+	}
+}
+
+/**
+ * 混合模式：添加积分（本地+云端）
+ * @param {number} points - 积分数量
+ * @param {string} reason - 获得原因
+ * @returns {Promise<object>}
+ */
+export const addPointsHybrid = async (points, reason) => {
+	// 1. 立即更新本地（快速响应）
+	let currentPoints = uni.getStorageSync('userPoints') || 0
+	const oldPoints = currentPoints
+	currentPoints += points
+	uni.setStorageSync('userPoints', currentPoints)
+	
+	// 记录本地历史
+	let pointsHistory = uni.getStorageSync('pointsHistory') || []
+	pointsHistory.unshift({
+		points: points,
+		reason: reason,
+		timestamp: Date.now(),
+		totalPoints: currentPoints
+	})
+	if (pointsHistory.length > 100) {
+		pointsHistory = pointsHistory.slice(0, 100)
+	}
+	uni.setStorageSync('pointsHistory', pointsHistory)
+	
+	// 2. 异步同步到云端（不阻塞用户操作）
+	addPointsToCloud(points, reason).catch(err => {
+		console.error('云端同步失败，但本地已保存:', err)
+	})
+	
+	// 3. 检查升级
+	const levelUpInfo = checkLevelUp(oldPoints, currentPoints)
+	
+	// 如果升级了，保存到本地存储，等待在"我的"页面显示
+	if (levelUpInfo && levelUpInfo.isLevelUp) {
+		uni.setStorageSync('pendingLevelUp', levelUpInfo)
+	}
+	
+	return {
+		success: true,
+		oldPoints,
+		newPoints: currentPoints,
+		addedPoints: points,
+		reason,
+		levelUpInfo
+	}
+}
+
+/**
+ * 初始化积分（页面加载时调用）
+ * 先显示本地，后台拉取云端
+ * @returns {Promise<object>}
+ */
+export const initPoints = async () => {
+	// 1. 先返回本地积分（快速显示）
+	const localPoints = uni.getStorageSync('userPoints') || 0
+	
+	// 2. 后台从云端拉取最新数据（静默同步，不显示升级提示）
+	pullPointsFromCloud().then(result => {
+		if (result.success && result.levelUpInfo && result.levelUpInfo.isLevelUp) {
+			// 如果升级了，保存到本地存储，等待在"我的"页面显示
+			uni.setStorageSync('pendingLevelUp', result.levelUpInfo)
+		}
+	}).catch(err => {
+		console.error('后台拉取积分失败:', err)
+	})
+	
+	return {
+		points: localPoints,
+		fromCache: true
+	}
+}
+
+export default {
+	getPointsFromCloud,
+	addPointsToCloud,
+	syncPointsToCloud,
+	pullPointsFromCloud,
+	getPointsHistoryFromCloud,
+	addPointsHybrid,
+	initPoints
+}
+
+
+// ========================================
+// 文件: utils/request.js
+// ========================================
+// 统一请求封装 - 统一使用Node.js后端API
+import apiConfig from './apiConfig.js'
+import security from './security.js'
+
+// 是否启用加密（可以通过配置控制）
+const ENABLE_ENCRYPTION = false // 设置为 true 启用加密
+
+class Request {
+	/**
+	 * 调用HTTP API
+	 * @param {String} path - API路径
+	 * @param {Object} data - 请求数据
+	 * @param {String} method - 请求方法，默认POST
+	 */
+	async call(path, data = {}, method = 'POST') {
+		return this.callHttpApi(path, data, method)
+	}
+	
+	/**
+	 * 调用HTTP API
+	 */
+	async callHttpApi(path, data, method = 'POST') {
+		return new Promise((resolve, reject) => {
+			const token = uni.getStorageSync('token') || ''
+			
+			const headers = {
+				'Content-Type': 'application/json'
+			}
+			
+			// 只有在有 token 时才添加 Authorization 头
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`
+			}
+			
+			// 处理加密
+			let requestData = data
+			if (ENABLE_ENCRYPTION) {
+				headers['X-Encrypted'] = 'true'
+				requestData = security.encryptRequest(data)
+			}
+			
+			uni.request({
+				url: `${apiConfig.apiBaseUrl}/${path}`,
+				method: method,
+				data: requestData,
+				header: headers,
+				timeout: 10000, // 10秒超时
+				success: (res) => {
+					if (res.statusCode === 200) {
+						let responseData = res.data
+						
+						// 处理加密响应
+						if (ENABLE_ENCRYPTION && responseData.encrypted) {
+							try {
+								responseData = security.decryptResponse(responseData.data)
+							} catch (error) {
+								console.error('响应解密失败:', error)
+								reject(new Error('响应解密失败'))
+								return
+							}
+						}
+						
+						resolve(responseData)
+					} else {
+						console.error(`API请求失败 [${path}]:`, res)
+						reject(new Error(res.data?.message || '请求失败'))
+					}
+				},
+				fail: (err) => {
+					console.error(`API请求异常 [${path}]:`, err)
+					reject(err)
+				}
+			})
+		})
+	}
+	
+	/**
+	 * 上传文件
+	 */
+	async uploadFile(filePath) {
+			return new Promise((resolve, reject) => {
+				const token = uni.getStorageSync('token') || ''
+
+				const headers = {}
+
+				// 只有在有 token 时才添加 Authorization 头
+				if (token) {
+					headers['Authorization'] = `Bearer ${token}`
+				}
+
+				// APP端需要转换文件路径为绝对路径
+				let uploadPath = filePath
+
+				// #ifdef APP-PLUS
+				// 如果是相对路径，转换为绝对路径
+				if (!filePath.startsWith('/') && !filePath.startsWith('file://')) {
+					// 获取临时文件目录
+					uploadPath = plus.io.convertLocalFileSystemURL(filePath)
+				}
+				// #endif
+
+				uni.uploadFile({
+					url: `${apiConfig.apiBaseUrl}/upload`,
+					filePath: uploadPath,
+					name: 'file',
+					header: headers,
+					success: (res) => {
+						try {
+							const data = JSON.parse(res.data)
+							resolve(data)
+						} catch (error) {
+							console.error('📤 [上传] JSON解析失败:', error)
+							reject(new Error('响应数据解析失败'))
+						}
+					},
+					fail: (err) => {
+						console.error('📤 [上传] 上传失败:', err)
+						reject(new Error('文件上传失败：' + (err.errMsg || '网络错误')))
+					}
+				})
+			})
+		}
+}
+
+export default new Request()
+
+
+// ========================================
+// 文件: utils/security.js
+// ========================================
+// 安全加密工具（uni-app 版本）
+
+// 加密密钥（生产环境应该从配置文件读取）
+const AES_KEY = 'qiannaqule2024!@#$%^&*()_+key'
+const SIGN_KEY = 'qiannaqule2024!@#$%^&*()_+sign'
+
+/**
+ * MD5 加密（简化版）
+ */
+function md5(str) {
+	// uni-app 环境下使用 uni.md5 或引入第三方库
+	// 这里使用简单的哈希算法作为示例
+	let hash = 0
+	for (let i = 0; i < str.length; i++) {
+		const char = str.charCodeAt(i)
+		hash = ((hash << 5) - hash) + char
+		hash = hash & hash
+	}
+	return Math.abs(hash).toString(16)
+}
+
+/**
+ * Base64 编码
+ */
+function base64Encode(str) {
+	return uni.base64Encode(str)
+}
+
+/**
+ * Base64 解码
+ */
+function base64Decode(str) {
+	return uni.base64Decode(str)
+}
+
+/**
+ * 简单加密（XOR + Base64）
+ */
+export function encrypt(data) {
+	const jsonStr = JSON.stringify(data)
+	let encrypted = ''
+	
+	for (let i = 0; i < jsonStr.length; i++) {
+		const charCode = jsonStr.charCodeAt(i) ^ AES_KEY.charCodeAt(i % AES_KEY.length)
+		encrypted += String.fromCharCode(charCode)
+	}
+	
+	return base64Encode(encrypted)
+}
+
+/**
+ * 简单解密（XOR + Base64）
+ */
+export function decrypt(encryptedData) {
+	const decoded = base64Decode(encryptedData)
+	let decrypted = ''
+	
+	for (let i = 0; i < decoded.length; i++) {
+		const charCode = decoded.charCodeAt(i) ^ AES_KEY.charCodeAt(i % AES_KEY.length)
+		decrypted += String.fromCharCode(charCode)
+	}
+	
+	return JSON.parse(decrypted)
+}
+
+/**
+ * 生成签名
+ * @param {Object} data - 请求数据
+ * @param {Number} timestamp - 时间戳
+ */
+export function generateSign(data, timestamp) {
+	// 将数据按 key 排序
+	const keys = Object.keys(data).sort()
+	const sortedData = {}
+	keys.forEach(key => {
+		sortedData[key] = data[key]
+	})
+	
+	// 拼接字符串：data + timestamp + key
+	const str = JSON.stringify(sortedData) + timestamp + SIGN_KEY
+	
+	// 生成签名
+	const sign = md5(str)
+	return sign
+}
+
+/**
+ * 验证签名
+ */
+export function verifySign(data, timestamp, sign) {
+	const expectedSign = generateSign(data, timestamp)
+	return sign === expectedSign
+}
+
+/**
+ * 验证时间戳（5分钟内有效）
+ */
+export function verifyTimestamp(timestamp) {
+	const now = Date.now()
+	const diff = Math.abs(now - timestamp)
+	const maxDiff = 5 * 60 * 1000 // 5分钟
+	return diff < maxDiff
+}
+
+/**
+ * 加密请求数据
+ */
+export function encryptRequest(data) {
+	const timestamp = Date.now()
+	const sign = generateSign(data, timestamp)
+	const encryptedData = encrypt(data)
+	
+	return {
+		data: encryptedData,
+		timestamp,
+		sign
+	}
+}
+
+/**
+ * 解密响应数据
+ */
+export function decryptResponse(encryptedData) {
+	return decrypt(encryptedData)
+}
+
+export default {
+	encrypt,
+	decrypt,
+	generateSign,
+	verifySign,
+	verifyTimestamp,
+	encryptRequest,
+	decryptResponse
+}
+
+
+// ========================================
+// 文件: utils/voice.js
+// ========================================
+// 语音识别工具类 - 跨平台支持
+
+/**
+ * 统一的语音识别接口
+ * 根据不同平台自动选择合适的语音识别方案
+ */
+class VoiceRecognition {
+	constructor() {
+		this.isRecording = false
+		this.recorderManager = null
+		this.initPlatform()
+	}
+	
+	// 初始化平台
+	initPlatform() {
+		// #ifdef MP-WEIXIN
+		this.platform = 'weixin'
+		this.recorderManager = uni.getRecorderManager()
+		// #endif
+		
+		// #ifdef APP-PLUS
+		this.platform = 'app'
+		// 可以在这里初始化APP端的语音识别插件
+		// #endif
+		
+		// #ifdef H5
+		this.platform = 'h5'
+		// H5端可以使用Web Speech API
+		// #endif
+	}
+	
+	// 开始录音
+	startRecord(options = {}) {
+		return new Promise((resolve, reject) => {
+			// #ifdef MP-WEIXIN
+			this.recorderManager.start({
+				duration: options.duration || 60000,
+				format: 'mp3'
+			})
+			this.isRecording = true
+			resolve()
+			// #endif
+			
+			// #ifdef APP-PLUS
+			// 使用讯飞语音识别插件
+			// const speech = uni.requireNativePlugin('speech-recognition')
+			// speech.start({
+			//   engine: 'iFly',
+			//   success: resolve,
+			//   fail: reject
+			// })
+			
+			// 临时方案：使用录音机
+			this.recorderManager = uni.getRecorderManager()
+			this.recorderManager.start({
+				duration: options.duration || 60000,
+				format: 'mp3'
+			})
+			this.isRecording = true
+			resolve()
+			// #endif
+			
+			// #ifdef H5
+			// H5端使用Web Speech API
+			if ('webkitSpeechRecognition' in window) {
+				const recognition = new webkitSpeechRecognition()
+				recognition.lang = 'zh-CN'
+				recognition.start()
+				recognition.onresult = (event) => {
+					const result = event.results[0][0].transcript
+					resolve({ result })
+				}
+				recognition.onerror = reject
+			} else {
+				reject(new Error('浏览器不支持语音识别'))
+			}
+			// #endif
+		})
+	}
+	
+	// 停止录音
+	stopRecord() {
+		return new Promise((resolve, reject) => {
+			if (!this.isRecording) {
+				reject(new Error('未在录音中'))
+				return
+			}
+			
+			// #ifdef MP-WEIXIN
+			this.recorderManager.stop()
+			this.recorderManager.onStop((res) => {
+				this.isRecording = false
+				resolve(res)
+			})
+			// #endif
+			
+			// #ifdef APP-PLUS
+			this.recorderManager.stop()
+			this.recorderManager.onStop((res) => {
+				this.isRecording = false
+				resolve(res)
+			})
+			// #endif
+		})
+	}
+	
+	// 语音转文字（调用云函数或第三方API）
+	async voiceToText(filePath) {
+		// #ifdef MP-WEIXIN
+		// 微信小程序可以使用云函数
+		try {
+			const res = await wx.cloud.callFunction({
+				name: 'voiceRecognize',
+				data: { filePath }
+			})
+			return res.result.text
+		} catch (error) {
+			console.error('语音识别失败:', error)
+			throw error
+		}
+		// #endif
+		
+		// #ifdef APP-PLUS
+		// APP端调用第三方API（如讯飞、百度）
+		// 这里需要配置具体的API
+		return this.callBaiduASR(filePath)
+		// #endif
+	}
+	
+	// 调用百度语音识别API（APP端使用）
+	async callBaiduASR(filePath) {
+		// 这里实现百度语音识别API调用
+		// 需要配置百度语音识别的API Key和Secret Key
+		const API_KEY = 'YOUR_BAIDU_ASR_API_KEY'
+		const SECRET_KEY = 'YOUR_BAIDU_ASR_SECRET_KEY'
+		
+		// 1. 获取access_token
+		// 2. 上传音频文件
+		// 3. 调用识别接口
+		// 4. 返回识别结果
+		
+		throw new Error('百度语音识别API未配置')
+	}
+}
+
+export default new VoiceRecognition()
+

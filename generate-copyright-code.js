@@ -2,7 +2,7 @@
 
 /**
  * 软著代码生成脚本
- * 生成前60页和后60页的代码文档
+ * 生成60页的代码文档（前30页+后30页合并）
  */
 
 const fs = require('fs');
@@ -12,9 +12,8 @@ const path = require('path');
 const CONFIG = {
   // 每页行数（软著要求每页50行）
   linesPerPage: 50,
-  // 需要的页数
-  frontPages: 60,
-  backPages: 60,
+  // 需要的页数（合并后总共60页）
+  totalPages: 60,
   // 输出目录
   outputDir: './软著代码',
   // 需要包含的文件扩展名
@@ -87,89 +86,62 @@ function readFileWithHeader(filePath, startLine = 1) {
   };
 }
 
-// 生成代码文档
-function generateCodeDocument(files, startFromBeginning = true) {
+// 生成代码文档（前30页+后30页）
+function generateCodeDocument(files) {
   const result = [];
-  let currentLine = 0;
-  const totalLines = startFromBeginning 
-    ? CONFIG.frontPages * CONFIG.linesPerPage 
-    : CONFIG.backPages * CONFIG.linesPerPage;
+  const totalLines = CONFIG.totalPages * CONFIG.linesPerPage; // 60页 * 50行 = 3000行
+  const halfLines = totalLines / 2; // 1500行
   
-  if (startFromBeginning) {
-    // 前60页：从头开始
-    for (const file of files) {
-      if (currentLine >= totalLines) break;
-      
-      const fileData = readFileWithHeader(file);
-      
-      // 添加文件头注释
-      result.push(`// ========================================`);
-      result.push(`// 文件: ${fileData.path}`);
-      result.push(`// ========================================`);
-      currentLine += 3;
-      
-      // 添加文件内容
-      for (let i = 0; i < fileData.lines.length && currentLine < totalLines; i++) {
-        result.push(fileData.lines[i]);
-        currentLine++;
-      }
-      
-      // 添加空行分隔
-      if (currentLine < totalLines) {
-        result.push('');
-        currentLine++;
-      }
-    }
-  } else {
-    // 后60页：从末尾倒推
-    const allLines = [];
+  // 第一部分：前30页（从头开始取1500行）
+  let currentLine = 0;
+  for (const file of files) {
+    if (currentLine >= halfLines) break;
     
-    // 收集所有文件的所有行
-    for (const file of files) {
-      const fileData = readFileWithHeader(file);
-      allLines.push(`// ========================================`);
-      allLines.push(`// 文件: ${fileData.path}`);
-      allLines.push(`// ========================================`);
-      allLines.push(...fileData.lines);
-      allLines.push('');
+    const fileData = readFileWithHeader(file);
+    
+    // 添加文件头注释
+    result.push(`// ========================================`);
+    result.push(`// 文件: ${fileData.path}`);
+    result.push(`// ========================================`);
+    currentLine += 3;
+    
+    // 添加文件内容
+    for (let i = 0; i < fileData.lines.length && currentLine < halfLines; i++) {
+      result.push(fileData.lines[i]);
+      currentLine++;
     }
     
-    // 取最后的行数
-    const startIndex = Math.max(0, allLines.length - totalLines);
-    return allLines.slice(startIndex);
+    // 添加空行分隔
+    if (currentLine < halfLines) {
+      result.push('');
+      currentLine++;
+    }
   }
   
-  return result;
+  // 第二部分：后30页（从末尾倒推取1500行）
+  const allLines = [];
+  
+  // 收集所有文件的所有行
+  for (const file of files) {
+    const fileData = readFileWithHeader(file);
+    allLines.push(`// ========================================`);
+    allLines.push(`// 文件: ${fileData.path}`);
+    allLines.push(`// ========================================`);
+    allLines.push(...fileData.lines);
+    allLines.push('');
+  }
+  
+  // 取最后1500行
+  const startIndex = Math.max(0, allLines.length - halfLines);
+  const backLines = allLines.slice(startIndex);
+  
+  // 合并前后两部分
+  return [...result, ...backLines];
 }
 
-// 格式化输出（添加页码和行号）
-function formatOutput(lines, isBack = false) {
-  const result = [];
-  const totalPages = Math.ceil(lines.length / CONFIG.linesPerPage);
-  
-  for (let page = 0; page < totalPages; page++) {
-    const pageNumber = isBack 
-      ? `第 ${totalPages - page} 页（共 ${CONFIG.backPages} 页）`
-      : `第 ${page + 1} 页（共 ${CONFIG.frontPages} 页）`;
-    
-    result.push(`${'='.repeat(80)}`);
-    result.push(`${pageNumber.padStart(40 + pageNumber.length / 2)}`);
-    result.push(`${'='.repeat(80)}`);
-    result.push('');
-    
-    const startLine = page * CONFIG.linesPerPage;
-    const endLine = Math.min(startLine + CONFIG.linesPerPage, lines.length);
-    
-    for (let i = startLine; i < endLine; i++) {
-      const lineNumber = String(i + 1).padStart(4, ' ');
-      result.push(`${lineNumber} | ${lines[i]}`);
-    }
-    
-    result.push('');
-    result.push('');
-  }
-  
-  return result.join('\n');
+// 格式化输出（不添加页码和行号，纯代码）
+function formatOutput(lines) {
+  return lines.join('\n');
 }
 
 // 主函数
@@ -195,49 +167,66 @@ function main() {
   ];
   console.log(`   优先文件: ${sortedFiles.filter(f => priorityFilesSet.has(f)).length} 个\n`);
   
-  // 生成前60页
-  console.log('3. 生成前60页代码...');
-  const frontLines = generateCodeDocument(sortedFiles, true);
-  const frontContent = formatOutput(frontLines, false);
-  fs.writeFileSync(path.join(CONFIG.outputDir, '前60页.txt'), frontContent);
-  console.log(`   ✓ 已生成: ${CONFIG.outputDir}/前60页.txt (${frontLines.length} 行)\n`);
+  // 生成60页代码（前30页+后30页合并）
+  console.log('3. 生成60页代码文档（前30页+后30页）...');
+  const allLines = generateCodeDocument(sortedFiles);
+  const content = formatOutput(allLines);
   
-  // 生成后60页
-  console.log('4. 生成后60页代码...');
-  const backLines = generateCodeDocument(sortedFiles, false);
-  const backContent = formatOutput(backLines, true);
-  fs.writeFileSync(path.join(CONFIG.outputDir, '后60页.txt'), backContent);
-  console.log(`   ✓ 已生成: ${CONFIG.outputDir}/后60页.txt (${backLines.length} 行)\n`);
+  // 保存为源代码.txt
+  const outputFile = path.join(CONFIG.outputDir, '源代码.txt');
+  fs.writeFileSync(outputFile, content);
+  console.log(`   ✓ 已生成: ${outputFile}`);
+  console.log(`   ✓ 总行数: ${allLines.length} 行`);
+  console.log(`   ✓ 总页数: ${Math.ceil(allLines.length / CONFIG.linesPerPage)} 页\n`);
   
   // 生成说明文件
-  const readme = `# 软著代码文档说明
+  const readme = `软著代码文档说明
 
-## 文件列表
-- 前60页.txt: 代码前60页（每页50行）
-- 后60页.txt: 代码后60页（每页50行）
+===============================================================================
 
-## 生成时间
+文件列表
+
+- 源代码.txt: 完整的60页代码（前30页+后30页合并）
+
+===============================================================================
+
+生成时间
+
 ${new Date().toLocaleString('zh-CN')}
 
-## 代码统计
-- 总文件数: ${allFiles.length}
-- 总代码行数: ${frontLines.length + backLines.length}
-- 前60页行数: ${frontLines.length}
-- 后60页行数: ${backLines.length}
+===============================================================================
 
-## 核心文件
+代码统计
+
+- 总文件数: ${allFiles.length}
+- 总代码行数: ${allLines.length}
+- 总页数: ${Math.ceil(allLines.length / CONFIG.linesPerPage)} 页
+- 每页行数: ${CONFIG.linesPerPage} 行
+
+===============================================================================
+
+核心文件
+
 ${CONFIG.priorityFiles.map((f, i) => `${i + 1}. ${f}`).join('\n')}
 
-## 使用说明
-1. 前60页.txt 和 后60页.txt 已按软著要求格式化
-2. 每页包含50行代码
-3. 每行都有行号标注
+===============================================================================
+
+使用说明
+
+1. 源代码.txt 包含前30页和后30页的代码
+2. 纯代码格式，无行号和页眉页脚
+3. 每页50行，共60页
 4. 文件之间有明确的分隔标识
 5. 可直接用于软著申请材料
 
-## 注意事项
+===============================================================================
+
+注意事项
+
 - 请确保代码中不包含敏感信息（密钥、密码等）
 - 如需重新生成，运行: node generate-copyright-code.js
+
+===============================================================================
 `;
   
   fs.writeFileSync(path.join(CONFIG.outputDir, 'README.md'), readme);
