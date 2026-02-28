@@ -1,18 +1,18 @@
 /**
  * AI 增强接口
- * 使用 DeepSeek API（兼容 OpenAI SDK）
+ * 使用智谱 AI GLM-4-Flash 模型（兼容 OpenAI SDK）
  */
 const express = require('express');
 const router = express.Router();
 const OpenAI = require('openai');
 
-// 初始化 DeepSeek 客户端
-let deepseekClient = null;
+// 初始化智谱 AI 客户端
+let zhipuClient = null;
 
 try {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey = process.env.ZHIPU_API_KEY;
   
-  console.log('� DeepSeek API Key:', apiKey ? '已配置' : '未配置');
+  console.log('🔑 智谱 AI API Key:', apiKey ? '已配置' : '未配置');
   
   if (apiKey) {
     // Node.js 16 需要提供 fetch 和 FormData polyfill
@@ -22,17 +22,17 @@ try {
     // 设置全局 FormData
     global.FormData = FormData;
     
-    deepseekClient = new OpenAI({
+    zhipuClient = new OpenAI({
       apiKey: apiKey,
-      baseURL: 'https://api.deepseek.com',
+      baseURL: 'https://open.bigmodel.cn/api/paas/v4',
       fetch: fetch  // 提供 fetch 实现
     });
-    console.log('✅ DeepSeek API 初始化成功');
+    console.log('✅ 智谱 AI 初始化成功');
   } else {
-    console.warn('⚠️ DeepSeek API Key 未配置');
+    console.warn('⚠️ 智谱 AI API Key 未配置');
   }
 } catch (error) {
-  console.warn('⚠️ DeepSeek API 初始化失败:', error.message);
+  console.warn('⚠️ 智谱 AI 初始化失败:', error.message);
 }
 
 /**
@@ -50,9 +50,9 @@ router.post('/ocr', async (req, res) => {
       });
     }
     
-    // 检查 DeepSeek 是否可用
-    if (!deepseekClient) {
-      console.log('⚠️ DeepSeek API 不可用，返回后端原始数据');
+    // 检查智谱 AI 是否可用
+    if (!zhipuClient) {
+      console.log('⚠️ 智谱 AI 不可用，返回后端原始数据');
       return res.json({
         success: true,
         data: baseInfo,
@@ -60,7 +60,7 @@ router.post('/ocr', async (req, res) => {
       });
     }
     
-    console.log('📤 [AI增强] 开始调用 DeepSeek API...');
+    console.log('📤 [AI增强] 开始调用智谱 AI GLM-4-Flash...');
     
     // 构建提示词
     const systemPrompt = `你是一个智能记账助手，擅长从小票/发票文本中提取语义信息。你必须严格按照JSON格式返回结果，不要有任何额外的解释文字。`;
@@ -95,6 +95,12 @@ ${ocrText}
    - 如果是其他：提取关键消费内容
    - 如果实在没有：留空字符串""
 
+3. **商家优化(merchant)** - 仅在后端识别不准确时优化
+   - 识别知名品牌（星巴克、麦当劳、海底捞、沃尔玛、家乐福等）
+   - 保留分店信息（如"星巴克五道口店"）
+   - 如果后端已正确识别，返回原值
+   - 如果识别不出，返回空字符串""
+
 4. **分类优化(categoryName)** - 根据商家和内容智能判断
    支出分类：餐饮/交通/购物/娱乐/住房/医疗/通讯/服饰/美容/学习/社交/零食/数码/家居/汽车/宠物/其他
    收入分类：工资/兼职/奖金/红包/退款/报销/投资/礼金/出售/其他
@@ -109,14 +115,14 @@ ${ocrText}
 - 如果某个字段无法优化，返回空字符串""（amount返回0）
 - 不要编造信息，不确定就留空`;
     
-    // 调用 DeepSeek API
+    // 调用智谱 AI
     let aiResult = { remark: '', merchant: '', categoryName: '' };
     
     try {
-      console.log('📤 [AI增强] 调用 DeepSeek chat.completions.create...');
+      console.log('📤 [AI增强] 调用智谱 AI chat.completions.create...');
       
-      const completion = await deepseekClient.chat.completions.create({
-        model: 'deepseek-chat',
+      const completion = await zhipuClient.chat.completions.create({
+        model: 'glm-4-flash',  // 使用 GLM-4-Flash 模型
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -126,12 +132,12 @@ ${ocrText}
       });
       
       const aiResponse = completion.choices[0]?.message?.content || '';
-      console.log('📥 [AI增强] DeepSeek 响应:', aiResponse);
+      console.log('📥 [AI增强] 智谱 AI 响应:', aiResponse);
       
       // 写入日志
       const fs = require('fs');
       fs.appendFileSync('/tmp/ai-enhance-debug.log', `\n=== ${new Date().toISOString()} ===\n`);
-      fs.appendFileSync('/tmp/ai-enhance-debug.log', `DeepSeek响应: ${aiResponse}\n`);
+      fs.appendFileSync('/tmp/ai-enhance-debug.log', `智谱AI响应: ${aiResponse}\n`);
       
       // 解析 JSON
       try {
@@ -155,7 +161,7 @@ ${ocrText}
       }
       
     } catch (aiError) {
-      console.error('❌ [AI增强] DeepSeek 调用失败:', aiError.message);
+      console.error('❌ [AI增强] 智谱 AI 调用失败:', aiError.message);
       
       // 写入错误日志
       const fs = require('fs');
@@ -167,7 +173,7 @@ ${ocrText}
     // 合并结果
     const finalResult = {
       ...baseInfo,
-      // 【修改】AI 提取的金额优先（如果 AI 提取到了且大于0）
+      // AI 提取的金额优先（如果 AI 提取到了且大于0）
       amount: (aiResult.amount && aiResult.amount > 0) ? aiResult.amount : baseInfo.amount,
       remark: aiResult.remark || baseInfo.remark || '',
       merchant: aiResult.merchant || baseInfo.merchant || '',
@@ -213,9 +219,9 @@ router.post('/voice', async (req, res) => {
       });
     }
     
-    // 检查 DeepSeek 是否可用
-    if (!deepseekClient) {
-      console.log('⚠️ DeepSeek API 不可用，返回前端原始数据');
+    // 检查智谱 AI 是否可用
+    if (!zhipuClient) {
+      console.log('⚠️ 智谱 AI 不可用，返回前端原始数据');
       return res.json({
         success: true,
         data: baseInfo,
@@ -223,7 +229,7 @@ router.post('/voice', async (req, res) => {
       });
     }
     
-    console.log('📤 [AI增强-语音] 开始调用 DeepSeek API...');
+    console.log('📤 [AI增强-语音] 开始调用智谱 AI GLM-4-Flash...');
     
     // 构建提示词
     const systemPrompt = `你是一个智能记账助手，擅长从语音文本中提取账单信息。你必须严格按照JSON格式返回结果，不要有任何额外的解释文字。`;
@@ -281,14 +287,14 @@ ${voiceText}
 - 如果某个字段无法优化，返回空字符串""（amount返回0）
 - 不要编造信息，不确定就留空`;
     
-    // 调用 DeepSeek API
+    // 调用智谱 AI
     let aiResult = { remark: '', merchant: '', categoryName: '' };
     
     try {
-      console.log('📤 [AI增强-语音] 调用 DeepSeek chat.completions.create...');
+      console.log('📤 [AI增强-语音] 调用智谱 AI chat.completions.create...');
       
-      const completion = await deepseekClient.chat.completions.create({
-        model: 'deepseek-chat',
+      const completion = await zhipuClient.chat.completions.create({
+        model: 'glm-4-flash',  // 使用 GLM-4-Flash 模型
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -298,12 +304,12 @@ ${voiceText}
       });
       
       const aiResponse = completion.choices[0]?.message?.content || '';
-      console.log('📥 [AI增强-语音] DeepSeek 响应:', aiResponse);
+      console.log('📥 [AI增强-语音] 智谱 AI 响应:', aiResponse);
       
       // 写入日志
       const fs = require('fs');
       fs.appendFileSync('/tmp/ai-enhance-voice-debug.log', `\n=== ${new Date().toISOString()} ===\n`);
-      fs.appendFileSync('/tmp/ai-enhance-voice-debug.log', `DeepSeek响应: ${aiResponse}\n`);
+      fs.appendFileSync('/tmp/ai-enhance-voice-debug.log', `智谱AI响应: ${aiResponse}\n`);
       
       // 解析 JSON
       try {
@@ -327,7 +333,7 @@ ${voiceText}
       }
       
     } catch (aiError) {
-      console.error('❌ [AI增强-语音] DeepSeek 调用失败:', aiError.message);
+      console.error('❌ [AI增强-语音] 智谱 AI 调用失败:', aiError.message);
       
       // 写入错误日志
       const fs = require('fs');
