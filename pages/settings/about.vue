@@ -6,7 +6,7 @@
 				<image class="app-logo" src="/static/logo.png" mode="aspectFit"></image>
 				<view class="app-name">钱哪去了</view>
 				<view class="app-slogan">让记账变得简单有趣</view>
-				<view class="version">v1.0.0</view>
+				<view class="version">v{{ appVersion }}</view>
 			</view>
 			
 			<!-- 核心功能 -->
@@ -74,22 +74,17 @@
 					<view class="qrcode-tips">获取最新功能 · 使用技巧 · 活动福利</view>
 				</view>
 				
-				<!-- 客服邮箱 -->
-				<view class="contact-card">
-					<view class="contact-item" @click="copyEmail">
-						<view class="contact-icon email-icon">
-							<view class="email-envelope">
-								<view class="envelope-flap"></view>
-								<view class="envelope-body"></view>
-							</view>
-						</view>
-						<view class="contact-content">
-							<view class="contact-label">客服邮箱</view>
-							<view class="contact-value">951123604@qq.com</view>
-							<view class="contact-hint">点击复制 · 24小时内回复</view>
-						</view>
+				<!-- 联系客服（仅小程序） -->
+				<!-- #ifdef MP-WEIXIN -->
+				<button class="feedback-card contact-service-button" open-type="contact">
+					<view class="feedback-icon">👨‍💼</view>
+					<view class="feedback-content">
+						<view class="feedback-title">联系客服</view>
+						<view class="feedback-desc">有任何问题？点击咨询在线客服</view>
 					</view>
-				</view>
+					<view class="feedback-arrow">›</view>
+				</button>
+				<!-- #endif -->
 				
 				<!-- 意见反馈 -->
 				<view class="feedback-card" @click="goToFeedback">
@@ -121,17 +116,23 @@
 </template>
 
 <script setup>
-const copyEmail = () => {
-	uni.setClipboardData({
-		data: '951123604@qq.com',
-		success: () => {
-			uni.showToast({
-				title: '邮箱已复制',
-				icon: 'success'
-			})
-		}
-	})
-}
+import { ref, onMounted } from 'vue'
+
+const appVersion = ref('1.0.0')
+
+onMounted(() => {
+	// 获取版本号
+	// #ifdef APP-PLUS
+	const appInfo = plus.runtime
+	appVersion.value = appInfo.version || '1.0.0'
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序从 manifest.json 读取版本号
+	const accountInfo = uni.getAccountInfoSync()
+	appVersion.value = accountInfo.miniProgram.version || '1.0.0'
+	// #endif
+})
 
 const previewQRCode = () => {
 	uni.previewImage({
@@ -335,6 +336,10 @@ const openPrivacyPolicy = () => {
 	background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
 }
 
+.service-icon {
+	background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
+}
+
 .wechat-icon {
 	background: linear-gradient(135deg, #07C160 0%, #2AAE67 100%);
 }
@@ -364,6 +369,29 @@ const openPrivacyPolicy = () => {
 	border-right: 24rpx solid transparent;
 	border-top: 18rpx solid #FFE5E5;
 	z-index: 1;
+}
+
+/* 客服图标 */
+.service-person {
+	font-size: 40rpx;
+}
+
+/* 联系客服按钮样式重置 */
+.contact-service-button {
+	background: transparent;
+	border: none;
+	padding: 0;
+	margin: 0 0 $spacing-lg 0;
+	line-height: normal;
+	text-align: left;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: $spacing-md;
+}
+
+.contact-service-button::after {
+	border: none;
 }
 
 /* 微信公众号二维码卡片 */
