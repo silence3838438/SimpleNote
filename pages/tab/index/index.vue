@@ -1007,6 +1007,13 @@ const checkAppUpdate = async () => {
 		const updateInfo = await checkUpdate()
 		
 		if (updateInfo.hasUpdate) {
+			// 检查是否已经下载过这个版本
+			const downloadedVersion = uni.getStorageSync('downloadedVersion')
+			if (downloadedVersion === updateInfo.newVersion) {
+				// 已经下载过，不再弹窗
+				return
+			}
+			
 			data.updateInfo = updateInfo
 			data.showUpdateModal = true
 		}
@@ -1029,6 +1036,8 @@ const handleUpdateConfirm = () => {
 
 // 下载完成
 const handleDownloadComplete = () => {
+	// 记录已下载的版本号，避免重复弹窗
+	uni.setStorageSync('downloadedVersion', data.updateInfo.newVersion)
 	data.showUpdateModal = false
 }
 

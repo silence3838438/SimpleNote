@@ -1,14 +1,16 @@
 <template>
 	<view class="update-modal" v-if="visible" @click="handleMaskClick">
+		<!-- 顶部火箭图标 - 突出显示 -->
+		<view class="rocket-icon">
+			<image class="rocket-image" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/rocket.png" mode="aspectFit"></image>
+			<view class="icon-badge" v-if="isForce">
+				<text class="badge-text">必须</text>
+			</view>
+		</view>
+		
 		<view class="modal-content" @click.stop :class="{ 'shake': showShake }">
-			<!-- 顶部图标 -->
+			<!-- 顶部标题 -->
 			<view class="modal-header">
-				<view class="update-icon">
-					<text class="icon-text">🎉</text>
-					<view class="icon-badge" v-if="isForce">
-						<text class="badge-text">必须</text>
-					</view>
-				</view>
 				<text class="modal-title">发现新版本</text>
 				<text class="version-text">v{{ newVersion }}</text>
 			</view>
@@ -321,6 +323,34 @@ const startDownload = () => {
 	}
 }
 
+/* 火箭图标 - 突出显示在弹窗顶部 */
+.rocket-icon {
+	position: absolute;
+	top: -60rpx;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 140rpx;
+	height: 140rpx;
+	background: rgba(255, 255, 255, 0.98);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.2);
+	z-index: 10;
+	animation: rocketFloat 2s ease-in-out infinite;
+}
+
+@keyframes rocketFloat {
+	0%, 100% { transform: translateX(-50%) translateY(0); }
+	50% { transform: translateX(-50%) translateY(-8rpx); }
+}
+
+.rocket-image {
+	width: 90rpx;
+	height: 90rpx;
+}
+
 .modal-content {
 	width: 600rpx;
 	background: #FFFFFF;
@@ -328,6 +358,8 @@ const startDownload = () => {
 	overflow: hidden;
 	box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
 	animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+	margin-top: 80rpx;
+	position: relative;
 }
 
 @keyframes slideUp {
@@ -352,7 +384,7 @@ const startDownload = () => {
 }
 
 .modal-header {
-	padding: 60rpx 40rpx 32rpx;
+	padding: 48rpx 40rpx 32rpx;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -360,33 +392,10 @@ const startDownload = () => {
 	position: relative;
 }
 
-.update-icon {
-	width: 120rpx;
-	height: 120rpx;
-	background: rgba(255, 255, 255, 0.95);
-	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-bottom: 24rpx;
-	box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-	position: relative;
-	animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-	0%, 100% { transform: translateY(0); }
-	50% { transform: translateY(-10rpx); }
-}
-
-.icon-text {
-	font-size: 64rpx;
-}
-
 .icon-badge {
 	position: absolute;
-	top: -8rpx;
-	right: -8rpx;
+	top: 0;
+	right: 0;
 	background: #FF4D4F;
 	padding: 4rpx 12rpx;
 	border-radius: 20rpx;
