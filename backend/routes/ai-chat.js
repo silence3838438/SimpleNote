@@ -1,31 +1,36 @@
 /**
  * AI 财务助手对话接口
  * 基于用户真实账单数据提供财务分析和建议
+ * 使用智谱 AI GLM-4-Flash 模型
  */
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const OpenAI = require('openai');
 
-// Cloudbase Node SDK
-let cloudbase = null;
+// 初始化智谱 AI 客户端
+let zhipuClient = null;
 
-// 初始化 Cloudbase
 try {
-  const tcb = require('@cloudbase/node-sdk');
-  const envId = process.env.CLOUDBASE_ENV || "cloud1-8gxevfq393690dfe";
+  const apiKey = process.env.ZHIPU_API_KEY;
   
-  cloudbase = tcb.init({
-    env: envId,
-    timeout: 60000
-  });
-  
-  console.log('✅ AI财务助手 - Cloudbase初始化成功');
+  if (apiKey) {
+    const fetch = require('node-fetch');
+    const { FormData } = require('formdata-node');
+    global.FormData = FormData;
+    
+    zhipuClient = new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://open.bigmodel.cn/api/paas/v4',
+      fetch: fetch
+    });
+    console.log('✅ AI财务助手 - 智谱AI初始化成功');
+  } else {
+    console.warn('⚠️ AI财务助手 - 智谱AI API Key未配置');
+  }
 } catch (error) {
-  console.warn('⚠️ AI财务助手 - Cloudbase初始化失败:', error.message);
+  console.warn('⚠️ AI财务助手 - 智谱AI初始化失败:', error.message);
 }
-
-// Agent ID
-const AGENT_ID = 'agent-xiaopiaoshi-2end0lcd9c419f';
 
 /**
  * POST /api/ai-chat
@@ -50,7 +55,7 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // 检查今日使用次数（每天限制3次）
+    // 检查今日使用次数（每天限制10次）
     const today = new Date().toISOString().split('T')[0];
     const usageCount = await db.query(
       `SELECT COUNT(*) as count FROM ai_chat_usage 
@@ -59,7 +64,7 @@ router.post('/', async (req, res) => {
     );
     
     const todayCount = usageCount[0]?.count || 0;
-    const dailyLimit = 3;
+    const dailyLimit = 10;
     
     if (todayCount >= dailyLimit) {
       return res.json({
@@ -69,8 +74,8 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // 检查 Cloudbase 是否可用
-    if (!cloudbase) {
+    // 检查智谱 AI 是否可用
+    if (!zhipuClient) {
       return res.json({
         success: false,
         message: 'AI服务暂时不可用'
@@ -104,7 +109,6 @@ router.post('/', async (req, res) => {
     
     bills.forEach(bill => {
       const amount = parseFloat(bill.amount);
-      // 将Date对象转换为字符串 YYYY-MM-DD
       const dateStr = bill.date instanceof Date 
         ? bill.date.toISOString().split('T')[0] 
         : bill.date;
@@ -150,9 +154,16 @@ router.post('/', async (req, res) => {
     });
     
     // 3. 构建prompt
-    const prompt = `你是一个专业、友好的AI财务顾问助手，名字叫"小财"。
+    const systemPrompt = `你是一个专业、友好的AI财务顾问助手，名字叫"小财"。你的任务是：
+1. 用简洁、友好的语气回答用户的财务问题
+2. 基于用户的真实账单数据给出分析和建议
+3. 如果用户问的问题与财务无关，礼貌地引导回财务话题
+4. 回答要具体、实用，避免空洞的建议
+5. 适当使用emoji让回答更生动
+6. 回答控制在200字以内
+7. 直接回答，不要加"小财："等前缀`;
 
-【用户问题】
+    const userPrompt = `【用户问题】
 ${question}
 
 【用户最近3个月的财务数据】
@@ -165,72 +176,35 @@ ${question}
 【按月统计】
 ${Object.entries(stats.monthlyStats).map(([month, data]) => 
   `${month}: 支出${data.expense.toFixed(2)}元，收入${data.income.toFixed(2)}元`
-).join('\n')}
-
-【你的任务】
-1. 用简洁、友好的语气回答用户的问题
-2. 基于真实数据给出分析和建议
-3. 如果用户问的问题与财务无关，礼貌地引导回财务话题
-4. 回答要具体、实用，避免空洞的建议
-5. 适当使用emoji让回答更生动
-6. 回答控制在200字以内
-
-【回答格式】
-直接回答，不要加"小财："等前缀，不要使用markdown格式。`;
+).join('\n')}`;
     
-    // 4. 调用 AI Agent
+    // 4. 调用智谱 AI
     let aiAnswer = '抱歉，我现在有点忙 😅 请稍后再试~';
     
     try {
-      const ai = cloudbase.ai();
+      console.log('📤 [AI财务助手] 调用智谱AI...');
       
-      console.log('📤 [AI财务助手] 调用 bot.sendMessage...');
-      const aiRes = await ai.bot.sendMessage({
-        botId: AGENT_ID,
-        threadId: `chat-${userId}-${Date.now()}`,
-        runId: `run-${Date.now()}`,
+      const completion = await zhipuClient.chat.completions.create({
+        model: 'glm-4-flash',
         messages: [
-          {
-            id: `msg-${Date.now()}`,
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
-        tools: [],
-        context: [],
-        state: {},
-        forwardedProps: {}
+        temperature: 0.7,
+        max_tokens: 500
       });
       
-      console.log('✅ [AI财务助手] 调用成功，读取 dataStream...');
+      const response = completion.choices[0]?.message?.content || '';
+      console.log('📥 [AI财务助手] 智谱AI响应:', response);
       
-      let fullText = '';
-      for await (const data of aiRes.dataStream) {
-        switch (data.type) {
-          case 'TEXT_MESSAGE_CONTENT':
-            fullText += data.delta;
-            break;
-          case 'RUN_ERROR':
-            console.error('❌ [AI财务助手] 运行出错:', data.message);
-            break;
-          case 'RUN_FINISHED':
-            console.log('✅ [AI财务助手] 运行结束');
-            break;
-        }
-      }
-      
-      console.log('📥 [AI财务助手] AI 响应:', fullText);
-      
-      if (fullText.trim()) {
-        aiAnswer = fullText.trim();
+      if (response.trim()) {
+        aiAnswer = response.trim();
       } else {
         console.warn('⚠️ [AI财务助手] AI响应为空');
-        aiAnswer = '抱歉，我现在有点忙，请稍后再试 😅';
       }
       
     } catch (aiError) {
       console.error('❌ [AI财务助手] 调用失败:', aiError.message);
-      console.error('❌ [AI财务助手] 错误堆栈:', aiError.stack);
       aiAnswer = '抱歉，我现在有点忙，请稍后再试 😅';
     }
     
