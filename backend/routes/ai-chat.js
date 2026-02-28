@@ -17,12 +17,16 @@ try {
   if (apiKey) {
     const fetch = require('node-fetch');
     const { FormData } = require('formdata-node');
+    const { Headers } = require('node-fetch');
+    
+    // 设置全局对象（OpenAI SDK需要）
     global.FormData = FormData;
+    global.Headers = Headers;
+    global.fetch = fetch;
     
     zhipuClient = new OpenAI({
       apiKey: apiKey,
-      baseURL: 'https://open.bigmodel.cn/api/paas/v4',
-      fetch: fetch
+      baseURL: 'https://open.bigmodel.cn/api/paas/v4'
     });
     console.log('✅ AI财务助手 - 智谱AI初始化成功');
   } else {
