@@ -195,10 +195,9 @@
 				</button>
 				<!-- #endif -->
 				
-				<!-- AI财务顾问 - 小程序端使用show_ai_advisor_wechat控制，APP端需要登录 -->
-				<!-- 暂时隐藏：云开发环境资源可能已释放，等恢复后再打开 -->
+				<!-- AI财务顾问 - 小程序端和APP端都可用 -->
 				<!-- #ifdef MP-WEIXIN -->
-				<!-- <view class="function-item" v-if="data.appConfig.show_ai_advisor_wechat" @click="goToAIChat">
+				<view class="function-item" v-if="data.appConfig.show_ai_advisor_wechat" @click="goToAIChat">
 					<view class="function-left">
 						<view class="function-icon ai-icon">
 							<text class="icon-text">🤖</text>
@@ -209,7 +208,7 @@
 						<text class="function-desc">智能分析</text>
 						<text class="arrow">›</text>
 					</view>
-				</view> -->
+				</view>
 				<!-- #endif -->
 				<!-- #ifdef APP-PLUS -->
 				<view class="function-item" v-if="data.userInfo.isLogin" @click="goToAIChat">
