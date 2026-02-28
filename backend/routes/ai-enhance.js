@@ -1,35 +1,31 @@
 /**
  * AI 增强接口
- * 使用腾讯云 Cloudbase Node SDK 调用 AI Agent
+ * 使用 DeepSeek API（兼容 OpenAI SDK）
  */
 const express = require('express');
 const router = express.Router();
+const OpenAI = require('openai');
 
-// Cloudbase Node SDK
-let cloudbase = null;
+// 初始化 DeepSeek 客户端
+let deepseekClient = null;
 
-// 初始化 Cloudbase
 try {
-  const tcb = require('@cloudbase/node-sdk');
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   
-  const envId = process.env.CLOUDBASE_ENV || "cloud1-8gxevfq393690dfe";
+  console.log('� DeepSeek API Key:', apiKey ? '已配置' : '未配置');
   
-  console.log('📦 环境 ID:', envId);
-  console.log('🔑 API Key:', process.env.CLOUDBASE_APIKEY ? '已配置' : '未配置');
-  
-  // 使用服务端 API Key（从环境变量 CLOUDBASE_APIKEY 自动读取）
-  cloudbase = tcb.init({
-    env: envId,
-    timeout: 60000 // AI 生成可能耗时较长
-  });
-  
-  console.log('✅ Cloudbase Node SDK 初始化成功');
+  if (apiKey) {
+    deepseekClient = new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://api.deepseek.com'
+    });
+    console.log('✅ DeepSeek API 初始化成功');
+  } else {
+    console.warn('⚠️ DeepSeek API Key 未配置');
+  }
 } catch (error) {
-  console.warn('⚠️ Cloudbase Node SDK 初始化失败:', error.message);
+  console.warn('⚠️ DeepSeek API 初始化失败:', error.message);
 }
-
-// Agent ID
-const AGENT_ID = 'agent-xiaopiaoshi-2end0lcd9c419f';
 
 /**
  * POST /api/ai-enhance/ocr
@@ -46,9 +42,9 @@ router.post('/ocr', async (req, res) => {
       });
     }
     
-    // 检查 Cloudbase 是否可用
-    if (!cloudbase) {
-      console.log('⚠️ Cloudbase 不可用，返回后端原始数据');
+    // 检查 DeepSeek 是否可用
+    if (!deepseekClient) {
+      console.log('⚠️ DeepSeek API 不可用，返回后端原始数据');
       return res.json({
         success: true,
         data: baseInfo,
@@ -56,10 +52,12 @@ router.post('/ocr', async (req, res) => {
       });
     }
     
-    console.log('📤 [AI增强] 开始调用 AI Agent...');
+    console.log('📤 [AI增强] 开始调用 DeepSeek API...');
     
     // 构建提示词
-    const prompt = `你是一个智能记账助手，擅长从小票/发票文本中提取语义信息。
+    const systemPrompt = `你是一个智能记账助手，擅长从小票/发票文本中提取语义信息。你必须严格按照JSON格式返回结果，不要有任何额外的解释文字。`;
+    
+    const userPrompt = `
 
 【OCR原始文本】
 ${ocrText}
@@ -103,66 +101,41 @@ ${ocrText}
 - 如果某个字段无法优化，返回空字符串""（amount返回0）
 - 不要编造信息，不确定就留空`;
     
-    // 调用 AI Agent（使用 dataStream）
+    // 调用 DeepSeek API
     let aiResult = { remark: '', merchant: '', categoryName: '' };
     
     try {
-      const ai = cloudbase.ai();
+      console.log('📤 [AI增强] 调用 DeepSeek chat.completions.create...');
       
-      console.log('📤 [AI增强] 调用 bot.sendMessage...');
-      const res = await ai.bot.sendMessage({
-        botId: AGENT_ID,
-        threadId: `thread-${Date.now()}`,
-        runId: `run-${Date.now()}`,
+      const completion = await deepseekClient.chat.completions.create({
+        model: 'deepseek-chat',
         messages: [
-          {
-            id: `msg-${Date.now()}`,
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
-        tools: [],
-        context: [],
-        state: {},
-        forwardedProps: {}
+        temperature: 0.3,
+        max_tokens: 1000
       });
       
-      console.log('✅ [AI增强] 调用成功，读取 dataStream...');
-      
-      let fullText = '';
-      for await (const data of res.dataStream) {
-        // 根据事件类型处理
-        switch (data.type) {
-          case 'TEXT_MESSAGE_CONTENT':
-            fullText += data.delta;
-            break;
-          case 'RUN_ERROR':
-            console.error('❌ [AI增强] 运行出错:', data.message);
-            break;
-          case 'RUN_FINISHED':
-            console.log('✅ [AI增强] 运行结束');
-            break;
-        }
-      }
-      
-      console.log('📥 [AI增强] AI 响应:', fullText);
+      const aiResponse = completion.choices[0]?.message?.content || '';
+      console.log('📥 [AI增强] DeepSeek 响应:', aiResponse);
       
       // 写入日志
       const fs = require('fs');
       fs.appendFileSync('/tmp/ai-enhance-debug.log', `\n=== ${new Date().toISOString()} ===\n`);
-      fs.appendFileSync('/tmp/ai-enhance-debug.log', `AI响应: ${fullText}\n`);
+      fs.appendFileSync('/tmp/ai-enhance-debug.log', `DeepSeek响应: ${aiResponse}\n`);
       
       // 解析 JSON
       try {
         let jsonStr = null;
-        const codeBlockMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
+        const codeBlockMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
         if (codeBlockMatch) {
           jsonStr = codeBlockMatch[1];
         } else {
-          const firstBrace = fullText.indexOf('{');
-          const lastBrace = fullText.lastIndexOf('}');
+          const firstBrace = aiResponse.indexOf('{');
+          const lastBrace = aiResponse.lastIndexOf('}');
           if (firstBrace !== -1 && lastBrace !== -1) {
-            jsonStr = fullText.substring(firstBrace, lastBrace + 1);
+            jsonStr = aiResponse.substring(firstBrace, lastBrace + 1);
           }
         }
         
@@ -174,7 +147,7 @@ ${ocrText}
       }
       
     } catch (aiError) {
-      console.error('❌ [AI增强] 调用失败:', aiError.message);
+      console.error('❌ [AI增强] DeepSeek 调用失败:', aiError.message);
       
       // 写入错误日志
       const fs = require('fs');
@@ -232,9 +205,9 @@ router.post('/voice', async (req, res) => {
       });
     }
     
-    // 检查 Cloudbase 是否可用
-    if (!cloudbase) {
-      console.log('⚠️ Cloudbase 不可用，返回前端原始数据');
+    // 检查 DeepSeek 是否可用
+    if (!deepseekClient) {
+      console.log('⚠️ DeepSeek API 不可用，返回前端原始数据');
       return res.json({
         success: true,
         data: baseInfo,
@@ -242,10 +215,12 @@ router.post('/voice', async (req, res) => {
       });
     }
     
-    console.log('📤 [AI增强-语音] 开始调用 AI Agent...');
+    console.log('📤 [AI增强-语音] 开始调用 DeepSeek API...');
     
     // 构建提示词
-    const prompt = `你是一个智能记账助手，擅长从语音文本中提取账单信息。
+    const systemPrompt = `你是一个智能记账助手，擅长从语音文本中提取账单信息。你必须严格按照JSON格式返回结果，不要有任何额外的解释文字。`;
+    
+    const userPrompt = `
 
 【语音原始文本】
 ${voiceText}
@@ -298,66 +273,41 @@ ${voiceText}
 - 如果某个字段无法优化，返回空字符串""（amount返回0）
 - 不要编造信息，不确定就留空`;
     
-    // 调用 AI Agent（使用 dataStream）
+    // 调用 DeepSeek API
     let aiResult = { remark: '', merchant: '', categoryName: '' };
     
     try {
-      const ai = cloudbase.ai();
+      console.log('📤 [AI增强-语音] 调用 DeepSeek chat.completions.create...');
       
-      console.log('📤 [AI增强-语音] 调用 bot.sendMessage...');
-      const res = await ai.bot.sendMessage({
-        botId: AGENT_ID,
-        threadId: `thread-${Date.now()}`,
-        runId: `run-${Date.now()}`,
+      const completion = await deepseekClient.chat.completions.create({
+        model: 'deepseek-chat',
         messages: [
-          {
-            id: `msg-${Date.now()}`,
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
-        tools: [],
-        context: [],
-        state: {},
-        forwardedProps: {}
+        temperature: 0.3,
+        max_tokens: 1000
       });
       
-      console.log('✅ [AI增强-语音] 调用成功，读取 dataStream...');
-      
-      let fullText = '';
-      for await (const data of res.dataStream) {
-        // 根据事件类型处理
-        switch (data.type) {
-          case 'TEXT_MESSAGE_CONTENT':
-            fullText += data.delta;
-            break;
-          case 'RUN_ERROR':
-            console.error('❌ [AI增强-语音] 运行出错:', data.message);
-            break;
-          case 'RUN_FINISHED':
-            console.log('✅ [AI增强-语音] 运行结束');
-            break;
-        }
-      }
-      
-      console.log('📥 [AI增强-语音] AI 响应:', fullText);
+      const aiResponse = completion.choices[0]?.message?.content || '';
+      console.log('📥 [AI增强-语音] DeepSeek 响应:', aiResponse);
       
       // 写入日志
       const fs = require('fs');
       fs.appendFileSync('/tmp/ai-enhance-voice-debug.log', `\n=== ${new Date().toISOString()} ===\n`);
-      fs.appendFileSync('/tmp/ai-enhance-voice-debug.log', `AI响应: ${fullText}\n`);
+      fs.appendFileSync('/tmp/ai-enhance-voice-debug.log', `DeepSeek响应: ${aiResponse}\n`);
       
       // 解析 JSON
       try {
         let jsonStr = null;
-        const codeBlockMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
+        const codeBlockMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
         if (codeBlockMatch) {
           jsonStr = codeBlockMatch[1];
         } else {
-          const firstBrace = fullText.indexOf('{');
-          const lastBrace = fullText.lastIndexOf('}');
+          const firstBrace = aiResponse.indexOf('{');
+          const lastBrace = aiResponse.lastIndexOf('}');
           if (firstBrace !== -1 && lastBrace !== -1) {
-            jsonStr = fullText.substring(firstBrace, lastBrace + 1);
+            jsonStr = aiResponse.substring(firstBrace, lastBrace + 1);
           }
         }
         
@@ -369,7 +319,7 @@ ${voiceText}
       }
       
     } catch (aiError) {
-      console.error('❌ [AI增强-语音] 调用失败:', aiError.message);
+      console.error('❌ [AI增强-语音] DeepSeek 调用失败:', aiError.message);
       
       // 写入错误日志
       const fs = require('fs');
