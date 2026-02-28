@@ -1,6 +1,17 @@
 <template>
 	<view class="page">
-		<view class="container">
+		<!-- 自定义导航栏（随手记风格） -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left"></view>
+				<view class="navbar-title">
+					<text class="title-text">账单</text>
+				</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 顶部搜索栏 -->
 			<view class="header-bar">
 				<view class="search-input-wrapper">
@@ -154,6 +165,10 @@ import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import billStorage from '@/utils/billStorage.js'
 import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
 import request from '@/utils/request.js'
+
+// 获取状态栏高度
+const systemInfo = uni.getWindowInfo()
+const statusBarHeight = systemInfo.statusBarHeight || 0
 
 const data = reactive({
 	allBills: [],
@@ -800,12 +815,55 @@ onPullDownRefresh(async () => {
 	.page {
 		width: 100%;
 		min-height: 100vh;
-		background: #F7F8FA;
+		background: $bg-page;
+	}
+	
+	/* 自定义导航栏（随手记风格 - 增加高度） */
+	.custom-navbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		background: $bg-white;
+		z-index: 1000;
+		border-bottom: 1rpx solid $border-light;
+		
+		.navbar-content {
+			height: 56px; /* 从44px增加到56px */
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 $spacing-lg;
+		}
+		
+		.navbar-left,
+		.navbar-right {
+			width: 80rpx;
+			display: flex;
+			align-items: center;
+		}
+		
+		.navbar-right {
+			justify-content: flex-end;
+		}
+		
+		.navbar-title {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+		}
+		
+		.title-text {
+			font-size: $font-size-lg; /* 使用统一的大字体 */
+			font-weight: $font-weight-semibold;
+			color: $text-primary;
+		}
 	}
 	
 	.container {
 		padding: $spacing-sm $spacing-md;
 		padding-bottom: 100rpx;
+		background: $bg-page;
 	}
 	
 	/* 顶部搜索栏 */
@@ -868,15 +926,15 @@ onPullDownRefresh(async () => {
 	
 	/* 统计卡片 - 美团风格优化 */
 	.summary-card {
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 		margin: 0 0 $spacing-xl 0;
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: 32rpx $spacing-lg; /* 美团风格：更紧凑的内边距 */
+		padding: 48rpx $spacing-lg; /* 增加内边距，让卡片更高 */
 		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 	}
 	
 	.summary-header {
-		margin-bottom: $spacing-md;
+		margin-bottom: $spacing-lg; /* 增加底部间距 */
 	}
 	
 	.month-selector {
@@ -917,7 +975,7 @@ onPullDownRefresh(async () => {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 12rpx;
+		gap: 16rpx; /* 增加间距 */
 	}
 	
 	.amount-label {
@@ -927,7 +985,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.amount-value {
-		font-size: 36rpx;
+		font-size: 40rpx; /* 增大字号 */
 		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 		margin-top: 4rpx;
@@ -943,7 +1001,7 @@ onPullDownRefresh(async () => {
 	
 	.amount-divider {
 		width: 1rpx;
-		height: 60rpx;
+		height: 70rpx; /* 增加分隔线高度 */
 		background: rgba(255, 255, 255, 0.25);
 	}
 	
@@ -981,14 +1039,14 @@ onPullDownRefresh(async () => {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(115, 209, 61, 0.1) 100%);
+		background: rgba(82, 196, 26, 0.1); /* 使用主题色的半透明背景 */
 		opacity: 0;
 		transition: opacity $transition-fast;
 	}
 	
 	.filter-tag.active {
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-		border-color: #52C41A;
+		background: $primary-gradient; /* 使用主题色渐变 */
+		border-color: $primary-color; /* 使用主题色 */
 		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
 	}
 	
@@ -1073,7 +1131,7 @@ onPullDownRefresh(async () => {
 		top: 0;
 		bottom: 0;
 		width: 4rpx; /* 美团风格：更细 */
-		background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 		border-radius: 0 2rpx 2rpx 0;
 	}
 	
@@ -1094,8 +1152,8 @@ onPullDownRefresh(async () => {
 	}
 	
 	.date-income {
-		color: #52C41A;
-		background: rgba(82, 196, 26, 0.1);
+		color: $success-color; /* 使用主题色 */
+		background: rgba(82, 196, 26, 0.1); /* 主题色背景 */
 		padding: 2rpx 10rpx; /* 美团风格：更紧凑 */
 		border-radius: $radius-sm; /* 美团风格：6rpx圆角 */
 	}
@@ -1205,7 +1263,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.bill-amount.income {
-		color: #52C41A;
+		color: $success-color; /* 使用主题色 */
 	}
 	
 	.bill-amount.expense {
@@ -1321,7 +1379,7 @@ onPullDownRefresh(async () => {
 	
 	.picker-confirm {
 		font-size: $font-size-base;
-		color: #52C41A;
+		color: $primary-color; /* 使用主题色 */
 		font-weight: $font-weight-medium;
 	}
 	
@@ -1355,9 +1413,9 @@ onPullDownRefresh(async () => {
 		transition: color 0.3s ease;
 	}
 	
-	/* 选中项文字颜色为绿色 */
+	/* 选中项文字颜色使用主题色 */
 	.picker-item-selected {
-		color: #52C41A !important;
+		color: $primary-color !important; /* 使用主题色 */
 		font-weight: $font-weight-bold;
 		font-size: 36rpx;
 	}

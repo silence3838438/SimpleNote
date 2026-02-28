@@ -1,6 +1,17 @@
 <template>
 	<view class="page">
-		<view class="container">
+		<!-- 自定义导航栏（随手记风格） -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left"></view>
+				<view class="navbar-title">
+					<text class="title-text">统计</text>
+				</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 时间筛选 -->
 			<view class="filter-wrapper">
 				<view class="time-filter">
@@ -240,6 +251,10 @@
 import { reactive, nextTick } from 'vue'
 import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import billStorage from '@/utils/billStorage.js'
+
+// 获取状态栏高度
+const systemInfo = uni.getWindowInfo()
+const statusBarHeight = systemInfo.statusBarHeight || 0
 
 const data = reactive({
 	currentFilter: 'month',
@@ -1119,18 +1134,57 @@ onPullDownRefresh(async () => {
 	.page {
 		width: 100%;
 		min-height: 100vh;
-		background: #F7F8FA;
+		background: $bg-page;
+	}
+	
+	/* 自定义导航栏（随手记风格 - 增加高度） */
+	.custom-navbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		background: $bg-white;
+		z-index: 1000;
+		border-bottom: 1rpx solid $border-light;
+		
+		.navbar-content {
+			height: 56px; /* 从44px增加到56px */
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 $spacing-lg;
+		}
+		
+		.navbar-left,
+		.navbar-right {
+			width: 80rpx;
+			display: flex;
+			align-items: center;
+		}
+		
+		.navbar-right {
+			justify-content: flex-end;
+		}
+		
+		.navbar-title {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+		}
+		
+		.title-text {
+			font-size: $font-size-lg; /* 使用统一的大字体 */
+			font-weight: $font-weight-semibold;
+			color: $text-primary;
+		}
 	}
 	
 	.container {
 		min-height: 100vh;
-		background: #F7F8FA;
+		background: $bg-page;
 		padding: $spacing-sm $spacing-md;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
-		/* #ifdef APP-PLUS */
-		padding-top: $spacing-md;
-		/* #endif */
 	}
 	
 	/* 筛选器包装容器 - 美团风格 */
@@ -1247,7 +1301,7 @@ onPullDownRefresh(async () => {
 		justify-content: space-between;
 		align-items: center;
 		padding: 32rpx 32rpx 24rpx;
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 		position: relative;
 		overflow: hidden;
 	}
@@ -1463,8 +1517,8 @@ onPullDownRefresh(async () => {
 	
 	.calendar-day.start-date,
 	.calendar-day.end-date {
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.4), 0 0 0 4rpx rgba(82, 196, 26, 0.15);
+		background: $primary-gradient; /* 使用主题色渐变 */
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.4), 0 0 0 4rpx rgba(82, 196, 26, 0.15); /* 主题色阴影 */
 		transform: scale(1.05);
 	}
 	
@@ -1535,7 +1589,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.confirm-btn {
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 		color: #FFFFFF;
 		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
 		border: 2rpx solid transparent;
@@ -1713,7 +1767,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.income-color {
-		color: #52C41A !important;
+		color: $success-color !important; /* 使用主题色 */
 	}
 	
 	.expense-color {
@@ -1770,7 +1824,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.type-tab.active .tab-text {
-		color: #52C41A;
+		color: $primary-color; /* 使用主题色 */
 		font-weight: $font-weight-semibold;
 	}
 
@@ -1984,7 +2038,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.insight-item.success::before {
-		background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 	}
 	
 	.insight-item.warning::before {
@@ -2030,7 +2084,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.insight-item.success .insight-text {
-		color: #52C41A;
+		color: $primary-color; /* 使用主题色 */
 		font-weight: $font-weight-semibold;
 	}
 	

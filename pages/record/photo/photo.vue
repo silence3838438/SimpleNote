@@ -916,7 +916,7 @@ const shouldUseAI = (quickResult, ocrText) => {
 	.btn-secondary, .btn-primary {
 		flex: 1;
 		height: 96rpx;
-		border-radius: $radius-2xl;
+		border-radius: 48rpx;
 		font-size: $font-size-lg;
 		font-weight: $font-weight-semibold;
 		border: none;

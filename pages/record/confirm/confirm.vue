@@ -1612,7 +1612,7 @@ export default {
 		height: 88rpx;
 		background: $gradient-primary;
 		color: $text-white;
-		border-radius: $radius-2xl;
+		border-radius: 44rpx;
 		font-size: $font-size-lg;
 		font-weight: $font-weight-bold;
 		border: none;

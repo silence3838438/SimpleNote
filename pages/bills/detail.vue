@@ -1,6 +1,17 @@
 <template>
 	<view class="page">
-		<view class="container">
+		<!-- 自定义导航栏 -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left" @click="goBack">
+					<text class="back-icon">‹</text>
+				</view>
+				<view class="navbar-title">账单详情</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56 + 16) + 'px' }">
 			<!-- 顶部金额卡片 -->
 			<view class="amount-card" :class="data.bill.type === 'income' ? 'income-card' : 'expense-card'">
 				<view class="type-badge">
@@ -68,10 +79,22 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import billStorage from '@/utils/billStorage.js'
 import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
+
+// 获取状态栏高度
+const statusBarHeight = ref(0)
+const getSystemInfo = () => {
+	const systemInfo = uni.getSystemInfoSync()
+	statusBarHeight.value = systemInfo.statusBarHeight || 0
+}
+
+// 返回上一页
+const goBack = () => {
+	uni.navigateBack()
+}
 
 const data = reactive({
 	bill: {},
@@ -80,6 +103,7 @@ const data = reactive({
 })
 
 onLoad((options) => {
+	getSystemInfo()
 	data.categories = uni.getStorageSync('categories') || []
 	
 	if (options.billData) {
@@ -245,7 +269,49 @@ const deleteBill = async () => {
 		background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%);
 	}
 	
+	/* 自定义导航栏 - 和账单页面一样的样式 */
+	.custom-navbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		background: $bg-white;
+		z-index: 1000;
+		border-bottom: 1rpx solid $border-light;
+	}
+
+	.navbar-content {
+		height: 56px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 $spacing-lg;
+	}
+
+	.navbar-left {
+		width: 80rpx;
+		display: flex;
+		align-items: center;
+	}
+
+	.back-icon {
+		font-size: 48rpx;
+		color: $text-primary;
+		font-weight: $font-weight-light;
+	}
+
+	.navbar-title {
+		font-size: $font-size-lg;
+		font-weight: $font-weight-semibold;
+		color: $text-primary;
+	}
+
+	.navbar-right {
+		width: 80rpx;
+	}
+	
 	.container {
+		min-height: 100vh;
 		padding: $spacing-md;
 		padding-bottom: 100rpx;
 	}

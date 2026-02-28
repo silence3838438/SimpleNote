@@ -1,6 +1,17 @@
 <template>
 	<view class="page">
-		<view class="container">
+		<!-- 自定义导航栏 -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left" @click="goBack">
+					<text class="back-icon">‹</text>
+				</view>
+				<view class="navbar-title">系统设置</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56 + 16) + 'px' }">
 			<!-- 功能列表 -->
 			<view class="function-list">
 				<!-- 关于我们 -->
@@ -160,7 +171,7 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useI18n } from 'vue-i18n'
 import billStorage from '@/utils/billStorage.js'
@@ -172,6 +183,17 @@ import UpdateModal from '@/components/UpdateModal.vue'
 
 const { t, locale } = useI18n()
 
+// 获取状态栏高度
+const statusBarHeight = ref(0)
+const getSystemInfo = () => {
+	const systemInfo = uni.getSystemInfoSync()
+	statusBarHeight.value = systemInfo.statusBarHeight || 0
+}
+
+// 返回上一页
+const goBack = () => {
+	uni.navigateBack()
+}
 const data = reactive({
 	isLogin: false,
 	phoneNumber: '', // 绑定的手机号（脱敏显示）
@@ -414,6 +436,7 @@ const performDeleteAccount = async () => {
 }
 
 onLoad(() => {
+	getSystemInfo()
 	checkLogin()
 	// #ifdef APP-PLUS
 	getAppVersion()
@@ -428,6 +451,47 @@ onLoad(() => {
 	width: 100%;
 	min-height: 100vh;
 	background: $bg-page;
+}
+
+/* 自定义导航栏 - 和账单页面一样的样式 */
+.custom-navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background: $bg-white;
+	z-index: 1000;
+	border-bottom: 1rpx solid $border-light;
+}
+
+.navbar-content {
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 $spacing-lg;
+}
+
+.navbar-left {
+	width: 80rpx;
+	display: flex;
+	align-items: center;
+}
+
+.back-icon {
+	font-size: 48rpx;
+	color: $text-primary;
+	font-weight: $font-weight-light;
+}
+
+.navbar-title {
+	font-size: $font-size-lg;
+	font-weight: $font-weight-semibold;
+	color: $text-primary;
+}
+
+.navbar-right {
+	width: 80rpx;
 }
 
 .container {
@@ -520,7 +584,7 @@ onLoad(() => {
 	width: 100%;
 	height: 96rpx;
 	background: $gradient-primary;
-	border-radius: $radius-xl;
+	border-radius: 48rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;

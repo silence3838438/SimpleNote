@@ -83,18 +83,7 @@
 				return
 			}
 			
-			// 5. 检查今天是否已经记过账
-			const bills = uni.getStorageSync('bills') || []
-			const todayBills = bills.filter(bill => {
-				const billDate = new Date(bill.date).toDateString()
-				return billDate === today
-			})
-			
-			if (todayBills.length > 0) {
-				return
-			}
-			
-			// 6. 检查应用是否刚启动（避免频繁弹窗）
+			// 5. 检查应用是否刚启动（避免频繁弹窗）
 			const lastShowTime = uni.getStorageSync('lastAppShowTime') || 0
 			const timeSinceLastShow = Date.now() - lastShowTime
 			
@@ -106,7 +95,7 @@
 			// 记录本次显示时间
 			uni.setStorageSync('lastAppShowTime', Date.now())
 			
-			// 7. 显示提醒弹窗（使用自定义弹框）
+			// 6. 显示提醒弹窗（使用自定义弹框）
 			showReminderModal()
 			
 			// 记录今天已提醒，避免重复弹窗

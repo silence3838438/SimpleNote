@@ -68,7 +68,7 @@ router.post('/', async (req, res) => {
     );
     
     const todayCount = usageCount[0]?.count || 0;
-    const dailyLimit = 3;
+    const dailyLimit = 5;
     
     if (todayCount >= dailyLimit) {
       return res.json({
@@ -88,19 +88,62 @@ router.post('/', async (req, res) => {
     
     console.log('📤 [AI财务助手] 用户问题:', question);
     
-    // 1. 查询用户最近3个月的账单数据
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    const threeMonthsAgoStr = threeMonthsAgo.toISOString().split('T')[0];
+    // 1. 智能识别时间范围
+    const questionLower = question.toLowerCase();
+    let startDateStr;
+    let endDateStr;
+    let timeRangeLabel;
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    
+    // 识别"本月"、"这个月"、"当月"等关键词
+    if (questionLower.includes('本月') || questionLower.includes('这个月') || 
+        questionLower.includes('当月') || questionLower.includes('这月')) {
+      // 查询本月数据：从本月1号到本月最后一天
+      const lastDay = new Date(currentYear, currentMonth, 0).getDate(); // 获取本月天数
+      startDateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      endDateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      timeRangeLabel = '本月';
+    } 
+    // 识别"本年"、"今年"等关键词
+    else if (questionLower.includes('本年') || questionLower.includes('今年') || 
+             questionLower.includes('全年') || questionLower.includes('这年')) {
+      startDateStr = `${currentYear}-01-01`;
+      endDateStr = `${currentYear}-12-31`;
+      timeRangeLabel = '本年';
+    }
+    // 识别"本季"、"这个季度"等关键词
+    else if (questionLower.includes('本季') || questionLower.includes('这个季度') || 
+             questionLower.includes('当季')) {
+      const currentQuarter = Math.floor((currentMonth - 1) / 3);
+      const quarterStartMonth = currentQuarter * 3 + 1;
+      const quarterEndMonth = quarterStartMonth + 2;
+      const quarterEndDay = new Date(currentYear, quarterEndMonth, 0).getDate();
+      startDateStr = `${currentYear}-${String(quarterStartMonth).padStart(2, '0')}-01`;
+      endDateStr = `${currentYear}-${String(quarterEndMonth).padStart(2, '0')}-${String(quarterEndDay).padStart(2, '0')}`;
+      timeRangeLabel = '本季';
+    }
+    // 默认：查询最近3个月
+    else {
+      const threeMonthsAgo = new Date(currentYear, currentMonth - 1 - 3, 1);
+      const threeMonthsAgoYear = threeMonthsAgo.getFullYear();
+      const threeMonthsAgoMonth = threeMonthsAgo.getMonth() + 1;
+      startDateStr = `${threeMonthsAgoYear}-${String(threeMonthsAgoMonth).padStart(2, '0')}-01`;
+      const lastDay = new Date(currentYear, currentMonth, 0).getDate();
+      endDateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      timeRangeLabel = '最近3个月';
+    }
     
     const bills = await db.query(
       `SELECT * FROM bills 
-       WHERE user_id = ? AND date >= ? 
+       WHERE user_id = ? AND date >= ? AND date <= ?
        ORDER BY date DESC`,
-      [userId, threeMonthsAgoStr]
+      [userId, startDateStr, endDateStr]
     );
     
-    console.log(`📊 查询到 ${bills.length} 笔账单`);
+    console.log(`📊 查询到 ${bills.length} 笔账单（${timeRangeLabel}：${startDateStr} 至 ${endDateStr}）`);
     
     // 2. 统计数据
     const stats = {
@@ -170,7 +213,7 @@ router.post('/', async (req, res) => {
     const userPrompt = `【用户问题】
 ${question}
 
-【用户最近3个月的财务数据】
+【用户${timeRangeLabel}的财务数据】
 - 总支出：${stats.totalExpense.toFixed(2)}元
 - 总收入：${stats.totalIncome.toFixed(2)}元
 - 账单笔数：${stats.billCount}笔

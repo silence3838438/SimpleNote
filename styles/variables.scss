@@ -1,6 +1,6 @@
 /* ==================== 颜色变量 ==================== */
 
-/* 主题色 - 清爽的绿色系（财富、增长）- 美团风格优化 */
+/* 主题色 - 更柔和的绿色（随手记风格） */
 $primary-color: #52C41A;
 $primary-dark: #389E0D;
 $primary-light: #73D13D;
@@ -8,47 +8,47 @@ $primary-lighter: #95DE64;
 $primary-lightest: #F6FFED;
 $primary-gradient: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
 
-/* 辅助色 - 精致的配色 - 美团风格 */
-$success-color: #52C41A;
-$warning-color: #FAAD14;
-$error-color: #FF4D4F;
-$info-color: #1890FF;
-$yellow-color: #FFD100;      // 美团黄
+/* 辅助色 - 随手记风格配色 */
+$success-color: #52C41A;     // 收入绿色（更柔和）
+$warning-color: #FF9500;     // 随手记橙色
+$error-color: #FF3B30;       // 支出红色（iOS风格）
+$info-color: #007AFF;        // 信息蓝色（iOS风格）
+$yellow-color: #FFCC00;      // 提示黄色
 
-/* 文字颜色 - 清晰的层级 - 美团风格 */
-$text-primary: #333333;      // 主要文字 - 深灰（美团标准）
+/* 文字颜色 - 随手记风格层级 */
+$text-primary: #1A1A1A;      // 主要文字 - 更深的黑色
 $text-secondary: #666666;    // 次要文字 - 中灰色
 $text-tertiary: #999999;     // 辅助文字 - 浅灰色
 $text-disabled: #CCCCCC;     // 禁用文字
 $text-white: #FFFFFF;
 
-/* 背景色 - 清爽的层次 - 美团风格 */
-$bg-page: #F5F5F5;           // 页面背景（美团标准）
+/* 背景色 - 随手记浅色体系 */
+$bg-page: #F7F8FA;           // 页面背景（随手记标准）
 $bg-white: #FFFFFF;
 $bg-gray: #FAFAFA;
 $bg-light: #F7F8FA;
 $bg-card: #FFFFFF;
 
-/* 边框颜色 - 细腻的分隔 - 美团风格 */
-$border-color: #E5E5E5;      // 边框色（美团标准）
+/* 边框颜色 - 随手记风格分隔 */
+$border-color: #E8E8E8;      // 边框色（随手记标准）
 $border-light: #F0F0F0;
 $border-dark: #D9D9D9;
 
-/* 阴影 - 精致的层次感 - 主流风格（更轻、更细腻） */
-$shadow-sm: 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
-$shadow-md: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
-$shadow-lg: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-$shadow-xl: 0 6rpx 20rpx rgba(0, 0, 0, 0.10);
-$shadow-primary: 0 2rpx 8rpx rgba(82, 196, 26, 0.12);
-$shadow-card: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);  // 卡片阴影（主流风格，更轻）
+/* 阴影 - 极简风格（更轻、更少） */
+$shadow-sm: 0 1rpx 2rpx rgba(0, 0, 0, 0.03);
+$shadow-md: 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+$shadow-primary: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
+$shadow-card: 0 1rpx 3rpx rgba(0, 0, 0, 0.03);  // 卡片阴影（极简风格）
 
-/* 渐变色 - 柔和的过渡 */
+/* 渐变色 - 克制使用 */
 $gradient-primary: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-$gradient-orange: linear-gradient(135deg, #FFA940 0%, #FFC069 100%);
-$gradient-blue: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+$gradient-orange: linear-gradient(135deg, #FF9500 0%, #FFAD33 100%);
+$gradient-blue: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
 $gradient-purple: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
-$gradient-gold: linear-gradient(135deg, #FAAD14 0%, #FFC53D 100%);
-$gradient-red: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
+$gradient-gold: linear-gradient(135deg, #FFCC00 0%, #FFD633 100%);
+$gradient-red: linear-gradient(135deg, #FF3B30 0%, #FF6259 100%);
 
 /* ==================== 字体变量 ==================== */
 
@@ -89,12 +89,12 @@ $spacing-3xl: 64rpx;
 /* ==================== 圆角变量 ==================== */
 
 $radius-xs: 4rpx;
-$radius-sm: 8rpx;            // 增强版（从6rpx改为8rpx）
-$radius-md: 12rpx;           // 增强版（从8rpx改为12rpx）
-$radius-lg: 16rpx;           // 增强版（从12rpx改为16rpx）
-$radius-xl: 20rpx;           // 增强版（从16rpx改为20rpx）
-$radius-2xl: 24rpx;          // 增强版（从16rpx改为24rpx）
-$radius-3xl: 32rpx;          // 增强版（从24rpx改为32rpx）
+$radius-sm: 6rpx;            // 随手记风格（更小的圆角）
+$radius-md: 8rpx;            // 随手记风格（更小的圆角）
+$radius-lg: 12rpx;           // 随手记风格（更小的圆角）
+$radius-xl: 16rpx;           // 随手记风格（更小的圆角）
+$radius-2xl: 20rpx;          // 随手记风格（更小的圆角）
+$radius-3xl: 24rpx;          // 随手记风格（更小的圆角）
 $radius-round: 50%;
 
 /* ==================== 过渡动画 ==================== */

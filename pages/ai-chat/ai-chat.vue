@@ -12,7 +12,7 @@
 			</view>
 		</view>
 		
-		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 对话区域 -->
 			<scroll-view 
 				class="chat-area" 
@@ -313,19 +313,19 @@ onLoad(async () => {
 	bottom: 0;
 }
 
-/* 自定义导航栏 */
+/* 自定义导航栏 - 和账单页面一样的样式 */
 .custom-navbar {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	background: $bg-white;
 	z-index: 1000;
-	box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.2);
+	border-bottom: 1rpx solid $border-light;
 }
 
 .navbar-content {
-	height: 44px;
+	height: 56px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -340,14 +340,14 @@ onLoad(async () => {
 
 .back-icon {
 	font-size: 48rpx;
-	color: $text-white;
+	color: $text-primary;
 	font-weight: $font-weight-light;
 }
 
 .navbar-title {
 	font-size: $font-size-lg;
-	font-weight: $font-weight-bold;
-	color: $text-white;
+	font-weight: $font-weight-semibold;
+	color: $text-primary;
 }
 
 .navbar-right {

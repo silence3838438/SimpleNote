@@ -764,7 +764,7 @@ const isIOS = computed(() => data.isIOS)
 .login-btn {
 	width: 100%;
 	height: 92rpx; /* 减小高度，从104rpx改为92rpx */
-	border-radius: 16rpx;
+	border-radius: 46rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;

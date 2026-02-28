@@ -1,5 +1,17 @@
 <template>
-	<view class="container">
+	<view class="page">
+		<!-- 自定义导航栏 -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left" @click="goBack">
+					<text class="back-icon">‹</text>
+				</view>
+				<view class="navbar-title">记账提醒</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56 + 16) + 'px' }">
 		<!-- 时间选择卡片 -->
 		<view class="time-card">
 			<view class="card-title">
@@ -72,13 +84,26 @@
 				</picker-view>
 			</view>
 		</view>
+		</view>
 	</view>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import request from '@/utils/request.js'
+
+// 获取状态栏高度
+const statusBarHeight = ref(0)
+const getSystemInfo = () => {
+	const systemInfo = uni.getSystemInfoSync()
+	statusBarHeight.value = systemInfo.statusBarHeight || 0
+}
+
+// 返回上一页
+const goBack = () => {
+	uni.navigateBack()
+}
 
 const data = reactive({
 	selectedTime: '未设置',  // 默认显示"未设置"
@@ -102,6 +127,9 @@ const data = reactive({
 })
 
 onLoad((options) => {
+	// 获取系统信息
+	getSystemInfo()
+	
 	// 保存来源参数
 	data.fromBillSuccess = options?.from === 'billSuccess'
 	
@@ -324,6 +352,53 @@ const saveSubscriptionToCloud = async () => {
 <style lang="scss" scoped>
 @import "@/styles/variables.scss";
 
+.page {
+	width: 100%;
+	min-height: 100vh;
+	background: #F7F8FA;
+}
+
+/* 自定义导航栏 - 和账单页面一样的样式 */
+.custom-navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background: $bg-white;
+	z-index: 1000;
+	border-bottom: 1rpx solid $border-light;
+}
+
+.navbar-content {
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 $spacing-lg;
+}
+
+.navbar-left {
+	width: 80rpx;
+	display: flex;
+	align-items: center;
+}
+
+.back-icon {
+	font-size: 48rpx;
+	color: $text-primary;
+	font-weight: $font-weight-light;
+}
+
+.navbar-title {
+	font-size: $font-size-lg;
+	font-weight: $font-weight-semibold;
+	color: $text-primary;
+}
+
+.navbar-right {
+	width: 80rpx;
+}
+
 .container {
 	min-height: 100vh;
 	background: #F7F8FA;
@@ -468,7 +543,7 @@ const saveSubscriptionToCloud = async () => {
 	height: 88rpx;
 	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
 	color: $text-white;
-	border-radius: $radius-2xl;
+	border-radius: 44rpx;
 	font-size: $font-size-lg;
 	font-weight: $font-weight-bold;
 	border: none;

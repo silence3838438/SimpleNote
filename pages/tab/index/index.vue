@@ -1,23 +1,17 @@
 <template>
 	<view class="page">
-		<!-- 系统样式导航栏 -->
-		<!-- #ifdef MP-WEIXIN -->
-		<view class="system-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-		<!-- #endif -->
-		<!-- #ifdef APP-PLUS -->
-		<view class="system-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-		<!-- #endif -->
+		<!-- 自定义导航栏（随手记风格） -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<view class="navbar-content">
-				<text class="navbar-title-text">钱哪去了</text>
+				<view class="navbar-left"></view>
+				<view class="navbar-title">
+				<text class="title-text">钱哪去了</text>
+			</view>
+				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
-		<!-- #ifdef MP-WEIXIN -->
-		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
-		<!-- #endif -->
-		<!-- #ifdef APP-PLUS -->
-		<view class="container" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
-		<!-- #endif -->
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 顶部月份选择器 -->
 			<view class="header">
 				<view class="month-picker" @click="showMonthPicker">
@@ -338,7 +332,7 @@ const data = reactive({
 	// 应用配置
 	appConfig: {
 		show_voice_record: false, // APP端语音记账开关
-		show_ai_advisor_wechat: false // 小程序端功能总开关
+		show_ai_advisor_wechat: true // 小程序端功能总开关（默认开启，等待接口返回）
 	}
 })
 
@@ -524,7 +518,7 @@ const showReminderSubscribeGuide = () => {
 		content: '开启每日提醒，养成记账好习惯？\n每天晚上8点温馨提示',
 		confirmText: '开启提醒',
 		cancelText: '暂不需要',
-		confirmColor: '#52C41A',
+		confirmColor: '#52C41A', // 使用主题色
 		success: (res) => {
 			if (res.confirm) {
 				// 用户点击开启提醒
@@ -1278,69 +1272,53 @@ export default {
 		z-index: 1000;
 	}
 	
-	/* 系统样式导航栏（非活动期间） */
-	.system-navbar {
+	/* 自定义导航栏（随手记风格 - 纯白极简，增加高度） */
+	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		background: #52C41A;
+		background: $bg-white;
 		z-index: 1000;
+		border-bottom: 1rpx solid $border-light;
 		
 		.navbar-content {
-			height: 44px;
+			height: 56px; /* 从44px增加到56px，更舒适 */
 			display: flex;
 			align-items: center;
-			justify-content: center;
-			/* #ifdef APP-PLUS */
-			padding-bottom: 8rpx;
-			/* #endif */
+			justify-content: space-between;
+			padding: 0 $spacing-lg;
 		}
 		
-		.navbar-title-text {
-			font-size: 36rpx;
-			font-weight: $font-weight-bold;
-			color: $text-white;
+		.navbar-left,
+		.navbar-right {
+			width: 80rpx;
+			display: flex;
+			align-items: center;
 		}
-	}
-	
-	.navbar-content {
-		height: 44px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0 $spacing-lg;
-	}
-	
-	.navbar-left,
-	.navbar-right {
-		width: 80rpx;
-		display: flex;
-		align-items: center;
-	}
-	
-	.navbar-right {
-		justify-content: flex-end;
-	}
-	
-	.navbar-title {
-		flex: 1;
-		display: flex;
-		justify-content: center;
-	}
-	
-	.title-text {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: $text-white;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
-		letter-spacing: 1rpx;
+		
+		.navbar-right {
+			justify-content: flex-end;
+		}
+		
+		.navbar-title {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+			
+			.title-text {
+				font-size: $font-size-lg; /* 增大标题字体 */
+				font-weight: $font-weight-semibold;
+				color: $text-primary;
+			}
+		}
 	}
 	
 	.container {
 		padding: $spacing-sm $spacing-md;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
+		background: $bg-page;
 	}
 
 	.header {
@@ -1456,7 +1434,7 @@ export default {
 	
 	.picker-confirm {
 		font-size: $font-size-base;
-		color: #52C41A;
+		color: $primary-color; /* 使用主题色 */
 		font-weight: $font-weight-medium;
 	}
 	
@@ -1490,9 +1468,9 @@ export default {
 		transition: color 0.3s ease;
 	}
 	
-	/* 选中项文字颜色为绿色 */
+	/* 选中项文字颜色使用主题色 */
 	.picker-item-selected {
-		color: #52C41A !important;
+		color: $primary-color !important; /* 使用主题色 */
 		font-weight: $font-weight-bold;
 		font-size: 36rpx;
 	}
@@ -1703,13 +1681,13 @@ export default {
 	}
 	
 	.photo-btn-compact {
-		background: linear-gradient(135deg, #F6FFED 0%, #E6F7E0 100%);
+		background: $primary-lightest; /* 使用主题色的极浅背景 */
 		box-shadow: $shadow-card;
-		border: 1rpx solid rgba(82, 196, 26, 0.15);
+		border: 1rpx solid rgba(82, 196, 26, 0.15); /* 使用主题色的边框 */
 	}
 	
 	.photo-btn-compact:active {
-		background: linear-gradient(135deg, #E6F7E0 0%, #D9F7BE 100%);
+		background: rgba(82, 196, 26, 0.15); /* 使用主题色的浅背景 */
 		box-shadow: $shadow-sm;
 	}
 	
@@ -2102,7 +2080,7 @@ export default {
 	
 	.budget-remaining {
 		font-size: $font-size-xl;
-		color: #52C41A;
+		color: $success-color; /* 使用主题色 */
 		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 	}
@@ -2347,7 +2325,7 @@ export default {
 	
 	.modal-content {
 		width: 640rpx;
-		background: linear-gradient(135deg, #ffffff 0%, #f6ffed 100%);
+		background: linear-gradient(135deg, #ffffff 0%, $primary-lightest 100%); /* 使用主题色的极浅背景 */
 		border-radius: 32rpx;
 		box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.15);
 		animation: scaleInModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -2455,7 +2433,7 @@ export default {
 	
 	.amount-btn {
 		height: 76rpx;
-		background: linear-gradient(135deg, #f6ffed 0%, #ffffff 100%);
+		background: linear-gradient(135deg, $primary-lightest 0%, #ffffff 100%); /* 使用主题色的极浅背景 */
 		border-radius: 16rpx;
 		display: flex;
 		align-items: center;
@@ -2504,9 +2482,9 @@ export default {
 	}
 	
 	.confirm-btn {
-		background: $gradient-primary;
+		background: $primary-gradient; /* 使用主题色渐变变量 */
 		color: #ffffff;
-		box-shadow: 0 8rpx 20rpx rgba(82, 196, 26, 0.3);
+		box-shadow: 0 8rpx 20rpx rgba(82, 196, 26, 0.3); /* 使用主题色的阴影 */
 	}
 	
 	.confirm-btn:active {
@@ -2589,7 +2567,7 @@ export default {
 		top: 0;
 		bottom: 0;
 		width: 4rpx; /* 美团风格：更细的装饰线 */
-		background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 		border-radius: 0 2rpx 2rpx 0;
 	}
 	
@@ -2672,7 +2650,7 @@ export default {
 	}
 	
 	.bill-amount.income {
-		color: #52C41A;
+		color: $success-color; /* 使用主题色 */
 	}
 
 	.bill-date {
@@ -2723,7 +2701,7 @@ export default {
 		bottom: 150rpx;
 		width: 120rpx;
 		height: 120rpx;
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+		background: $primary-gradient; /* 使用主题色渐变 */
 		border-radius: 60rpx;
 		display: flex;
 		align-items: center;
@@ -2764,19 +2742,19 @@ export default {
 /* 日期选择器确定按钮颜色 - APP端 */
 /* #ifdef APP-PLUS */
 ::v-deep .uni-picker-action-confirm {
-	color: #52C41A !important;
+	color: $primary-color !important; /* 使用主题色 */
 }
 
 ::v-deep .uni-picker__action-btn-confirm {
-	color: #52C41A !important;
+	color: $primary-color !important; /* 使用主题色 */
 }
 
 ::v-deep .uni-picker-action .uni-picker-action-confirm {
-	color: #52C41A !important;
+	color: $primary-color !important; /* 使用主题色 */
 }
 
 ::v-deep .uni-picker__action .uni-picker__action-btn-confirm {
-	color: #52C41A !important;
+	color: $primary-color !important; /* 使用主题色 */
 }
 /* #endif */
 </style>

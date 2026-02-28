@@ -103,7 +103,7 @@ const drawPoster = () => {
 	// 新增：收支对比标签
 	if (data.totalIncome > 0) {
 		const balanceText = data.balance >= 0 ? `结余 ¥${data.balance.toFixed(0)}` : `赤字 ¥${Math.abs(data.balance).toFixed(0)}`
-		const balanceColor = data.balance >= 0 ? '#4CAF50' : '#F44336'
+		const balanceColor = data.balance >= 0 ? '#52C41A' : '#F44336'
 		
 		ctx.setFillStyle('rgba(255, 255, 255, 0.2)')
 		roundRect(ctx, canvasWidth / 2 - 80, 100, 160, 28, 14)
@@ -517,7 +517,7 @@ onLoad((options) => {
 		align-items: center;
 		justify-content: center;
 		padding: $spacing-md $spacing-lg;
-		border-radius: $radius-xl;
+		border-radius: 40rpx;
 		font-size: $font-size-base;
 		font-weight: $font-weight-semibold;
 		border: none;

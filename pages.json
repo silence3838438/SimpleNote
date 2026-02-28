@@ -4,18 +4,17 @@
 			"path": "pages/tab/index/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTextStyle": "white",
+				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": true,
 				"backgroundTextStyle": "dark",
-				"backgroundColor": "#52C41A"
+				"backgroundColor": "#F7F8FA"
 			}
 		},
 		{
 			"path": "pages/tab/bills/bills",
 			"style": {
-				"navigationBarTitleText": "账单",
-				"navigationBarBackgroundColor": "#52C41A",
-				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom",
+				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": true,
 				"backgroundTextStyle": "dark"
 			}
@@ -23,9 +22,8 @@
 		{
 			"path": "pages/tab/statistics/statistics",
 			"style": {
-				"navigationBarTitleText": "统计",
-				"navigationBarBackgroundColor": "#52C41A",
-				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom",
+				"navigationBarTextStyle": "black",
 				"enablePullDownRefresh": true,
 				"backgroundTextStyle": "dark"
 			}
@@ -84,8 +82,7 @@
 				{
 					"path": "detail",
 					"style": {
-						"navigationBarTitleText": "账单详情",
-						"navigationBarBackgroundColor": "#52C41A",
+						"navigationStyle": "custom",
 						"navigationBarTextStyle": "white"
 					}
 				}
@@ -127,8 +124,7 @@
 				{
 					"path": "settings",
 					"style": {
-						"navigationBarTitleText": "系统设置",
-						"navigationBarBackgroundColor": "#52C41A",
+						"navigationStyle": "custom",
 						"navigationBarTextStyle": "white"
 					}
 				},
@@ -142,8 +138,7 @@
 				{
 					"path": "reminder",
 					"style": {
-						"navigationBarTitleText": "记账提醒",
-						"navigationBarBackgroundColor": "#52C41A",
+						"navigationStyle": "custom",
 						"navigationBarTextStyle": "white"
 					}
 				},
@@ -230,14 +225,14 @@
 		}
 	},
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
+		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "钱哪去了",
-		"navigationBarBackgroundColor": "#52C41A",
-		"backgroundColor": "#F8F9FA",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F7F8FA",
 		"navigationStyle": "default",
 		"enablePullDownRefresh": false,
 		"disableScroll": false,
-		"backgroundTextStyle": "light"
+		"backgroundTextStyle": "dark"
 	},
 	"tabBar": {
 		"color": "#666666",

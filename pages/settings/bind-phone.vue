@@ -584,7 +584,7 @@ onLoad(async () => {
 	width: 100%;
 	height: 96rpx;
 	background: $gradient-primary;
-	border-radius: $radius-lg;
+	border-radius: 48rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;

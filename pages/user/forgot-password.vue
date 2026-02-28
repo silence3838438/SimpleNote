@@ -424,7 +424,7 @@ const goToLogin = () => {
 	width: 100%;
 	height: 104rpx;
 	background: #52C41A;
-	border-radius: 16rpx;
+	border-radius: 52rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
