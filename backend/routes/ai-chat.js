@@ -68,7 +68,7 @@ router.post('/', async (req, res) => {
     );
     
     const todayCount = usageCount[0]?.count || 0;
-    const dailyLimit = 10;
+    const dailyLimit = 3;
     
     if (todayCount >= dailyLimit) {
       return res.json({

@@ -15,17 +15,19 @@ try {
   console.log('🔑 智谱 AI API Key:', apiKey ? '已配置' : '未配置');
   
   if (apiKey) {
-    // Node.js 16 需要提供 fetch 和 FormData polyfill
+    // Node.js 16 需要提供 fetch、FormData 和 Headers polyfill
     const fetch = require('node-fetch');
     const { FormData } = require('formdata-node');
+    const { Headers } = require('node-fetch');
     
-    // 设置全局 FormData
+    // 设置全局对象（OpenAI SDK需要）
     global.FormData = FormData;
+    global.Headers = Headers;
+    global.fetch = fetch;
     
     zhipuClient = new OpenAI({
       apiKey: apiKey,
-      baseURL: 'https://open.bigmodel.cn/api/paas/v4',
-      fetch: fetch  // 提供 fetch 实现
+      baseURL: 'https://open.bigmodel.cn/api/paas/v4'
     });
     console.log('✅ 智谱 AI 初始化成功');
   } else {
