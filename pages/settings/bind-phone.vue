@@ -399,13 +399,16 @@ onLoad(async () => {
 }
 
 .navbar-left {
-	width: 80rpx;
+	min-width: 120rpx; /* 增大点击区域 */
+	height: 100%; /* 占满导航栏高度 */
 	display: flex;
 	align-items: center;
+	justify-content: flex-start;
+	padding-right: 20rpx; /* 增加右侧内边距，扩大点击区域 */
 }
 
 .back-icon {
-	font-size: 48rpx;
+	font-size: 56rpx; /* 增大箭头图标 */
 	color: $text-primary;
 	font-weight: $font-weight-light;
 	line-height: 1;

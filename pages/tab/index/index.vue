@@ -1287,9 +1287,9 @@ export default {
 		top: 0;
 		left: 0;
 		right: 0;
-		background: $bg-white;
+		background: $primary-gradient; /* 使用主题色渐变 */
 		z-index: 1000;
-		border-bottom: 1rpx solid $border-light;
+		border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
 		
 		.navbar-content {
 			height: 56px; /* 从44px增加到56px，更舒适 */
@@ -1318,7 +1318,7 @@ export default {
 			.title-text {
 				font-size: $font-size-lg; /* 增大标题字体 */
 				font-weight: $font-weight-semibold;
-				color: $text-primary;
+				color: $text-white; /* 白色文字 */
 			}
 		}
 	}

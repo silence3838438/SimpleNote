@@ -1612,8 +1612,8 @@ const handleDownloadComplete = () => {
 	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%); /* 绿色渐变背景 */
 	border-radius: 0; /* 移除所有圆角 */
 	padding: $spacing-xl $spacing-lg;
-	padding-top: calc(var(--status-bar-height) + 44px + 40rpx); /* 适中的顶部间距 */
-	padding-bottom: 100rpx; /* 大幅增加底部内边距 */
+	padding-top: calc(var(--status-bar-height) + 44px + 60rpx); /* 增加顶部间距 */
+	padding-bottom: 140rpx; /* 进一步增加底部内边距，让绿色区域更高 */
 	margin: 0 0 $spacing-lg 0;
 	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.25);
 	position: relative;
@@ -1650,7 +1650,7 @@ const handleDownloadComplete = () => {
 	display: flex;
 	align-items: center;
 	gap: 40rpx;
-	margin-bottom: 0; /* 移除底部边距 */
+	margin-bottom: 20rpx; /* 增加底部边距，让内容更协调 */
 	padding: 0;
 	position: relative;
 	z-index: 1;
@@ -1658,13 +1658,13 @@ const handleDownloadComplete = () => {
 
 .avatar-wrapper {
 	position: relative;
-	width: 120rpx;
-	height: 120rpx;
+	width: 140rpx; /* 稍微增大头像 */
+	height: 140rpx;
 }
 
 .avatar {
-	width: 120rpx;
-	height: 120rpx;
+	width: 140rpx; /* 稍微增大头像 */
+	height: 140rpx;
 	border-radius: 50%;
 	border: 4rpx solid rgba(255, 255, 255, 0.3); /* 半透明白色边框 */
 	box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15); /* 更明显的阴影 */
@@ -1717,7 +1717,7 @@ const handleDownloadComplete = () => {
 }
 
 .nickname {
-	font-size: 40rpx; /* 增大字号 */
+	font-size: 44rpx; /* 进一步增大字号 */
 	font-weight: $font-weight-bold;
 	color: #FFFFFF; /* 白色文字 */
 	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1); /* 添加文字阴影 */
@@ -1742,16 +1742,16 @@ const handleDownloadComplete = () => {
 	display: flex;
 	align-items: center;
 	gap: $spacing-xs;
-	padding: 8rpx 20rpx;
+	padding: 10rpx 24rpx; /* 增加内边距 */
 	background: rgba(255, 255, 255, 0.25); /* 半透明白色背景 */
 	border-radius: $radius-lg;
 	width: fit-content;
-	margin-top: 6rpx;
+	margin-top: 8rpx; /* 增加上边距 */
 	backdrop-filter: blur(10rpx);
 }
 
 .level-name {
-	font-size: $font-size-base;
+	font-size: 30rpx; /* 稍微增大字号 */
 	font-weight: $font-weight-semibold;
 	color: #FFFFFF; /* 白色文字 */
 }

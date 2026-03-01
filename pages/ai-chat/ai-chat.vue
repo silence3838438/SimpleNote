@@ -8,7 +8,9 @@
 					<text class="back-icon">‹</text>
 				</view>
 				<view class="navbar-title">财务顾问</view>
-				<view class="navbar-right"></view>
+				<view class="navbar-right" @click="clearHistory" v-if="messages.length > 0">
+					<text class="clear-icon">🗑️</text>
+				</view>
 			</view>
 		</view>
 		
@@ -75,7 +77,7 @@
 			</scroll-view>
 			
 			<!-- 快捷问题 -->
-			<view class="quick-questions" v-if="messages.length === 0 && !isLoading">
+			<view class="quick-questions">
 				<view 
 					class="quick-item" 
 					v-for="(q, index) in quickQuestions" 
@@ -124,6 +126,51 @@ const userAvatar = ref('https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avata
 
 const messages = reactive([])
 
+// 从本地存储加载历史消息
+const loadHistoryMessages = () => {
+	try {
+		const history = uni.getStorageSync('ai_chat_history')
+		if (history && Array.isArray(history)) {
+			// 清空当前消息
+			messages.length = 0
+			// 加载历史消息
+			history.forEach(msg => {
+				messages.push(msg)
+			})
+		}
+	} catch (error) {
+		console.error('加载历史消息失败:', error)
+	}
+}
+
+// 保存消息到本地存储
+const saveMessageToStorage = () => {
+	try {
+		uni.setStorageSync('ai_chat_history', messages)
+	} catch (error) {
+		console.error('保存消息失败:', error)
+	}
+}
+
+// 清空历史记录
+const clearHistory = () => {
+	uni.showModal({
+		title: '清空历史',
+		content: '确定要清空所有聊天记录吗？',
+		confirmColor: '#FF4D4F',
+		success: (res) => {
+			if (res.confirm) {
+				messages.length = 0
+				uni.removeStorageSync('ai_chat_history')
+				uni.showToast({
+					title: '已清空',
+					icon: 'success'
+				})
+			}
+		}
+	})
+}
+
 const quickQuestions = [
 	'我这个月花了多少钱？',
 	'哪个分类花费最多？',
@@ -154,6 +201,9 @@ const sendMessage = async () => {
 		time: formatTime(new Date())
 	})
 	
+	// 保存到本地存储
+	saveMessageToStorage()
+	
 	inputText.value = ''
 	isLoading.value = true
 	
@@ -174,6 +224,9 @@ const sendMessage = async () => {
 				content: result.answer,
 				time: formatTime(new Date())
 			})
+			
+			// 保存到本地存储
+			saveMessageToStorage()
 			
 			// 显示剩余次数提示
 			if (result.remainingCount !== undefined) {
@@ -207,6 +260,9 @@ const sendMessage = async () => {
 				content: errorMessage,
 				time: formatTime(new Date())
 			})
+			
+			// 保存到本地存储
+			saveMessageToStorage()
 		}
 	} catch (error) {
 		console.error('AI对话失败:', error)
@@ -215,6 +271,9 @@ const sendMessage = async () => {
 			content: '抱歉，网络连接失败 😅 请检查网络后重试~',
 			time: formatTime(new Date())
 		})
+		
+		// 保存到本地存储
+		saveMessageToStorage()
 	} finally {
 		isLoading.value = false
 		await nextTick()
@@ -294,6 +353,15 @@ onLoad(async () => {
 	if (userInfo && userInfo.avatarUrl) {
 		userAvatar.value = userInfo.avatarUrl
 	}
+	
+	// 加载历史消息
+	loadHistoryMessages()
+	
+	// 如果有历史消息，滚动到底部
+	if (messages.length > 0) {
+		await nextTick()
+		scrollToBottom()
+	}
 })
 </script>
 
@@ -319,9 +387,9 @@ onLoad(async () => {
 	top: 0;
 	left: 0;
 	right: 0;
-	background: $bg-white;
+	background: $primary-gradient; /* 使用主题色渐变 */
 	z-index: 1000;
-	border-bottom: 1rpx solid $border-light;
+	border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
 }
 
 .navbar-content {
@@ -333,25 +401,37 @@ onLoad(async () => {
 }
 
 .navbar-left {
-	width: 80rpx;
+	min-width: 120rpx; /* 增大点击区域 */
+	height: 100%; /* 占满导航栏高度 */
 	display: flex;
 	align-items: center;
+	justify-content: flex-start;
+	padding-right: 20rpx; /* 增加右侧内边距，扩大点击区域 */
 }
 
 .back-icon {
-	font-size: 48rpx;
-	color: $text-primary;
+	font-size: 56rpx; /* 增大箭头图标 */
+	color: $text-white;
 	font-weight: $font-weight-light;
 }
 
 .navbar-title {
 	font-size: $font-size-lg;
 	font-weight: $font-weight-semibold;
-	color: $text-primary;
+	color: $text-white; /* 白色文字 */
 }
 
 .navbar-right {
 	width: 80rpx;
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+.clear-icon {
+	font-size: 32rpx;
+	color: $text-white;
+	padding: 8rpx;
 }
 
 .container {
@@ -509,6 +589,7 @@ onLoad(async () => {
 	display: flex;
 	flex-direction: column;
 	gap: $spacing-md;
+	flex-shrink: 0;
 }
 
 .quick-item {
