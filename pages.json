@@ -61,8 +61,8 @@
 					"path": "confirm/confirm",
 					"style": {
 						"navigationBarTitleText": "确认账单",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationBarBackgroundColor": "#FFFFFF",
+						"navigationBarTextStyle": "black"
 					}
 				},
 				{
@@ -145,17 +145,13 @@
 				{
 					"path": "feedback",
 					"style": {
-						"navigationBarTitleText": "意见反馈",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationStyle": "custom"
 					}
 				},
 				{
 					"path": "about",
 					"style": {
-						"navigationBarTitleText": "关于我们",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationStyle": "custom"
 					}
 				}
 			]

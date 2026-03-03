@@ -44,7 +44,7 @@
 				<view class="action-bar">
 					<view class="action-item" @click="chooseImage">
 						<view class="action-btn album-btn">
-							<image class="action-icon-img" src="/static/xiangce.png" mode="aspectFit"></image>
+							<image class="action-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/xiangce.png" mode="aspectFit"></image>
 						</view>
 						<text class="action-label">相册</text>
 					</view>
@@ -76,7 +76,7 @@
 				<view class="action-bar">
 					<view class="action-item" @click="chooseImage">
 						<view class="action-btn album-btn">
-							<image class="action-icon-img" src="/static/xiangce.png" mode="aspectFit"></image>
+							<image class="action-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/xiangce.png" mode="aspectFit"></image>
 						</view>
 						<text class="action-label">相册</text>
 					</view>
@@ -227,7 +227,7 @@ const chooseImage = () => {
 // 压缩图片并立即识别
 const compressImage = async (imagePath) => {
 	try {
-		// 压缩图片
+		// 压缩图片（quality: 70，在识别准确率和文件大小间取得平衡）
 		const compressRes = await uni.compressImage({
 			src: imagePath,
 			quality: 70

@@ -11,12 +11,12 @@
 			
 			<view class="share-options">
 				<view class="share-item" @click="shareToWechatFriend">
-					<image class="share-icon" src="/static/weixinhaoyou.png" mode="aspectFit"></image>
+					<image class="share-icon" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/weixinhaoyou.png" mode="aspectFit"></image>
 					<text class="share-label">微信好友</text>
 				</view>
 				
 				<view class="share-item" @click="shareToWechatMoments">
-					<image class="share-icon" src="/static/weixinpengyouquan.png" mode="aspectFit"></image>
+					<image class="share-icon" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/weixinpengyouquan.png" mode="aspectFit"></image>
 					<text class="share-label">朋友圈</text>
 				</view>
 			</view>

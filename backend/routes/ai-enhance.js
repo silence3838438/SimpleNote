@@ -91,10 +91,12 @@ ${ocrText}
    - 返回纯数字，不要单位（如：7.19、25.62、123.5）
    - 如果实在提取不到，返回0
 
-2. **备注(remark)** - 提取小票上的商品信息
-   - 如果是餐饮：提取菜品名（如"红烧鸡腿、素菜"）
-   - 如果是超市：提取商品名（如"可乐、薯片、面包"，最多3个，用顿号分隔）
-   - 如果是其他：提取关键消费内容
+2. **备注(remark)** - 提取小票上的备注信息
+   - **优先级1**：如果是发票，提取"备注"栏的内容（如"加班产品上线发布"）
+   - **优先级2**：如果是餐饮小票，提取菜品名（如"红烧鸡腿、素菜"）
+   - **优先级3**：如果是超市小票，提取商品名（如"可乐、薯片、面包"，最多3个，用顿号分隔）
+   - **优先级4**：如果是其他类型，提取关键消费内容
+   - **注意**：不要提取"服务类型"、"商品类别"等分类信息，只提取具体的备注内容
    - 如果实在没有：留空字符串""
 
 3. **商家优化(merchant)** - 仅在后端识别不准确时优化
@@ -175,8 +177,8 @@ ${ocrText}
     // 合并结果
     const finalResult = {
       ...baseInfo,
-      // AI 提取的金额优先（如果 AI 提取到了且大于0）
-      amount: (aiResult.amount && aiResult.amount > 0) ? aiResult.amount : baseInfo.amount,
+      // 【修复】优先使用后端正则解析的金额（更准确），只有当后端金额无效时才使用AI金额
+      amount: (baseInfo.amount && baseInfo.amount > 0) ? baseInfo.amount : (aiResult.amount || 0),
       remark: aiResult.remark || baseInfo.remark || '',
       merchant: aiResult.merchant || baseInfo.merchant || '',
       categoryName: aiResult.categoryName || baseInfo.categoryName || '其他'
@@ -347,8 +349,8 @@ ${voiceText}
     // 合并结果
     const finalResult = {
       ...baseInfo,
-      // AI 提取的金额优先（如果 AI 提取到了且大于0）
-      amount: (aiResult.amount && aiResult.amount > 0) ? aiResult.amount : baseInfo.amount,
+      // 【修复】优先使用前端正则解析的金额（更准确），只有当前端金额无效时才使用AI金额
+      amount: (baseInfo.amount && baseInfo.amount > 0) ? baseInfo.amount : (aiResult.amount || 0),
       remark: aiResult.remark || baseInfo.remark || '',
       merchant: aiResult.merchant || baseInfo.merchant || '',
       categoryName: aiResult.categoryName || baseInfo.categoryName || '其他'

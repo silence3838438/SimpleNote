@@ -51,7 +51,7 @@
 				<view class="overview-item income-item">
 					<view class="overview-label-row">
 						<text class="overview-label">总收入</text>
-						<image class="eye-icon-img" :src="data.hideIncome ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
+						<image class="eye-icon-img" :src="data.hideIncome ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
 					</view>
 					<text class="overview-amount income-color" v-if="!data.hideIncome">+¥{{ formatAmount(data.totalIncome) }}</text>
 					<text class="overview-amount income-color" v-else>****</text>
@@ -59,7 +59,7 @@
 				<view class="overview-item expense-item">
 					<view class="overview-label-row">
 						<text class="overview-label">总支出</text>
-						<image class="eye-icon-img" :src="data.hideExpense ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
+						<image class="eye-icon-img" :src="data.hideExpense ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
 					</view>
 					<text class="overview-amount expense-color" v-if="!data.hideExpense">-¥{{ formatAmount(data.totalExpense) }}</text>
 					<text class="overview-amount expense-color" v-else>****</text>
@@ -70,7 +70,7 @@
 				<view class="overview-item">
 					<view class="overview-label-row">
 						<text class="overview-label">结余</text>
-						<image class="eye-icon-img" :src="data.hideBalance ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
+						<image class="eye-icon-img" :src="data.hideBalance ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
 					</view>
 					<text class="overview-amount" :class="data.balance >= 0 ? 'income-color' : 'expense-color'" v-if="!data.hideBalance">
 						{{ data.balance >= 0 ? '+' : '-' }}¥{{ formatAmount(data.balance) }}
@@ -91,7 +91,6 @@
 				:class="{ 'active': data.currentType === 'expense' }"
 				@click="switchType('expense')"
 			>
-				<text class="tab-icon">💸</text>
 				<text class="tab-text">支出分析</text>
 			</view>
 			<view 
@@ -99,7 +98,6 @@
 				:class="{ 'active': data.currentType === 'income' }"
 				@click="switchType('income')"
 			>
-				<text class="tab-icon">💰</text>
 				<text class="tab-text">收入分析</text>
 			</view>
 		</view>
@@ -112,7 +110,7 @@
 				<view class="label-top" v-if="data.chartData[0]">
 					<view class="label-dot" :style="{ backgroundColor: data.chartData[0].color }"></view>
 					<view class="label-info">
-						<text class="label-text">{{ data.chartData[0].icon }} {{ data.chartData[0].name }}</text>
+						<text class="label-text">{{ data.chartData[0].name }}</text>
 						<text class="label-value">¥{{ data.chartData[0].amount.toFixed(0) }} ({{ data.chartData[0].percent }}%)</text>
 					</view>
 				</view>
@@ -122,7 +120,7 @@
 					<view class="label-left" v-if="data.chartData[3]">
 						<view class="label-dot" :style="{ backgroundColor: data.chartData[3].color }"></view>
 						<view class="label-info">
-							<text class="label-text">{{ data.chartData[3].icon }} {{ data.chartData[3].name }}</text>
+							<text class="label-text">{{ data.chartData[3].name }}</text>
 							<text class="label-value">¥{{ data.chartData[3].amount.toFixed(0) }}</text>
 							<text class="label-percent">{{ data.chartData[3].percent }}%</text>
 						</view>
@@ -142,7 +140,7 @@
 					<!-- 右侧标签 -->
 					<view class="label-right" v-if="data.chartData[1]">
 						<view class="label-info">
-							<text class="label-text">{{ data.chartData[1].icon }} {{ data.chartData[1].name }}</text>
+							<text class="label-text">{{ data.chartData[1].name }}</text>
 							<text class="label-value">¥{{ data.chartData[1].amount.toFixed(0) }}</text>
 							<text class="label-percent">{{ data.chartData[1].percent }}%</text>
 						</view>
@@ -154,13 +152,12 @@
 				<view class="label-bottom" v-if="data.chartData[2]">
 					<view class="label-dot" :style="{ backgroundColor: data.chartData[2].color }"></view>
 					<view class="label-info">
-						<text class="label-text">{{ data.chartData[2].icon }} {{ data.chartData[2].name }}</text>
+						<text class="label-text">{{ data.chartData[2].name }}</text>
 						<text class="label-value">¥{{ data.chartData[2].amount.toFixed(0) }} ({{ data.chartData[2].percent }}%)</text>
 					</view>
 				</view>
 			</view>
 			<view class="chart-empty" v-else>
-				<text class="empty-icon">📊</text>
 				<text class="empty-text">暂无{{ data.currentType === 'income' ? '收入' : '支出' }}数据</text>
 				<view class="empty-action" @click="goToHome">快去记账</view>
 			</view>
@@ -176,7 +173,6 @@
 					:key="index"
 					:class="insight.type"
 				>
-					<view class="insight-icon">{{ insight.icon }}</view>
 					<view class="insight-content">
 						<text class="insight-text">{{ insight.text }}</text>
 						<text class="insight-tip" v-if="insight.tip">{{ insight.tip }}</text>
@@ -1137,15 +1133,16 @@ onPullDownRefresh(async () => {
 		background: $bg-page;
 	}
 	
-	/* 自定义导航栏（随手记风格 - 增加高度） */
+	/* 自定义导航栏（随手记风格 - 纯白色） */
 	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		background: $primary-gradient; /* 使用主题色渐变 */
+		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
+		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 		
 		.navbar-content {
 			height: 56px; /* 从44px增加到56px */
@@ -1175,79 +1172,58 @@ onPullDownRefresh(async () => {
 		.title-text {
 			font-size: $font-size-lg; /* 使用统一的大字体 */
 			font-weight: $font-weight-semibold;
-			color: $text-white; /* 白色文字 */
+			color: $text-primary; /* 深灰色文字 */
 		}
 	}
 	
 	.container {
 		min-height: 100vh;
 		background: $bg-page;
-		padding: $spacing-sm $spacing-md;
+		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
 	}
 	
-	/* 筛选器包装容器 - 美团风格 */
+	/* 筛选器包装容器 - 随手记风格（简洁版） */
 	.filter-wrapper {
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: $spacing-sm;
-		/* #ifdef MP-WEIXIN */
-		margin-top: $spacing-sm;
-		/* #endif */
-		/* #ifdef APP-PLUS */
-		margin-top: $spacing-sm;
-		/* #endif */
-		margin-bottom: $spacing-xl; /* 增大与收支总览的间距 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
-		border: 2rpx solid rgba(82, 196, 26, 0.08);
+		background: transparent;
+		padding: 0;
+		margin-top: $spacing-md;
+		margin-bottom: $spacing-xl;
 	}
 
 	.time-filter {
 		display: flex;
-		gap: $spacing-md;
+		gap: $spacing-sm;
+		background: $bg-white;
+		border-radius: $radius-lg;
+		padding: 6rpx;
+		border: 1rpx solid $border-color;
 	}
 
 	.filter-item {
 		flex: 1;
 		text-align: center;
-		padding: 16rpx 20rpx; /* 美团风格：更紧凑 */
-		font-size: 28rpx;
+		padding: 16rpx 16rpx;
+		font-size: $font-size-sm;
 		color: $text-secondary;
-		background: $bg-light;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		transition: all $transition-base ease;
+		background: linear-gradient(135deg, #F7F9FA 0%, #F0F2F5 100%);
+		border-radius: $radius-md;
+		transition: all $transition-fast;
 		font-weight: $font-weight-medium;
-		border: 2rpx solid transparent;
-		position: relative;
-		overflow: hidden;
-		letter-spacing: 0.5rpx;
-	}
-	
-	.filter-item::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-		transition: left 0.5s ease;
+		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
 	}
 	
 	.filter-item:active {
-		transform: scale(0.96);
-	}
-	
-	.filter-item:active::before {
-		left: 100%;
+		background: $bg-hover;
+		transform: scale(0.98);
 	}
 
 	.filter-item.active {
-		background: $gradient-primary;
+		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
 		color: $text-white;
 		font-weight: $font-weight-semibold;
-		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
+		box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.3), 0 2rpx 8rpx rgba(7, 193, 96, 0.2);
 		transform: scale(1.02);
 		border-color: transparent;
 	}
@@ -1620,36 +1596,57 @@ onPullDownRefresh(async () => {
 		}
 	}
 
+	/* 收支总览卡片 - 精致高端版 */
 	.overview-card {
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: $spacing-xl; /* 增大内边距，让卡片更高 */
-		margin-bottom: $spacing-xl; /* 增大底部间距 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border-radius: 16rpx;
+		padding: 32rpx $spacing-xl;
+		margin-bottom: $spacing-2xl;
+		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 卡片装饰光效 */
+	.overview-card::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		right: -30%;
+		width: 200rpx;
+		height: 200rpx;
+		background: radial-gradient(circle, rgba(7, 193, 96, 0.06) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
 	.overview-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: $spacing-sm; /* 减小间距 */
+		margin-bottom: $spacing-lg;
+		position: relative;
+		z-index: 1;
 	}
 	
 	.overview-title-wrapper {
 		display: flex;
 		flex-direction: column;
-		gap: 4rpx;
+		gap: 6rpx;
 	}
 	
 	.overview-title {
-		font-size: $font-size-base;
-		font-weight: $font-weight-semibold;
+		font-size: $font-size-lg;
+		font-weight: 600;
 		color: $text-primary;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.overview-subtitle {
-		font-size: $font-size-xs;
+		font-size: 22rpx;
 		color: $text-tertiary;
+		letter-spacing: 0.3rpx;
 	}
 	
 	/* 海报按钮 - 年度账单版 - 美团风格 */
@@ -1781,15 +1778,11 @@ onPullDownRefresh(async () => {
 		font-family: 'DIN Alternate', monospace;
 	}
 	
-	/* 类型切换标签 - 美团风格 */
+	/* 类型切换标签 - 参考首页拍照/语音按钮样式 */
 	.type-tabs {
 		display: flex;
-		gap: $spacing-sm;
-		margin-bottom: $spacing-xl; /* 增大与支出构成卡片的间距 */
-		padding: $spacing-xs;
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		gap: $spacing-lg;
+		margin-bottom: $spacing-2xl;
 	}
 	
 	.type-tab {
@@ -1798,34 +1791,71 @@ onPullDownRefresh(async () => {
 		align-items: center;
 		justify-content: center;
 		gap: $spacing-xs;
-		padding: $spacing-md; /* 增大内边距，让按钮更高 */
-		background: transparent;
-		border-radius: $radius-lg;
+		height: 88rpx;
+		padding: 0 $spacing-md;
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border-radius: 14rpx;
 		transition: all $transition-fast;
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		position: relative;
+		overflow: hidden;
 	}
 	
 	.type-tab.active {
-		background: #F0F9FF;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.1);
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+		border: 1rpx solid rgba(82, 196, 26, 0.15);
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08), 0 2rpx 8rpx rgba(82, 196, 26, 0.05);
+	}
+	
+	.type-tab.active::after {
+		content: '';
+		position: absolute;
+		top: -40%;
+		right: -20%;
+		width: 150rpx;
+		height: 150rpx;
+		background: radial-gradient(circle, rgba(82, 196, 26, 0.1) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
+	}
+	
+	.type-tab::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+		opacity: 0;
+		transition: opacity $transition-fast;
 	}
 	
 	.type-tab:active {
 		transform: scale(0.98);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+	}
+	
+	.type-tab:active::before {
+		opacity: 1;
 	}
 	
 	.tab-icon {
-		font-size: 40rpx; /* 增大图标尺寸 */
+		font-size: 38rpx;
 	}
 	
 	.tab-text {
-		font-size: $font-size-base; /* 增大文字尺寸 */
+		font-size: $font-size-base;
 		color: $text-secondary;
-		font-weight: $font-weight-medium;
+		font-weight: 500;
+		position: relative;
+		z-index: 1;
 	}
 	
 	.type-tab.active .tab-text {
-		color: $primary-color; /* 使用主题色 */
-		font-weight: $font-weight-semibold;
+		color: $primary-color;
+		font-weight: 600;
 	}
 
 	.overview-card, .analysis-card {
@@ -1957,19 +1987,6 @@ onPullDownRefresh(async () => {
 		padding: 80rpx 0;
 	}
 	
-	.empty-icon {
-		font-size: 80rpx; /* 美团风格：稍小的图标 */
-		margin-bottom: $spacing-lg;
-		opacity: 0.4;
-		filter: drop-shadow(0 4rpx 12rpx rgba(0, 0, 0, 0.08));
-		animation: float 3s ease-in-out infinite;
-	}
-	
-	@keyframes float {
-		0%, 100% { transform: translateY(0); }
-		50% { transform: translateY(-12rpx); }
-	}
-	
 	.empty-text {
 		font-size: $font-size-lg;
 		color: $text-secondary;
@@ -2013,47 +2030,11 @@ onPullDownRefresh(async () => {
 	.insight-item {
 		display: flex;
 		align-items: flex-start;
-		gap: $spacing-sm;
 		padding: $spacing-md;
 		border-radius: $radius-lg;
-		background: linear-gradient(135deg, #FAFAFA 0%, #FFFFFF 100%); /* 更精致的背景 */
-		border: 1rpx solid rgba(0, 0, 0, 0.06); /* 添加边框 */
-		position: relative;
-		overflow: hidden;
-		box-shadow: $shadow-sm; /* 添加轻微阴影 */
-	}
-	
-	.insight-item::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 4rpx; /* 美团风格：更细的装饰线 */
-		border-radius: 0 2rpx 2rpx 0;
-	}
-	
-	.insight-item.info::before {
-		background: linear-gradient(180deg, #1890FF 0%, #40A9FF 100%);
-	}
-	
-	.insight-item.success::before {
-		background: $primary-gradient; /* 使用主题色渐变 */
-	}
-	
-	.insight-item.warning::before {
-		background: linear-gradient(180deg, #FAAD14 0%, #FFC53D 100%);
-	}
-	
-	.insight-item.danger::before {
-		background: linear-gradient(180deg, #F5222D 0%, #FF4D4F 100%);
-	}
-	
-	.insight-icon {
-		font-size: 32rpx; /* 美团风格：稍小的图标 */
-		line-height: 1;
-		flex-shrink: 0;
-		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
+		background: linear-gradient(135deg, #FAFAFA 0%, #FFFFFF 100%);
+		border: 1rpx solid rgba(0, 0, 0, 0.06);
+		box-shadow: $shadow-sm;
 	}
 	
 	.insight-content {

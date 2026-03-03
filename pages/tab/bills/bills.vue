@@ -818,15 +818,16 @@ onPullDownRefresh(async () => {
 		background: $bg-page;
 	}
 	
-	/* 自定义导航栏（随手记风格 - 增加高度） */
+	/* 自定义导航栏（随手记风格 - 纯白色） */
 	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		background: $primary-gradient; /* 使用主题色渐变 */
+		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
+		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 		
 		.navbar-content {
 			height: 56px; /* 从44px增加到56px */
@@ -856,44 +857,46 @@ onPullDownRefresh(async () => {
 		.title-text {
 			font-size: $font-size-lg; /* 使用统一的大字体 */
 			font-weight: $font-weight-semibold;
-			color: $text-white; /* 白色文字 */
+			color: $text-primary; /* 深灰色文字 */
 		}
 	}
 	
 	.container {
-		padding: $spacing-sm $spacing-md;
+		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		background: $bg-page;
 	}
 	
-	/* 顶部搜索栏 */
+	/* 顶部搜索栏 - 精致版 */
 	.header-bar {
-		padding: $spacing-lg $spacing-md;
-		background: $bg-white;
-		border-bottom: 1rpx solid #F0F0F0;
-		margin-bottom: $spacing-sm;
+		padding: $spacing-lg 0;
+		background: transparent;
+		margin-bottom: $spacing-xs;
 	}
 	
-	/* 搜索输入框 */
+	/* 搜索输入框 - 精致版 */
 	.search-input-wrapper {
 		display: flex;
 		align-items: center;
-		background: #F5F5F5;
-		border-radius: $radius-2xl;
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border-radius: 14rpx;
 		padding: $spacing-md $spacing-lg;
-		height: 60rpx;
+		height: 68rpx;
 		transition: all $transition-fast;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 	
 	.search-input-wrapper:focus-within {
-		background: #EBEBEB;
-		box-shadow: 0 0 0 2rpx rgba(82, 196, 26, 0.2);
+		box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.08), 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+		border-color: rgba(7, 193, 96, 0.2);
 	}
 	
 	.search-icon {
 		font-size: 32rpx;
 		color: $text-tertiary;
 		flex-shrink: 0;
+		opacity: 0.6;
 	}
 	
 	.search-input {
@@ -902,72 +905,95 @@ onPullDownRefresh(async () => {
 		color: $text-primary;
 		margin-left: $spacing-md;
 		background: transparent;
+		font-weight: 400;
 	}
 	
 	/* placeholder样式 */
 	.search-input::placeholder {
-		color: rgba(0, 0, 0, 0.35);
+		color: $text-tertiary;
 		font-size: $font-size-base;
-		font-weight: $font-weight-light;
+		font-weight: 400;
 	}
 	
 	.clear-icon {
-		font-size: 32rpx;
+		font-size: 28rpx;
 		color: $text-tertiary;
 		padding: $spacing-sm;
 		flex-shrink: 0;
 		transition: all $transition-fast;
+		opacity: 0.5;
 	}
 	
 	.clear-icon:active {
-		transform: scale(0.9);
-		color: $text-secondary;
+		transform: scale(0.92);
+		opacity: 0.8;
 	}
 	
-	/* 统计卡片 - 美团风格优化 */
+	/* 统计卡片 - 精致高端版 */
 	.summary-card {
-		background: $primary-gradient; /* 使用主题色渐变 */
-		margin: 0 0 $spacing-xl 0;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: 48rpx $spacing-lg; /* 增加内边距，让卡片更高 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		margin: 0 0 $spacing-2xl 0;
+		border-radius: 16rpx;
+		padding: 36rpx $spacing-xl;
+		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 卡片装饰光效 */
+	.summary-card::before {
+		content: '';
+		position: absolute;
+		top: -40%;
+		right: -20%;
+		width: 180rpx;
+		height: 180rpx;
+		background: radial-gradient(circle, rgba(7, 193, 96, 0.06) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
 	.summary-header {
-		margin-bottom: $spacing-lg; /* 增加底部间距 */
+		margin-bottom: $spacing-xl;
+		position: relative;
+		z-index: 1;
 	}
 	
 	.month-selector {
 		display: inline-flex;
 		align-items: center;
 		gap: $spacing-xs;
-		padding: 6rpx $spacing-md;
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		backdrop-filter: blur(10rpx);
+		padding: 8rpx $spacing-lg;
+		background: rgba(7, 193, 96, 0.06);
+		border-radius: 20rpx; /* 胶囊形状 */
 		transition: all $transition-fast;
+		border: 1rpx solid rgba(7, 193, 96, 0.12);
 	}
 	
 	.month-selector:active {
 		transform: scale(0.96);
-		background: rgba(255, 255, 255, 0.3);
+		background: rgba(7, 193, 96, 0.1);
 	}
 	
 	.month-text {
 		font-size: $font-size-sm;
-		color: $text-white;
-		font-weight: $font-weight-medium;
+		color: $primary-color;
+		font-weight: 500;
 	}
 	
 	.month-arrow {
 		font-size: 18rpx;
-		color: rgba(255, 255, 255, 0.8);
+		color: $primary-color;
+		opacity: 0.7;
 	}
 	
 	.summary-amounts {
 		display: flex;
 		align-items: center;
 		justify-content: space-around;
+		position: relative;
+		z-index: 1;
 	}
 	
 	.amount-item {
@@ -975,57 +1001,60 @@ onPullDownRefresh(async () => {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 16rpx; /* 增加间距 */
+		gap: 12rpx;
 	}
 	
 	.amount-label {
-		font-size: $font-size-sm;
-		color: rgba(255, 255, 255, 0.8);
+		font-size: 22rpx;
+		color: $text-tertiary;
 		font-weight: $font-weight-normal;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.amount-value {
-		font-size: 40rpx; /* 增大字号 */
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
+		font-size: 38rpx;
+		font-weight: 600;
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		margin-top: 4rpx;
+		letter-spacing: -0.5rpx;
 	}
 	
 	.amount-value.expense {
-		color: #FF4D4F;
+		color: $error-color;
 	}
 	
 	.amount-value.income {
-		color: #FFFFFF;
+		color: $success-color;
 	}
 	
 	.amount-divider {
 		width: 1rpx;
-		height: 70rpx; /* 增加分隔线高度 */
-		background: rgba(255, 255, 255, 0.25);
+		height: 60rpx;
+		background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.06), transparent);
 	}
 	
 	/* 筛选标签 - 横向滚动 */
 	.filter-scroll {
-		padding: $spacing-lg 0; /* 增加上下内边距 */
-		margin-bottom: $spacing-md; /* 减小与列表的间距 */
+		padding: $spacing-md 0;
+		margin-bottom: $spacing-xs;
 		white-space: nowrap;
-		background: $bg-white;
+		background: transparent;
 	}
 	
 	.filter-tags {
 		display: inline-flex;
-		gap: $spacing-lg; /* 增加按钮之间的间距，从sm改为lg */
+		gap: $spacing-lg;
+		padding: 0;
 	}
 	
 	.filter-tag {
 		display: inline-flex;
 		align-items: center;
 		gap: 4rpx;
-		padding: 10rpx 24rpx; /* 美团风格：更紧凑的内边距 */
-		background: #F5F5F5;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		border: 2rpx solid transparent;
+		padding: 10rpx 24rpx;
+		background: $bg-white;
+		border-radius: $radius-lg;
+		border: 2rpx solid $border-color;
 		transition: all $transition-fast;
 		white-space: nowrap;
 		position: relative;
@@ -1039,15 +1068,15 @@ onPullDownRefresh(async () => {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(82, 196, 26, 0.1); /* 使用主题色的半透明背景 */
+		background: rgba(82, 196, 26, 0.1);
 		opacity: 0;
 		transition: opacity $transition-fast;
 	}
 	
 	.filter-tag.active {
-		background: $primary-gradient; /* 使用主题色渐变 */
-		border-color: $primary-color; /* 使用主题色 */
-		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
+		background: $gradient-primary;
+		border-color: $primary-color;
+		box-shadow: $shadow-md;
 	}
 	
 	.tag-text {
@@ -1067,7 +1096,7 @@ onPullDownRefresh(async () => {
 	.export-tag {
 		background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
 		border-color: #13C2C2;
-		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
+		box-shadow: $shadow-md;
 	}
 	
 	.export-tag .tag-text {
@@ -1094,121 +1123,112 @@ onPullDownRefresh(async () => {
 		color: rgba(255, 255, 255, 0.8);
 	}
 	
-	/* 账单列表 */
+	/* 账单列表 - 精致高端版 */
 	.bills-list {
 		display: flex;
 		flex-direction: column;
-		gap: $spacing-md;
+		gap: $spacing-lg;
 		padding: 0 0 $spacing-md 0;
 	}
 	
 	.date-group {
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border-radius: 14rpx;
 		overflow: hidden;
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 	
 	.date-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: $spacing-lg $spacing-lg;
-		/* 纯白背景 */
-		background: #FFFFFF;
-		border-bottom: 2rpx solid #F0F0F0;
+		padding: $spacing-lg $spacing-xl;
+		background: rgba(7, 193, 96, 0.02);
+		border-bottom: 1rpx solid rgba(0, 0, 0, 0.03);
 		position: relative;
-		overflow: hidden;
-		/* 添加阴影增加层次感 */
-		box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.02);
 	}
 	
-	/* 日期头部装饰线 - 美团风格：更细的装饰线 */
+	/* 日期头部装饰线 - 精致版 */
 	.date-header::before {
 		content: '';
 		position: absolute;
 		left: 0;
 		top: 0;
 		bottom: 0;
-		width: 4rpx; /* 美团风格：更细 */
-		background: $primary-gradient; /* 使用主题色渐变 */
+		width: 3rpx;
+		background: linear-gradient(to bottom, $primary-color, rgba(7, 193, 96, 0.3));
 		border-radius: 0 2rpx 2rpx 0;
 	}
 	
 	.date-text {
 		font-size: $font-size-base;
 		color: $text-primary;
-		font-weight: $font-weight-bold;
-		letter-spacing: 0.5rpx;
-		padding-left: $spacing-sm; /* 为装饰线留出空间 */
+		font-weight: 600;
+		letter-spacing: 0.3rpx;
+		padding-left: $spacing-md;
 	}
 	
 	.date-summary {
 		display: flex;
-		gap: $spacing-lg;
-		font-size: $font-size-sm;
-		font-family: 'DIN Alternate', monospace;
-		font-weight: $font-weight-semibold;
+		gap: $spacing-md;
+		font-size: 22rpx;
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
+		font-weight: 500;
 	}
 	
 	.date-income {
-		color: $success-color; /* 使用主题色 */
-		background: rgba(82, 196, 26, 0.1); /* 主题色背景 */
-		padding: 2rpx 10rpx; /* 美团风格：更紧凑 */
-		border-radius: $radius-sm; /* 美团风格：6rpx圆角 */
+		color: $success-color;
+		background: rgba(7, 193, 96, 0.08);
+		padding: 4rpx 12rpx;
+		border-radius: 10rpx;
 	}
 	
 	.date-expense {
-		color: #FF4D4F;
-		background: rgba(255, 77, 79, 0.1);
-		padding: 2rpx 10rpx; /* 美团风格：更紧凑 */
-		border-radius: $radius-sm; /* 美团风格：6rpx圆角 */
+		color: $error-color;
+		background: rgba(238, 10, 36, 0.08);
+		padding: 4rpx 12rpx;
+		border-radius: 10rpx;
 	}
 	
 	.bill-items {
 		display: flex;
 		flex-direction: column;
-		gap: $spacing-sm; /* 账单项之间的间距 */
 	}
 	
 	.bill-item {
 		position: relative;
 		display: flex;
 		align-items: center;
-		padding: $spacing-md;
+		padding: $spacing-lg $spacing-xl;
 		background: $bg-white;
-		border-bottom: 1rpx solid #F0F0F0;
+		border-bottom: 1rpx solid rgba(0, 0, 0, 0.03);
 		transition: all $transition-fast;
-		/* 美团风格：去掉阴影，更简洁 */
-		border-radius: $radius-md; /* 美团风格：8rpx圆角 */
-		margin-bottom: $spacing-sm;
 	}
 	
 	.bill-item:active {
-		background: #FAFAFA;
-		/* 美团风格：去掉阴影变化 */
-		transform: scale(0.98); /* 美团风格：缩放反馈 */
+		background: rgba(7, 193, 96, 0.02);
 	}
 	
 	.bill-item:last-child {
 		border-bottom: none;
-		margin-bottom: 0;
 	}
 	
 	.bill-icon-wrapper {
-		width: 64rpx; /* 美团风格：更小的图标容器 */
-		height: 64rpx;
+		width: 52rpx;
+		height: 52rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #F5F5F5;
-		border-radius: $radius-md; /* 美团风格：8rpx圆角 */
-		margin-right: $spacing-md;
+		background: linear-gradient(135deg, #F7F8FA 0%, #FAFBFC 100%);
+		border-radius: 12rpx;
+		margin-right: $spacing-lg;
 		flex-shrink: 0;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
 	}
 	
 	.bill-icon {
-		font-size: 40rpx; /* 美团风格：稍小的图标 */
+		font-size: 36rpx;
 	}
 	
 	.bill-content {
@@ -1216,7 +1236,7 @@ onPullDownRefresh(async () => {
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 6rpx;
+		gap: 8rpx;
 	}
 	
 	.bill-main {
@@ -1227,106 +1247,136 @@ onPullDownRefresh(async () => {
 	}
 	
 	.bill-merchant {
-		font-size: $font-size-base;
+		font-size: 30rpx; /* 稍大的字号 */
 		color: $text-primary;
-		font-weight: $font-weight-medium;
+		font-weight: 500;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		max-width: 280rpx;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.bill-category {
-		font-size: $font-size-xs;
+		font-size: 20rpx;
 		color: $text-tertiary;
-		padding: 2rpx 8rpx;
-		background: #F5F5F5;
-		border-radius: $radius-sm; /* 美团风格：6rpx圆角 */
+		padding: 3rpx 10rpx;
+		background: rgba(0, 0, 0, 0.03);
+		border-radius: 8rpx; /* 更圆润 */
 		white-space: nowrap;
 		flex-shrink: 0;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.bill-time {
-		font-size: $font-size-xs;
+		font-size: 22rpx;
 		color: $text-tertiary;
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.bill-amount-wrapper {
 		flex-shrink: 0;
-		margin-left: $spacing-md;
+		margin-left: $spacing-lg;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
 	}
 	
 	.bill-amount {
-		font-size: $font-size-lg;
-		font-weight: $font-weight-semibold;
-		font-family: 'DIN Alternate', monospace;
+		font-size: 32rpx; /* 更大的金额字号 */
+		font-weight: 600;
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
+		letter-spacing: -0.5rpx;
+		line-height: 1.2;
 	}
 	
 	.bill-amount.income {
-		color: $success-color; /* 使用主题色 */
+		color: $success-color;
 	}
 	
 	.bill-amount.expense {
-		color: #FF4D4F;
+		color: $error-color;
 	}
 	
 	.bill-delete-icon {
-		width: 44rpx; /* 美团风格：更小的删除按钮 */
-		height: 44rpx;
+		width: 40rpx;
+		height: 40rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-left: $spacing-sm;
-		background: #FFF1F0;
-		border-radius: $radius-md; /* 美团风格：8rpx圆角 */
+		margin-left: $spacing-md;
+		background: rgba(238, 10, 36, 0.06);
+		border-radius: 10rpx;
 		transition: all $transition-fast;
 		flex-shrink: 0;
+		opacity: 0.7;
 	}
 	
 	.bill-delete-icon:active {
-		background: #FF4D4F;
-		transform: scale(0.9);
+		background: rgba(238, 10, 36, 0.12);
+		transform: scale(0.92);
+		opacity: 1;
 	}
 	
 	.bill-delete-icon .delete-icon {
-		font-size: 24rpx;
+		font-size: 22rpx;
 		transition: transform $transition-fast;
 	}
 	
 	.bill-delete-icon:active .delete-icon {
-		transform: rotate(15deg);
+		transform: rotate(12deg);
 	}
 	
-	/* 空状态 - 美团风格 */
+	/* 空状态 - 精致版 */
 	.empty-state {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 150rpx 0; /* 稍微增大内边距 */
-		margin-top: 30rpx; /* 增加顶部距离 */
+		padding: 120rpx 0;
+		margin-top: 40rpx;
 		text-align: center;
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border-radius: 16rpx;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 空状态装饰光效 */
+	.empty-state::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		right: -30%;
+		width: 200rpx;
+		height: 200rpx;
+		background: radial-gradient(circle, rgba(7, 193, 96, 0.04) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
 	.empty-icon {
-		font-size: 120rpx;
-		margin-bottom: $spacing-lg;
-		opacity: 0.3;
+		font-size: 100rpx;
+		margin-bottom: $spacing-xl;
+		opacity: 0.25;
+		filter: grayscale(0.3);
 	}
 	
 	.empty-text {
 		font-size: $font-size-lg;
 		color: $text-secondary;
-		font-weight: $font-weight-medium;
-		margin-bottom: $spacing-xs;
+		font-weight: 500;
+		margin-bottom: $spacing-sm;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.empty-tip {
 		font-size: $font-size-sm;
 		color: $text-tertiary;
+		letter-spacing: 0.3rpx;
 	}
 	
 	/* 自定义月份选择器弹窗 */

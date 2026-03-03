@@ -381,15 +381,16 @@ onLoad(async () => {
 	bottom: 0;
 }
 
-/* 自定义导航栏 - 和账单页面一样的样式 */
+/* 自定义导航栏 - 随手记风格（纯白色） */
 .custom-navbar {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
-	background: $primary-gradient; /* 使用主题色渐变 */
+	background: $bg-white; /* 随手记风格：纯白色导航栏 */
 	z-index: 1000;
-	border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
+	border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 }
 
 .navbar-content {
@@ -411,14 +412,17 @@ onLoad(async () => {
 
 .back-icon {
 	font-size: 56rpx; /* 增大箭头图标 */
-	color: $text-white;
+	color: $text-primary; /* 深灰色图标 */
 	font-weight: $font-weight-light;
 }
 
 .navbar-title {
+	flex: 1;
+	display: flex;
+	justify-content: center;
 	font-size: $font-size-lg;
 	font-weight: $font-weight-semibold;
-	color: $text-white; /* 白色文字 */
+	color: $text-primary; /* 深灰色文字 */
 }
 
 .navbar-right {
@@ -484,7 +488,8 @@ onLoad(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	background: linear-gradient(135deg, $primary-color 0%, #00A870 100%);
+	color: $text-white;
 	box-shadow: $shadow-sm;
 }
 
@@ -519,7 +524,8 @@ onLoad(async () => {
 }
 
 .user-message .message-bubble {
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	background: linear-gradient(135deg, $primary-color 0%, #00A870 100%);
+	color: $text-white;
 }
 
 .message-text {
@@ -651,8 +657,12 @@ onLoad(async () => {
 }
 
 .send-btn.active {
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-	box-shadow: $shadow-md;
+	background: linear-gradient(135deg, $primary-color 0%, #00A870 100%);
+	box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.3);
+}
+
+.send-btn.active .send-icon {
+	color: $text-white;
 }
 
 .send-btn:active {

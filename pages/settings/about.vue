@@ -1,6 +1,17 @@
 <template>
 	<view class="page">
-		<view class="container">
+		<!-- 自定义导航栏 -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left" @click="goBack">
+					<text class="back-icon">‹</text>
+				</view>
+				<view class="navbar-title">关于我们</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56 + 16) + 'px' }">
 			<!-- Logo 和标题 -->
 			<view class="header-section">
 				<image class="app-logo" src="/static/logo.png" mode="aspectFit"></image>
@@ -119,8 +130,20 @@
 import { ref, onMounted } from 'vue'
 
 const appVersion = ref('1.0.0')
+const statusBarHeight = ref(0)
+
+const getSystemInfo = () => {
+	const systemInfo = uni.getSystemInfoSync()
+	statusBarHeight.value = systemInfo.statusBarHeight || 0
+}
+
+const goBack = () => {
+	uni.navigateBack()
+}
 
 onMounted(() => {
+	getSystemInfo()
+	
 	// 获取版本号
 	// #ifdef APP-PLUS
 	const appInfo = plus.runtime
@@ -166,6 +189,51 @@ const openPrivacyPolicy = () => {
 .page {
 	min-height: 100vh;
 	background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%);
+}
+
+/* 自定义导航栏 - 随手记风格（纯白色） */
+.custom-navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background: $bg-white;
+	z-index: 1000;
+	border-bottom: 1rpx solid $border-color;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.navbar-content {
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 $spacing-lg;
+}
+
+.navbar-left {
+	min-width: 120rpx;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	padding-right: 20rpx;
+}
+
+.back-icon {
+	font-size: 56rpx;
+	color: $text-primary;
+	font-weight: $font-weight-light;
+}
+
+.navbar-title {
+	font-size: $font-size-lg;
+	font-weight: $font-weight-semibold;
+	color: $text-primary;
+}
+
+.navbar-right {
+	width: 80rpx;
 }
 
 .container {
@@ -341,7 +409,7 @@ const openPrivacyPolicy = () => {
 }
 
 .wechat-icon {
-	background: linear-gradient(135deg, #07C160 0%, #2AAE67 100%);
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
 }
 
 /* 邮件信封图标 */
@@ -417,10 +485,10 @@ const openPrivacyPolicy = () => {
 .wechat-logo-single {
 	width: 48rpx;
 	height: 48rpx;
-	background: #07C160;
+	background: #52C41A;
 	border-radius: 50%;
 	position: relative;
-	box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.3);
+	box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.3);
 }
 
 .wechat-logo-single::before {

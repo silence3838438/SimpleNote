@@ -1,6 +1,17 @@
 <template>
 	<view class="page">
-		<view class="container">
+		<!-- 自定义导航栏 -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left" @click="goBack">
+					<text class="back-icon">‹</text>
+				</view>
+				<view class="navbar-title">意见反馈</view>
+				<view class="navbar-right"></view>
+			</view>
+		</view>
+		
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56 + 16) + 'px' }">
 			<!-- 输入区域 -->
 			<view class="input-section">
 				<view class="section-title">
@@ -62,8 +73,21 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import request from '@/utils/request.js'
+
+const statusBarHeight = ref(0)
+
+const getSystemInfo = () => {
+	const systemInfo = uni.getSystemInfoSync()
+	statusBarHeight.value = systemInfo.statusBarHeight || 0
+}
+
+const goBack = () => {
+	uni.navigateBack()
+}
+
+getSystemInfo()
 
 const data = reactive({
 	feedbackContent: '',
@@ -166,6 +190,51 @@ const submitFeedback = async () => {
 	width: 100%;
 	min-height: 100vh;
 	background: $bg-page;
+}
+
+/* 自定义导航栏 - 随手记风格（纯白色） */
+.custom-navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background: $bg-white;
+	z-index: 1000;
+	border-bottom: 1rpx solid $border-color;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.navbar-content {
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 $spacing-lg;
+}
+
+.navbar-left {
+	min-width: 120rpx;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	padding-right: 20rpx;
+}
+
+.back-icon {
+	font-size: 56rpx;
+	color: $text-primary;
+	font-weight: $font-weight-light;
+}
+
+.navbar-title {
+	font-size: $font-size-lg;
+	font-weight: $font-weight-semibold;
+	color: $text-primary;
+}
+
+.navbar-right {
+	width: 80rpx;
 }
 
 .container {

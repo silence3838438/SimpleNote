@@ -93,12 +93,11 @@ async function uploadImage(imagePath, token) {
   });
 }
 
-// 调用OCR识别接口
+// 调用OCR识别接口（后端正则解析）
 async function recognizeImage(imageUrl, token) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
-      imageUrl: imageUrl,
-      useAI: true  // 启用AI增强
+      imageUrl: imageUrl
     });
     
     const options = {
@@ -134,6 +133,45 @@ async function recognizeImage(imageUrl, token) {
   });
 }
 
+// 调用AI增强接口
+async function enhanceWithAI(ocrText, baseInfo, token) {
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify({
+      ocrText: ocrText,
+      baseInfo: baseInfo
+    });
+    
+    const options = {
+      hostname: 'api.qiannaqule.top',
+      port: 443,
+      path: '/api/ai-enhance/ocr',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData),
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
 // 测试单张图片
 async function testImage(imagePath, token) {
   const fileName = path.basename(imagePath);
@@ -153,30 +191,36 @@ async function testImage(imagePath, token) {
     const imageUrl = uploadResult.url;
     console.log(`   ✅ 上传成功: ${imageUrl}`);
     
-    // 2. OCR识别
-    console.log('\n🔍 步骤2: OCR识别...');
-    const result = await recognizeImage(imageUrl, token);
+    // 2. OCR识别（后端正则解析）
+    console.log('\n🔍 步骤2: OCR识别（后端正则解析）...');
+    const ocrResult = await recognizeImage(imageUrl, token);
     
-    if (result.success) {
-      const data = result.data || {};
-      console.log('✅ 识别成功!');
-      console.log('\n📊 识别结果:');
+    if (!ocrResult.success) {
+      throw new Error('OCR识别失败: ' + ocrResult.message);
+    }
+    
+    const baseInfo = ocrResult.data || {};
+    const ocrText = ocrResult.text || '';
+    console.log('✅ OCR识别成功!');
+    console.log(`   金额: ${baseInfo.amount}元`);
+    console.log(`   商家: ${baseInfo.merchant || '未识别'}`);
+    console.log(`   分类: ${baseInfo.categoryName || '未识别'}`);
+    console.log(`   备注: ${baseInfo.remark || '无'}`);
+    
+    // 3. AI增强
+    console.log('\n🤖 步骤3: AI增强...');
+    const aiResult = await enhanceWithAI(ocrText, baseInfo, token);
+    
+    if (aiResult.success) {
+      const data = aiResult.data || {};
+      console.log('✅ AI增强成功!');
+      console.log('\n📊 最终识别结果:');
       console.log(`   金额: ${data.amount}元`);
       console.log(`   商家: ${data.merchant || '未识别'}`);
       console.log(`   分类: ${data.categoryName || '未识别'} (ID: ${data.categoryId})`);
       console.log(`   备注: ${data.remark || '无'}`);
       console.log(`   日期: ${data.date || '未识别'}`);
       console.log(`   类型: ${data.type === 'income' ? '收入' : '支出'}`);
-      
-      if (result.aiEnhanced !== undefined) {
-        console.log(`\n🤖 AI增强: ${result.aiEnhanced ? '已启用' : '未启用'}`);
-      }
-      
-      // 显示OCR原始文本（前200字符）
-      if (result.text) {
-        const ocrPreview = result.text.substring(0, 200).replace(/\n/g, ' ');
-        console.log(`\n📝 OCR文本预览: ${ocrPreview}...`);
-      }
       
       return {
         fileName,
@@ -185,14 +229,18 @@ async function testImage(imagePath, token) {
         merchant: data.merchant,
         categoryName: data.categoryName,
         remark: data.remark,
-        aiEnhanced: result.aiEnhanced
+        aiEnhanced: true
       };
     } else {
-      console.log('❌ 识别失败:', result.message);
+      console.log('⚠️ AI增强失败，使用OCR结果:', aiResult.message);
       return {
         fileName,
-        success: false,
-        error: result.message
+        success: true,
+        amount: baseInfo.amount,
+        merchant: baseInfo.merchant,
+        categoryName: baseInfo.categoryName,
+        remark: baseInfo.remark,
+        aiEnhanced: false
       };
     }
     

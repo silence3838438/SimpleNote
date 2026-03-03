@@ -33,7 +33,7 @@
 				
 				<view class="form-item">
 					<view class="input-wrapper">
-						<image class="input-icon-img" src="/static/yanzhengma.png" mode="aspectFit"></image>
+						<image class="input-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/yanzhengma.png" mode="aspectFit"></image>
 						<input 
 							class="form-input" 
 							v-model="data.code" 
@@ -61,7 +61,7 @@
 						/>
 						<image 
 							class="eye-icon-img" 
-							:src="data.showPassword ? '/static/mingwen.png' : '/static/miwen.png'"
+							:src="data.showPassword ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png'"
 							@click="togglePassword"
 						/>
 					</view>
@@ -80,7 +80,7 @@
 						/>
 						<image 
 							class="eye-icon-img" 
-							:src="data.showConfirmPassword ? '/static/mingwen.png' : '/static/miwen.png'"
+							:src="data.showConfirmPassword ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png'"
 							@click="toggleConfirmPassword"
 						/>
 					</view>

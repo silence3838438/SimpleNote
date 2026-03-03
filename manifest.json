@@ -2,8 +2,8 @@
     "name" : "钱哪去了",
     "appid" : "__UNI__1BF73C1",
     "description" : "智能记账助手 - 语音记账3秒搞定，拍照识别自动提取，智能分类餐饮交通购物，可视化统计消费去向，一键生成精美海报。让记账像聊天一样简单！",
-    "versionName" : "1.1.1",
-    "versionCode" : 260226,
+    "versionName" : "1.1.2",
+    "versionCode" : 260227,
     "transformPx" : false,
     // "permission" : {
     //     "network" : {

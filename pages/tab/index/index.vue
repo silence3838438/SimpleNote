@@ -59,7 +59,7 @@
 				<view class="finance-item income-item">
 					<view class="finance-label-row">
 						<view class="finance-label">本月收入</view>
-						<image class="eye-icon-img" :src="data.hideIncome ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
+						<image class="eye-icon-img" :src="data.hideIncome ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
 					</view>
 					<view class="finance-amount income-color" v-if="!data.hideIncome">¥{{ formatAmount(data.totalIncome) }}</view>
 					<view class="finance-amount income-color" v-else>****</view>
@@ -68,7 +68,7 @@
 				<view class="finance-item expense-item">
 					<view class="finance-label-row">
 						<view class="finance-label">本月支出</view>
-						<image class="eye-icon-img" :src="data.hideExpense ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
+						<image class="eye-icon-img" :src="data.hideExpense ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
 					</view>
 					<view class="finance-amount expense-color" v-if="!data.hideExpense">-¥{{ formatAmount(data.totalExpense) }}</view>
 					<view class="finance-amount expense-color" v-else>****</view>
@@ -79,7 +79,7 @@
 			<view class="balance-section" :class="{ 'positive': data.balance >= 0, 'negative': data.balance < 0 }">
 				<view class="balance-label-row">
 					<text class="balance-label">本月结余</text>
-					<image class="eye-icon-img balance-eye-icon" :src="data.hideBalance ? '/static/miwen.png' : '/static/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
+					<image class="eye-icon-img balance-eye-icon" :src="data.hideBalance ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
 				</view>
 				<view class="balance-amount" v-if="!data.hideBalance">{{ data.balance >= 0 ? '+' : '-' }}¥{{ formatAmount(Math.abs(data.balance)) }}</view>
 				<view class="balance-amount" v-else>****</view>
@@ -1271,32 +1271,23 @@ export default {
 		overflow: hidden;
 	}
 	
-	/* 自定义导航栏 */
+	/* 自定义导航栏 - 随手记风格（纯白色） */
 	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		background: transparent;
+		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-	}
-	
-	/* 自定义导航栏（随手记风格 - 纯白极简，增加高度） */
-	.custom-navbar {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		background: $primary-gradient; /* 使用主题色渐变 */
-		z-index: 1000;
-		border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
+		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 		
 		.navbar-content {
-			height: 56px; /* 从44px增加到56px，更舒适 */
+			height: 56px; /* 专业高度 */
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 0 $spacing-lg;
+			padding: 0 $spacing-xl;
 		}
 		
 		.navbar-left,
@@ -1316,15 +1307,16 @@ export default {
 			justify-content: center;
 			
 			.title-text {
-				font-size: $font-size-lg; /* 增大标题字体 */
+				font-size: 32rpx; /* 专业字号 */
 				font-weight: $font-weight-semibold;
-				color: $text-white; /* 白色文字 */
+				color: $text-primary; /* 深灰色文字 */
+				letter-spacing: 1rpx; /* 增加字间距 */
 			}
 		}
 	}
 	
 	.container {
-		padding: $spacing-sm $spacing-md;
+		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
 		background: $bg-page;
@@ -1334,63 +1326,34 @@ export default {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		/* #ifdef MP-WEIXIN */
-		margin-bottom: $spacing-xl;
+		margin-bottom: $spacing-2xl;
 		padding-top: $spacing-lg;
-		/* #endif */
-		/* #ifdef APP-PLUS */
-		margin-bottom: $spacing-xl;
-		padding-top: $spacing-xl;
-		margin-top: $spacing-sm;
-		/* #endif */
 		position: relative;
 		z-index: 100;
 	}
 
 	.month-picker {
-		font-size: $font-size-2xl;
-		font-weight: $font-weight-bold;
+		font-size: 30rpx; /* 减小字号，更简洁 */
+		font-weight: $font-weight-semibold;
 		color: $text-primary;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
-		/* #ifdef MP-WEIXIN */
 		padding: $spacing-md $spacing-lg;
-		/* #endif */
-		/* #ifdef APP-PLUS */
-		padding: $spacing-lg $spacing-xl;
-		/* #endif */
-		background: $bg-white;
-		border-radius: $radius-2xl;
-		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08);
+		background: transparent; /* 透明背景，更简洁 */
+		border-radius: $radius-lg;
 		transition: all $transition-fast;
-		border: 2rpx solid rgba(82, 196, 26, 0.08);
-		position: relative;
-		overflow: hidden;
-	}
-	
-	.month-picker::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 6rpx;
-		background: $gradient-primary;
-		border-radius: 0 3rpx 3rpx 0;
 	}
 	
 	.month-picker:active {
-		transform: scale(0.98);
-		box-shadow: 0 8rpx 20rpx rgba(82, 196, 26, 0.15);
-		border-color: $primary-color;
+		transform: scale(0.96);
+		background: $bg-hover; /* 点击时浅灰背景 */
 	}
 
 	.arrow {
 		font-size: 20rpx;
-		margin-left: $spacing-sm;
+		margin-left: $spacing-xs;
 		color: $text-tertiary;
-		opacity: 0.7;
 	}
 	
 	/* 自定义月份选择器弹窗 */
@@ -1674,74 +1637,120 @@ export default {
 		overflow: hidden;
 	}
 	
-	.action-btn-compact:active {
-		transform: scale(0.98); /* 美团风格：更轻微的缩放 */
+	/* 紧凑版记账按钮 - 精致高端版 */
+	.action-buttons-compact {
+		display: flex;
+		gap: $spacing-lg;
+		margin-bottom: $spacing-2xl;
 	}
 	
-	.voice-btn-compact {
-		background: $bg-white;
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
-		border: 1rpx solid $border-light;
+	.action-btn-compact {
+		flex: 1;
+		height: 108rpx;
+		border-radius: 14rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: $spacing-sm;
+		transition: all $transition-fast;
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		position: relative;
+		overflow: hidden;
 	}
 	
-	.voice-btn-compact:active {
-		background: $bg-gray;
-		box-shadow: $shadow-sm;
-	}
-	
+	/* 拍照按钮 - 浅绿色主题色 */
 	.photo-btn-compact {
-		background: $primary-lightest; /* 使用主题色的极浅背景 */
-		box-shadow: $shadow-card;
-		border: 1rpx solid rgba(82, 196, 26, 0.15); /* 使用主题色的边框 */
-	}
-	
-	.photo-btn-compact:active {
-		background: rgba(82, 196, 26, 0.15); /* 使用主题色的浅背景 */
-		box-shadow: $shadow-sm;
-	}
-	
-	.btn-icon-compact {
-		font-size: 44rpx; /* 美团风格：稍小的图标 */
-		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
-	}
-	
-	.btn-text-compact {
-		font-size: $font-size-base; /* 美团风格：标准字号 */
-		color: $text-primary;
-		font-weight: $font-weight-semibold;
-		letter-spacing: 0.5rpx;
-	}
-	
-	.voice-btn-compact .btn-text-compact {
-		color: $text-primary;
-		text-shadow: none;
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+		border: 1rpx solid rgba(82, 196, 26, 0.15);
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08), 0 2rpx 8rpx rgba(82, 196, 26, 0.05);
 	}
 	
 	.photo-btn-compact .btn-text-compact {
 		color: $primary-color;
-		text-shadow: none;
+		font-weight: 600;
 	}
 	
-	.voice-btn-compact .btn-icon-compact {
-		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
+	.photo-btn-compact::after {
+		content: '';
+		position: absolute;
+		top: -40%;
+		right: -20%;
+		width: 150rpx;
+		height: 150rpx;
+		background: radial-gradient(circle, rgba(82, 196, 26, 0.1) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
-	.photo-btn-compact .btn-icon-compact {
-		filter: drop-shadow(0 2rpx 4rpx rgba(82, 196, 26, 0.2));
+	/* 语音按钮 - 白色 */
+	.voice-btn-compact {
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 	
-	.photo-btn-compact .btn-icon-compact {
-		filter: drop-shadow(0 2rpx 4rpx rgba(82, 196, 26, 0.25));
+	.voice-btn-compact .btn-text-compact {
+		color: $text-primary;
 	}
 	
-	/* 收支结余合并卡片 - 美团风格优化 */
+	/* 按钮光效 */
+	.action-btn-compact::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+		opacity: 0;
+		transition: opacity $transition-fast;
+	}
+	
+	.action-btn-compact:active {
+		transform: scale(0.98);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+	}
+	
+	.action-btn-compact:active::before {
+		opacity: 1;
+	}
+	
+	.btn-icon-compact {
+		font-size: 42rpx;
+		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.08));
+	}
+	
+	.btn-text-compact {
+		font-size: $font-size-base;
+		color: $text-primary;
+		font-weight: 500;
+		letter-spacing: 0.5rpx;
+	}
+	
+	/* 收支结余合并卡片 - 精致高端版 */
 	.finance-summary-card {
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: 32rpx 24rpx;
-		margin-bottom: $spacing-xl;
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
-		border: 1rpx solid $border-light;
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%); /* 微妙的渐变 */
+		border-radius: 16rpx; /* 更大的圆角 */
+		padding: 32rpx 28rpx;
+		margin-bottom: $spacing-2xl;
+		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02); /* 双层阴影 */
+		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 卡片装饰光效 */
+	.finance-summary-card::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		right: -30%;
+		width: 200rpx;
+		height: 200rpx;
+		background: radial-gradient(circle, rgba(7, 193, 96, 0.08) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
 	.finance-data {
@@ -1749,77 +1758,68 @@ export default {
 		align-items: center;
 		margin-bottom: 24rpx;
 		padding-bottom: 24rpx;
-		border-bottom: 1rpx solid $border-light;
+		border-bottom: 1rpx solid rgba(0, 0, 0, 0.04);
+		position: relative;
+		z-index: 1;
 	}
 	
 	.finance-item {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 12rpx;
+		gap: 10rpx;
+		align-items: center;
 	}
 	
 	.income-item {
-		align-items: flex-end;
-		padding-right: $spacing-lg;
+		padding-right: $spacing-md;
 	}
 	
 	.expense-item {
-		align-items: flex-start;
-		padding-left: $spacing-lg;
+		padding-left: $spacing-md;
 	}
 	
 	.finance-divider {
 		width: 1rpx;
-		height: 60rpx;
-		background: $border-light;
-		margin: 0 $spacing-lg;
+		height: 56rpx;
+		background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.06), transparent); /* 渐变分隔线 */
 		flex-shrink: 0;
 	}
 	
 	.finance-label {
-		font-size: $font-size-sm;
+		font-size: 22rpx;
 		color: $text-tertiary;
 		font-weight: $font-weight-normal;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.finance-label-row {
 		display: flex;
 		align-items: center;
-		gap: 8rpx;
-	}
-	
-	.finance-amount-row {
-		display: flex;
-		align-items: center;
-		gap: 8rpx;
+		gap: 6rpx;
 	}
 	
 	.finance-amount {
-		font-size: 40rpx; /* 美团风格：稍小的字号 */
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
-		line-height: 1;
-		margin-top: 8rpx;
+		font-size: 38rpx; /* 稍大的字号 */
+		font-weight: 600; /* 更粗的字重 */
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
+		line-height: 1.2;
+		letter-spacing: -0.5rpx; /* 紧凑的字间距 */
 	}
 	
 	.eye-icon-img {
-		width: 28rpx;
-		height: 28rpx;
+		width: 26rpx;
+		height: 26rpx;
 		display: block;
 		cursor: pointer;
 		transition: all $transition-fast;
-		opacity: 0.5;
+		opacity: 0.35;
+		filter: grayscale(0.3);
 	}
 	
 	.eye-icon-img:active {
-		transform: scale(0.9);
-		opacity: 0.8;
-	}
-	
-	.balance-eye-icon {
-		position: relative;
-		top: -2rpx;
+		opacity: 0.6;
+		transform: scale(1.1);
 	}
 	
 	.income-color {
@@ -1833,59 +1833,34 @@ export default {
 	.balance-section {
 		text-align: center;
 		padding: 20rpx 0 8rpx;
-	}
-	
-	.balance-section.positive {
-		background: transparent;
-	}
-	
-	.balance-section.negative {
-		background: transparent;
-	}
-	
-	.balance-section .balance-label {
-		font-size: $font-size-sm;
-		color: $text-tertiary;
-		font-weight: $font-weight-normal;
-		line-height: 1;
+		position: relative;
+		z-index: 1;
 	}
 	
 	.balance-label-row {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 8rpx;
-		margin-bottom: 8rpx;
+		gap: 6rpx;
+		margin-bottom: 10rpx;
 	}
 	
 	.balance-label {
-		font-size: $font-size-base;
-		color: $text-secondary;
+		font-size: 22rpx;
+		color: $text-tertiary;
+		font-weight: $font-weight-normal;
+		letter-spacing: 0.5rpx;
 		line-height: 1;
-	}
-	
-	.balance-amount-wrapper {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: $spacing-sm;
-		margin-bottom: 8rpx;
 	}
 	
 	.balance-section .balance-amount {
-		font-size: 40rpx; /* 美团风格：稍小的字号 */
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
-		line-height: 1;
-		margin-top: 8rpx;
-	}
-	
-	.eye-icon-img-large {
-		width: 36rpx;
-		height: 36rpx;
-		cursor: pointer;
-		transition: all $transition-fast;
-		opacity: 0.5;
+		font-size: 34rpx;
+		font-weight: 600;
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
+		line-height: 1.2;
+		margin-top: 4rpx;
+		margin-bottom: 10rpx;
+		letter-spacing: -0.5rpx;
 	}
 	
 	.eye-icon-img-large:active {
@@ -2568,18 +2543,6 @@ export default {
 		overflow: hidden;
 	}
 	
-	/* 左侧绿色装饰线 */
-	.bill-item::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 4rpx; /* 美团风格：更细的装饰线 */
-		background: $primary-gradient; /* 使用主题色渐变 */
-		border-radius: 0 2rpx 2rpx 0;
-	}
-	
 	.bill-item:active {
 		background: $bg-gray;
 		transform: scale(0.99);
@@ -2591,7 +2554,6 @@ export default {
 		align-items: center;
 		flex: 1;
 		min-width: 0;
-		padding-left: $spacing-sm;
 	}
 
 	.bill-icon {

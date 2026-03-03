@@ -75,7 +75,7 @@
 							/>
 							<image 
 								class="eye-icon-img" 
-								:src="data.showPassword ? '/static/mingwen.png' : '/static/miwen.png'" 
+								:src="data.showPassword ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png'" 
 								@click="togglePassword" 
 								mode="aspectFit"
 							></image>

@@ -358,15 +358,16 @@ const saveSubscriptionToCloud = async () => {
 	background: #F7F8FA;
 }
 
-/* 自定义导航栏 - 和账单页面一样的样式 */
+/* 自定义导航栏 - 随手记风格（纯白色） */
 .custom-navbar {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
-	background: $primary-gradient; /* 使用主题色渐变 */
+	background: $bg-white; /* 随手记风格：纯白色导航栏 */
 	z-index: 1000;
-	border-bottom: 1rpx solid rgba(255, 255, 255, 0.2); /* 半透明白色边框 */
+	border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 }
 
 .navbar-content {
@@ -388,14 +389,14 @@ const saveSubscriptionToCloud = async () => {
 
 .back-icon {
 	font-size: 56rpx; /* 增大箭头图标 */
-	color: $text-white;
+	color: $text-primary; /* 深灰色图标 */
 	font-weight: $font-weight-light;
 }
 
 .navbar-title {
 	font-size: $font-size-lg;
 	font-weight: $font-weight-semibold;
-	color: $text-white;
+	color: $text-primary; /* 深灰色文字 */
 }
 
 .navbar-right {
@@ -546,7 +547,7 @@ const saveSubscriptionToCloud = async () => {
 	height: 88rpx;
 	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
 	color: $text-white;
-	border-radius: 44rpx;
+	border-radius: 25rpx;
 	font-size: $font-size-lg;
 	font-weight: $font-weight-bold;
 	border: none;
