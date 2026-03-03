@@ -1620,17 +1620,27 @@ const handleDownloadComplete = () => {
 	overflow: hidden;
 }
 
-/* 添加波浪形底部装饰 */
+/* 添加波浪形底部装饰 - 增大弧度，添加流动动画 */
 .user-card::before {
 	content: '';
 	position: absolute;
 	bottom: -2rpx;
 	left: 0;
 	right: 0;
-	height: 40rpx;
+	height: 60rpx; /* 增加高度，让弧度更明显 */
 	background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%);
-	clip-path: ellipse(100% 100% at 50% 100%);
+	clip-path: ellipse(120% 100% at 50% 100%); /* 增大弧度 */
 	z-index: 2;
+	animation: wave-flow 8s ease-in-out infinite; /* 添加流动动画 */
+}
+
+@keyframes wave-flow {
+	0%, 100% {
+		clip-path: ellipse(120% 100% at 50% 100%);
+	}
+	50% {
+		clip-path: ellipse(130% 100% at 50% 100%);
+	}
 }
 
 .user-card::after {
@@ -1822,7 +1832,7 @@ const handleDownloadComplete = () => {
 .title-text {
 	font-size: $font-size-lg; /* 美团风格：稍小的字号 */
 	font-weight: $font-weight-bold;
-	color: $text-primary;
+	color: #595959; /* 使用更柔和的深灰色 */
 }
 
 .progress-points {
@@ -1924,19 +1934,21 @@ const handleDownloadComplete = () => {
 	justify-content: center;
 	gap: $spacing-xs;
 	padding: $spacing-sm $spacing-lg;
-	background: $bg-light; /* 改为浅灰色背景 */
-	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	background: transparent; /* 移除背景色 */
+	border-radius: $radius-lg;
+	border: none; /* 移除边框 */
 	position: relative;
 	z-index: 1;
 }
 
 .progress-tip.max-tip {
-	background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 120, 117, 0.05) 100%);
+	background: transparent; /* 移除背景色 */
+	border: none; /* 移除边框 */
 }
 
 .tip-text {
 	font-size: $font-size-sm;
-	color: $text-secondary;
+	color: #8C8C8C; /* 使用柔和的灰色，更低调 */
 	font-weight: $font-weight-medium;
 }
 
@@ -1966,16 +1978,17 @@ const handleDownloadComplete = () => {
 	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
 }
 
-/* 卡片内部的统计行 */
+/* 卡片内部的统计行 - 优化背景和边框 */
 .stats-row-inner {
 	display: flex;
 	align-items: center;
 	justify-content: space-around;
-	background: $bg-light; /* 改为浅灰色背景，更清爽 */
+	background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%); /* 使用渐变背景 */
 	padding: $spacing-lg;
 	margin-top: $spacing-lg;
 	border-radius: $radius-xl;
-	border-top: 2rpx solid $border-light; /* 改为灰色边框 */
+	border: 2rpx solid #F0F0F0; /* 更柔和的边框 */
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 添加轻微阴影 */
 }
 
 .stat-item {
@@ -1996,10 +2009,14 @@ const handleDownloadComplete = () => {
 	line-height: 1;
 }
 
-/* 卡片内部的统计数值 */
+/* 卡片内部的统计数值 - 使用渐变色，更醒目 */
 .stats-row-inner .stat-value {
-	color: $text-primary; /* 改为黑色，更专业 */
+	background: linear-gradient(135deg, $primary-color 0%, #73D13D 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 	text-shadow: none;
+	font-weight: 700;
 }
 
 .stat-label {
@@ -2009,10 +2026,11 @@ const handleDownloadComplete = () => {
 	font-weight: $font-weight-medium;
 }
 
-/* 卡片内部的统计标签 */
+/* 卡片内部的统计标签 - 使用更柔和的灰色 */
 .stats-row-inner .stat-label {
-	color: $text-secondary;
+	color: #8C8C8C;
 	text-shadow: none;
+	font-weight: 500;
 }
 
 .stat-divider {
@@ -2021,10 +2039,10 @@ const handleDownloadComplete = () => {
 	background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
 }
 
-/* 卡片内部的分隔线 */
+/* 卡片内部的分隔线 - 使用更柔和的渐变 */
 .stats-row-inner .stat-divider {
 	height: 50rpx;
-	background: linear-gradient(180deg, transparent 0%, $border-color 50%, transparent 100%); /* 改为灰色渐变 */
+	background: linear-gradient(180deg, transparent 0%, #E0E0E0 50%, transparent 100%);
 }
 
 /* 功能列表 - 优化层次感和间距 */
@@ -2178,8 +2196,9 @@ const handleDownloadComplete = () => {
 
 .function-title {
 	font-size: $font-size-lg;
-	font-weight: $font-weight-normal;
-	color: $text-primary;
+	font-weight: $font-weight-medium;
+	color: #595959; /* 使用更柔和的深灰色，不那么黑 */
+	letter-spacing: 0.3rpx;
 }
 
 .function-right {
@@ -2190,12 +2209,12 @@ const handleDownloadComplete = () => {
 
 .function-desc {
 	font-size: $font-size-base;
-	color: $text-secondary; /* 改为灰色，更专业 */
+	color: $primary-color; /* 使用主题色，更醒目 */
 	font-weight: $font-weight-medium;
 }
 
 .function-desc.inactive {
-	color: $text-tertiary;
+	color: #BFBFBF; /* 未开启时使用更浅的灰色 */
 }
 
 .arrow {
@@ -2667,7 +2686,7 @@ const handleDownloadComplete = () => {
 .nickname-tips {
 	margin-top: 24rpx;
 	padding: 20rpx 24rpx;
-	background: $bg-light; /* 改为浅灰色背景 */
+	background: linear-gradient(135deg, #F0FFF4 0%, #F6FFED 100%); /* 使用淡绿色渐变 */
 	border-radius: 12rpx;
 	border-left: 4rpx solid $primary-color; /* 使用主题色变量 */
 }
