@@ -312,16 +312,10 @@ onLoad(async () => {
 			// 检查AI财务顾问配置（小程序端使用show_ai_advisor_wechat字段）
 			const showAiAdvisor = res.data.show_ai_advisor_wechat || false
 			if (!showAiAdvisor) {
-				uni.showModal({
-					title: '功能提示',
-					content: '该功能暂未开放，敬请期待',
-					showCancel: false,
-					success: () => {
-						uni.navigateBack({
-							fail: () => {
-								uni.switchTab({ url: '/pages/tab/profile/profile' })
-							}
-						})
+				// 直接返回，不显示提示
+				uni.navigateBack({
+					fail: () => {
+						uni.switchTab({ url: '/pages/tab/profile/profile' })
 					}
 				})
 				return
@@ -329,17 +323,10 @@ onLoad(async () => {
 		}
 	} catch (error) {
 		console.error('加载配置失败:', error)
-		// 配置加载失败，默认不允许访问
-		uni.showModal({
-			title: '功能提示',
-			content: '该功能暂未开放，敬请期待',
-			showCancel: false,
-			success: () => {
-				uni.navigateBack({
-					fail: () => {
-						uni.switchTab({ url: '/pages/tab/profile/profile' })
-					}
-				})
+		// 配置加载失败，直接返回
+		uni.navigateBack({
+			fail: () => {
+				uni.switchTab({ url: '/pages/tab/profile/profile' })
 			}
 		})
 		return
