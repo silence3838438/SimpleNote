@@ -1,14 +1,15 @@
 <template>
 	<view class="update-modal" v-if="visible" @click="handleMaskClick">
-		<!-- 顶部火箭图标 - 突出显示 -->
-		<view class="rocket-icon">
-			<image class="rocket-image" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/rocket.png" mode="aspectFit"></image>
-			<view class="icon-badge" v-if="isForce">
-				<text class="badge-text">必须</text>
+		<view class="modal-wrapper">
+			<!-- 顶部礼花筒图标 - 突出显示 -->
+			<view class="gift-icon">
+				<text class="gift-emoji">🎉</text>
+				<view class="icon-badge" v-if="isForce">
+					<text class="badge-text">必须</text>
+				</view>
 			</view>
-		</view>
-		
-		<view class="modal-content" @click.stop :class="{ 'shake': showShake }">
+			
+			<view class="modal-content" @click.stop :class="{ 'shake': showShake }">
 			<!-- 顶部标题 -->
 			<view class="modal-header">
 				<text class="modal-title">发现新版本</text>
@@ -58,6 +59,7 @@
 			<view class="force-tip" v-if="isForce">
 				<text class="force-tip-text">⚠️ 此版本为强制更新，必须升级后才能继续使用</text>
 			</view>
+		</view>
 		</view>
 	</view>
 </template>
@@ -249,15 +251,8 @@ const startDownload = () => {
 				plus.runtime.install(res.tempFilePath, {
 					force: false
 				}, () => {
-					uni.showModal({
-						title: '安装成功',
-						content: '应用将重启以完成更新',
-						showCancel: false,
-						success: () => {
-							plus.runtime.restart()
-						}
-					})
-					emit('downloadComplete')
+					// 安装成功，立即重启应用（不延迟，避免系统弹框）
+					plus.runtime.restart()
 				}, (error) => {
 					uni.showModal({
 						title: '安装失败',
@@ -323,12 +318,16 @@ const startDownload = () => {
 	}
 }
 
-/* 火箭图标 - 突出显示在弹窗顶部 */
-.rocket-icon {
-	position: absolute;
-	top: -60rpx;
-	left: 50%;
-	transform: translateX(-50%);
+/* 弹窗包装器 */
+.modal-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* 礼花筒图标 - 突出显示在弹窗顶部 */
+.gift-icon {
+	position: relative;
 	width: 140rpx;
 	height: 140rpx;
 	background: rgba(255, 255, 255, 0.98);
@@ -338,17 +337,38 @@ const startDownload = () => {
 	justify-content: center;
 	box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.2);
 	z-index: 10;
-	animation: rocketFloat 2s ease-in-out infinite;
+	margin-bottom: -70rpx;
+	animation: giftFloat 2s ease-in-out infinite;
 }
 
-@keyframes rocketFloat {
-	0%, 100% { transform: translateX(-50%) translateY(0); }
-	50% { transform: translateX(-50%) translateY(-8rpx); }
+@keyframes giftFloat {
+	0%, 100% { transform: translateY(0) rotate(0deg); }
+	50% { transform: translateY(-8rpx) rotate(5deg); }
+}
+
+.gift-emoji {
+	font-size: 80rpx;
 }
 
 .rocket-image {
 	width: 90rpx;
 	height: 90rpx;
+}
+
+.icon-badge {
+	position: absolute;
+	top: 0;
+	right: 0;
+	background: #FF4D4F;
+	padding: 4rpx 12rpx;
+	border-radius: 20rpx;
+	box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.4);
+}
+
+.badge-text {
+	font-size: 20rpx;
+	color: #FFFFFF;
+	font-weight: bold;
 }
 
 .modal-content {
@@ -358,7 +378,7 @@ const startDownload = () => {
 	overflow: hidden;
 	box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
 	animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	margin-top: 80rpx;
+	padding-top: 100rpx;
 	position: relative;
 }
 
@@ -384,7 +404,7 @@ const startDownload = () => {
 }
 
 .modal-header {
-	padding: 48rpx 40rpx 32rpx;
+	padding: 0 40rpx 32rpx;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
