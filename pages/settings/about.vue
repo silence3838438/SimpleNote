@@ -97,6 +97,18 @@
 				</button>
 				<!-- #endif -->
 				
+				<!-- 下载APP（仅小程序显示） -->
+				<!-- #ifdef MP-WEIXIN -->
+				<view class="feedback-card" @click="goToDownloadPage">
+					<view class="feedback-icon">📱</view>
+					<view class="feedback-content">
+						<view class="feedback-title">下载APP</view>
+						<view class="feedback-desc">体验更流畅，功能更强大</view>
+					</view>
+					<view class="feedback-arrow">›</view>
+				</view>
+				<!-- #endif -->
+				
 				<!-- 意见反馈 -->
 				<view class="feedback-card" @click="goToFeedback">
 					<view class="feedback-icon">💡</view>
@@ -180,6 +192,29 @@ const openPrivacyPolicy = () => {
 	uni.navigateTo({
 		url: '/pages/privacy/privacy'
 	})
+}
+
+const goToDownloadPage = () => {
+	// #ifdef MP-WEIXIN
+	uni.showModal({
+		title: '下载APP',
+		content: '请访问官网下载APP，获得更好的使用体验',
+		confirmText: '复制链接',
+		success: (res) => {
+			if (res.confirm) {
+				uni.setClipboardData({
+					data: 'https://api.qiannaqule.top',
+					success: () => {
+						uni.showToast({
+							title: '链接已复制',
+							icon: 'success'
+						})
+					}
+				})
+			}
+		}
+	})
+	// #endif
 }
 </script>
 

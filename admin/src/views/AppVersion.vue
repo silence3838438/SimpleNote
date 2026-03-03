@@ -292,11 +292,11 @@ const dialogTitle = computed(() => {
 })
 
 const uploadUrl = computed(() => {
-  return 'https://api.qiannaqule.top/api/admin/upload-apk'
+  return '/api/admin/upload-apk'
 })
 
 const qrcodeUploadUrl = computed(() => {
-  return 'https://api.qiannaqule.top/api/admin/upload-android-qrcode'
+  return '/api/admin/upload-android-qrcode'
 })
 
 const uploadHeaders = computed(() => {

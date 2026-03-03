@@ -1421,6 +1421,60 @@ router.post('/upload-apk', async (req, res) => {
 
 // ========== 安卓二维码管理 ==========
 
+// 获取配置列表
+router.get('/configs', async (req, res) => {
+  try {
+    const configs = await db.query('SELECT * FROM app_config ORDER BY id ASC');
+    
+    res.json({
+      success: true,
+      data: configs
+    });
+  } catch (error) {
+    console.error('获取配置列表失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '获取配置列表失败'
+    });
+  }
+});
+
+// 更新配置
+router.put('/configs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { config_value } = req.body;
+    
+    if (config_value === undefined) {
+      return res.json({
+        success: false,
+        message: '参数不完整'
+      });
+    }
+    
+    await db.query(
+      'UPDATE app_config SET config_value = ?, updated_at = NOW() WHERE id = ?',
+      [config_value, id]
+    );
+    
+    // 清除配置缓存
+    clearCache('/api/config/public');
+    
+    res.json({
+      success: true,
+      message: '更新成功'
+    });
+  } catch (error) {
+    console.error('更新配置失败:', error);
+    res.json({
+      success: false,
+      message: error.message || '更新配置失败'
+    });
+  }
+});
+
+// ========== 安卓二维码管理 ==========
+
 // 上传安卓二维码
 router.post('/upload-android-qrcode', async (req, res) => {
   try {

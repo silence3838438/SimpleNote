@@ -765,7 +765,7 @@ const shouldUseAI = (quickResult, ocrText) => {
 	/* 底部操作栏 */
 	.action-bar {
 		position: absolute;
-		bottom: 80rpx;
+		bottom: 50rpx;
 		left: 0;
 		right: 0;
 		display: flex;

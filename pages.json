@@ -45,16 +45,16 @@
 					"path": "photo/photo",
 					"style": {
 						"navigationBarTitleText": "拍照记账",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationBarBackgroundColor": "#FFFFFF",
+						"navigationBarTextStyle": "black"
 					}
 				},
 				{
 					"path": "voice/voice",
 					"style": {
 						"navigationBarTitleText": "语音记账",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationBarBackgroundColor": "#FFFFFF",
+						"navigationBarTextStyle": "black"
 					}
 				},
 				{
