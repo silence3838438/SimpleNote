@@ -118,3 +118,60 @@ sshpass -p '520silenceW' ssh root@8.218.209.109 "tail -n 50 /www/backend/server.
 ```bash
 sshpass -p '520silenceW' ssh root@8.218.209.109 "/www/backend/restart-backend.sh"
 ```
+
+
+## 数据备份与恢复
+
+### 执行备份
+
+```bash
+cd backend
+./backup-production.sh
+```
+
+备份内容包括：
+- 数据库完整备份（所有表和数据）
+- .env.production（环境变量配置）
+- ecosystem.config.js（PM2配置）
+- nginx配置文件
+- uploads目录（用户上传文件）
+
+备份文件保存在：`backups/YYYYMMDD_HHMMSS/`
+
+### 备份内容说明
+
+数据库包含17个表：
+- `users` - 用户信息
+- `bills` - 账单记录
+- `reminders` - 记账提醒设置
+- `budgets` - 预算设置
+- `ai_chat_usage` - AI对话记录
+- `feedback` - 用户反馈
+- `app_versions` - APP版本管理
+- `app_config` - 应用配置
+- `user_points` - 用户积分
+- `points_history` - 积分历史
+- `red_packet_records` - 红包记录
+- `verification_codes` - 验证码
+- `registration_logs` - 注册日志
+- `logs` - 系统日志
+- `ip_blacklist` - IP黑名单
+- `phone_blacklist` - 手机号黑名单
+- `android_qrcode` - Android二维码
+
+### 恢复数据库
+
+```bash
+# 1. 上传备份文件到服务器
+scp backups/YYYYMMDD_HHMMSS/simplenote_backup.sql root@8.218.209.109:/tmp/
+
+# 2. 恢复数据库
+sshpass -p '520silenceW' ssh root@8.218.209.109 "mysql -u root -p'Simplenote@123' simplenote < /tmp/simplenote_backup.sql"
+
+# 3. 重启服务
+sshpass -p '520silenceW' ssh root@8.218.209.109 "export PATH=/usr/local/node-v16.20.2-linux-x64/bin:\$PATH && pm2 restart simplenote-api"
+```
+
+### 定期备份建议
+
+建议每周执行一次完整备份，重要更新前也应该备份。备份文件建议保存到云存储或其他安全位置。
