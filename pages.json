@@ -222,7 +222,7 @@
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "钱哪去了",
+		"navigationBarTitleText": "小獭记账",
 		"navigationBarBackgroundColor": "#FFFFFF",
 		"backgroundColor": "#F7F8FA",
 		"navigationStyle": "default",

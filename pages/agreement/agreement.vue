@@ -2,14 +2,14 @@
 	<view class="agreement-page">
 		<scroll-view class="agreement-content" scroll-y>
 			<view class="container">
-				<view class="title">钱哪去了 - 用户协议</view>
+				<view class="title">小獭记账 - 用户协议</view>
 				
 				<view class="section">
-					<text class="text">欢迎您使用"钱哪去了"！</text>
+					<text class="text">欢迎您使用"小獭记账"！</text>
 				</view>
 				
 				<view class="section">
-					<text class="text">在使用"钱哪去了"服务之前，请您仔细阅读并充分理解本《用户协议》（以下简称"本协议"）。<text class="highlight">请您特别注意限制、免责条款，以及开通或使用某项服务的单独协议。</text></text>
+					<text class="text">在使用"小獭记账"服务之前，请您仔细阅读并充分理解本《用户协议》（以下简称"本协议"）。<text class="highlight">请您特别注意限制、免责条款，以及开通或使用某项服务的单独协议。</text></text>
 				</view>
 				
 				<view class="section">
@@ -19,7 +19,7 @@
 				<view class="section-title">一、服务说明</view>
 				
 				<view class="section">
-					<text class="text">"钱哪去了"是一款个人记账应用，为用户提供以下服务：</text>
+					<text class="text">"小獭记账"是一款个人记账应用，为用户提供以下服务：</text>
 					<text class="list-item">• 账单记录与管理</text>
 					<text class="list-item">• 收支统计与分析</text>
 					<text class="list-item">• OCR小票识别</text>
@@ -68,7 +68,7 @@
 				<view class="section-title">五、知识产权</view>
 				
 				<view class="section">
-					<text class="text">"钱哪去了"的所有内容，包括但不限于文字、图片、软件、程序、界面设计等，均归我们或相关权利人所有。未经授权，您不得复制、传播、修改或用于商业用途。</text>
+					<text class="text">"小獭记账"的所有内容，包括但不限于文字、图片、软件、程序、界面设计等，均归我们或相关权利人所有。未经授权，您不得复制、传播、修改或用于商业用途。</text>
 				</view>
 				
 				<view class="section-title">六、隐私保护</view>
@@ -91,7 +91,7 @@
 				<view class="section-title">八、服务费用</view>
 				
 				<view class="section">
-					<text class="text">目前，"钱哪去了"的基础功能免费提供。我们保留在未来推出付费功能或服务的权利，届时会提前通知您。</text>
+					<text class="text">目前，"小獭记账"的基础功能免费提供。我们保留在未来推出付费功能或服务的权利，届时会提前通知您。</text>
 				</view>
 				
 				<view class="section-title">九、协议的变更</view>

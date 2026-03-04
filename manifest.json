@@ -1,9 +1,9 @@
 {
-    "name" : "钱哪去了",
+    "name" : "小獭记账",
     "appid" : "__UNI__1BF73C1",
-    "description" : "智能记账助手 - 语音记账3秒搞定，拍照识别自动提取，智能分类餐饮交通购物，可视化统计消费去向，一键生成精美海报。让记账像聊天一样简单！",
-    "versionName" : "1.1.3",
-    "versionCode" : 260228,
+    "description" : "小獭记账 - 可爱治愈的智能记账工具，像小水獭一样聪明灵活。支持拍照识别、语音记账等多种便捷方式，智能分类餐饮交通购物，可视化统计消费去向，让记账变得简单有趣。",
+    "versionName" : "1.1.4",
+    "versionCode" : 260229,
     "transformPx" : false,
     // "permission" : {
     //     "network" : {

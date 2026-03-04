@@ -1506,7 +1506,7 @@ onShareTimeline(async () => {
 	await rewardShareToTimeline()
 	
 	return {
-		title: '钱哪去了 - 语音拍照记账，轻松管理每一笔',
+		title: '小獭记账 - 聪明记账，轻松理财',
 		imageUrl: '/static/shareLine.png'
 	}
 })

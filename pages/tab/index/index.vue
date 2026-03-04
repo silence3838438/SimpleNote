@@ -5,7 +5,7 @@
 			<view class="navbar-content">
 				<view class="navbar-left"></view>
 				<view class="navbar-title">
-				<text class="title-text">钱哪去了</text>
+				<text class="title-text">首页</text>
 			</view>
 				<view class="navbar-right"></view>
 			</view>

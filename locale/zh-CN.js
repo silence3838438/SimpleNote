@@ -27,7 +27,7 @@ export default {
   },
   
   home: {
-    title: '钱哪去了',
+    title: '小獭记账',
     monthlyIncome: '本月收入',
     monthlyExpense: '本月支出',
     balance: '结余',
@@ -146,7 +146,7 @@ export default {
   
   about: {
     title: '关于我们',
-    appName: '钱哪去了',
+    appName: '小獭记账',
     version: '版本',
     description: '智能记账助手，让记账像聊天一样简单'
   }

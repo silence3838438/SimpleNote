@@ -15,8 +15,8 @@
 			<!-- Logo 和标题 -->
 			<view class="header-section">
 				<image class="app-logo" src="/static/logo.png" mode="aspectFit"></image>
-				<view class="app-name">钱哪去了</view>
-				<view class="app-slogan">让记账变得简单有趣</view>
+				<view class="app-name">小獭记账</view>
+				<view class="app-slogan">聪明记账，轻松理财</view>
 				<view class="version">v{{ appVersion }}</view>
 			</view>
 			
@@ -52,10 +52,10 @@
 				<view class="section-title">产品介绍</view>
 				<view class="intro-card">
 					<view class="intro-text">
-						钱哪去了是一款简洁实用的记账小程序，致力于帮助用户轻松管理每一笔收支。
+						小獭记账是一款可爱治愈的智能记账工具，像小水獭一样聪明灵活，帮你轻松管理每一笔收支。
 					</view>
 					<view class="intro-text">
-						我们提供语音记账、拍照记账等多种便捷方式，让记账变得像聊天一样简单。智能统计功能帮你清晰了解消费习惯，合理规划财务。
+						我们提供拍照识别、语音记账等多种便捷方式,让记账变得简单有趣。智能统计功能帮你清晰了解消费习惯，合理规划财务。
 					</view>
 					<view class="intro-text">
 						数据云端同步，换手机也不怕。我们重视用户隐私，所有数据加密存储，安全可靠。
@@ -131,7 +131,7 @@
 			
 			<!-- 底部信息 -->
 			<view class="footer-section">
-				<view class="footer-text">© 2026 钱哪去了</view>
+				<view class="footer-text">© 2026 小獭记账</view>
 				<view class="footer-text">用心做好每一个功能</view>
 			</view>
 		</view>

@@ -48,7 +48,7 @@ const shareToWechatFriend = () => {
 		scene: 'WXSceneSession',
 		type: 0,
 		title: '语音拍照记账，3秒搞定！消费一目了然',
-		summary: '钱哪去了 - 轻松管理每一笔',
+		summary: '小獭记账 - 聪明记账，轻松理财',
 		href: 'https://api.qiannaqule.top',
 		imageUrl: '/static/shareLine.png',
 		success: () => {
@@ -66,7 +66,7 @@ const shareToWechatMoments = () => {
 		provider: 'weixin',
 		scene: 'WXSceneTimeline',
 		type: 0,
-		title: '钱哪去了 - 语音拍照记账，轻松管理每一笔',
+		title: '小獭记账 - 聪明记账，轻松理财',
 		summary: '语音拍照记账，3秒搞定！消费一目了然',
 		href: 'https://api.qiannaqule.top',
 		imageUrl: '/static/shareLine.png',

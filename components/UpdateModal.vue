@@ -210,7 +210,7 @@ const jumpToMarket = () => {
 			console.error('打开应用市场失败:', error)
 			uni.showModal({
 				title: '提示',
-				content: '无法打开应用市场，请手动前往应用市场搜索"钱哪去了"进行更新',
+				content: '无法打开应用市场，请手动前往应用市场搜索"小獭记账"进行更新',
 				showCancel: false
 			})
 		})

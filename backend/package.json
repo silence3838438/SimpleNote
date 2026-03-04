@@ -1,7 +1,7 @@
 {
   "name": "simplenote-backend",
   "version": "1.0.0",
-  "description": "钱哪去了 - 后端API服务",
+  "description": "小獭记账 - 后端API服务",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

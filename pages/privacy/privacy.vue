@@ -2,21 +2,21 @@
 	<view class="privacy-page">
 		<scroll-view class="privacy-content" scroll-y>
 			<view class="container">
-				<view class="title">钱哪去了 - 隐私政策</view>
+				<view class="title">小獭记账 - 隐私政策</view>
 				
 				<view class="section">
-					<text class="text">【钱哪去了】深知个人信息对您的重要性，我们将按法律法规要求，采取相应的安全保护措施，尽力保护您的个人信息安全可控。本隐私政策适用于"钱哪去了"提供的所有产品和服务。</text>
+					<text class="text">【小獭记账】深知个人信息对您的重要性，我们将按法律法规要求，采取相应的安全保护措施，尽力保护您的个人信息安全可控。本隐私政策适用于"小獭记账"提供的所有产品和服务。</text>
 				</view>
 				
 				<view class="section">
-					<text class="text">在使用"钱哪去了"各项产品或服务前，请您务必仔细阅读并透彻理解本政策，特别是以<text class="highlight">粗体标识的条款</text>，您应重点阅读。如对本政策内容有任何疑问、意见或建议，您可通过本政策提供的联系方式与我们联系。</text>
+					<text class="text">在使用"小獭记账"各项产品或服务前，请您务必仔细阅读并透彻理解本政策，特别是以<text class="highlight">粗体标识的条款</text>，您应重点阅读。如对本政策内容有任何疑问、意见或建议，您可通过本政策提供的联系方式与我们联系。</text>
 				</view>
 				
 				<view class="section-title">一、我们如何收集和使用您的信息</view>
 				
 				<view class="sub-title">（一）账户注册与登录</view>
 				<view class="section">
-					<text class="text">为了使用"钱哪去了"的记账服务，您需要注册账户。我们会收集您的<text class="highlight">手机号码</text>用于账户注册和登录。您也可以选择使用<text class="highlight">微信授权登录</text>，我们会获取您的<text class="highlight">微信昵称、头像</text>等基本信息。</text>
+					<text class="text">为了使用"小獭记账"的记账服务，您需要注册账户。我们会收集您的<text class="highlight">手机号码</text>用于账户注册和登录。您也可以选择使用<text class="highlight">微信授权登录</text>，我们会获取您的<text class="highlight">微信昵称、头像</text>等基本信息。</text>
 				</view>
 				
 				<view class="sub-title">（二）记账功能</view>

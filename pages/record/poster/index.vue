@@ -327,7 +327,7 @@ const drawPoster = () => {
 	ctx.setFillStyle('#1A1A1A')
 	ctx.setFontSize(20)
 	ctx.setTextAlign('left')
-	ctx.fillText('钱哪去了？', textX, footerY + 45)
+	ctx.fillText('小獭记账', textX, footerY + 45)
 	
 	// 副标题
 	ctx.setFillStyle('#8C8C8C')

@@ -10,8 +10,8 @@
 			<!-- Logo和标题 -->
 			<view class="header-section">
 				<image class="app-logo" src="/static/logo.png" mode="aspectFit"></image>
-				<text class="app-name">钱哪去了</text>
-				<text class="app-slogan">让每一笔支出都清晰可见</text>
+				<text class="app-name">小獭记账</text>
+				<text class="app-slogan">聪明记账，轻松理财</text>
 			</view>
 			
 			<!-- 登录卡片 -->
