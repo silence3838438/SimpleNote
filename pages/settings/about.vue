@@ -292,7 +292,7 @@ const goToDownloadPage = () => {
 	height: 120rpx;
 	border-radius: $radius-2xl;
 	margin-bottom: $spacing-md;
-	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.2);
+	background: transparent;
 }
 
 .app-name {
