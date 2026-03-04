@@ -1,14 +1,12 @@
 <template>
 	<view class="register-page">
-		<!-- 背景装饰 -->
-		<view class="bg-decoration">
-			<view class="circle circle-1"></view>
-			<view class="circle circle-2"></view>
-			<view class="circle circle-3"></view>
+		<!-- 沉浸式返回按钮 -->
+		<view class="back-button" :style="{ top: (statusBarHeight + 12) + 'px' }" @click="goBack">
+			<text class="back-icon">‹</text>
 		</view>
 		
 		<!-- 主内容区 -->
-		<view class="content-wrapper">
+		<view class="content-wrapper" :style="{ paddingTop: (statusBarHeight + 80) + 'px' }">
 			<!-- 头部 -->
 			<view class="header-section">
 				<text class="page-title">注册账号</text>
@@ -303,6 +301,18 @@ const goToLogin = () => {
 	uni.navigateBack()
 }
 
+// 获取状态栏高度
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0
+
+// 返回上一页
+const goBack = () => {
+	uni.navigateBack({
+		fail: () => {
+			uni.switchTab({ url: '/pages/tab/index/index' })
+		}
+	})
+}
+
 // 打开隐私政策
 const openPrivacy = () => {
 	// #ifdef APP-PLUS
@@ -333,65 +343,45 @@ const openUserAgreement = () => {
 <style lang="scss" scoped>
 .register-page {
 	min-height: 100vh;
-	background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
+	background: #F5F5F5;
 	position: relative;
-	overflow: hidden;
-	display: flex;
-	align-items: center; /* 改回居中对齐 */
-	justify-content: center;
-	padding: 80rpx 80rpx 60rpx; /* 和登录页面保持一致 */
 }
 
-// 背景装饰 - 简化设计
-.bg-decoration {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	top: 0;
-	left: 0;
-	overflow: hidden;
-	z-index: 0;
-	opacity: 0.6;
-}
-
-.circle {
-	position: absolute;
+// 沉浸式返回按钮
+.back-button {
+	position: fixed;
+	left: 32rpx;
+	width: 72rpx;
+	height: 72rpx;
+	background: rgba(255, 255, 255, 0.9);
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.08);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 999;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+	backdrop-filter: blur(10rpx);
+	transition: all 0.2s;
 }
 
-.circle-1 {
-	width: 500rpx;
-	height: 500rpx;
-	top: -200rpx;
-	right: -150rpx;
+.back-button:active {
+	transform: scale(0.92);
+	background: rgba(255, 255, 255, 1);
 }
 
-.circle-2 {
-	width: 350rpx;
-	height: 350rpx;
-	bottom: -100rpx;
-	left: -100rpx;
-}
-
-.circle-3 {
-	width: 250rpx;
-	height: 250rpx;
-	top: 40%;
-	right: -80rpx;
+.back-icon {
+	font-size: 52rpx;
+	color: #1A1A1A;
+	font-weight: 300;
+	margin-left: -4rpx;
 }
 
 // 主内容区
 .content-wrapper {
-	position: relative;
-	z-index: 1;
-	width: 100%;
-	max-width: 600rpx; /* 保持减小的宽度 */
-	margin: 0 auto;
+	padding: 32rpx 64rpx;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-top: -100rpx; /* 向上偏移100rpx，实现居中偏上的效果 */
 }
 
 // 头部区域
@@ -399,50 +389,50 @@ const openUserAgreement = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 100rpx;
+	margin-bottom: 48rpx;
 }
 
 .page-title {
-	font-size: 56rpx;
-	font-weight: 700;
-	color: #FFFFFF;
-	margin-bottom: 16rpx;
-	letter-spacing: 1rpx;
+	font-size: 40rpx;
+	font-weight: 600;
+	color: #1A1A1A;
+	margin-bottom: 8rpx;
+	letter-spacing: 0.5rpx;
 }
 
 .page-subtitle {
-	font-size: 28rpx;
-	color: rgba(255, 255, 255, 0.9);
+	font-size: 24rpx;
+	color: #999999;
 	font-weight: 400;
 }
 
-// 注册卡片
+// 注册卡片 - 添加白色背景增加层次感
 .register-card {
 	width: 100%;
 	background: #FFFFFF;
 	border-radius: 24rpx;
-	padding: 56rpx 48rpx 48rpx;
-	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+	padding: 48rpx 40rpx;
+	box-shadow: 0 2rpx 20rpx rgba(0, 0, 0, 0.04);
 }
 
 .form-item {
-	margin-bottom: 28rpx;
+	margin-bottom: 32rpx;
 }
 
 // 表单内隐私协议
 .privacy-section-inline {
-	margin-bottom: 24rpx;
+	margin-bottom: 16rpx;
 }
 
 .checkbox-label-inline {
 	display: flex;
-	align-items: center; /* 改为center，确保垂直居中 */
-	gap: 12rpx;
+	align-items: center;
+	gap: 8rpx;
 }
 
 .custom-checkbox-inline {
 	flex-shrink: 0;
-	/* 移除margin-top，让checkbox自然居中 */
+	transform: scale(0.85);
 }
 
 .privacy-text-inline {
@@ -450,64 +440,63 @@ const openUserAgreement = () => {
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 4rpx;
-	line-height: 1.6;
+	line-height: 1.5;
 }
 
 .text-normal-inline {
-	font-size: 24rpx;
-	color: #8c8c8c;
+	font-size: 22rpx;
+	color: #999999;
 }
 
 .text-link-inline {
-	font-size: 24rpx;
+	font-size: 22rpx;
 	color: #52C41A;
-	font-weight: 500;
+	font-weight: 400;
 }
 
 .input-wrapper {
 	display: flex;
 	align-items: center;
-	background: #fafafa;
-	border-radius: 16rpx;
-	padding: 0 28rpx;
-	height: 104rpx;
-	border: 2rpx solid #f0f0f0;
-	transition: all 0.25s ease;
+	background: #FAFAFA;
+	border-radius: 12rpx;
+	padding: 0 24rpx;
+	height: 88rpx;
+	border: 1rpx solid #F0F0F0;
+	transition: all 0.3s ease;
 }
 
 .input-wrapper:focus-within {
-	background: #fff;
+	background: #FFFFFF;
 	border-color: #52C41A;
-	box-shadow: 0 0 0 6rpx rgba(82, 196, 26, 0.08);
+	box-shadow: 0 0 0 4rpx rgba(82, 196, 26, 0.06);
 }
 
 .input-icon {
 	font-size: 40rpx;
-	margin-right: 20rpx;
-	flex-shrink: 0; /* 防止图标被压缩 */
-	display: flex;
-	align-items: center; /* 确保垂直居中 */
+	margin-right: 16rpx;
+	opacity: 0.6;
 }
 
 .input-icon-img {
 	width: 40rpx;
 	height: 40rpx;
-	margin-right: 20rpx;
+	margin-right: 16rpx;
 	flex-shrink: 0;
-	display: block; /* 移除图片底部空隙 */
+	display: block;
+	opacity: 0.6;
 }
 
 .form-input {
 	flex: 1;
 	font-size: 30rpx;
-	color: #1a1a1a;
+	color: #1A1A1A;
 	height: 100%;
 	display: flex;
-	align-items: center; /* 确保输入框内容垂直居中 */
+	align-items: center;
 }
 
 .input-placeholder {
-	color: #bfbfbf;
+	color: #C0C0C0;
 }
 
 .eye-icon {
@@ -528,50 +517,55 @@ const openUserAgreement = () => {
 }
 
 .code-btn {
-	padding: 16rpx 28rpx;
+	padding: 12rpx 24rpx;
 	background: #52C41A;
-	border-radius: 12rpx;
-	transition: all 0.25s ease;
+	border-radius: 8rpx;
+	transition: all 0.2s ease;
 }
 
 .code-btn.disabled {
-	background: #d9d9d9;
+	background: #E5E5E5;
 }
 
 .code-btn:active:not(.disabled) {
-	transform: scale(0.96);
+	transform: scale(0.95);
+	opacity: 0.85;
 }
 
 .code-text {
-	font-size: 26rpx;
-	color: #fff;
-	font-weight: 500;
+	font-size: 24rpx;
+	color: #FFFFFF;
+	font-weight: 400;
 	white-space: nowrap;
+}
+
+.code-btn.disabled .code-text {
+	color: #999999;
 }
 
 .register-btn {
 	width: 100%;
-	height: 104rpx;
+	height: 96rpx;
 	background: #52C41A;
-	border-radius: 52rpx;
+	border-radius: 12rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.25);
-	margin-top: 40rpx;
-	transition: all 0.25s ease;
+	box-shadow: none;
+	margin-top: 48rpx;
+	transition: all 0.2s ease;
 }
 
 .register-btn:active {
-	transform: scale(0.98);
-	opacity: 0.9;
+	transform: scale(0.985);
+	opacity: 0.85;
 }
 
 .btn-text {
 	font-size: 32rpx;
-	font-weight: 600;
+	font-weight: 500;
 	color: #FFFFFF;
-	letter-spacing: 1rpx;
+	letter-spacing: 0.5rpx;
 }
 
 .login-link {
@@ -583,14 +577,14 @@ const openUserAgreement = () => {
 }
 
 .link-text {
-	font-size: 28rpx;
-	color: #8c8c8c;
+	font-size: 26rpx;
+	color: #999999;
 }
 
 .link-action {
-	font-size: 28rpx;
+	font-size: 26rpx;
 	color: #52C41A;
-	font-weight: 600;
+	font-weight: 400;
 }
 
 // 隐私协议
@@ -625,13 +619,12 @@ const openUserAgreement = () => {
 
 .text-normal {
 	font-size: 26rpx;
-	color: rgba(255, 255, 255, 0.9);
+	color: #8C8C8C;
 }
 
 .text-link {
 	font-size: 26rpx;
-	color: #FFFFFF;
+	color: #52C41A;
 	font-weight: 600;
-	text-decoration: underline;
 }
 </style>

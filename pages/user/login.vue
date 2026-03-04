@@ -1,14 +1,12 @@
 <template>
 	<view class="login-page">
-		<!-- 背景装饰 -->
-		<view class="bg-decoration">
-			<view class="circle circle-1"></view>
-			<view class="circle circle-2"></view>
-			<view class="circle circle-3"></view>
+		<!-- 沉浸式返回按钮 -->
+		<view class="back-button" :style="{ top: (statusBarHeight + 12) + 'px' }" @click="goBack">
+			<text class="back-icon">‹</text>
 		</view>
 		
 		<!-- 主内容区 -->
-		<view class="content-wrapper">
+		<view class="content-wrapper" :style="{ paddingTop: (statusBarHeight + 80) + 'px' }">
 			<!-- Logo和标题 -->
 			<view class="header-section">
 				<image class="app-logo" src="/static/logo.png" mode="aspectFit"></image>
@@ -18,35 +16,6 @@
 			
 			<!-- 登录卡片 -->
 			<view class="login-card">
-				<text class="card-title">欢迎回来</text>
-				<text class="card-subtitle">选择你喜欢的方式登录</text>
-				
-				<!-- #ifdef MP-WEIXIN -->
-				<!-- 
-				<view class="privacy-section-inline">
-					<checkbox-group @change="onAgreeChange">
-						<label class="checkbox-label-inline">
-							<checkbox :checked="data.agreed" color="#52C41A" class="custom-checkbox-inline" />
-							<view class="privacy-text-inline">
-								<text class="text-normal-inline">登录即表示同意</text>
-								<text class="text-link-inline" @click.stop="openUserAgreement">《用户协议》</text>
-								<text class="text-normal-inline">和</text>
-								<text class="text-link-inline" @click.stop="openPrivacy">《隐私政策》</text>
-							</view>
-						</label>
-					</checkbox-group>
-				</view>
-				
-				<view class="login-buttons">
-					<button class="login-btn primary-btn" open-type="getUserProfile" @click="wechatLogin">
-						<view class="btn-content">
-							<text class="btn-text">一键登录</text>
-						</view>
-					</button>
-				</view>
-				-->
-				<!-- #endif -->
-				
 				<!-- APP登录 -->
 				<!-- #ifdef APP-PLUS -->
 				<!-- 账号密码登录表单 -->
@@ -117,23 +86,15 @@
 					</view>
 				</view>
 				
-				<!-- 分割线 -->
-				<!-- #ifndef APP-PLUS -->
-				<view class="divider">
-					<view class="divider-line"></view>
-					<text class="divider-text">其他登录方式</text>
-					<view class="divider-line"></view>
-				</view>
-				<!-- #endif -->
-				
 				<!-- 第三方登录 -->
-				<view class="third-party-login">
-					<!-- 暂时隐藏微信登录按钮，等认证通过后再启用 -->
-					<!-- <view class="third-party-btn" @click="wechatAppLogin">
-						<image class="third-party-icon-img" src="/static/weixinhaoyou.png" mode="aspectFit"></image>
-					</view> -->
+				<view class="third-party-login" v-if="isIOS">
+					<view class="divider">
+						<view class="divider-line"></view>
+						<text class="divider-text">其他登录方式</text>
+						<view class="divider-line"></view>
+					</view>
 					
-					<view class="third-party-btn" @click="appleLogin" v-if="isIOS">
+					<view class="third-party-btn" @click="appleLogin">
 						<image class="third-party-icon-img" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/appleLogo.png" mode="aspectFit"></image>
 					</view>
 				</view>
@@ -609,69 +570,62 @@ const laterLogin = () => {
 }
 
 const isIOS = computed(() => data.isIOS)
+
+// 获取状态栏高度
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0
+
+// 返回上一页
+const goBack = () => {
+	uni.navigateBack({
+		fail: () => {
+			uni.switchTab({ url: '/pages/tab/index/index' })
+		}
+	})
+}
 </script>
 
 <style lang="scss" scoped>
 .login-page {
 	min-height: 100vh;
-	background: linear-gradient(180deg, #52C41A 0%, #73D13D 100%);
+	background: #F5F5F5;
 	position: relative;
-	overflow: hidden;
+}
+
+// 沉浸式返回按钮
+.back-button {
+	position: fixed;
+	left: 32rpx;
+	width: 72rpx;
+	height: 72rpx;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 80rpx 80rpx 60rpx;
+	z-index: 999;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+	backdrop-filter: blur(10rpx);
+	transition: all 0.2s;
 }
 
-// 背景装饰 - 简化设计
-.bg-decoration {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	top: 0;
-	left: 0;
-	overflow: hidden;
-	z-index: 0;
-	opacity: 0.6;
+.back-button:active {
+	transform: scale(0.92);
+	background: rgba(255, 255, 255, 1);
 }
 
-.circle {
-	position: absolute;
-	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.08);
-}
-
-.circle-1 {
-	width: 500rpx;
-	height: 500rpx;
-	top: -200rpx;
-	right: -150rpx;
-}
-
-.circle-2 {
-	width: 350rpx;
-	height: 350rpx;
-	bottom: -100rpx;
-	left: -100rpx;
-}
-
-.circle-3 {
-	width: 250rpx;
-	height: 250rpx;
-	top: 40%;
-	right: -80rpx;
+.back-icon {
+	font-size: 52rpx;
+	color: #1A1A1A;
+	font-weight: 300;
+	margin-left: -4rpx;
 }
 
 // 主内容区
 .content-wrapper {
-	position: relative;
-	z-index: 1;
-	width: 100%;
-	max-width: 640rpx;
+	padding: 32rpx 64rpx;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-top: -100rpx;
 }
 
 // 头部区域
@@ -679,63 +633,39 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 56rpx;
-	animation: fadeInDown 0.5s ease-out;
-}
-
-@keyframes fadeInDown {
-	from {
-		opacity: 0;
-		transform: translateY(-20rpx);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	margin-bottom: 64rpx;
 }
 
 .app-logo {
-	width: 128rpx;
-	height: 128rpx;
-	border-radius: 32rpx;
-	box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.15);
-	margin-bottom: 32rpx;
+	width: 120rpx;
+	height: 120rpx;
+	border-radius: 24rpx;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+	margin-bottom: 24rpx;
 	background: #fff;
 }
 
 .app-name {
-	font-size: 56rpx;
-	font-weight: 700;
-	color: #FFFFFF;
-	margin-bottom: 16rpx;
-	letter-spacing: 1rpx;
+	font-size: 40rpx;
+	font-weight: 600;
+	color: #1A1A1A;
+	margin-bottom: 8rpx;
+	letter-spacing: 0.5rpx;
 }
 
 .app-slogan {
-	font-size: 28rpx;
-	color: rgba(255, 255, 255, 0.9);
+	font-size: 24rpx;
+	color: #999999;
 	font-weight: 400;
 }
 
-// 登录卡片
+// 登录卡片 - 添加白色背景增加层次感
 .login-card {
 	width: 100%;
 	background: #FFFFFF;
 	border-radius: 24rpx;
-	padding: 56rpx 48rpx 48rpx;
-	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-	animation: fadeInUp 0.5s ease-out 0.15s both;
-}
-
-@keyframes fadeInUp {
-	from {
-		opacity: 0;
-		transform: translateY(20rpx);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	padding: 48rpx 40rpx;
+	box-shadow: 0 2rpx 20rpx rgba(0, 0, 0, 0.04);
 }
 
 .card-title {
@@ -763,12 +693,12 @@ const isIOS = computed(() => data.isIOS)
 
 .login-btn {
 	width: 100%;
-	height: 92rpx; /* 减小高度，从104rpx改为92rpx */
-	border-radius: 46rpx;
+	height: 96rpx;
+	border-radius: 12rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: all 0.25s ease;
+	transition: all 0.2s ease;
 	border: none;
 	padding: 0;
 	position: relative;
@@ -776,13 +706,13 @@ const isIOS = computed(() => data.isIOS)
 }
 
 .login-btn:active {
-	transform: scale(0.98);
-	opacity: 0.9;
+	transform: scale(0.985);
+	opacity: 0.85;
 }
 
 .primary-btn {
 	background: #52C41A;
-	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.25);
+	box-shadow: none;
 }
 
 .secondary-btn {
@@ -801,10 +731,10 @@ const isIOS = computed(() => data.isIOS)
 }
 
 .btn-text {
-	font-size: 30rpx;
-	font-weight: 600;
+	font-size: 32rpx;
+	font-weight: 500;
 	color: #FFFFFF;
-	letter-spacing: 1rpx;
+	letter-spacing: 0.5rpx;
 }
 
 // 登录表单
@@ -813,17 +743,18 @@ const isIOS = computed(() => data.isIOS)
 }
 
 .form-item {
-	margin-bottom: 24rpx; /* 恢复原来的间距 */
+	margin-bottom: 32rpx;
 }
 
 // 表单内隐私协议
 .privacy-section-inline {
-	margin-bottom: 24rpx; /* 恢复原来的间距 */
+	margin-bottom: 16rpx;
 }
 
 // 记住密码
 .remember-section {
-	margin-bottom: 20rpx; /* 恢复原来的间距 */
+	margin-bottom: 24rpx;
+	margin-top: -8rpx;
 }
 
 .remember-label {
@@ -833,23 +764,23 @@ const isIOS = computed(() => data.isIOS)
 }
 
 .remember-checkbox {
-	transform: scale(0.9);
+	transform: scale(0.85);
 }
 
 .remember-text {
-	font-size: 26rpx;
-	color: #666;
+	font-size: 24rpx;
+	color: #666666;
 }
 
 .checkbox-label-inline {
 	display: flex;
-	align-items: center; /* 改为center，让单选框和文字垂直居中对齐 */
-	gap: 12rpx;
+	align-items: center;
+	gap: 8rpx;
 }
 
 .custom-checkbox-inline {
 	flex-shrink: 0;
-	transform: scale(0.9); /* 和记住密码的单选框大小一致 */
+	transform: scale(0.85);
 }
 
 .privacy-text-inline {
@@ -857,51 +788,52 @@ const isIOS = computed(() => data.isIOS)
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 4rpx;
-	line-height: 1.6;
+	line-height: 1.5;
 }
 
 .text-normal-inline {
-	font-size: 24rpx;
-	color: #8c8c8c;
+	font-size: 22rpx;
+	color: #999999;
 }
 
 .text-link-inline {
-	font-size: 24rpx;
+	font-size: 22rpx;
 	color: #52C41A;
-	font-weight: 500;
+	font-weight: 400;
 }
 
 .input-wrapper {
 	display: flex;
 	align-items: center;
-	background: #fafafa;
-	border-radius: 16rpx;
-	padding: 0 28rpx;
-	height: 92rpx; /* 减小高度，从104rpx改为92rpx，和登录按钮一致 */
-	border: 2rpx solid #f0f0f0;
-	transition: all 0.25s ease;
+	background: #FAFAFA;
+	border-radius: 12rpx;
+	padding: 0 24rpx;
+	height: 88rpx;
+	border: 1rpx solid #F0F0F0;
+	transition: all 0.3s ease;
 }
 
 .input-wrapper:focus-within {
-	background: #fff;
+	background: #FFFFFF;
 	border-color: #52C41A;
-	box-shadow: 0 0 0 6rpx rgba(82, 196, 26, 0.08);
+	box-shadow: 0 0 0 4rpx rgba(82, 196, 26, 0.06);
 }
 
 .input-icon {
-	font-size: 36rpx;
+	font-size: 40rpx;
 	margin-right: 16rpx;
+	opacity: 0.6;
 }
 
 .form-input {
 	flex: 1;
-	font-size: 28rpx;
-	color: #1a1a1a;
+	font-size: 30rpx;
+	color: #1A1A1A;
 	height: 100%;
 }
 
 .input-placeholder {
-	color: #999;
+	color: #C0C0C0;
 }
 
 .eye-icon {
@@ -921,50 +853,52 @@ const isIOS = computed(() => data.isIOS)
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 32rpx; /* 恢复原来的间距 */
+	margin-bottom: 48rpx;
+	margin-top: 8rpx;
 }
 
 .action-link {
 	font-size: 26rpx;
 	color: #52C41A;
-	font-weight: 500;
+	font-weight: 400;
 }
 
 // 第三方登录
 .third-party-login {
 	display: flex;
 	justify-content: center;
-	gap: 40rpx;
-	margin-bottom: 16rpx; /* 减小间距，从24rpx改为16rpx */
+	gap: 48rpx;
+	margin-bottom: 0;
 }
 
 .third-party-btn {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 12rpx;
-	padding: 20rpx;
-	transition: all 0.3s;
+	gap: 8rpx;
+	padding: 16rpx;
+	transition: all 0.2s;
 }
 
 .third-party-btn:active {
-	transform: scale(0.95);
+	transform: scale(0.92);
+	opacity: 0.7;
 }
 
 .third-party-icon {
 	font-size: 48rpx;
-	width: 80rpx;
-	height: 80rpx;
+	width: 88rpx;
+	height: 88rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: #f8f9fa;
+	background: #F7F7F7;
 	border-radius: 50%;
 }
 
 .third-party-icon-img {
-	width: 80rpx;
-	height: 80rpx;
+	width: 88rpx;
+	height: 88rpx;
 	border-radius: 50%;
 }
 
@@ -982,7 +916,7 @@ const isIOS = computed(() => data.isIOS)
 
 .later-login-text {
 	font-size: 26rpx;
-	color: #999999; /* 改为浅灰色，和其他登录方式文字颜色一样 */
+	color: #BFBFBF;
 	padding: 12rpx 24rpx;
 }
 
@@ -990,19 +924,19 @@ const isIOS = computed(() => data.isIOS)
 .divider {
 	display: flex;
 	align-items: center;
-	gap: 24rpx;
-	margin: 32rpx 0 24rpx; /* 优化间距，从40rpx 0 20rpx改为32rpx 0 24rpx */
+	gap: 20rpx;
+	margin: 48rpx 0 32rpx;
 }
 
 .divider-line {
 	flex: 1;
 	height: 1rpx;
-	background: #e8e8e8;
+	background: #E5E5E5;
 }
 
 .divider-text {
-	font-size: 26rpx;
-	color: #bfbfbf;
+	font-size: 24rpx;
+	color: #CCCCCC;
 }
 
 // 卡片内隐私协议
@@ -1048,16 +982,6 @@ const isIOS = computed(() => data.isIOS)
 	justify-content: center;
 	margin-top: 48rpx;
 	gap: 12rpx;
-	animation: fadeIn 0.5s ease-out 0.3s both;
-}
-
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
 }
 
 .privacy-checkbox {
@@ -1083,13 +1007,12 @@ const isIOS = computed(() => data.isIOS)
 
 .text-normal {
 	font-size: 24rpx;
-	color: rgba(255, 255, 255, 0.85);
+	color: #8C8C8C;
 }
 
 .text-link {
 	font-size: 24rpx;
-	color: #FFFFFF;
+	color: #52C41A;
 	font-weight: 600;
-	text-decoration: underline;
 }
 </style>

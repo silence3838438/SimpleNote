@@ -1,23 +1,23 @@
 <template>
 	<view class="update-modal" v-if="visible" @click="handleMaskClick">
-		<view class="modal-wrapper">
-			<!-- 顶部礼花筒图标 - 突出显示 -->
-			<view class="gift-icon">
-				<text class="gift-emoji">🎉</text>
-				<view class="icon-badge" v-if="isForce">
-					<text class="badge-text">必须</text>
+		<view class="modal-content" @click.stop :class="{ 'shake': showShake }">
+			<!-- 内容区域 -->
+			<view class="content-area">
+				<!-- 顶部标题 -->
+				<view class="header-row">
+					<text class="modal-title">发现新版本</text>
+					<view class="force-badge" v-if="isForce">
+						<text class="force-badge-text">强制</text>
+					</view>
 				</view>
-			</view>
-			
-			<view class="modal-content" @click.stop :class="{ 'shake': showShake }">
-			<!-- 顶部标题 -->
-			<view class="modal-header">
-				<text class="modal-title">发现新版本</text>
-				<text class="version-text">v{{ newVersion }}</text>
-			</view>
-			
-			<!-- 更新内容 -->
-			<view class="modal-body">
+				
+				<!-- 版本号 -->
+				<view class="version-row">
+					<text class="version-label">版本号：</text>
+					<text class="version-number">v{{ newVersion }}</text>
+				</view>
+				
+				<!-- 更新内容 -->
 				<scroll-view class="update-content" scroll-y>
 					<view class="update-item" v-for="(item, index) in updateContent" :key="index">
 						<view class="item-dot"></view>
@@ -25,33 +25,36 @@
 					</view>
 				</scroll-view>
 				
-				<!-- 更新大小和时间 -->
+				<!-- 更新信息 -->
 				<view class="update-info">
 					<text class="info-text">📦 {{ packageSize }}</text>
 					<text class="info-divider">|</text>
 					<text class="info-text">🕐 {{ updateTime }}</text>
 				</view>
-			</view>
-			
-			<!-- 下载进度条 -->
-			<view class="progress-container" v-if="isDownloading">
-				<view class="progress-bar">
-					<view class="progress-fill" :style="{ width: downloadProgress }"></view>
+				
+				<!-- 下载进度条 -->
+				<view class="progress-container" v-if="isDownloading">
+					<view class="progress-bar">
+						<view class="progress-fill" :style="{ width: downloadProgress }"></view>
+					</view>
+					<text class="progress-text">{{ downloadProgress }}</text>
 				</view>
-				<text class="progress-text">{{ downloadProgress }} 下载中...</text>
-			</view>
-			
-			<!-- 底部按钮 -->
-			<view class="modal-footer">
-				<view class="btn-cancel" v-if="!isForce && !isDownloading" @click="handleCancel">
-					<text class="btn-text-cancel">稍后更新</text>
-				</view>
-				<view 
-					class="btn-confirm" 
-					:class="{ 'btn-full': isForce || isDownloading, 'btn-disabled': isDownloading }" 
-					@click="handleConfirm"
-				>
-					<text class="btn-text-confirm">{{ confirmButtonText }}</text>
+				
+				<!-- 占位空间 -->
+				<view style="flex: 1;"></view>
+				
+				<!-- 底部按钮 -->
+				<view class="button-group">
+					<view class="btn-cancel" v-if="!isForce && !isDownloading" @click="handleCancel">
+						<text class="btn-text-cancel">稍后更新</text>
+					</view>
+					<view 
+						class="btn-confirm" 
+						:class="{ 'btn-full': isForce || isDownloading, 'btn-disabled': isDownloading }" 
+						@click="handleConfirm"
+					>
+						<text class="btn-text-confirm">{{ confirmButtonText }}</text>
+					</view>
 				</view>
 			</view>
 			
@@ -59,7 +62,6 @@
 			<view class="force-tip" v-if="isForce">
 				<text class="force-tip-text">⚠️ 此版本为强制更新，必须升级后才能继续使用</text>
 			</view>
-		</view>
 		</view>
 	</view>
 </template>
@@ -300,96 +302,41 @@ const startDownload = () => {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(0, 0, 0, 0.6);
+	background: rgba(0, 0, 0, 0.7);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	z-index: 9999;
-	backdrop-filter: blur(8rpx);
+	backdrop-filter: blur(10rpx);
 	animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
-
-/* 弹窗包装器 */
-.modal-wrapper {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-}
-
-/* 礼花筒图标 - 突出显示在弹窗顶部 */
-.gift-icon {
-	position: relative;
-	width: 140rpx;
-	height: 140rpx;
-	background: rgba(255, 255, 255, 0.98);
-	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.2);
-	z-index: 10;
-	margin-bottom: -70rpx;
-	animation: giftFloat 2s ease-in-out infinite;
-}
-
-@keyframes giftFloat {
-	0%, 100% { transform: translateY(0) rotate(0deg); }
-	50% { transform: translateY(-8rpx) rotate(5deg); }
-}
-
-.gift-emoji {
-	font-size: 80rpx;
-}
-
-.rocket-image {
-	width: 90rpx;
-	height: 90rpx;
-}
-
-.icon-badge {
-	position: absolute;
-	top: 0;
-	right: 0;
-	background: #FF4D4F;
-	padding: 4rpx 12rpx;
-	border-radius: 20rpx;
-	box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.4);
-}
-
-.badge-text {
-	font-size: 20rpx;
-	color: #FFFFFF;
-	font-weight: bold;
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
 
 .modal-content {
-	width: 600rpx;
-	background: #FFFFFF;
-	border-radius: 32rpx;
-	overflow: hidden;
-	box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
-	animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	padding-top: 100rpx;
+	background: url("https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/zm/rocket.png") no-repeat;
+	background-size: contain;
+	background-position: top center;
+	width: 75vw;
+	height: 890rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	animation: modalFadeIn 0.5s ease-out;
 	position: relative;
 }
 
-@keyframes slideUp {
-	from {
-		transform: translateY(100rpx);
+@keyframes modalFadeIn {
+	0% {
 		opacity: 0;
+		transform: translateY(60rpx) scale(0.95);
 	}
-	to {
-		transform: translateY(0);
+	100% {
 		opacity: 1;
+		transform: translateY(0) scale(1);
 	}
 }
 
@@ -403,83 +350,97 @@ const startDownload = () => {
 	20%, 40%, 60%, 80% { transform: translateX(10rpx); }
 }
 
-.modal-header {
-	padding: 0 40rpx 32rpx;
+// 内容区域（从火箭下方开始）
+.content-area {
 	display: flex;
 	flex-direction: column;
+	width: 100%;
+	margin-top: 260rpx;
+	padding: 30rpx 60rpx 50rpx;
+	box-sizing: border-box;
+	height: 630rpx;
+	position: relative;
+	opacity: 0;
+	animation: contentFadeIn 0.4s ease-out 0.3s forwards;
+}
+
+@keyframes contentFadeIn {
+	0% {
+		opacity: 0;
+		transform: translateY(20rpx);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+// 标题行
+.header-row {
+	display: flex;
 	align-items: center;
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	justify-content: center;
+	margin-bottom: 16rpx;
 	position: relative;
 }
 
-.icon-badge {
-	position: absolute;
-	top: 0;
-	right: 0;
-	background: #FF4D4F;
-	padding: 4rpx 12rpx;
-	border-radius: 20rpx;
-	box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.4);
+.modal-title {
+	font-size: 36rpx;
+	font-weight: bold;
+	color: #3D3D3D;
 }
 
-.badge-text {
+.force-badge {
+	position: absolute;
+	right: 0;
+	top: 0;
+	background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
+	padding: 6rpx 16rpx;
+	border-radius: 20rpx;
+	box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.3);
+}
+
+.force-badge-text {
 	font-size: 20rpx;
 	color: #FFFFFF;
 	font-weight: bold;
 }
 
-.modal-title {
-	font-size: 40rpx;
-	font-weight: bold;
-	color: #FFFFFF;
-	margin-bottom: 12rpx;
-	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+// 版本号
+.version-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 20rpx;
 }
 
-.version-text {
-	font-size: 28rpx;
-	color: rgba(255, 255, 255, 0.9);
-	padding: 8rpx 24rpx;
-	background: rgba(255, 255, 255, 0.2);
-	border-radius: 24rpx;
-	backdrop-filter: blur(10rpx);
+.version-label {
+	font-size: 24rpx;
+	color: #3D3D3D;
 }
 
-.modal-body {
-	padding: 40rpx;
+.version-number {
+	font-size: 24rpx;
+	color: #3D3D3D;
+	font-weight: 600;
 }
 
+// 更新内容
 .update-content {
-	max-height: 400rpx;
-	margin-bottom: 24rpx;
+	height: 240rpx;
+	overflow: hidden;
+	margin-bottom: 20rpx;
 }
 
 .update-item {
 	display: flex;
 	align-items: flex-start;
-	margin-bottom: 24rpx;
-	animation: slideInLeft 0.5s ease;
-	animation-fill-mode: both;
-}
-
-.update-item:nth-child(1) { animation-delay: 0.1s; }
-.update-item:nth-child(2) { animation-delay: 0.2s; }
-.update-item:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes slideInLeft {
-	from {
-		transform: translateX(-20rpx);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
+	margin-bottom: 20rpx;
 }
 
 .item-dot {
-	width: 12rpx;
-	height: 12rpx;
+	width: 10rpx;
+	height: 10rpx;
 	background: #52C41A;
 	border-radius: 50%;
 	margin-top: 12rpx;
@@ -489,22 +450,24 @@ const startDownload = () => {
 
 .item-text {
 	flex: 1;
-	font-size: 28rpx;
-	color: #333333;
+	font-size: 26rpx;
+	color: #3D3D3D;
 	line-height: 1.6;
 }
 
+// 更新信息
 .update-info {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 20rpx;
-	background: #F5F5F5;
-	border-radius: 16rpx;
+	padding: 12rpx;
+	background: rgba(245, 245, 245, 0.8);
+	border-radius: 12rpx;
+	margin-bottom: 16rpx;
 }
 
 .info-text {
-	font-size: 24rpx;
+	font-size: 22rpx;
 	color: #666666;
 }
 
@@ -513,13 +476,14 @@ const startDownload = () => {
 	color: #D9D9D9;
 }
 
+// 进度条
 .progress-container {
-	padding: 0 40rpx 24rpx;
+	margin-bottom: 24rpx;
 }
 
 .progress-bar {
 	height: 12rpx;
-	background: #F0F0F0;
+	background: rgba(240, 240, 240, 0.8);
 	border-radius: 6rpx;
 	overflow: hidden;
 	margin-bottom: 12rpx;
@@ -533,55 +497,60 @@ const startDownload = () => {
 }
 
 .progress-text {
-	font-size: 24rpx;
+	font-size: 22rpx;
 	color: #52C41A;
 	text-align: center;
 	display: block;
 	font-weight: 500;
 }
 
-.modal-footer {
+// 按钮组
+.button-group {
 	display: flex;
-	padding: 0 40rpx 40rpx;
+	justify-content: center;
 	gap: 20rpx;
+	margin-top: 16rpx;
 }
 
 .btn-cancel {
-	flex: 1;
-	height: 88rpx;
-	background: #F5F5F5;
-	border-radius: 44rpx;
+	width: 170rpx;
+	height: 72rpx;
+	background: transparent;
+	border-radius: 36rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	transition: all 0.3s;
+	border: 2rpx solid #CCCCCC;
 }
 
 .btn-cancel:active {
-	transform: scale(0.98);
-	background: #E8E8E8;
+	transform: scale(0.95);
+	background: #F5F5F5;
 }
 
 .btn-text-cancel {
-	font-size: 32rpx;
+	font-size: 28rpx;
 	color: #666666;
 	font-weight: 500;
 }
 
 .btn-confirm {
-	flex: 1;
-	height: 88rpx;
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-	border-radius: 44rpx;
+	width: 170rpx;
+	height: 72rpx;
+	background: #28B73B;
+	border-radius: 36rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
 	transition: all 0.3s;
+	box-shadow: 0 4rpx 12rpx rgba(40, 183, 59, 0.3);
 }
 
 .btn-confirm.btn-full {
-	flex: 1;
+	width: 240rpx;
+	height: 88rpx;
+	border-radius: 44rpx;
 }
 
 .btn-confirm.btn-disabled {
@@ -589,27 +558,33 @@ const startDownload = () => {
 }
 
 .btn-confirm:active:not(.btn-disabled) {
-	transform: scale(0.98);
-	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.4);
+	transform: scale(0.95);
+	opacity: 0.9;
 }
 
 .btn-text-confirm {
-	font-size: 32rpx;
+	font-size: 28rpx;
 	color: #FFFFFF;
 	font-weight: bold;
 }
 
+// 强制更新提示
 .force-tip {
-	padding: 24rpx 40rpx;
-	background: #FFF7E6;
-	border-top: 1rpx solid #FFE7BA;
+	position: absolute;
+	bottom: 20rpx;
+	left: 20rpx;
+	right: 20rpx;
+	padding: 16rpx;
+	background: rgba(255, 247, 230, 0.95);
+	border-radius: 12rpx;
 }
 
 .force-tip-text {
-	font-size: 24rpx;
+	font-size: 22rpx;
 	color: #FA8C16;
 	line-height: 1.5;
 	text-align: center;
 	display: block;
 }
+
 </style>
