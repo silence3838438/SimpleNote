@@ -1043,7 +1043,7 @@ onPullDownRefresh(async () => {
 	
 	.filter-tags {
 		display: inline-flex;
-		gap: $spacing-lg;
+		gap: $spacing-sm;
 		padding: 0;
 	}
 	
@@ -1051,7 +1051,7 @@ onPullDownRefresh(async () => {
 		display: inline-flex;
 		align-items: center;
 		gap: 4rpx;
-		padding: 10rpx 24rpx;
+		padding: 10rpx 28rpx;
 		background: $bg-white;
 		border-radius: $radius-lg;
 		border: 2rpx solid $border-color;

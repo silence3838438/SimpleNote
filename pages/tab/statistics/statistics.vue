@@ -1194,7 +1194,7 @@ onPullDownRefresh(async () => {
 
 	.time-filter {
 		display: flex;
-		gap: $spacing-sm;
+		gap: $spacing-xs;
 		background: $bg-white;
 		border-radius: $radius-lg;
 		padding: 6rpx;
@@ -1204,7 +1204,7 @@ onPullDownRefresh(async () => {
 	.filter-item {
 		flex: 1;
 		text-align: center;
-		padding: 16rpx 16rpx;
+		padding: 18rpx 16rpx;
 		font-size: $font-size-sm;
 		color: $text-secondary;
 		background: linear-gradient(135deg, #F7F9FA 0%, #F0F2F5 100%);
