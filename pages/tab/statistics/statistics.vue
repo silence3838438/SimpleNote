@@ -1781,7 +1781,7 @@ onPullDownRefresh(async () => {
 	/* 类型切换标签 - 参考首页拍照/语音按钮样式 */
 	.type-tabs {
 		display: flex;
-		gap: $spacing-lg;
+		gap: $spacing-sm;
 		margin-bottom: $spacing-2xl;
 	}
 	

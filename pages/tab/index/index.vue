@@ -1640,13 +1640,13 @@ export default {
 	/* 紧凑版记账按钮 - 精致高端版 */
 	.action-buttons-compact {
 		display: flex;
-		gap: $spacing-lg;
+		gap: $spacing-sm;
 		margin-bottom: $spacing-2xl;
 	}
 	
 	.action-btn-compact {
 		flex: 1;
-		height: 108rpx;
+		height: 98rpx;
 		border-radius: 14rpx;
 		display: flex;
 		align-items: center;
