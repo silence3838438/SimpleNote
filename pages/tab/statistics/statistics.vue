@@ -1803,21 +1803,9 @@ onPullDownRefresh(async () => {
 	}
 	
 	.type-tab.active {
-		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
-		border: 1rpx solid rgba(82, 196, 26, 0.15);
+		background: #E8F5E9;
+		border: 1rpx solid rgba(82, 196, 26, 0.2);
 		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08), 0 2rpx 8rpx rgba(82, 196, 26, 0.05);
-	}
-	
-	.type-tab.active::after {
-		content: '';
-		position: absolute;
-		top: -40%;
-		right: -20%;
-		width: 150rpx;
-		height: 150rpx;
-		background: radial-gradient(circle, rgba(82, 196, 26, 0.1) 0%, transparent 70%);
-		border-radius: 50%;
-		pointer-events: none;
 	}
 	
 	.type-tab::before {
@@ -1854,7 +1842,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.type-tab.active .tab-text {
-		color: $primary-color;
+		color: #52C41A;
 		font-weight: 600;
 	}
 
