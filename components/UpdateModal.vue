@@ -302,18 +302,24 @@ const startDownload = () => {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(0, 0, 0, 0.7);
+	background: rgba(0, 0, 0, 0.75);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	z-index: 9999;
-	backdrop-filter: blur(10rpx);
+	backdrop-filter: blur(12rpx);
 	animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from { 
+		opacity: 0;
+		backdrop-filter: blur(0);
+	}
+	to { 
+		opacity: 1;
+		backdrop-filter: blur(12rpx);
+	}
 }
 
 .modal-content {
@@ -325,14 +331,15 @@ const startDownload = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	animation: modalFadeIn 0.5s ease-out;
+	animation: modalFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 	position: relative;
+	filter: drop-shadow(0 16rpx 48rpx rgba(0, 0, 0, 0.2));
 }
 
 @keyframes modalFadeIn {
 	0% {
 		opacity: 0;
-		transform: translateY(60rpx) scale(0.95);
+		transform: translateY(80rpx) scale(0.9);
 	}
 	100% {
 		opacity: 1;
@@ -356,18 +363,18 @@ const startDownload = () => {
 	flex-direction: column;
 	width: 100%;
 	margin-top: 260rpx;
-	padding: 30rpx 60rpx 50rpx;
+	padding: 32rpx 56rpx 48rpx;
 	box-sizing: border-box;
 	height: 630rpx;
 	position: relative;
 	opacity: 0;
-	animation: contentFadeIn 0.4s ease-out 0.3s forwards;
+	animation: contentFadeIn 0.5s ease-out 0.3s forwards;
 }
 
 @keyframes contentFadeIn {
 	0% {
 		opacity: 0;
-		transform: translateY(20rpx);
+		transform: translateY(30rpx);
 	}
 	100% {
 		opacity: 1;
@@ -380,14 +387,15 @@ const startDownload = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-bottom: 16rpx;
+	margin-bottom: 20rpx;
 	position: relative;
 }
 
 .modal-title {
-	font-size: 36rpx;
-	font-weight: bold;
-	color: #3D3D3D;
+	font-size: 40rpx;
+	font-weight: 700;
+	color: #2C2C2C;
+	letter-spacing: 1rpx;
 }
 
 .force-badge {
@@ -395,15 +403,22 @@ const startDownload = () => {
 	right: 0;
 	top: 0;
 	background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
-	padding: 6rpx 16rpx;
-	border-radius: 20rpx;
-	box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.3);
+	padding: 8rpx 20rpx;
+	border-radius: 24rpx;
+	box-shadow: 0 6rpx 16rpx rgba(255, 77, 79, 0.35);
+	animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { transform: scale(1); }
+	50% { transform: scale(1.05); }
 }
 
 .force-badge-text {
-	font-size: 20rpx;
+	font-size: 22rpx;
 	color: #FFFFFF;
-	font-weight: bold;
+	font-weight: 700;
+	letter-spacing: 0.5rpx;
 }
 
 // 版本号
@@ -411,48 +426,73 @@ const startDownload = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-bottom: 20rpx;
+	margin-bottom: 24rpx;
+	padding: 8rpx 24rpx;
+	background: rgba(82, 196, 26, 0.08);
+	border-radius: 20rpx;
+	align-self: center;
 }
 
 .version-label {
 	font-size: 24rpx;
-	color: #3D3D3D;
+	color: #52C41A;
+	font-weight: 500;
 }
 
 .version-number {
 	font-size: 24rpx;
-	color: #3D3D3D;
-	font-weight: 600;
+	color: #52C41A;
+	font-weight: 700;
+	letter-spacing: 0.5rpx;
 }
 
 // 更新内容
 .update-content {
 	height: 240rpx;
 	overflow: hidden;
-	margin-bottom: 20rpx;
+	margin-bottom: 24rpx;
+	padding: 4rpx 0;
 }
 
 .update-item {
 	display: flex;
 	align-items: flex-start;
-	margin-bottom: 20rpx;
+	margin-bottom: 24rpx;
+	animation: slideIn 0.4s ease-out backwards;
+}
+
+.update-item:nth-child(1) { animation-delay: 0.4s; }
+.update-item:nth-child(2) { animation-delay: 0.5s; }
+.update-item:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateX(-20rpx);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .item-dot {
-	width: 10rpx;
-	height: 10rpx;
-	background: #52C41A;
+	width: 12rpx;
+	height: 12rpx;
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
 	border-radius: 50%;
-	margin-top: 12rpx;
-	margin-right: 16rpx;
+	margin-top: 14rpx;
+	margin-right: 20rpx;
 	flex-shrink: 0;
+	box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.3);
 }
 
 .item-text {
 	flex: 1;
 	font-size: 26rpx;
 	color: #3D3D3D;
-	line-height: 1.6;
+	line-height: 1.7;
+	font-weight: 400;
 }
 
 // 更新信息
@@ -460,131 +500,224 @@ const startDownload = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 12rpx;
-	background: rgba(245, 245, 245, 0.8);
-	border-radius: 12rpx;
-	margin-bottom: 16rpx;
+	padding: 16rpx 24rpx;
+	background: linear-gradient(135deg, rgba(245, 245, 245, 0.9) 0%, rgba(250, 250, 250, 0.9) 100%);
+	border-radius: 16rpx;
+	margin-bottom: 20rpx;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 }
 
 .info-text {
 	font-size: 22rpx;
 	color: #666666;
+	font-weight: 500;
 }
 
 .info-divider {
-	margin: 0 16rpx;
+	margin: 0 20rpx;
 	color: #D9D9D9;
+	font-weight: 300;
 }
 
 // 进度条
 .progress-container {
-	margin-bottom: 24rpx;
+	margin-bottom: 28rpx;
 }
 
 .progress-bar {
-	height: 12rpx;
-	background: rgba(240, 240, 240, 0.8);
-	border-radius: 6rpx;
+	height: 16rpx;
+	background: linear-gradient(135deg, rgba(240, 240, 240, 0.9) 0%, rgba(245, 245, 245, 0.9) 100%);
+	border-radius: 8rpx;
 	overflow: hidden;
-	margin-bottom: 12rpx;
+	margin-bottom: 16rpx;
+	box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.06);
 }
 
 .progress-fill {
 	height: 100%;
-	background: linear-gradient(90deg, #52C41A 0%, #73D13D 100%);
-	transition: width 0.3s;
-	border-radius: 6rpx;
+	background: linear-gradient(90deg, #52C41A 0%, #73D13D 50%, #95DE64 100%);
+	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	border-radius: 8rpx;
+	box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.4);
+	position: relative;
+	overflow: hidden;
+}
+
+.progress-fill::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+	animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+	0% { transform: translateX(-100%); }
+	100% { transform: translateX(100%); }
 }
 
 .progress-text {
-	font-size: 22rpx;
+	font-size: 24rpx;
 	color: #52C41A;
 	text-align: center;
 	display: block;
-	font-weight: 500;
+	font-weight: 600;
+	letter-spacing: 0.5rpx;
 }
 
 // 按钮组
 .button-group {
 	display: flex;
 	justify-content: center;
-	gap: 20rpx;
-	margin-top: 16rpx;
+	gap: 24rpx;
+	margin-top: 20rpx;
+	padding: 0 8rpx;
 }
 
 .btn-cancel {
-	width: 170rpx;
-	height: 72rpx;
-	background: transparent;
-	border-radius: 36rpx;
+	flex: 1;
+	max-width: 140rpx;
+	height: 60rpx;
+	background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+	border-radius: 30rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: all 0.3s;
-	border: 2rpx solid #CCCCCC;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	border: 2rpx solid #E8E8E8;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+	position: relative;
+	overflow: hidden;
+}
+
+.btn-cancel::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.01) 100%);
+	opacity: 0;
+	transition: opacity 0.3s;
 }
 
 .btn-cancel:active {
-	transform: scale(0.95);
-	background: #F5F5F5;
+	transform: scale(0.96);
+	border-color: #D9D9D9;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.btn-cancel:active::before {
+	opacity: 1;
 }
 
 .btn-text-cancel {
-	font-size: 28rpx;
+	font-size: 25rpx;
 	color: #666666;
-	font-weight: 500;
+	font-weight: 600;
+	letter-spacing: 0.5rpx;
+	position: relative;
+	z-index: 1;
 }
 
 .btn-confirm {
-	width: 170rpx;
-	height: 72rpx;
-	background: #28B73B;
-	border-radius: 36rpx;
+	flex: 1;
+	max-width: 140rpx;
+	height: 60rpx;
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	border-radius: 30rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: all 0.3s;
-	box-shadow: 0 4rpx 12rpx rgba(40, 183, 59, 0.3);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.4), 0 2rpx 8rpx rgba(82, 196, 26, 0.2);
+	position: relative;
+	overflow: hidden;
+}
+
+.btn-confirm::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+	transition: left 0.6s;
+}
+
+.btn-confirm:active::before {
+	left: 100%;
+}
+
+.btn-confirm::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.3);
+	transform: translate(-50%, -50%);
+	transition: width 0.4s, height 0.4s;
+}
+
+.btn-confirm:active::after {
+	width: 300rpx;
+	height: 300rpx;
 }
 
 .btn-confirm.btn-full {
-	width: 240rpx;
-	height: 88rpx;
-	border-radius: 44rpx;
+	max-width: 200rpx;
+	height: 68rpx;
+	border-radius: 34rpx;
 }
 
 .btn-confirm.btn-disabled {
-	opacity: 0.6;
+	opacity: 0.65;
+	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.25);
 }
 
 .btn-confirm:active:not(.btn-disabled) {
-	transform: scale(0.95);
-	opacity: 0.9;
+	transform: scale(0.97);
+	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.35);
 }
 
 .btn-text-confirm {
-	font-size: 28rpx;
+	font-size: 25rpx;
 	color: #FFFFFF;
-	font-weight: bold;
+	font-weight: 700;
+	letter-spacing: 1rpx;
+	position: relative;
+	z-index: 1;
+	text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
 }
 
 // 强制更新提示
 .force-tip {
 	position: absolute;
-	bottom: 20rpx;
-	left: 20rpx;
-	right: 20rpx;
-	padding: 16rpx;
-	background: rgba(255, 247, 230, 0.95);
-	border-radius: 12rpx;
+	bottom: 24rpx;
+	left: 24rpx;
+	right: 24rpx;
+	padding: 20rpx 24rpx;
+	background: linear-gradient(135deg, rgba(255, 247, 230, 0.98) 0%, rgba(255, 250, 240, 0.98) 100%);
+	border-radius: 16rpx;
+	border: 1rpx solid rgba(250, 173, 20, 0.2);
+	box-shadow: 0 4rpx 16rpx rgba(250, 173, 20, 0.15);
 }
 
 .force-tip-text {
 	font-size: 22rpx;
 	color: #FA8C16;
-	line-height: 1.5;
+	line-height: 1.6;
 	text-align: center;
 	display: block;
+	font-weight: 500;
 }
 
 </style>

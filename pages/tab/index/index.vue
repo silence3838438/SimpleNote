@@ -1266,7 +1266,7 @@ export default {
 	.page {
 		width: 100%;
 		min-height: 100vh;
-		background: #F7F8FA;
+		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%);
 		position: relative;
 		overflow: hidden;
 	}
@@ -1319,14 +1319,14 @@ export default {
 		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
-		background: $bg-page;
+		background: transparent;
 	}
 
 	.header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: $spacing-2xl;
+		margin-bottom: $spacing-lg;
 		padding-top: $spacing-lg;
 		position: relative;
 		z-index: 100;
@@ -1363,25 +1363,29 @@ export default {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(0, 0, 0, 0.6);
 		z-index: 9999;
 		display: flex;
 		align-items: flex-end;
+		backdrop-filter: blur(4rpx);
 	}
 	
 	.picker-content {
 		width: 100%;
-		background: $bg-white;
-		border-radius: $radius-2xl $radius-2xl 0 0;
-		animation: slideUp 0.3s ease;
+		background: #FFFFFF;
+		border-radius: 24rpx 24rpx 0 0;
+		animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+		box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.12);
 	}
 	
 	@keyframes slideUp {
 		from {
 			transform: translateY(100%);
+			opacity: 0;
 		}
 		to {
 			transform: translateY(0);
+			opacity: 1;
 		}
 	}
 	
@@ -1389,62 +1393,62 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: $spacing-xl $spacing-xl;
-		border-bottom: 1rpx solid #F0F0F0;
+		padding: 32rpx 40rpx;
+		border-bottom: 1rpx solid #F5F5F5;
+		background: linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%);
 	}
 	
 	.picker-cancel {
-		font-size: $font-size-base;
-		color: $text-secondary;
+		font-size: 30rpx;
+		color: #999999;
+		padding: 8rpx 16rpx;
+		transition: all 0.2s ease;
+	}
+	
+	.picker-cancel:active {
+		opacity: 0.6;
+		transform: scale(0.95);
 	}
 	
 	.picker-title {
-		font-size: $font-size-lg;
-		font-weight: $font-weight-bold;
-		color: $text-primary;
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #333333;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.picker-confirm {
-		font-size: $font-size-base;
-		color: $primary-color; /* 使用主题色 */
-		font-weight: $font-weight-medium;
+		font-size: 30rpx;
+		color: $primary-color;
+		font-weight: 600;
+		padding: 8rpx 16rpx;
+		transition: all 0.2s ease;
+	}
+	
+	.picker-confirm:active {
+		opacity: 0.7;
+		transform: scale(0.95);
 	}
 	
 	.picker-view {
 		height: 400rpx;
 		position: relative;
-	}
-	
-	/* picker-view选中指示器 */
-	.picker-view::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		height: 50px;
-		border-top: 1rpx solid #E8E8E8;
-		border-bottom: 1rpx solid #E8E8E8;
-		pointer-events: none;
-		z-index: 1;
+		padding: 20rpx 0;
 	}
 	
 	.picker-item {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: $font-size-xl;
-		color: $text-secondary;
-		height: 50px;
-		transition: color 0.3s ease;
+		text-align: center;
+		font-size: 30rpx;
+		color: #999999;
+		transition: all 0.3s ease;
+		font-weight: 400;
 	}
 	
 	/* 选中项文字颜色使用主题色 */
 	.picker-item-selected {
-		color: $primary-color !important; /* 使用主题色 */
-		font-weight: $font-weight-bold;
-		font-size: 36rpx;
+		color: $primary-color !important;
+		font-weight: 600;
+		font-size: 34rpx;
 	}
 	
 	/* 统计按钮 */
@@ -1718,7 +1722,7 @@ export default {
 	
 	/* 收支结余合并卡片 - 精致高端版 */
 	.finance-summary-card {
-		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%); /* 微妙的渐变 */
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%); /* 更柔和的渐变 */
 		border-radius: 16rpx; /* 更大的圆角 */
 		padding: 32rpx 28rpx;
 		margin-bottom: $spacing-2xl;
@@ -2071,7 +2075,7 @@ export default {
 	
 	/* 简化版预算卡片 - 美团风格优化 */
 	.budget-card-compact {
-		background: $bg-white;
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: 32rpx 28rpx; /* 增加内边距，从24rpx增加到32rpx 28rpx */
 		margin-bottom: $spacing-xl;
@@ -2087,13 +2091,13 @@ export default {
 	}
 	
 	.budget-card-compact.budget-warning {
-		background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
+		background: linear-gradient(135deg, #FFF9E6 0%, #F8F9FA 100%);
 		border-color: rgba(250, 173, 20, 0.2);
 		box-shadow: $shadow-card;
 	}
 	
 	.budget-card-compact.budget-danger {
-		background: linear-gradient(135deg, #FFF1F0 0%, #FFFFFF 100%);
+		background: linear-gradient(135deg, #FFF1F0 0%, #F8F9FA 100%);
 		border-color: rgba(245, 34, 45, 0.2);
 		box-shadow: $shadow-card;
 	}
@@ -2514,27 +2518,27 @@ export default {
 	.bills-list {
 		display: flex;
 		flex-direction: column;
-		gap: $spacing-sm;
+		gap: $spacing-md;
 	}
 
 	.bill-item {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 16rpx 12rpx; /* 减小内边距，从20rpx 16rpx改为16rpx 12rpx */
+		padding: 20rpx 16rpx;
 		background: $bg-white;
-		border-radius: $radius-md; /* 美团风格：更小的圆角 */
+		border-radius: 12rpx;
 		transition: all $transition-fast;
 		position: relative;
-		box-shadow: none; /* 美团风格：去掉阴影 */
-		border: 1rpx solid $border-light;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+		border: 1rpx solid #F0F0F0;
 		overflow: hidden;
 	}
 	
 	.bill-item:active {
-		background: $bg-gray;
-		transform: scale(0.99);
-		box-shadow: none;
+		background: #FAFAFA;
+		transform: scale(0.98);
+		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.06);
 	}
 
 	.bill-left {

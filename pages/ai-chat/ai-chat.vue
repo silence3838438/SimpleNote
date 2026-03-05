@@ -475,9 +475,10 @@ onLoad(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: linear-gradient(135deg, $primary-color 0%, #00A870 100%);
-	color: $text-white;
-	box-shadow: $shadow-sm;
+	background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+	color: $primary-color;
+	box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
+	border: 2rpx solid rgba(82, 196, 26, 0.1);
 }
 
 .avatar-icon {
@@ -503,16 +504,18 @@ onLoad(async () => {
 }
 
 .message-bubble {
-	padding: $spacing-lg;
-	border-radius: $radius-lg;
+	padding: $spacing-lg $spacing-xl;
+	border-radius: $radius-xl;
 	background: $bg-white;
-	box-shadow: $shadow-sm;
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 	word-break: break-word;
+	border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
 .user-message .message-bubble {
-	background: linear-gradient(135deg, $primary-color 0%, #00A870 100%);
-	color: $text-white;
+	background: linear-gradient(135deg, #F0F0F0 0%, #FAFAFA 100%);
+	color: $text-primary;
+	border: 1rpx solid rgba(0, 0, 0, 0.06);
 }
 
 .message-text {
@@ -528,7 +531,7 @@ onLoad(async () => {
 }
 
 .user-message .message-text {
-	color: $text-white;
+	color: $text-primary;
 }
 
 .message-time {
@@ -540,6 +543,7 @@ onLoad(async () => {
 /* 加载动画 */
 .loading-bubble {
 	padding: $spacing-lg $spacing-xl;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 }
 
 .loading-dots {
@@ -553,7 +557,7 @@ onLoad(async () => {
 	width: 12rpx;
 	height: 12rpx;
 	border-radius: 50%;
-	background: #52C41A;
+	background: $primary-color;
 	animation: bounce 1.4s infinite ease-in-out both;
 }
 
@@ -581,35 +585,38 @@ onLoad(async () => {
 	padding: 0 $spacing-lg $spacing-lg;
 	display: flex;
 	flex-direction: column;
-	gap: $spacing-md;
+	gap: $spacing-sm;
 	flex-shrink: 0;
 }
 
 .quick-item {
-	padding: $spacing-lg;
-	background: $bg-white;
-	border-radius: $radius-lg;
-	box-shadow: $shadow-sm;
+	padding: $spacing-md $spacing-lg;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+	border-radius: $radius-xl;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 	transition: all $transition-fast;
+	border: 1rpx solid rgba(82, 196, 26, 0.08);
 }
 
 .quick-item:active {
 	transform: scale(0.98);
-	background: #F0FFF4;
+	background: linear-gradient(135deg, #F0FFF4 0%, #FAFBFC 100%);
+	border-color: rgba(82, 196, 26, 0.15);
 }
 
 .quick-text {
-	font-size: $font-size-base;
-	color: #52C41A;
+	font-size: 26rpx;
+	color: $text-secondary;
 	font-weight: $font-weight-medium;
+	letter-spacing: 0.3rpx;
 }
 
 /* 输入区域 */
 .input-area {
 	padding: $spacing-lg;
 	background: $bg-white;
-	border-top: 1rpx solid $border-light;
-	box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.05);
+	border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+	box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.04);
 	flex-shrink: 0;
 }
 
@@ -617,9 +624,16 @@ onLoad(async () => {
 	display: flex;
 	align-items: center;
 	gap: $spacing-md;
-	background: #F5F5F5;
+	background: linear-gradient(135deg, #F8F9FA 0%, #FAFBFC 100%);
 	border-radius: $radius-2xl;
 	padding: $spacing-sm $spacing-lg;
+	border: 2rpx solid rgba(0, 0, 0, 0.04);
+	transition: all $transition-fast;
+}
+
+.input-wrapper:focus-within {
+	border-color: rgba(82, 196, 26, 0.2);
+	box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
 }
 
 .input-box {
@@ -635,17 +649,19 @@ onLoad(async () => {
 	width: 64rpx;
 	height: 64rpx;
 	border-radius: 50%;
-	background: #E8E8E8;
+	background: linear-gradient(135deg, #E8E8E8 0%, #F0F0F0 100%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	transition: all $transition-fast;
 	flex-shrink: 0;
+	border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
 .send-btn.active {
-	background: linear-gradient(135deg, $primary-color 0%, #00A870 100%);
-	box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.3);
+	background: linear-gradient(135deg, $primary-color 0%, #73D13D 100%);
+	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.3);
+	border-color: transparent;
 }
 
 .send-btn.active .send-icon {
@@ -653,12 +669,12 @@ onLoad(async () => {
 }
 
 .send-btn:active {
-	transform: scale(0.9);
+	transform: scale(0.92);
 }
 
 .send-icon {
 	font-size: 28rpx;
-	color: $text-white;
+	color: $text-tertiary;
 	font-weight: $font-weight-bold;
 }
 </style>

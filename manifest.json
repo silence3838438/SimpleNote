@@ -33,7 +33,8 @@
             "Share" : {},
             "Camera" : {},
             "OAuth" : {},
-            "Speech" : {}
+            "Speech" : {},
+            "Push" : {}
         },
         "screenOrientation" : [
             "portrait-primary",

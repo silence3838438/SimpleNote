@@ -160,7 +160,7 @@
 						<text class="function-title">记账提醒</text>
 					</view>
 					<view class="function-right">
-						<text class="function-desc" v-if="data.reminderTime">每天 {{ data.reminderTime }}</text>
+						<text class="function-desc reminder-desc" v-if="data.reminderTime">每天 {{ data.reminderTime }}</text>
 						<text class="function-desc inactive" v-else>未开启</text>
 						<text class="arrow">›</text>
 					</view>
@@ -205,7 +205,7 @@
 						<text class="function-title">财务顾问</text>
 					</view>
 					<view class="function-right">
-						<text class="function-desc">智能分析</text>
+						<text class="function-desc ai-desc">智能分析</text>
 						<text class="arrow">›</text>
 					</view>
 				</view>
@@ -219,7 +219,7 @@
 						<text class="function-title">财务顾问</text>
 					</view>
 					<view class="function-right">
-						<text class="function-desc">智能分析</text>
+						<text class="function-desc ai-desc">智能分析</text>
 						<text class="arrow">›</text>
 					</view>
 				</view>
@@ -360,6 +360,81 @@
 			@share="handleShare"
 		/>
 		<!-- #endif -->
+		
+		<!-- 积分详情弹框 -->
+		<view class="points-modal" v-if="data.showPointsModal" @click="closePointsModal">
+			<view class="points-modal-content" @click.stop>
+				<view class="points-header">
+					<view class="points-icon-wrapper">
+						<text class="points-icon">💰</text>
+						<view class="points-glow"></view>
+					</view>
+					<text class="points-title">我的积分</text>
+					<view class="points-close" @click="closePointsModal">
+						<text class="close-icon">✕</text>
+					</view>
+				</view>
+				
+				<view class="points-body">
+					<!-- 积分统计 -->
+					<view class="points-stats">
+						<view class="points-stat-item">
+							<text class="stat-number">{{ data.userPoints }}</text>
+							<text class="stat-text">总积分</text>
+						</view>
+						<view class="points-divider"></view>
+						<view class="points-stat-item">
+							<text class="stat-number highlight">+{{ getTodayPoints() }}</text>
+							<text class="stat-text">今日获得</text>
+						</view>
+					</view>
+					
+					<!-- 积分规则 -->
+					<view class="points-rules">
+						<text class="rules-title">获取积分规则</text>
+						<view class="rule-list">
+							<view class="rule-item">
+								<text class="rule-icon">📝</text>
+								<text class="rule-text">每记一笔账</text>
+								<text class="rule-points">+2积分</text>
+							</view>
+							<view class="rule-item">
+								<text class="rule-icon">⭐</text>
+								<text class="rule-text">每日首次记账额外</text>
+								<text class="rule-points">+5积分</text>
+							</view>
+							<view class="rule-item">
+								<text class="rule-icon">🎁</text>
+								<text class="rule-text">设置预算</text>
+								<text class="rule-points">+10积分</text>
+							</view>
+							<view class="rule-item">
+								<text class="rule-icon">📤</text>
+								<text class="rule-text">分享给好友</text>
+								<text class="rule-points">+5积分</text>
+							</view>
+							<view class="rule-item">
+								<text class="rule-icon">🎯</text>
+								<text class="rule-text">完成成就任务</text>
+								<text class="rule-points">更多积分</text>
+							</view>
+						</view>
+					</view>
+					
+					<!-- 提示 -->
+					<view class="points-tip">
+						<text class="tip-icon">✨</text>
+						<text class="tip-text">积分越高，等级越高，成就感满满！</text>
+					</view>
+				</view>
+				
+				<view class="points-footer">
+					<view class="points-btn" @click="closePointsModal">
+						<text class="points-btn-text">继续加油</text>
+					</view>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -389,6 +464,7 @@ const data = reactive({
 	memberLevel: getMemberLevel(0), // 初始化为0积分的等级
 	todayPoints: 0, // 今日获得积分
 	showLevelModal: false, // 是否显示等级详情弹框
+	showPointsModal: false, // 是否显示积分详情弹框
 	showShareModal: false, // 是否显示分享弹框
 	showNicknameModal: false, // 是否显示昵称修改弹框
 	tempNickname: '', // 临时昵称
@@ -995,24 +1071,12 @@ const getTodayPointsFromCloud = async () => {
 // 从云端获取提醒设置
 // 显示积分详情
 const showPointsDetail = () => {
-	const todayPoints = getTodayPoints()
-	
-	let content = `总积分：${data.userPoints}分\n`
-	content += `今日获得：+${todayPoints}分\n\n`
-	content += `━━━━━━━━━━━━━━\n\n`
-	content += `📝 每记一笔账 +2积分\n`
-	content += `⭐ 每日首次记账额外 +5积分\n`
-	content += `🧧 春节红包雨随机 +1~10积分\n`
-	content += `🎯 完成成就任务获得更多积分\n\n`
-	content += `积分越高，等级越高，成就感满满！`
-	
-	uni.showModal({
-		title: '💰 我的积分',
-		content: content,
-		showCancel: false,
-		confirmText: '继续加油',
-		confirmColor: '#52C41A' // 使用主题色
-	})
+	data.showPointsModal = true
+}
+
+// 关闭积分详情弹框
+const closePointsModal = () => {
+	data.showPointsModal = false
 }
 
 // 显示等级详情
@@ -1563,7 +1627,7 @@ const handleDownloadComplete = () => {
 .page {
 	width: 100%;
 	min-height: 100vh;
-	background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%); /* 渐变背景，更有层次 */
+	background: linear-gradient(180deg, #E8F5E9 0%, #F5F7FA 50%, #FAFBFC 100%); /* 更柔和的三段渐变 */
 	--status-bar-height: 0px;
 }
 
@@ -1609,7 +1673,7 @@ const handleDownloadComplete = () => {
 
 /* 用户信息卡片 - 优化渐变和层次感，移除底部圆角 */
 .user-card {
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%); /* 绿色渐变背景 */
+	background: linear-gradient(135deg, #52C41A 0%, #66BB6A 50%, #73D13D 100%); /* 更柔和的品牌色渐变 */
 	border-radius: 0; /* 移除所有圆角 */
 	padding: $spacing-xl $spacing-lg;
 	padding-top: calc(var(--status-bar-height) + 44px + 60rpx); /* 增加顶部间距 */
@@ -1628,7 +1692,7 @@ const handleDownloadComplete = () => {
 	left: 0;
 	right: 0;
 	height: 60rpx; /* 增加高度，让弧度更明显 */
-	background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%);
+	background: linear-gradient(180deg, #E8F5E9 0%, #F5F7FA 100%);
 	clip-path: ellipse(120% 100% at 50% 100%); /* 增大弧度 */
 	z-index: 2;
 	animation: wave-flow 8s ease-in-out infinite; /* 添加流动动画 */
@@ -1948,8 +2012,8 @@ const handleDownloadComplete = () => {
 
 .tip-text {
 	font-size: $font-size-sm;
-	color: #8C8C8C; /* 使用柔和的灰色，更低调 */
-	font-weight: $font-weight-medium;
+	color: #999999 !important;
+	font-weight: $font-weight-normal;
 }
 
 .tip-icon {
@@ -2213,6 +2277,14 @@ const handleDownloadComplete = () => {
 	font-size: $font-size-base;
 	color: $primary-color; /* 使用主题色，更醒目 */
 	font-weight: $font-weight-medium;
+}
+
+.function-desc.reminder-desc {
+	color: #73D13D; /* 记账提醒用淡一点的绿色 */
+}
+
+.function-desc.ai-desc {
+	color: #FFA940; /* 财务顾问用柔和的橙色 */
 }
 
 .function-desc.inactive {
@@ -2745,5 +2817,284 @@ const handleDownloadComplete = () => {
 
 .nickname-btn.confirm-btn .nickname-btn-text {
 	color: #FFFFFF;
+}
+
+/* 积分详情弹框 */
+.points-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+	animation: fadeIn 0.3s ease;
+	padding: 80rpx;
+}
+
+.points-modal-content {
+	width: 100%;
+	max-width: 600rpx;
+	background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+	border-radius: 32rpx;
+	overflow: hidden;
+	animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.25);
+}
+
+.points-header {
+	position: relative;
+	padding: 32rpx 32rpx 20rpx;
+	text-align: center;
+	background: linear-gradient(135deg, #52C41A 0%, #66BB6A 50%, #73D13D 100%);
+	overflow: hidden;
+}
+
+.points-header::before {
+	content: '';
+	position: absolute;
+	top: -50%;
+	right: -30%;
+	width: 300rpx;
+	height: 300rpx;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+	border-radius: 50%;
+}
+
+.points-icon-wrapper {
+	position: relative;
+	display: inline-block;
+	margin-bottom: 8rpx;
+}
+
+.points-icon {
+	font-size: 56rpx;
+	filter: drop-shadow(0 4rpx 12rpx rgba(0, 0, 0, 0.2));
+	position: relative;
+	z-index: 1;
+}
+
+.points-glow {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 120rpx;
+	height: 120rpx;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+	border-radius: 50%;
+	animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+	0%, 100% {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 0.6;
+	}
+	50% {
+		transform: translate(-50%, -50%) scale(1.2);
+		opacity: 0.3;
+	}
+}
+
+.points-title {
+	font-size: 32rpx;
+	font-weight: 700;
+	color: #FFFFFF;
+	letter-spacing: 1rpx;
+	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.points-close {
+	position: absolute;
+	top: 32rpx;
+	right: 32rpx;
+	width: 48rpx;
+	height: 48rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	backdrop-filter: blur(10rpx);
+	transition: all 0.2s ease;
+}
+
+.points-close:active {
+	background: rgba(255, 255, 255, 0.3);
+	transform: scale(0.9);
+}
+
+.points-close .close-icon {
+	color: #FFFFFF;
+}
+
+.points-body {
+	padding: 20rpx 28rpx;
+}
+
+.points-stats {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	padding: 20rpx;
+	background: linear-gradient(135deg, #FFFFFF 0%, #F0FFF4 100%);
+	border-radius: 20rpx;
+	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+	margin-bottom: 16rpx;
+}
+
+.points-stat-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8rpx;
+}
+
+.stat-number {
+	font-size: 36rpx;
+	font-weight: 700;
+	color: #52C41A;
+	font-family: 'DIN Alternate', monospace;
+	line-height: 1;
+}
+
+.stat-number.highlight {
+	color: #FF6F00;
+}
+
+.stat-text {
+	font-size: 24rpx;
+	color: #999;
+	font-weight: 500;
+}
+
+.points-divider {
+	width: 2rpx;
+	height: 60rpx;
+	background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.points-rules {
+	margin-bottom: 16rpx;
+}
+
+.rules-title {
+	display: block;
+	font-size: 26rpx;
+	font-weight: 600;
+	color: #333;
+	margin-bottom: 12rpx;
+	padding-left: 8rpx;
+	border-left: 4rpx solid #52C41A;
+}
+
+.rule-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8rpx;
+}
+
+.rule-item {
+	display: flex;
+	align-items: center;
+	padding: 14rpx 18rpx;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+	border-radius: 16rpx;
+	border: 2rpx solid rgba(0, 0, 0, 0.04);
+	transition: all 0.2s ease;
+}
+
+.rule-item:active {
+	transform: translateX(4rpx);
+	box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.1);
+}
+
+.rule-icon {
+	font-size: 32rpx;
+	margin-right: 16rpx;
+	filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
+}
+
+.rule-text {
+	flex: 1;
+	font-size: 26rpx;
+	color: #666;
+	font-weight: 500;
+}
+
+.rule-points {
+	font-size: 26rpx;
+	color: #52C41A;
+	font-weight: 700;
+	font-family: 'DIN Alternate', monospace;
+}
+
+.points-tip {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8rpx;
+	padding: 16rpx;
+	background: linear-gradient(135deg, #FFF9E6 0%, #FFF3E0 100%);
+	border-radius: 16rpx;
+	border: 2rpx solid rgba(255, 152, 0, 0.2);
+}
+
+.points-tip .tip-icon {
+	font-size: 28rpx;
+}
+
+.points-tip .tip-text {
+	font-size: 24rpx;
+	color: #FF6F00;
+	font-weight: 500;
+	letter-spacing: 0.5rpx;
+}
+
+.points-footer {
+	padding: 0 28rpx 24rpx;
+}
+
+.points-btn {
+	width: 100%;
+	padding: 24rpx;
+	background: linear-gradient(135deg, #52C41A 0%, #66BB6A 50%, #73D13D 100%);
+	border-radius: 20rpx;
+	text-align: center;
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
+	transition: all 0.2s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.points-btn::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+	transition: left 0.6s;
+}
+
+.points-btn:active::before {
+	left: 100%;
+}
+
+.points-btn:active {
+	transform: scale(0.98);
+	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.3);
+}
+
+.points-btn-text {
+	font-size: 30rpx;
+	font-weight: 700;
+	color: #FFFFFF;
+	letter-spacing: 1rpx;
 }
 </style>

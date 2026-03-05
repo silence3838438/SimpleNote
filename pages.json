@@ -178,8 +178,8 @@
 					"path": "privacy",
 					"style": {
 						"navigationBarTitleText": "隐私政策",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationBarBackgroundColor": "#FFFFFF",
+						"navigationBarTextStyle": "black"
 					}
 				}
 			]
@@ -192,8 +192,8 @@
 					"path": "agreement",
 					"style": {
 						"navigationBarTitleText": "用户协议",
-						"navigationBarBackgroundColor": "#52C41A",
-						"navigationBarTextStyle": "white"
+						"navigationBarBackgroundColor": "#FFFFFF",
+						"navigationBarTextStyle": "black"
 					}
 				}
 			]

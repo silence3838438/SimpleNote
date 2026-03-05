@@ -2,7 +2,6 @@
 	<view class="container">
 		<!-- 顶部标题 -->
 		<view class="header-section">
-			<view class="header-icon">✓</view>
 			<view class="header-title">确认账单信息</view>
 			<view class="header-subtitle">请核对并完善账单详情</view>
 		</view>
@@ -16,7 +15,6 @@
 					:class="{ 'active': data.billData.type === 'expense' }"
 					@click="switchType('expense')"
 				>
-					<text class="type-icon">💸</text>
 					<text class="type-text">支出</text>
 				</view>
 				<view 
@@ -24,7 +22,6 @@
 					:class="{ 'active': data.billData.type === 'income' }"
 					@click="switchType('income')"
 				>
-					<text class="type-icon">💰</text>
 					<text class="type-text">收入</text>
 				</view>
 			</view>
@@ -42,7 +39,6 @@
 			<!-- 金额 -->
 			<view class="form-item amount-item">
 				<view class="item-label">
-					<text class="label-icon">💰</text>
 					<text class="label-text">金额</text>
 				</view>
 				<view class="item-content amount-content">
@@ -71,7 +67,6 @@
 			<!-- 分类 -->
 			<view class="form-item" @click="data.showCategoryPicker = true">
 				<view class="item-label">
-					<text class="label-icon">📂</text>
 					<text class="label-text">分类</text>
 				</view>
 				<view class="item-content">
@@ -87,7 +82,6 @@
 			<!-- 日期 -->
 			<view class="form-item" @click="openDatePicker">
 				<view class="item-label">
-					<text class="label-icon">📅</text>
 					<text class="label-text">日期</text>
 				</view>
 				<view class="item-content">
@@ -101,7 +95,6 @@
 			<!-- 商家/来源 -->
 			<view class="form-item" v-if="data.billData.type === 'expense' || data.billData.type === 'income'">
 				<view class="item-label">
-					<text class="label-icon">{{ data.billData.type === 'income' ? '💼' : '🏪' }}</text>
 					<text class="label-text">{{ data.billData.type === 'income' ? '来源' : '商家' }}</text>
 					<text class="label-optional">（可选）</text>
 				</view>
@@ -132,7 +125,6 @@
 			<!-- 备注 -->
 			<view class="form-item remark-item">
 				<view class="item-label">
-					<text class="label-icon">📝</text>
 					<text class="label-text">备注</text>
 					<text class="label-optional">（可选）</text>
 				</view>
@@ -1113,7 +1105,7 @@ export default {
 	
 	.container {
 		min-height: 100vh;
-		background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%);
+		background: linear-gradient(180deg, #E8F5E9 0%, #F5F7FA 50%, #FAFBFC 100%);
 		padding: $spacing-lg $spacing-md;
 		padding-bottom: 180rpx;
 	}
@@ -1124,38 +1116,6 @@ export default {
 		padding: $spacing-lg 0 $spacing-xl;
 		margin-bottom: $spacing-md;
 		position: relative;
-	}
-	
-	.header-icon {
-		width: 88rpx;
-		height: 88rpx;
-		background: $gradient-primary;
-		color: $text-white;
-		font-size: 48rpx;
-		border-radius: $radius-2xl;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		margin-bottom: $spacing-md;
-		box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
-		position: relative;
-		overflow: hidden;
-	}
-	
-	.header-icon::before {
-		content: '';
-		position: absolute;
-		top: -50%;
-		right: -50%;
-		width: 100rpx;
-		height: 100rpx;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-		animation: rotate 3s linear infinite;
-	}
-	
-	@keyframes rotate {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
 	}
 	
 	.header-title {
@@ -1174,11 +1134,26 @@ export default {
 
 	/* 表单卡片 */
 	.form-card {
-		background: $bg-white;
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 		border-radius: $radius-2xl;
 		padding: $spacing-xl;
-		box-shadow: 0 4rpx 20rpx rgba(82, 196, 26, 0.08);
-		border: 1rpx solid rgba(82, 196, 26, 0.08);
+		box-shadow: 
+			0 2rpx 8rpx rgba(0, 0, 0, 0.04),
+			0 8rpx 24rpx rgba(0, 0, 0, 0.06),
+			inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
+		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.form-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 1rpx;
+		background: linear-gradient(90deg, transparent, rgba(82, 196, 26, 0.15), transparent);
 	}
 	
 	/* 分组分隔线 */
@@ -1213,9 +1188,10 @@ export default {
 		display: flex;
 		gap: $spacing-md;
 		margin-bottom: $spacing-lg;
-		padding: $spacing-sm;
-		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+		padding: $spacing-sm 8rpx;
+		background: linear-gradient(135deg, #F5F7FA 0%, #E8EAED 100%);
 		border-radius: $radius-2xl;
+		box-shadow: inset 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 	}
 	
 	.type-btn {
@@ -1245,8 +1221,8 @@ export default {
 	}
 	
 	.type-btn.active {
-		background: $bg-white;
-		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.15);
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
 	}
 	
 	.type-btn.active::before {
@@ -1255,11 +1231,6 @@ export default {
 	
 	.type-btn:active {
 		transform: scale(0.98);
-	}
-	
-	.type-icon {
-		font-size: $font-size-2xl;
-		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
 	}
 	
 	.type-text {
@@ -1331,13 +1302,14 @@ export default {
 	}
 	
 	.form-item.amount-item {
-		background: linear-gradient(135deg, #FFF9E6 0%, #FFF3E0 100%);
+		background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 50%, #FFE082 100%);
 		margin: 0 -#{$spacing-xl} $spacing-lg;
 		padding: $spacing-2xl $spacing-xl;
 		border-radius: $radius-xl;
 		border-bottom: none;
 		position: relative;
 		overflow: hidden;
+		box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.12);
 	}
 	
 	.form-item.amount-item::before {
@@ -1361,7 +1333,7 @@ export default {
 	
 	.quick-amount-btn {
 		height: 56rpx;
-		background: rgba(255, 255, 255, 0.9);
+		background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E1 100%);
 		border-radius: $radius-lg;
 		display: flex;
 		align-items: center;
@@ -1369,25 +1341,26 @@ export default {
 		font-size: $font-size-base;
 		color: #FF6F00;
 		font-weight: $font-weight-semibold;
-		border: 2rpx solid rgba(255, 111, 0, 0.2);
+		border: 2rpx solid rgba(255, 152, 0, 0.2);
 		transition: all $transition-fast;
-		box-shadow: 0 2rpx 8rpx rgba(255, 152, 0, 0.1);
+		box-shadow: 0 2rpx 8rpx rgba(255, 152, 0, 0.08);
 	}
 	
 	.quick-amount-btn:active {
-		background: #FF6F00;
+		background: linear-gradient(135deg, #FF6F00 0%, #FF8F00 100%);
 		color: $text-white;
 		transform: scale(0.95);
-		box-shadow: 0 4rpx 12rpx rgba(255, 111, 0, 0.3);
+		box-shadow: 0 4rpx 12rpx rgba(255, 111, 0, 0.25);
 	}
 	
 	/* 历史商家 */
 	.recent-merchants {
 		margin-top: $spacing-lg;
 		padding: $spacing-lg;
-		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+		background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
 		border-radius: $radius-xl;
-		border: 2rpx solid rgba(82, 196, 26, 0.15);
+		border: 2rpx solid rgba(76, 175, 80, 0.2);
+		box-shadow: 0 2rpx 12rpx rgba(76, 175, 80, 0.08);
 	}
 	
 	.recent-label {
@@ -1420,14 +1393,14 @@ export default {
 	
 	.merchant-tag {
 		padding: $spacing-sm $spacing-lg;
-		background: $bg-white;
+		background: linear-gradient(135deg, #FFFFFF 0%, #F1F8E9 100%);
 		border-radius: $radius-2xl;
 		font-size: $font-size-sm;
-		color: #52C41A;
-		border: 2rpx solid rgba(82, 196, 26, 0.2);
+		color: #4CAF50;
+		border: 2rpx solid rgba(76, 175, 80, 0.25);
 		transition: all $transition-fast;
 		font-weight: $font-weight-medium;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
+		box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.1);
 		position: relative;
 		overflow: hidden;
 	}
@@ -1448,15 +1421,23 @@ export default {
 	}
 	
 	.merchant-tag:active {
-		background: $gradient-primary;
+		background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
 		color: $text-white;
 		transform: translateY(-2rpx);
-		box-shadow: 0 8rpx 16rpx rgba(82, 196, 26, 0.3);
-		border-color: $primary-color;
+		box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
+		border-color: #4CAF50;
 	}
 	
 	.form-item.remark-item {
 		border-bottom: none;
+	}
+	
+	.form-item.remark-item .item-content.full {
+		padding-right: 0;
+	}
+	
+	.form-item.remark-item .text-input.full {
+		margin-right: 0;
 	}
 
 	.item-label {
@@ -1466,12 +1447,6 @@ export default {
 		display: flex;
 		align-items: center;
 		font-weight: $font-weight-semibold;
-	}
-	
-	.label-icon {
-		font-size: $font-size-2xl;
-		margin-right: $spacing-sm;
-		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
 	}
 	
 	.label-text {
@@ -1549,20 +1524,23 @@ export default {
 	}
 
 	.text-input.full {
-		width: 100%;
-		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+		width: calc(100% - 0rpx);
+		background: linear-gradient(135deg, #F5F7FA 0%, #E8EAED 100%);
 		border-radius: $radius-xl;
-		padding: $spacing-lg $spacing-xl;
+		padding: $spacing-lg $spacing-md;
 		margin-top: $spacing-xs;
+		margin-right: 0;
 		min-height: 100rpx;
 		border: 2rpx solid transparent;
 		transition: all $transition-fast;
+		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+		box-sizing: border-box;
 	}
 	
 	.text-input.full:focus {
-		background: $bg-white;
-		border-color: rgba(82, 196, 26, 0.3);
-		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.1);
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+		border-color: rgba(76, 175, 80, 0.3);
+		box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.12);
 	}
 
 	.item-value {
@@ -1572,7 +1550,8 @@ export default {
 	}
 	
 	.item-value.placeholder {
-		color: $text-tertiary;
+		color: #BFBFBF;
+		font-weight: $font-weight-normal;
 	}
 	
 	.item-arrow {
@@ -1740,18 +1719,18 @@ export default {
 	}
 	
 	.category-item.recommended {
-		background: linear-gradient(135deg, #FFF9E6 0%, #FFF3E0 100%);
-		border: 2rpx solid #FFB74D;
-		box-shadow: 0 4rpx 12rpx rgba(255, 152, 0, 0.2);
+		background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+		border: 2rpx solid #FFA726;
+		box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.18);
 		animation: recommend-pulse 2s ease-in-out infinite;
 	}
 	
 	@keyframes recommend-pulse {
 		0%, 100% {
-			box-shadow: 0 4rpx 12rpx rgba(255, 152, 0, 0.2);
+			box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.18);
 		}
 		50% {
-			box-shadow: 0 8rpx 20rpx rgba(255, 152, 0, 0.4);
+			box-shadow: 0 6rpx 20rpx rgba(255, 152, 0, 0.3);
 		}
 	}
 	

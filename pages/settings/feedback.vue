@@ -189,19 +189,35 @@ const submitFeedback = async () => {
 .page {
 	width: 100%;
 	min-height: 100vh;
-	background: $bg-page;
+	background: linear-gradient(180deg, #F5F7FA 0%, #E8EBF0 50%, #F5F7FA 100%);
+	position: relative;
 }
 
-/* 自定义导航栏 - 随手记风格（纯白色） */
+.page::before {
+	content: '';
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-image: 
+		radial-gradient(circle at 20% 30%, rgba(82, 196, 26, 0.03) 0%, transparent 50%),
+		radial-gradient(circle at 80% 70%, rgba(115, 209, 61, 0.03) 0%, transparent 50%);
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* 自定义导航栏 */
 .custom-navbar {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
-	background: $bg-white;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: saturate(180%) blur(20rpx);
 	z-index: 1000;
-	border-bottom: 1rpx solid $border-color;
-	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+	border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
+	box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 .navbar-content {
@@ -225,12 +241,18 @@ const submitFeedback = async () => {
 	font-size: 56rpx;
 	color: $text-primary;
 	font-weight: $font-weight-light;
+	transition: all $transition-fast;
+}
+
+.navbar-left:active .back-icon {
+	opacity: 0.6;
 }
 
 .navbar-title {
 	font-size: $font-size-lg;
 	font-weight: $font-weight-semibold;
 	color: $text-primary;
+	letter-spacing: 0.5rpx;
 }
 
 .navbar-right {
@@ -239,15 +261,33 @@ const submitFeedback = async () => {
 
 .container {
 	padding: $spacing-lg;
+	position: relative;
+	z-index: 1;
 }
 
 /* 输入区域 */
 .input-section {
-	background: $bg-white;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 	border-radius: $radius-xl;
 	padding: $spacing-xl;
 	margin-bottom: $spacing-lg;
-	box-shadow: $shadow-card;
+	box-shadow: 
+		0 2rpx 8rpx rgba(0, 0, 0, 0.04),
+		0 8rpx 24rpx rgba(0, 0, 0, 0.06),
+		inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
+	border: 1rpx solid rgba(255, 255, 255, 0.8);
+	position: relative;
+	overflow: hidden;
+}
+
+.input-section::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1rpx;
+	background: linear-gradient(90deg, transparent, rgba(82, 196, 26, 0.15), transparent);
 }
 
 .section-title {
@@ -264,28 +304,39 @@ const submitFeedback = async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: $shadow-sm;
+	box-shadow: 
+		0 4rpx 12rpx rgba(82, 196, 26, 0.2),
+		inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
 	flex-shrink: 0;
+	position: relative;
 }
 
 .feedback-icon {
-	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+}
+
+.feedback-icon::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+	border-radius: $radius-md;
 }
 
 .title-icon {
 	font-size: 32rpx;
-}
-
-.title-icon-img {
-	width: 40rpx;
-	height: 40rpx;
-	margin-right: 12rpx;
+	position: relative;
+	z-index: 1;
 }
 
 .title-text {
 	font-size: $font-size-xl;
 	font-weight: $font-weight-bold;
 	color: $text-primary;
+	letter-spacing: 0.5rpx;
 }
 
 .title-tip {
@@ -298,18 +349,22 @@ const submitFeedback = async () => {
 	width: 100%;
 	min-height: 300rpx;
 	padding: $spacing-lg;
-	background: $bg-light;
+	background: linear-gradient(135deg, #F8F9FA 0%, #F5F6F8 100%);
 	border-radius: $radius-lg;
 	font-size: $font-size-lg;
 	color: $text-primary;
-	line-height: 1.6;
-	border: 2rpx solid transparent;
+	line-height: 1.8;
+	border: 2rpx solid rgba(0, 0, 0, 0.04);
 	transition: all $transition-fast;
+	box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.02);
 }
 
 .feedback-input:focus {
-	border-color: $primary-color;
-	background: $bg-white;
+	border-color: rgba(82, 196, 26, 0.4);
+	background: #FFFFFF;
+	box-shadow: 
+		inset 0 2rpx 4rpx rgba(0, 0, 0, 0.02),
+		0 0 0 4rpx rgba(82, 196, 26, 0.08);
 }
 
 .char-count {
@@ -317,15 +372,32 @@ const submitFeedback = async () => {
 	font-size: $font-size-sm;
 	color: $text-tertiary;
 	margin-top: $spacing-sm;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* 图片上传区域 */
 .upload-section {
-	background: $bg-white;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 	border-radius: $radius-xl;
 	padding: $spacing-xl;
 	margin-bottom: $spacing-lg;
-	box-shadow: $shadow-card;
+	box-shadow: 
+		0 2rpx 8rpx rgba(0, 0, 0, 0.04),
+		0 8rpx 24rpx rgba(0, 0, 0, 0.06),
+		inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
+	border: 1rpx solid rgba(255, 255, 255, 0.8);
+	position: relative;
+	overflow: hidden;
+}
+
+.upload-section::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1rpx;
+	background: linear-gradient(90deg, transparent, rgba(82, 196, 26, 0.15), transparent);
 }
 
 .image-list {
@@ -340,13 +412,15 @@ const submitFeedback = async () => {
 	position: relative;
 	border-radius: $radius-lg;
 	overflow: hidden;
+	box-shadow: 
+		0 4rpx 12rpx rgba(0, 0, 0, 0.08),
+		inset 0 0 0 1rpx rgba(255, 255, 255, 0.2);
 }
 
 .image-preview {
 	width: 100%;
 	height: 100%;
 	border-radius: $radius-lg;
-	border: 2rpx solid $border-light;
 }
 
 .image-delete {
@@ -355,17 +429,19 @@ const submitFeedback = async () => {
 	right: $spacing-sm;
 	width: 48rpx;
 	height: 48rpx;
-	background: rgba(0, 0, 0, 0.7);
+	background: rgba(0, 0, 0, 0.75);
+	backdrop-filter: saturate(180%) blur(20rpx);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	backdrop-filter: blur(10rpx);
 	transition: all $transition-fast;
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
 }
 
 .image-delete:active {
 	transform: scale(0.9);
+	background: rgba(0, 0, 0, 0.85);
 }
 
 .delete-icon {
@@ -377,8 +453,8 @@ const submitFeedback = async () => {
 .upload-btn {
 	width: 200rpx;
 	height: 200rpx;
-	background: $bg-light;
-	border: 2rpx dashed $border-color;
+	background: linear-gradient(135deg, #F8F9FA 0%, #F5F6F8 100%);
+	border: 2rpx dashed rgba(0, 0, 0, 0.1);
 	border-radius: $radius-lg;
 	display: flex;
 	flex-direction: column;
@@ -386,21 +462,45 @@ const submitFeedback = async () => {
 	justify-content: center;
 	gap: $spacing-sm;
 	transition: all $transition-fast;
+	position: relative;
+	overflow: hidden;
+	box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.02);
+}
+
+.upload-btn::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(135deg, rgba(82, 196, 26, 0.05) 0%, rgba(115, 209, 61, 0.05) 100%);
+	opacity: 0;
+	transition: opacity $transition-fast;
 }
 
 .upload-btn:active {
-	transform: scale(0.95);
-	background: #E8E8E8;
-	border-color: $primary-color;
+	transform: scale(0.96);
+	border-color: rgba(82, 196, 26, 0.4);
+}
+
+.upload-btn:active::before {
+	opacity: 1;
 }
 
 .upload-icon {
 	font-size: 64rpx;
+	transition: transform $transition-fast;
+}
+
+.upload-btn:active .upload-icon {
+	transform: scale(1.1);
 }
 
 .upload-text {
 	font-size: $font-size-base;
 	color: $text-tertiary;
+	font-weight: 500;
 }
 
 /* 提交按钮 */
@@ -411,23 +511,46 @@ const submitFeedback = async () => {
 .submit-button {
 	width: 100%;
 	height: 96rpx;
-	background: $gradient-primary;
-	border-radius: $radius-xl;
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	border-radius: 28rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: $shadow-primary;
+	box-shadow: 
+		0 8rpx 24rpx rgba(82, 196, 26, 0.3),
+		inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
 	transition: all $transition-fast;
+	position: relative;
+	overflow: hidden;
+}
+
+.submit-button::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+	transition: left 0.6s;
+}
+
+.submit-button:active::before {
+	left: 100%;
 }
 
 .submit-button:active {
 	transform: scale(0.98);
-	box-shadow: $shadow-sm;
+	box-shadow: 
+		0 4rpx 16rpx rgba(82, 196, 26, 0.3),
+		inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
 }
 
 .submit-button-text {
 	font-size: $font-size-xl;
 	font-weight: $font-weight-bold;
 	color: $text-white;
+	letter-spacing: 2rpx;
+	text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
 }
 </style>

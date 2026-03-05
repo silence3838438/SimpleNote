@@ -815,7 +815,7 @@ onPullDownRefresh(async () => {
 	.page {
 		width: 100%;
 		min-height: 100vh;
-		background: $bg-page;
+		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%); /* 柔和的灰色渐变 */
 	}
 	
 	/* 自定义导航栏（随手记风格 - 纯白色） */
@@ -864,7 +864,7 @@ onPullDownRefresh(async () => {
 	.container {
 		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
-		background: $bg-page;
+		background: transparent;
 	}
 	
 	/* 顶部搜索栏 - 精致版 */
@@ -931,12 +931,12 @@ onPullDownRefresh(async () => {
 	
 	/* 统计卡片 - 精致高端版 */
 	.summary-card {
-		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 		margin: 0 0 $spacing-2xl 0;
 		border-radius: 16rpx;
 		padding: 36rpx $spacing-xl;
-		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
-		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+		border: 1rpx solid rgba(255, 255, 255, 0.9);
 		position: relative;
 		overflow: hidden;
 	}
@@ -1035,26 +1035,29 @@ onPullDownRefresh(async () => {
 	
 	/* 筛选标签 - 横向滚动 */
 	.filter-scroll {
-		padding: $spacing-md 0;
-		margin-bottom: $spacing-xs;
+		padding: $spacing-xs 0;
+		margin-bottom: $spacing-lg;
 		white-space: nowrap;
 		background: transparent;
 	}
 	
 	.filter-tags {
 		display: inline-flex;
-		gap: $spacing-sm;
+		gap: $spacing-lg;
 		padding: 0;
 	}
 	
 	.filter-tag {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 4rpx;
-		padding: 10rpx 28rpx;
+		padding: 8rpx 20rpx;
+		min-width: 88rpx;
+		height: 48rpx;
 		background: $bg-white;
-		border-radius: $radius-lg;
-		border: 2rpx solid $border-color;
+		border-radius: 12rpx;
+		border: 1rpx solid #E8E8E8;
 		transition: all $transition-fast;
 		white-space: nowrap;
 		position: relative;
@@ -1074,15 +1077,15 @@ onPullDownRefresh(async () => {
 	}
 	
 	.filter-tag.active {
-		background: $gradient-primary;
+		background: $primary-color;
 		border-color: $primary-color;
-		box-shadow: $shadow-md;
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.25);
 	}
 	
 	.tag-text {
-		font-size: $font-size-base;
+		font-size: 26rpx;
 		color: #666666;
-		font-weight: $font-weight-semibold;
+		font-weight: 500;
 		position: relative;
 		z-index: 1;
 		letter-spacing: 0.5rpx;
@@ -1090,18 +1093,18 @@ onPullDownRefresh(async () => {
 	
 	.filter-tag.active .tag-text {
 		color: #FFFFFF;
-		font-weight: $font-weight-bold;
+		font-weight: 600;
 	}
 	
 	.export-tag {
 		background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
 		border-color: #13C2C2;
-		box-shadow: $shadow-md;
+		box-shadow: 0 2rpx 8rpx rgba(19, 194, 194, 0.25);
 	}
 	
 	.export-tag .tag-text {
 		color: #FFFFFF;
-		font-weight: $font-weight-bold;
+		font-weight: 600;
 	}
 	
 	.export-tag .tag-icon {
@@ -1109,8 +1112,8 @@ onPullDownRefresh(async () => {
 	}
 	
 	.export-tag:active {
-		transform: scale(0.95);
-		box-shadow: 0 2rpx 8rpx rgba(19, 194, 194, 0.2);
+		transform: scale(0.96);
+		box-shadow: 0 1rpx 4rpx rgba(19, 194, 194, 0.2);
 	}
 	
 	.tag-arrow {
@@ -1129,14 +1132,15 @@ onPullDownRefresh(async () => {
 		flex-direction: column;
 		gap: $spacing-lg;
 		padding: 0 0 $spacing-md 0;
+		margin-top: $spacing-xs;
 	}
 	
 	.date-group {
-		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
-		border-radius: 14rpx;
+		background: #FFFFFF;
+		border-radius: 16rpx;
 		overflow: hidden;
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
-		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+		border: 1rpx solid #F0F0F0;
 	}
 	
 	.date-header {
@@ -1144,29 +1148,16 @@ onPullDownRefresh(async () => {
 		justify-content: space-between;
 		align-items: center;
 		padding: $spacing-lg $spacing-xl;
-		background: rgba(7, 193, 96, 0.02);
-		border-bottom: 1rpx solid rgba(0, 0, 0, 0.03);
+		background: #FFFFFF;
+		border-bottom: 2rpx solid #F5F5F5;
 		position: relative;
-	}
-	
-	/* 日期头部装饰线 - 精致版 */
-	.date-header::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 3rpx;
-		background: linear-gradient(to bottom, $primary-color, rgba(7, 193, 96, 0.3));
-		border-radius: 0 2rpx 2rpx 0;
 	}
 	
 	.date-text {
 		font-size: $font-size-base;
 		color: $text-primary;
 		font-weight: 600;
-		letter-spacing: 0.3rpx;
-		padding-left: $spacing-md;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.date-summary {
@@ -1194,6 +1185,7 @@ onPullDownRefresh(async () => {
 	.bill-items {
 		display: flex;
 		flex-direction: column;
+		background: #FFFFFF;
 	}
 	
 	.bill-item {
@@ -1335,7 +1327,7 @@ onPullDownRefresh(async () => {
 		align-items: center;
 		justify-content: center;
 		padding: 120rpx 0;
-		margin-top: 40rpx;
+		margin-top: $spacing-md;
 		text-align: center;
 		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 		border-radius: 16rpx;
@@ -1386,25 +1378,29 @@ onPullDownRefresh(async () => {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(0, 0, 0, 0.6);
 		z-index: 9999;
 		display: flex;
 		align-items: flex-end;
+		backdrop-filter: blur(4rpx);
 	}
 	
 	.picker-content {
 		width: 100%;
-		background: $bg-white;
-		border-radius: $radius-2xl $radius-2xl 0 0;
-		animation: slideUp 0.3s ease;
+		background: #FFFFFF;
+		border-radius: 24rpx 24rpx 0 0;
+		animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+		box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.12);
 	}
 	
 	@keyframes slideUp {
 		from {
 			transform: translateY(100%);
+			opacity: 0;
 		}
 		to {
 			transform: translateY(0);
+			opacity: 1;
 		}
 	}
 	
@@ -1412,61 +1408,61 @@ onPullDownRefresh(async () => {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: $spacing-xl $spacing-xl;
-		border-bottom: 1rpx solid #F0F0F0;
+		padding: 32rpx 40rpx;
+		border-bottom: 1rpx solid #F5F5F5;
+		background: linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%);
 	}
 	
 	.picker-cancel {
-		font-size: $font-size-base;
-		color: $text-secondary;
+		font-size: 30rpx;
+		color: #999999;
+		padding: 8rpx 16rpx;
+		transition: all 0.2s ease;
+	}
+	
+	.picker-cancel:active {
+		opacity: 0.6;
+		transform: scale(0.95);
 	}
 	
 	.picker-title {
-		font-size: $font-size-lg;
-		font-weight: $font-weight-bold;
-		color: $text-primary;
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #333333;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.picker-confirm {
-		font-size: $font-size-base;
-		color: $primary-color; /* 使用主题色 */
-		font-weight: $font-weight-medium;
+		font-size: 30rpx;
+		color: $primary-color;
+		font-weight: 600;
+		padding: 8rpx 16rpx;
+		transition: all 0.2s ease;
+	}
+	
+	.picker-confirm:active {
+		opacity: 0.7;
+		transform: scale(0.95);
 	}
 	
 	.picker-view {
 		height: 400rpx;
 		position: relative;
-	}
-	
-	/* picker-view选中指示器 */
-	.picker-view::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		height: 50px;
-		border-top: 1rpx solid #E8E8E8;
-		border-bottom: 1rpx solid #E8E8E8;
-		pointer-events: none;
-		z-index: 1;
+		padding: 20rpx 0;
 	}
 	
 	.picker-item {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: $font-size-xl;
-		color: $text-secondary;
-		height: 50px;
-		transition: color 0.3s ease;
+		text-align: center;
+		font-size: 30rpx;
+		color: #999999;
+		transition: all 0.3s ease;
+		font-weight: 400;
 	}
 	
 	/* 选中项文字颜色使用主题色 */
 	.picker-item-selected {
-		color: $primary-color !important; /* 使用主题色 */
-		font-weight: $font-weight-bold;
-		font-size: 36rpx;
+		color: $primary-color !important;
+		font-weight: 600;
+		font-size: 34rpx;
 	}
 </style>

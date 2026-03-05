@@ -264,7 +264,7 @@ const goBack = () => {
 <style lang="scss" scoped>
 .forgot-page {
 	min-height: 100vh;
-	background: #F5F5F5;
+	background: linear-gradient(180deg, #F8FAFB 0%, #F5F7FA 50%, #FFFFFF 100%);
 	position: relative;
 }
 
@@ -274,20 +274,18 @@ const goBack = () => {
 	left: 32rpx;
 	width: 72rpx;
 	height: 72rpx;
-	background: rgba(255, 255, 255, 0.9);
+	background: transparent;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	z-index: 999;
-	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-	backdrop-filter: blur(10rpx);
 	transition: all 0.2s;
 }
 
 .back-button:active {
 	transform: scale(0.92);
-	background: rgba(255, 255, 255, 1);
+	opacity: 0.7;
 }
 
 .back-icon {
@@ -330,10 +328,11 @@ const goBack = () => {
 // 重置密码卡片 - 添加白色背景增加层次感
 .forgot-card {
 	width: 100%;
-	background: #FFFFFF;
-	border-radius: 24rpx;
-	padding: 48rpx 40rpx;
-	box-shadow: 0 2rpx 20rpx rgba(0, 0, 0, 0.04);
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+	border-radius: 28rpx;
+	padding: 52rpx 44rpx;
+	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+	border: 1rpx solid rgba(255, 255, 255, 0.8);
 }
 
 .form-item {
@@ -343,18 +342,20 @@ const goBack = () => {
 .input-wrapper {
 	display: flex;
 	align-items: center;
-	background: #FAFAFA;
-	border-radius: 12rpx;
-	padding: 0 24rpx;
-	height: 88rpx;
-	border: 1rpx solid #F0F0F0;
-	transition: all 0.3s ease;
+	background: linear-gradient(135deg, #F8F9FA 0%, #FAFBFC 100%);
+	border-radius: 16rpx;
+	padding: 0 28rpx;
+	height: 96rpx;
+	border: 2rpx solid transparent;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
 }
 
 .input-wrapper:focus-within {
 	background: #FFFFFF;
 	border-color: #52C41A;
-	box-shadow: 0 0 0 4rpx rgba(82, 196, 26, 0.06);
+	box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.12), 0 0 0 4rpx rgba(82, 196, 26, 0.06);
+	transform: translateY(-2rpx);
 }
 
 .input-icon {
@@ -396,10 +397,11 @@ const goBack = () => {
 }
 
 .code-btn {
-	padding: 12rpx 24rpx;
-	background: #52C41A;
-	border-radius: 8rpx;
-	transition: all 0.2s ease;
+	padding: 14rpx 28rpx;
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	border-radius: 12rpx;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.25);
 }
 
 .code-btn.disabled {
@@ -424,15 +426,15 @@ const goBack = () => {
 
 .reset-btn {
 	width: 100%;
-	height: 96rpx;
-	background: #52C41A;
-	border-radius: 12rpx;
+	height: 100rpx;
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	border-radius: 16rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: none;
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3), 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
 	margin-top: 48rpx;
-	transition: all 0.2s ease;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .reset-btn:active {

@@ -1130,7 +1130,7 @@ onPullDownRefresh(async () => {
 	.page {
 		width: 100%;
 		min-height: 100vh;
-		background: $bg-page;
+		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%); /* 柔和的灰色渐变 */
 	}
 	
 	/* 自定义导航栏（随手记风格 - 纯白色） */
@@ -1178,7 +1178,7 @@ onPullDownRefresh(async () => {
 	
 	.container {
 		min-height: 100vh;
-		background: $bg-page;
+		background: transparent;
 		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
@@ -1205,7 +1205,7 @@ onPullDownRefresh(async () => {
 		flex: 1;
 		text-align: center;
 		padding: 18rpx 16rpx;
-		font-size: $font-size-sm;
+		font-size: $font-size-base;
 		color: $text-secondary;
 		background: linear-gradient(135deg, #F7F9FA 0%, #F0F2F5 100%);
 		border-radius: $radius-md;
@@ -1598,12 +1598,12 @@ onPullDownRefresh(async () => {
 
 	/* 收支总览卡片 - 精致高端版 */
 	.overview-card {
-		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 		border-radius: 16rpx;
 		padding: 32rpx $spacing-xl;
 		margin-bottom: $spacing-2xl;
-		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
-		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+		border: 1rpx solid rgba(255, 255, 255, 0.9);
 		position: relative;
 		overflow: hidden;
 	}
@@ -1634,6 +1634,7 @@ onPullDownRefresh(async () => {
 		display: flex;
 		flex-direction: column;
 		gap: 6rpx;
+		padding: $spacing-lg 0 0 $spacing-lg; /* 增加顶部和左边内边距 */
 	}
 	
 	.overview-title {
@@ -1847,19 +1848,19 @@ onPullDownRefresh(async () => {
 	}
 
 	.overview-card, .analysis-card {
-		background: $bg-white;
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: $spacing-md; /* 减小内边距 */
 		margin-bottom: $spacing-xl; /* 增大卡片之间的间距 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
 	}
 	
 	.chart-card {
-		background: $bg-white;
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
 		padding: $spacing-xs $spacing-md $spacing-sm $spacing-md; /* 减小顶部内边距，让标题更靠上 */
 		margin-bottom: $spacing-md; /* 减小底部间距，让下面的财务分析板块更靠近 */
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
 	}
 
 	.card-title {
@@ -1867,7 +1868,7 @@ onPullDownRefresh(async () => {
 		font-weight: $font-weight-bold; /* 加粗标题 */
 		color: $text-primary;
 		margin-bottom: 4rpx; /* 进一步减小底部间距 */
-		padding-bottom: 0; /* 移除底部内边距 */
+		padding: $spacing-lg 0 0 $spacing-lg; /* 增加顶部和左边内边距 */
 		border-bottom: none; /* 移除分割线 */
 	}
 
