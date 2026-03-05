@@ -38,6 +38,14 @@ else
     echo "📤 上传migrations目录..."
     sshpass -p "$PASSWORD" scp -r migrations/ "$SERVER:$REMOTE_DIR/" 2>/dev/null || echo "⚠️  migrations目录不存在"
     
+    # 上传tasks目录
+    echo "📤 上传tasks目录..."
+    sshpass -p "$PASSWORD" scp -r tasks/ "$SERVER:$REMOTE_DIR/" 2>/dev/null || echo "⚠️  tasks目录不存在"
+    
+    # 上传services目录
+    echo "📤 上传services目录..."
+    sshpass -p "$PASSWORD" scp -r services/ "$SERVER:$REMOTE_DIR/" 2>/dev/null || echo "⚠️  services目录不存在"
+    
     if [ $? -ne 0 ]; then
         echo "❌ 文件上传失败"
         exit 1
@@ -65,6 +73,17 @@ fi
 # 执行reminders表的template_id字段迁移
 echo "🔄 执行reminders表迁移..."
 sshpass -p "$PASSWORD" ssh "$SERVER" "cd /www/backend && node migrations/add-template-id-to-reminders.js" 2>/dev/null || echo "⚠️  reminders表迁移失败或已完成"
+
+# 执行push_client_id字段迁移
+echo "🔄 执行push_client_id字段迁移..."
+sshpass -p "$PASSWORD" ssh "$SERVER" "cd /www/backend && node migrations/add-push-client-id.js" 2>/dev/null || echo "⚠️  push_client_id字段迁移失败或已完成"
+
+echo ""
+echo "🔄 配置推送定时任务..."
+
+# 上传cron配置脚本
+sshpass -p "$PASSWORD" scp setup-push-cron.sh "$SERVER:$REMOTE_DIR/"
+sshpass -p "$PASSWORD" ssh "$SERVER" "chmod +x /www/backend/setup-push-cron.sh && /www/backend/setup-push-cron.sh"
 
 echo ""
 echo "🔄 重启后端服务..."

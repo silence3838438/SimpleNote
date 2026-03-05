@@ -210,6 +210,82 @@
 		}
 	}
 	
+	// 初始化 UniPush 2.0（仅APP端）
+	const initUniPush = async () => {
+		// #ifdef APP-PLUS
+		try {
+			console.log('🔔 初始化 UniPush 2.0...')
+			
+			// 获取推送客户端ID
+			const clientInfo = await uni.getPushClientId()
+			const clientId = clientInfo.cid
+			
+			if (clientId) {
+				console.log('✅ 获取到 ClientID:', clientId)
+				// 保存到本地
+				uni.setStorageSync('pushClientId', clientId)
+				
+				// 上传到服务器（需要等待登录完成）
+				const token = uni.getStorageSync('token')
+				if (token) {
+					try {
+						await request.call('billManager', {
+							action: 'savePushClientId',
+							data: { clientId }
+						})
+						console.log('✅ ClientID 已上传到服务器')
+					} catch (error) {
+						console.error('❌ 上传 ClientID 失败:', error)
+						// 失败不影响应用使用，下次启动会重试
+					}
+				} else {
+					console.log('⚠️  用户未登录，ClientID 将在登录后上传')
+				}
+			} else {
+				console.error('❌ 获取 ClientID 失败')
+			}
+			
+			// 监听推送消息点击事件
+			uni.onPushMessage((res) => {
+				console.log('📬 收到推送消息:', res)
+				
+				const { type, data } = res
+				
+				// 点击通知栏消息
+				if (type === 'click') {
+					console.log('👆 用户点击了推送消息')
+					// 跳转到记账页面
+					uni.switchTab({
+						url: '/pages/tab/index/index'
+					})
+				}
+				
+				// 收到透传消息（APP在前台时）
+				if (type === 'receive') {
+					console.log('📨 收到透传消息:', data)
+					// 可以显示自定义弹窗
+					uni.showModal({
+						title: '记账提醒',
+						content: data?.content || '该记账啦！',
+						confirmText: '去记账',
+						success: (modalRes) => {
+							if (modalRes.confirm) {
+								uni.switchTab({
+									url: '/pages/tab/index/index'
+								})
+							}
+						}
+					})
+				}
+			})
+			
+			console.log('✅ UniPush 2.0 初始化完成')
+		} catch (error) {
+			console.error('❌ UniPush 2.0 初始化失败:', error)
+		}
+		// #endif
+	}
+	
 	onLaunch(async () => {
 		// #ifdef MP-WEIXIN
 		// 初始化云开发环境
@@ -236,6 +312,9 @@
 		
 		// 从云端加载提醒设置（等待加载完成）
 		await loadReminderSettingsFromCloud()
+		
+		// 初始化 UniPush 2.0（仅APP端）
+		await initUniPush()
 	})
 	
 	onShow(() => {

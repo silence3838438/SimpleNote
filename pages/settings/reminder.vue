@@ -266,7 +266,8 @@ const saveAndSubscribe = async () => {
 		uni.setStorageSync('reminderTime', data.selectedTime)
 		uni.setStorageSync('reminderEnabled', true)
 		
-		// 请求订阅授权
+		// #ifdef MP-WEIXIN
+		// 小程序端：使用微信订阅消息
 		uni.requestSubscribeMessage({
 			tmplIds: ['bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw'],
 			success: async (res) => {
@@ -320,6 +321,54 @@ const saveAndSubscribe = async () => {
 				data.saving = false
 			}
 		})
+		// #endif
+		
+		// #ifdef APP-PLUS
+		// APP端：使用 UniPush 2.0
+		try {
+			// 获取推送客户端ID
+			const clientId = uni.getStorageSync('pushClientId')
+			
+			if (!clientId) {
+				uni.showToast({
+					title: '推送服务初始化中，请稍后重试',
+					icon: 'none'
+				})
+				data.saving = false
+				return
+			}
+			
+			// 保存到云端
+			await saveSubscriptionToCloud()
+			
+			uni.showToast({
+				title: '设置成功',
+				icon: 'success',
+				duration: 1500
+			})
+			
+			// 延迟返回
+			setTimeout(() => {
+				if (data.fromBillSuccess) {
+					uni.switchTab({
+						url: '/pages/tab/index/index'
+					})
+				} else {
+					uni.navigateBack({
+						delta: 1
+					})
+				}
+			}, 1500)
+		} catch (error) {
+			console.error('保存失败:', error)
+			uni.showToast({
+				title: '保存失败，请重试',
+				icon: 'none'
+			})
+		} finally {
+			data.saving = false
+		}
+		// #endif
 	} catch (error) {
 		console.error('保存失败:', error)
 		data.saving = false

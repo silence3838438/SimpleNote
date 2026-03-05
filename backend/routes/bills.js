@@ -38,6 +38,8 @@ router.post('/', async (req, res) => {
         return await setReminder(req, res, userId, data);
       case 'saveReminderSubscription':
         return await saveReminderSubscription(req, res, userId, data);
+      case 'savePushClientId':
+        return await savePushClientId(req, res, userId, data);
       case 'getRedPacketCount':
         return await getRedPacketCount(req, res, userId);
       case 'grabRedPacket':
@@ -301,30 +303,49 @@ async function setReminder(req, res, userId, data) {
 async function saveReminderSubscription(req, res, userId, data) {
   const { subscribed, templateId, reminderTime } = data;
   
-  // 获取用户的 openid（用于发送订阅消息）
+  // 获取用户的 openid（小程序用户需要）
   const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
-  if (userResult.length === 0 || !userResult[0].openid) {
-    return res.json({ success: false, message: '用户 openid 不存在，无法订阅' });
+  if (userResult.length === 0) {
+    return res.json({ success: false, message: '用户不存在' });
   }
   
+  // 小程序用户使用 openid，APP用户使用 userId
   const openid = userResult[0].openid;
+  const reminderUserId = openid || userId.toString(); // 优先使用 openid，没有则使用 userId
   
-  // 使用 openid 作为 user_id 存储（因为发送订阅消息需要 openid）
-  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [openid]);
+  // 检查是否已存在
+  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [reminderUserId]);
   
   if (existing.length > 0) {
     await db.query(
       'UPDATE reminders SET enabled = ?, time = ?, template_id = ?, updated_at = NOW() WHERE user_id = ?',
-      [subscribed, reminderTime, templateId, openid]
+      [subscribed, reminderTime, templateId, reminderUserId]
     );
   } else {
     await db.query(
       'INSERT INTO reminders (user_id, enabled, time, template_id, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [openid, subscribed, reminderTime, templateId]
+      [reminderUserId, subscribed, reminderTime, templateId]
     );
   }
   
   res.json({ success: true, message: '订阅信息保存成功' });
+}
+
+// 保存推送客户端ID（APP端）
+async function savePushClientId(req, res, userId, data) {
+  const { clientId } = data;
+  
+  if (!clientId) {
+    return res.json({ success: false, message: 'clientId 不能为空' });
+  }
+  
+  // 更新用户的推送客户端ID
+  await db.query(
+    'UPDATE users SET push_client_id = ?, updated_at = NOW() WHERE id = ?',
+    [clientId, userId]
+  );
+  
+  res.json({ success: true, message: 'ClientID 保存成功' });
 }
 
 // 获取抢红包次数
