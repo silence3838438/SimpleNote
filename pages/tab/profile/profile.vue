@@ -1983,12 +1983,12 @@ const handleDownloadComplete = () => {
 	display: flex;
 	align-items: center;
 	justify-content: space-around;
-	background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%); /* 使用渐变背景 */
-	padding: $spacing-lg;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFAFA 100%); /* 更亮的渐变背景 */
+	padding: 28rpx $spacing-lg; /* 增加上下内边距 */
 	margin-top: $spacing-lg;
-	border-radius: $radius-xl;
-	border: 2rpx solid #F0F0F0; /* 更柔和的边框 */
-	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 添加轻微阴影 */
+	border-radius: 20rpx; /* 更大的圆角 */
+	border: 1rpx solid #F0F0F0; /* 更细的边框 */
+	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06); /* 更明显的阴影 */
 }
 
 .stat-item {
@@ -1996,7 +1996,7 @@ const handleDownloadComplete = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: $spacing-xs;
+	gap: 10rpx; /* 增加间距 */
 	position: relative;
 }
 
@@ -2011,12 +2011,13 @@ const handleDownloadComplete = () => {
 
 /* 卡片内部的统计数值 - 使用渐变色，更醒目 */
 .stats-row-inner .stat-value {
-	background: linear-gradient(135deg, $primary-color 0%, #73D13D 100%);
+	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%); /* 更鲜艳的绿色渐变 */
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 	text-shadow: none;
 	font-weight: 700;
+	font-size: 48rpx; /* 增大字号 */
 }
 
 .stat-label {
@@ -2028,9 +2029,10 @@ const handleDownloadComplete = () => {
 
 /* 卡片内部的统计标签 - 使用更柔和的灰色 */
 .stats-row-inner .stat-label {
-	color: #8C8C8C;
+	color: #999999; /* 稍微深一点的灰色 */
 	text-shadow: none;
 	font-weight: 500;
+	font-size: 26rpx; /* 稍微增大字号 */
 }
 
 .stat-divider {
@@ -2041,8 +2043,8 @@ const handleDownloadComplete = () => {
 
 /* 卡片内部的分隔线 - 使用更柔和的渐变 */
 .stats-row-inner .stat-divider {
-	height: 50rpx;
-	background: linear-gradient(180deg, transparent 0%, #E0E0E0 50%, transparent 100%);
+	height: 56rpx; /* 增加高度 */
+	background: linear-gradient(180deg, transparent 0%, #E8E8E8 50%, transparent 100%); /* 稍微深一点的颜色 */
 }
 
 /* 功能列表 - 优化层次感和间距 */

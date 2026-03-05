@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小獭记账 - 分享图</title>
+    <title>小獭记账 - 分享图 2026</title>
     <style>
         * {
             margin: 0;
@@ -16,173 +16,187 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #f5f5f5;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
             padding: 40px;
         }
 
         .poster {
             width: 500px;
             height: 400px;
-            background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-            border-radius: 20px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(82, 196, 26, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* 大数字展示 */
-        .big-number {
+        /* 动态背景 */
+        .dynamic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(82, 196, 26, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(115, 209, 61, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(82, 196, 26, 0.03) 0%, transparent 70%);
+            filter: blur(40px);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* 3D网格背景 */
+        .grid-3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(82, 196, 26, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(82, 196, 26, 0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: center bottom;
+            opacity: 0.4;
+        }
+
+        /* 玻璃拟态容器 */
+        .glass-container {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 120px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.15);
-            z-index: 0;
-        }
-
-        /* 装饰圆形 */
-        .deco-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .circle-1 {
-            width: 200px;
-            height: 200px;
-            top: -80px;
-            right: -80px;
-        }
-
-        .circle-2 {
-            width: 150px;
-            height: 150px;
-            bottom: -50px;
-            left: -50px;
-        }
-
-        /* 内容区域 */
-        .content {
-            position: relative;
-            z-index: 1;
-            height: 100%;
+            width: 440px;
+            height: 340px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
             display: flex;
             flex-direction: column;
-            padding: 30px 30px 50px 30px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        /* 标题区域 */
-        .header {
-            text-align: center;
-            margin-bottom: 18px;
-        }
-
-        .title {
-            font-size: 38px;
-            font-weight: bold;
-            color: #ffffff;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            letter-spacing: 2px;
-        }
-
-        .subtitle {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.95);
-            font-weight: 500;
-        }
-
-        /* 亮点展示 */
-        .highlights {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        .highlight-item {
+        /* Logo区域 - 3D效果 */
+        .logo-3d {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 14px;
+            margin-bottom: 36px;
         }
 
-        .highlight-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .highlight-icon {
-            width: 45px;
-            height: 45px;
+        .logo-icon {
+            width: 48px;
+            height: 48px;
             background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-            border-radius: 10px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 26px;
+            box-shadow: 
+                0 8px 24px rgba(82, 196, 26, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, rgba(82, 196, 26, 0.3), rgba(115, 209, 61, 0.3));
+            border-radius: 16px;
+            z-index: -1;
+            filter: blur(8px);
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .brand-name {
             font-size: 22px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: 0.5px;
         }
 
-        .highlight-content {
-            flex: 1;
-        }
-
-        .highlight-title {
-            font-size: 15px;
-            font-weight: bold;
-            color: #333333;
-            margin-bottom: 2px;
-        }
-
-        .highlight-desc {
-            font-size: 12px;
-            color: #666666;
-        }
-
-        /* 底部文字 */
-        .footer {
-            text-align: center;
-            margin-top: auto;
-        }
-
-        .footer-text {
-            font-size: 16px;
-            color: #ffffff;
+        .brand-tag {
+            font-size: 9px;
+            color: rgba(82, 196, 26, 0.7);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .footer-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.25);
-            padding: 6px 16px;
-            border-radius: 20px;
+        /* 主标题 */
+        .hero-title {
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1.15;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1.5px;
+        }
+
+        .hero-highlight {
+            background: linear-gradient(135deg, #52C41A 0%, #73D13D 50%, #52C41A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .hero-subtitle {
             font-size: 13px;
-            color: #ffffff;
-            margin-top: 10px;
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.45);
+            line-height: 1.8;
+            margin-bottom: 0;
+            font-weight: 400;
         }
 
-        /* 装饰元素 */
-        .deco-money {
+        /* 装饰光点 */
+        .light-dot {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
-            font-size: 48px;
-            opacity: 0.3;
+            width: 4px;
+            height: 4px;
+            background: #52C41A;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(82, 196, 26, 0.8);
+            animation: float 4s ease-in-out infinite;
         }
 
-        .deco-coin {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            font-size: 48px;
-            opacity: 0.3;
+        .dot-1 { top: 15%; left: 10%; animation-delay: 0s; }
+        .dot-2 { top: 25%; right: 15%; animation-delay: 1s; }
+        .dot-3 { bottom: 20%; left: 20%; animation-delay: 2s; }
+        .dot-4 { bottom: 30%; right: 10%; animation-delay: 1.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); opacity: 0.3; }
+            50% { transform: translateY(-10px); opacity: 1; }
         }
 
         /* 说明文字 */
@@ -190,79 +204,69 @@
             margin-top: 30px;
             text-align: center;
             color: #666;
-            font-size: 14px;
+            font-size: 13px;
+            line-height: 1.8;
         }
 
         .instructions p {
-            margin: 8px 0;
+            margin: 6px 0;
         }
 
         .instructions strong {
             color: #52C41A;
+            font-weight: 600;
+        }
+
+        .instructions .tip {
+            color: #888;
+            font-size: 11px;
+            margin-top: 12px;
         }
     </style>
 </head>
 <body>
     <div>
         <div class="poster" id="poster">
-            <!-- 装饰圆形 -->
-            <div class="deco-circle circle-1"></div>
-            <div class="deco-circle circle-2"></div>
-            
-            <!-- 大数字背景 -->
-            <div class="big-number">¥</div>
+            <!-- 动态背景 -->
+            <div class="dynamic-bg"></div>
+            <div class="grid-3d"></div>
 
-            <!-- 内容 -->
-            <div class="content">
-                <!-- 标题 -->
-                <div class="header">
-                    <div class="title">小獭记账</div>
-                    <div class="subtitle">聪明记账，轻松理财</div>
-                </div>
+            <!-- 装饰光点 -->
+            <div class="light-dot dot-1"></div>
+            <div class="light-dot dot-2"></div>
+            <div class="light-dot dot-3"></div>
+            <div class="light-dot dot-4"></div>
 
-                <!-- 核心亮点 -->
-                <div class="highlights">
-                    <div class="highlight-item">
-                        <div class="highlight-icon">⚡</div>
-                        <div class="highlight-content">
-                            <div class="highlight-title">语音记账，3秒搞定</div>
-                            <div class="highlight-desc">说话就能记，比打字快10倍</div>
-                        </div>
-                    </div>
-                    <div class="highlight-item">
-                        <div class="highlight-icon">📸</div>
-                        <div class="highlight-content">
-                            <div class="highlight-title">拍照记账，自动识别</div>
-                            <div class="highlight-desc">拍小票就能记，智能识别金额</div>
-                        </div>
-                    </div>
-                    <div class="highlight-item">
-                        <div class="highlight-icon">📊</div>
-                        <div class="highlight-content">
-                            <div class="highlight-title">智能统计，清晰明了</div>
-                            <div class="highlight-desc">收入支出全掌握，一目了然</div>
-                        </div>
+            <!-- 玻璃拟态容器 -->
+            <div class="glass-container">
+                <!-- Logo -->
+                <div class="logo-3d">
+                    <div class="logo-icon">🦦</div>
+                    <div class="brand-text">
+                        <div class="brand-name">小獭记账</div>
+                        <div class="brand-tag">SMART TECH</div>
                     </div>
                 </div>
 
-                <!-- 底部文字 -->
-                <div class="footer">
-                    <div class="footer-text">推荐最好用的记账小程序</div>
-                    <div class="footer-badge">💰 10万+用户都在用</div>
+                <!-- 主标题 -->
+                <div class="hero-title">
+                    <span class="hero-highlight">3秒</span>完成<br>
+                    智能记账
+                </div>
+
+                <div class="hero-subtitle">
+                    语音识别 · 拍照解析 · 智能分类<br>
+                    让每一笔消费都清晰可见
                 </div>
             </div>
-
-            <!-- 装饰元素 -->
-            <span class="deco-money">💰</span>
-            <span class="deco-coin">📒</span>
         </div>
 
         <div class="instructions">
-            <p><strong>使用说明：</strong></p>
-            <p>1. 在浏览器中打开此页面</p>
-            <p>2. 对绿色区域进行截图（推荐使用浏览器开发者工具截图，尺寸精确）</p>
-            <p>3. 保存为 <strong>shareLine.png</strong></p>
-            <p>4. 替换到项目的 <strong>/static/shareLine.png</strong></p>
+            <p><strong>📸 生成分享图</strong></p>
+            <p>1. 在Chrome浏览器中打开此页面</p>
+            <p>2. 按F12打开开发者工具 → 截图工具 → 截取节点（500×400px）</p>
+            <p>3. 保存为 <strong>shareLine.png</strong> → 替换到 <strong>/static/shareLine.png</strong></p>
+            <p class="tip">💡 使用开发者工具截图可获得最佳质量和精确尺寸</p>
         </div>
     </div>
 </body>
