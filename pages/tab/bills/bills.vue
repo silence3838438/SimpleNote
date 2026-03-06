@@ -1,17 +1,29 @@
 <template>
 	<view class="page">
-		<!-- 自定义导航栏（随手记风格） -->
-		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-			<view class="navbar-content">
-				<view class="navbar-left"></view>
-				<view class="navbar-title">
-					<text class="title-text">账单</text>
+		<!-- 自定义导航栏（带风景图片背景） -->
+		<view class="custom-navbar-wrapper">
+			<!-- 风景图片背景 -->
+			<image 
+				class="navbar-bg-image" 
+				src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/homebg2.png" 
+				mode="aspectFill"
+			></image>
+			<!-- 渐变遮罩 -->
+			<view class="navbar-gradient-mask"></view>
+			
+			<!-- 导航栏内容 -->
+			<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+				<view class="navbar-content">
+					<view class="navbar-left"></view>
+					<view class="navbar-title">
+						<!-- 标题已移除 -->
+					</view>
+					<view class="navbar-right"></view>
 				</view>
-				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
-		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
+		<view class="container">
 			<!-- 顶部搜索栏 -->
 			<view class="header-bar">
 				<view class="search-input-wrapper">
@@ -818,19 +830,43 @@ onPullDownRefresh(async () => {
 		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%); /* 柔和的灰色渐变 */
 	}
 	
-	/* 自定义导航栏（随手记风格 - 纯白色） */
-	.custom-navbar {
+	/* 自定义导航栏包装器 - 带风景图片 */
+	.custom-navbar-wrapper {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
-		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
+	}
+	
+	/* 风景图片背景 */
+	.navbar-bg-image {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 360rpx;
+		z-index: 1;
+	}
+	
+	/* 渐变遮罩 */
+	.navbar-gradient-mask {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 360rpx;
+		background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+		z-index: 2;
+	}
+	
+	/* 自定义导航栏 */
+	.custom-navbar {
+		position: relative;
+		z-index: 3;
 		
 		.navbar-content {
-			height: 56px; /* 从44px增加到56px */
+			height: 44px;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
@@ -839,7 +875,7 @@ onPullDownRefresh(async () => {
 		
 		.navbar-left,
 		.navbar-right {
-			width: 80rpx;
+			width: 60rpx;
 			display: flex;
 			align-items: center;
 		}
@@ -852,17 +888,19 @@ onPullDownRefresh(async () => {
 			flex: 1;
 			display: flex;
 			justify-content: center;
-		}
-		
-		.title-text {
-			font-size: $font-size-lg; /* 使用统一的大字体 */
-			font-weight: $font-weight-semibold;
-			color: $text-primary; /* 深灰色文字 */
+			
+			.title-text {
+				font-size: 32rpx;
+				font-weight: $font-weight-semibold;
+				color: #FFFFFF;
+				letter-spacing: 1rpx;
+				text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+			}
 		}
 	}
 	
 	.container {
-		padding: $spacing-sm $spacing-xl;
+		padding: 380rpx $spacing-xl $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		background: transparent;
 	}
