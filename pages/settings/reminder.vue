@@ -46,6 +46,25 @@
 			</view>
 		</view>
 		
+		<!-- #ifdef APP-PLUS -->
+		<!-- APP 端提示卡片 -->
+		<view class="tips-card">
+			<view class="tips-header">
+				<text class="tips-icon">💡</text>
+				<text class="tips-title">温馨提示</text>
+			</view>
+			<view class="tips-content">
+				<text class="tips-text">APP 端推送功能正在优化中，目前可能无法稳定接收提醒通知。</text>
+				<text class="tips-text">建议使用小程序版本开启记账提醒，推送更稳定可靠。</text>
+			</view>
+			<view class="tips-footer">
+				<text class="tips-note">* 服务端推送功能已集成，后续版本将持续优化</text>
+			</view>
+		</view>
+		<!-- #endif -->
+		
+
+		
 		<!-- 保存按钮 -->
 		<view class="save-btn-area">
 			<button class="save-btn" @click="saveAndSubscribe" :disabled="data.saving || data.selectedTime === '未设置'">
@@ -62,7 +81,7 @@
 					<text class="picker-title">选择时间</text>
 					<text class="picker-confirm" @click="confirmTime">确定</text>
 				</view>
-				<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange">
+				<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange" indicator-style="height: 80rpx">
 					<picker-view-column>
 						<view 
 							class="picker-item" 
@@ -324,22 +343,13 @@ const saveAndSubscribe = async () => {
 		// #endif
 		
 		// #ifdef APP-PLUS
-		// APP端：使用 UniPush 2.0
+		// APP端：直接保存到云端即可
 		try {
 			// 获取推送客户端ID
 			const clientId = uni.getStorageSync('pushClientId')
 			
-			if (!clientId) {
-				uni.showToast({
-					title: '推送服务初始化中，请稍后重试',
-					icon: 'none'
-				})
-				data.saving = false
-				return
-			}
-			
 			// 保存到云端
-			await saveSubscriptionToCloud()
+			await saveSubscriptionToCloud(clientId)
 			
 			uni.showToast({
 				title: '设置成功',
@@ -379,13 +389,14 @@ const saveAndSubscribe = async () => {
 	}
 }
 
-const saveSubscriptionToCloud = async () => {
+const saveSubscriptionToCloud = async (clientId = null) => {
 	const res = await request.call('billManager', {
 		action: 'saveReminderSubscription',
 		data: {
 			subscribed: true,
 			templateId: 'bNzt1GtONIHLlujvtLtYRO5B2Ot24MKrwFGmo_10Mxw',
-			reminderTime: data.selectedTime
+			reminderTime: data.selectedTime,
+			clientId: clientId // APP 端传递 ClientID
 		}
 	})
 	
@@ -396,6 +407,7 @@ const saveSubscriptionToCloud = async () => {
 		throw new Error(res.message)
 	}
 }
+
 </script>
 
 <style lang="scss" scoped>
@@ -581,6 +593,56 @@ const saveSubscriptionToCloud = async () => {
 	line-height: 1.2;
 }
 
+/* APP 端提示卡片 */
+.tips-card {
+	background: linear-gradient(135deg, #FFF7E6 0%, #FFE7BA 100%);
+	border-radius: $radius-2xl;
+	padding: $spacing-xl;
+	margin-bottom: $spacing-lg;
+	border: 2rpx solid #FFD591;
+}
+
+.tips-header {
+	display: flex;
+	align-items: center;
+	gap: $spacing-sm;
+	margin-bottom: $spacing-md;
+}
+
+.tips-icon {
+	font-size: 32rpx;
+}
+
+.tips-title {
+	font-size: $font-size-lg;
+	font-weight: $font-weight-bold;
+	color: #D46B08;
+}
+
+.tips-content {
+	display: flex;
+	flex-direction: column;
+	gap: $spacing-sm;
+	margin-bottom: $spacing-md;
+}
+
+.tips-text {
+	font-size: $font-size-base;
+	color: #AD6800;
+	line-height: 1.6;
+}
+
+.tips-footer {
+	padding-top: $spacing-sm;
+	border-top: 1rpx solid rgba(255, 213, 145, 0.5);
+}
+
+.tips-note {
+	font-size: $font-size-sm;
+	color: #D46B08;
+	opacity: 0.8;
+}
+
 .save-btn-area {
 	position: fixed;
 	bottom: 40rpx;
@@ -702,4 +764,5 @@ const saveSubscriptionToCloud = async () => {
 	color: #52C41A;
 	font-weight: $font-weight-bold;
 }
+
 </style>

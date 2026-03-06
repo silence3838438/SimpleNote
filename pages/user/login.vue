@@ -594,14 +594,14 @@ const goBack = () => {
 // 沉浸式返回按钮
 .back-button {
 	position: fixed;
-	left: 32rpx;
+	left: 45rpx;
 	width: 72rpx;
 	height: 72rpx;
-	background: transparent;
+	background-color: transparent;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
 	z-index: 999;
 	transition: all 0.2s;
 }
@@ -615,12 +615,11 @@ const goBack = () => {
 	font-size: 52rpx;
 	color: #1A1A1A;
 	font-weight: 300;
-	margin-left: -4rpx;
 }
 
 // 主内容区
 .content-wrapper {
-	padding: 32rpx 64rpx;
+	padding: 32rpx 80rpx;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -638,9 +637,7 @@ const goBack = () => {
 	width: 120rpx;
 	height: 120rpx;
 	border-radius: 24rpx;
-	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
 	margin-bottom: 24rpx;
-	background: #fff;
 }
 
 .app-name {

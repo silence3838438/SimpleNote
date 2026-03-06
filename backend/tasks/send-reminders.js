@@ -53,7 +53,7 @@ async function sendReminders() {
       try {
         const reminderTime = reminder.time || '20:00';
         
-        // 检查是否到了提醒时间（允许 10 分钟误差）
+        // 检查是否到了提醒时间（允许 5 分钟误差）
         if (isTimeMatch(currentTime, reminderTime)) {
           console.log(`⏰ 用户 ${reminder.user_id} 的提醒时间已到: ${reminderTime}`);
           
@@ -130,7 +130,7 @@ async function sendReminders() {
 }
 
 /**
- * 检查时间是否匹配（当前时间在目标时间之后的 10 分钟内）
+ * 检查时间是否匹配（当前时间在目标时间之后的 5 分钟内）
  */
 function isTimeMatch(currentTime, targetTime) {
   const [currentHour, currentMinute] = currentTime.split(':').map(v => parseInt(v));
@@ -142,8 +142,8 @@ function isTimeMatch(currentTime, targetTime) {
   // 计算时间差（当前时间 - 目标时间）
   const diff = currentTotalMinutes - targetTotalMinutes;
   
-  // 如果当前时间在目标时间之后的 0-10 分钟内，则匹配
-  return diff >= 0 && diff <= 10;
+  // 如果当前时间在目标时间之后的 0-5 分钟内，则匹配
+  return diff >= 0 && diff <= 5;
 }
 
 /**
@@ -179,14 +179,23 @@ async function sendReminderMessage(reminder) {
 }
 
 /**
- * 发送 APP 推送消息（UniPush 2.0）
+ * 获取个推 auth_token
+ * 注意：使用 uniCloud 云函数后，此函数已不再使用
+ */
+async function getGeTuiAuthToken() {
+  // 此函数已废弃，保留仅供参考
+  throw new Error('请使用 uniCloud 云函数发送推送');
+}
+
+/**
+ * 发送 APP 推送消息（通过 uniCloud 云函数）
  */
 async function sendAppPushMessage(reminder) {
   try {
-    // 检查环境变量
-    if (!process.env.UNIPUSH_APP_ID || !process.env.UNIPUSH_APP_KEY || !process.env.UNIPUSH_MASTER_SECRET) {
-      console.error('❌ UniPush 配置缺失，请检查环境变量');
-      return { success: false, error: 'UniPush 配置缺失' };
+    // 检查是否有 ClientID
+    if (!reminder.push_client_id) {
+      console.error('❌ 用户没有 push_client_id');
+      return { success: false, error: '用户没有推送标识' };
     }
     
     const now = new Date();
@@ -194,56 +203,29 @@ async function sendAppPushMessage(reminder) {
     
     // 构造推送消息
     const message = {
-      request_id: `reminder_${reminder.user_id}_${Date.now()}`,
-      settings: {
-        ttl: 3600000 // 消息有效期 1 小时
-      },
-      audience: {
-        cid: [reminder.push_client_id]
-      },
-      push_message: {
-        notification: {
-          title: '记账提醒',
-          body: `${dateStr} - 别忘了记录今天的收支哦~`,
-          click_type: 'intent',
-          intent: 'intent://io.dcloud.unipush/pages/tab/index/index#Intent;scheme=unipush;launchFlags=0x4000000;end'
-        }
-      }
+      push_clientid: reminder.push_client_id,
+      title: '记账提醒',
+      content: `${dateStr} - 别忘了记录今天的收支哦~`,
+      request_id: `reminder_${reminder.user_id}_${Date.now()}`
     };
     
-    // 调用 UniPush API
-    const appId = process.env.UNIPUSH_APP_ID;
-    const appKey = process.env.UNIPUSH_APP_KEY;
-    const masterSecret = process.env.UNIPUSH_MASTER_SECRET;
-    const timestamp = Date.now();
+    // 调用 uniCloud 云函数发送推送
+    // 注意：这里需要配置 uniCloud 的 HTTP 访问地址
+    // 在 uniCloud 控制台 -> 云函数 -> send-reminder -> 详情 -> 云函数URL化
+    const cloudFunctionUrl = process.env.UNICLOUD_PUSH_URL || 'https://fc-mp-xxxxxxxx.next.bspapp.com/send-reminder';
     
-    // 生成签名
-    const crypto = require('crypto');
-    const sign = crypto.createHash('sha256')
-      .update(`${appKey}${timestamp}${masterSecret}`)
-      .digest('hex');
-    
-    // 发送推送请求
-    const response = await axios.post(
-      `https://restapi.getui.com/v2/${appId}/push/single/cid`,
-      message,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'token': sign,
-          'appkey': appKey,
-          'timestamp': timestamp
-        }
+    const response = await axios.post(cloudFunctionUrl, message, {
+      headers: {
+        'Content-Type': 'application/json'
       }
-    );
+    });
     
-    if (response.data && response.data.code === 0) {
+    if (response.data && response.data.success) {
       return { success: true };
     } else {
       return { 
         success: false, 
-        error: response.data?.msg || '推送失败',
-        errcode: response.data?.code
+        error: response.data?.message || '推送失败'
       };
     }
   } catch (error) {

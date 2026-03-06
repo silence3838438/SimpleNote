@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 配置推送提醒的定时任务
-# 每10分钟执行一次推送检查
+# 每5分钟执行一次推送检查
 
 BACKEND_DIR="/www/backend"
 LOG_DIR="/var/log/simplenote"
@@ -23,13 +23,13 @@ if crontab -l 2>/dev/null | grep -q "send-reminders.js"; then
 fi
 
 # 添加定时任务
-(crontab -l 2>/dev/null; echo "*/10 * * * * cd $BACKEND_DIR && node tasks/send-reminders.js >> $LOG_DIR/push-reminders.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "*/5 * * * * cd $BACKEND_DIR && node tasks/send-reminders.js >> $LOG_DIR/push-reminders.log 2>&1") | crontab -
 
 if [ $? -eq 0 ]; then
     echo "✅ 定时任务配置成功"
     echo ""
     echo "定时任务详情："
-    echo "  执行频率: 每10分钟"
+    echo "  执行频率: 每5分钟"
     echo "  执行脚本: $BACKEND_DIR/tasks/send-reminders.js"
     echo "  日志文件: $LOG_DIR/push-reminders.log"
     echo ""

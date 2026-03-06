@@ -105,9 +105,9 @@
                     "unipush" : {
                         "version" : "2",
                         "offline" : true,
-                        "appid" : "32yYnvGJLC6imw8W1Ga4S8",
-                        "appkey" : "KChiP8PRJ46o22fX8NFS04",
-                        "appsecret" : "4kOWXllrf61gYuzGT9Ek3"
+                        "appid" : "32yYnvGJLC6lmw8W1Ga4S8",
+                        "appkey" : "KChlP8PRJ46o22fX8NFS04",
+                        "appsecret" : "4kOWXlIrfi61gYuzGT9Ek3"
                     }
                 },
                 "speech" : {

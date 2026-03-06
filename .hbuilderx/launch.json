@@ -5,6 +5,19 @@
             "customPlaygroundType" : "local",
             "playground" : "custom",
             "type" : "uni-app:app-android"
+        },
+        {
+            "app" : {
+                "launchtype" : "local"
+            },
+            "default" : {
+                "launchtype" : "local"
+            },
+            "mp-weixin" : {
+                "launchtype" : "local"
+            },
+            "provider" : "aliyun",
+            "type" : "uniCloud"
         }
     ]
 }

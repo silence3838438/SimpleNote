@@ -62,6 +62,39 @@ cd backend
 
 测试报告保存在服务器：`/www/test-report.json`
 
+## 推送功能配置
+
+### 1. 配置环境变量
+
+编辑 `backend/.env.production`：
+
+```bash
+# uniCloud 云函数 URL
+UNICLOUD_PUSH_URL=https://fc-mp-15dbe83d-4164-48c2-8f42-ae207c4d3b38.next.bspapp.com/send-reminder
+```
+
+### 2. 配置定时任务
+
+```bash
+cd backend
+bash setup-push-cron.sh
+```
+
+### 3. 测试推送
+
+```bash
+cd backend
+node test-unipush.js
+```
+
+### 4. 查看推送日志
+
+```bash
+tail -f /www/backend/logs/push-reminders.log
+```
+
+**详细配置请查看：** `uniCloud-aliyun/README.md`
+
 ## 查看测试报告
 
 ```bash

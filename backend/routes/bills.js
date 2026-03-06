@@ -249,17 +249,18 @@ async function setBudget(req, res, userId, data) {
 
 // 获取提醒设置
 async function getReminder(req, res, userId) {
-  // 获取用户的 openid
-  const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
-  if (userResult.length === 0 || !userResult[0].openid) {
+  // 获取用户信息
+  const userResult = await db.query('SELECT id, openid FROM users WHERE id = ?', [userId]);
+  if (userResult.length === 0) {
     return res.json({
       success: true,
       reminder: { enabled: false, time: '21:00', reminder_time: '21:00' }
     });
   }
   
-  const openid = userResult[0].openid;
-  const result = await db.query('SELECT * FROM reminders WHERE user_id = ?', [openid]);
+  // APP用户使用 userId，小程序用户使用 openid
+  const reminderUserId = userResult[0].openid || userId.toString();
+  const result = await db.query('SELECT * FROM reminders WHERE user_id = ?', [reminderUserId]);
   
   if (result.length > 0) {
     // 确保返回的数据包含 time 和 reminder_time 两个字段（兼容性）
@@ -279,21 +280,28 @@ async function getReminder(req, res, userId) {
 
 // 设置提醒
 async function setReminder(req, res, userId, data) {
-  // 获取用户的 openid
-  const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
-  if (userResult.length === 0 || !userResult[0].openid) {
-    return res.json({ success: false, message: '用户 openid 不存在' });
+  // 获取用户信息
+  const userResult = await db.query('SELECT id, openid, push_client_id FROM users WHERE id = ?', [userId]);
+  if (userResult.length === 0) {
+    return res.json({ success: false, message: '用户不存在' });
   }
   
-  const openid = userResult[0].openid;
-  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [openid]);
+  // APP用户使用 userId，小程序用户使用 openid
+  const reminderUserId = userResult[0].openid || userId.toString();
+  
+  // 如果是 APP 用户且没有 push_client_id，尝试从本地获取
+  if (!userResult[0].openid && !userResult[0].push_client_id && data.clientId) {
+    await db.query('UPDATE users SET push_client_id = ? WHERE id = ?', [data.clientId, userId]);
+  }
+  
+  const existing = await db.query('SELECT id FROM reminders WHERE user_id = ?', [reminderUserId]);
   
   if (existing.length > 0) {
     await db.query('UPDATE reminders SET enabled = ?, time = ?, updated_at = NOW() WHERE user_id = ?', 
-      [data.enabled, data.time, openid]);
+      [data.enabled, data.time, reminderUserId]);
   } else {
     await db.query('INSERT INTO reminders (user_id, enabled, time, created_at) VALUES (?, ?, ?, NOW())', 
-      [openid, data.enabled, data.time]);
+      [reminderUserId, data.enabled, data.time]);
   }
   
   res.json({ success: true, message: data.enabled ? '提醒设置成功' : '提醒已关闭' });
@@ -301,12 +309,17 @@ async function setReminder(req, res, userId, data) {
 
 // 保存提醒订阅信息
 async function saveReminderSubscription(req, res, userId, data) {
-  const { subscribed, templateId, reminderTime } = data;
+  const { subscribed, templateId, reminderTime, clientId } = data;
   
-  // 获取用户的 openid（小程序用户需要）
-  const userResult = await db.query('SELECT openid FROM users WHERE id = ?', [userId]);
+  // 获取用户信息
+  const userResult = await db.query('SELECT openid, push_client_id FROM users WHERE id = ?', [userId]);
   if (userResult.length === 0) {
     return res.json({ success: false, message: '用户不存在' });
+  }
+  
+  // 如果提供了 clientId，更新 push_client_id（无论是否有 openid）
+  if (clientId) {
+    await db.query('UPDATE users SET push_client_id = ? WHERE id = ?', [clientId, userId]);
   }
   
   // 小程序用户使用 openid，APP用户使用 userId
@@ -339,7 +352,7 @@ async function savePushClientId(req, res, userId, data) {
     return res.json({ success: false, message: 'clientId 不能为空' });
   }
   
-  // 更新用户的推送客户端ID
+  // 更新用户的推送客户端ID（无论是否有 openid）
   await db.query(
     'UPDATE users SET push_client_id = ?, updated_at = NOW() WHERE id = ?',
     [clientId, userId]
