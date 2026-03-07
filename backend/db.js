@@ -57,6 +57,7 @@ async function initTables() {
         apple_id VARCHAR(100),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_login DATETIME,
+        last_logout DATETIME DEFAULT NULL,
         INDEX idx_openid (openid),
         INDEX idx_unionid (unionid),
         INDEX idx_apple_id (apple_id)

@@ -1089,8 +1089,8 @@ router.post('/delete-account', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     const userId = decoded.userId;
 
-    // 检查用户是否存在
-    const [users] = await connection.execute('SELECT id FROM users WHERE id = ?', [userId]);
+    // 检查用户是否存在，并获取openid
+    const [users] = await connection.execute('SELECT id, openid FROM users WHERE id = ?', [userId]);
     
     if (users.length === 0) {
       connection.release();
@@ -1099,6 +1099,9 @@ router.post('/delete-account', async (req, res) => {
         message: '用户不存在或已被注销'
       });
     }
+
+    const userOpenid = users[0].openid;
+    const reminderUserId = userOpenid || userId.toString();
 
     // 开始事务
     await connection.beginTransaction();
@@ -1110,8 +1113,8 @@ router.post('/delete-account', async (req, res) => {
       // 2. 删除用户的积分记录
       await connection.execute('DELETE FROM points_history WHERE user_id = ?', [userId]);
 
-      // 3. 删除用户的提醒设置
-      await connection.execute('DELETE FROM reminders WHERE user_id = ?', [userId]);
+      // 3. 删除用户的提醒设置（使用openid或userId字符串）
+      await connection.execute('DELETE FROM reminders WHERE user_id = ?', [reminderUserId]);
       
       // 4. 删除用户的预算设置
       await connection.execute('DELETE FROM budgets WHERE user_id = ?', [userId]);
