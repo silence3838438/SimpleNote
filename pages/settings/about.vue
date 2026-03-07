@@ -29,22 +29,6 @@
 					<view class="menu-arrow">›</view>
 				</view>
 				
-				<!-- 意见反馈 -->
-				<view class="menu-item" @click="goToFeedback">
-					<view class="menu-icon">💡</view>
-					<view class="menu-label">意见反馈</view>
-					<view class="menu-arrow">›</view>
-				</view>
-				
-				<!-- 联系客服（仅小程序） -->
-				<!-- #ifdef MP-WEIXIN -->
-				<button class="menu-item menu-button" open-type="contact">
-					<view class="menu-icon">👨‍💼</view>
-					<view class="menu-label">联系客服</view>
-					<view class="menu-arrow">›</view>
-				</button>
-				<!-- #endif -->
-				
 				<!-- 下载APP（仅小程序显示） -->
 				<!-- #ifdef MP-WEIXIN -->
 				<view class="menu-item" @click="goToDownloadPage">

@@ -1,29 +1,17 @@
 <template>
 	<view class="page">
-		<!-- 自定义导航栏（带风景图片背景） -->
-		<view class="custom-navbar-wrapper">
-			<!-- 风景图片背景 -->
-			<image 
-				class="navbar-bg-image" 
-				src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/homebg2.png" 
-				mode="aspectFill"
-			></image>
-			<!-- 渐变遮罩 -->
-			<view class="navbar-gradient-mask"></view>
-			
-			<!-- 导航栏内容 -->
-			<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-				<view class="navbar-content">
-					<view class="navbar-left"></view>
-					<view class="navbar-title">
-						<!-- 标题已移除 -->
-					</view>
-					<view class="navbar-right"></view>
+		<!-- 自定义导航栏（随手记风格） -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left"></view>
+				<view class="navbar-title">
+					<text class="title-text">账单</text>
 				</view>
+				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
-		<view class="container">
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 顶部搜索栏 -->
 			<view class="header-bar">
 				<view class="search-input-wrapper">
@@ -830,43 +818,19 @@ onPullDownRefresh(async () => {
 		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%); /* 柔和的灰色渐变 */
 	}
 	
-	/* 自定义导航栏包装器 - 带风景图片 */
-	.custom-navbar-wrapper {
+	/* 自定义导航栏（随手记风格 - 纯白色） */
+	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
+		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-	}
-	
-	/* 风景图片背景 */
-	.navbar-bg-image {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 360rpx;
-		z-index: 1;
-	}
-	
-	/* 渐变遮罩 */
-	.navbar-gradient-mask {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 360rpx;
-		background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
-		z-index: 2;
-	}
-	
-	/* 自定义导航栏 */
-	.custom-navbar {
-		position: relative;
-		z-index: 3;
+		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 		
 		.navbar-content {
-			height: 44px;
+			height: 56px; /* 从44px增加到56px */
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
@@ -875,7 +839,7 @@ onPullDownRefresh(async () => {
 		
 		.navbar-left,
 		.navbar-right {
-			width: 60rpx;
+			width: 80rpx;
 			display: flex;
 			align-items: center;
 		}
@@ -888,19 +852,17 @@ onPullDownRefresh(async () => {
 			flex: 1;
 			display: flex;
 			justify-content: center;
-			
-			.title-text {
-				font-size: 32rpx;
-				font-weight: $font-weight-semibold;
-				color: #FFFFFF;
-				letter-spacing: 1rpx;
-				text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
-			}
+		}
+		
+		.title-text {
+			font-size: $font-size-lg; /* 使用统一的大字体 */
+			font-weight: $font-weight-semibold;
+			color: $text-primary; /* 深灰色文字 */
 		}
 	}
 	
 	.container {
-		padding: 380rpx $spacing-xl $spacing-sm $spacing-xl;
+		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		background: transparent;
 	}
@@ -1071,73 +1033,69 @@ onPullDownRefresh(async () => {
 		background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.06), transparent);
 	}
 	
-	/* 筛选标签 - 横向滚动 */
+	/* 筛选标签 - 横向滚动（统一样式） */
 	.filter-scroll {
-		padding: $spacing-xs 0;
-		margin-bottom: $spacing-lg;
+		padding: 0;
+		margin-top: $spacing-md;
+		margin-bottom: $spacing-xl;
 		white-space: nowrap;
 		background: transparent;
 	}
 	
 	.filter-tags {
-		display: inline-flex;
-		gap: $spacing-lg;
-		padding: 0;
+		display: inline-flex; /* 改为 inline-flex，宽度自适应内容 */
+		gap: $spacing-md; /* 从 $spacing-xs 增大到 $spacing-md */
+		background: transparent; /* 去掉白色背景 */
+		border-radius: 0; /* 去掉圆角 */
+		padding: 0; /* 去掉内边距 */
+		border: none; /* 去掉边框 */
 	}
 	
 	.filter-tag {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 4rpx;
-		padding: 8rpx 20rpx;
-		min-width: 88rpx;
-		height: 48rpx;
-		background: $bg-white;
-		border-radius: 12rpx;
-		border: 1rpx solid #E8E8E8;
+		flex: 0 0 auto;
+		min-width: 100rpx; /* 改为 100rpx */
+		text-align: center;
+		padding: 14rpx 24rpx; /* 从 20rpx 增大到 24rpx */
+		font-size: $font-size-sm;
+		color: $text-secondary;
+		background: #FFFFFF; /* 改为纯白色背景 */
+		border-radius: 12rpx; /* 增大圆角 */
 		transition: all $transition-fast;
+		font-weight: $font-weight-medium;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 增强阴影 */
+		border: 1rpx solid #E8E8E8; /* 添加浅灰色边框 */
 		white-space: nowrap;
-		position: relative;
-		overflow: hidden;
 	}
 	
-	.filter-tag::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(82, 196, 26, 0.1);
-		opacity: 0;
-		transition: opacity $transition-fast;
+	.filter-tag:active {
+		background: $bg-hover;
+		transform: scale(0.98);
 	}
 	
 	.filter-tag.active {
-		background: $primary-color;
-		border-color: $primary-color;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.25);
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+		color: $primary-color;
+		font-weight: $font-weight-semibold;
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
+		border: 1rpx solid rgba(82, 196, 26, 0.2);
+	}
+	
+	.filter-tag.active:active {
+		transform: scale(0.98);
 	}
 	
 	.tag-text {
-		font-size: 26rpx;
-		color: #666666;
-		font-weight: 500;
-		position: relative;
-		z-index: 1;
-		letter-spacing: 0.5rpx;
-	}
-	
-	.filter-tag.active .tag-text {
-		color: #FFFFFF;
-		font-weight: 600;
+		font-size: $font-size-sm;
+		color: inherit;
+		font-weight: inherit;
 	}
 	
 	.export-tag {
 		background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
-		border-color: #13C2C2;
+		color: #FFFFFF;
+		font-weight: 600;
 		box-shadow: 0 2rpx 8rpx rgba(19, 194, 194, 0.25);
+		border: none;
 	}
 	
 	.export-tag .tag-text {
@@ -1145,23 +1103,9 @@ onPullDownRefresh(async () => {
 		font-weight: 600;
 	}
 	
-	.export-tag .tag-icon {
-		font-size: $font-size-lg;
-	}
-	
 	.export-tag:active {
 		transform: scale(0.96);
 		box-shadow: 0 1rpx 4rpx rgba(19, 194, 194, 0.2);
-	}
-	
-	.tag-arrow {
-		font-size: 20rpx;
-		color: $text-tertiary;
-		margin-left: 2rpx;
-	}
-	
-	.filter-tag.active .tag-arrow {
-		color: rgba(255, 255, 255, 0.8);
 	}
 	
 	/* 账单列表 - 精致高端版 */
@@ -1277,7 +1221,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.bill-merchant {
-		font-size: 30rpx; /* 稍大的字号 */
+		font-size: $font-size-base; /* 28rpx，基础字号 */
 		color: $text-primary;
 		font-weight: 500;
 		overflow: hidden;

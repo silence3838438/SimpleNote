@@ -14,10 +14,6 @@
 		<view class="container" :style="{ paddingTop: (statusBarHeight + 56 + 16) + 'px' }">
 			<!-- 顶部金额卡片 -->
 			<view class="amount-card" :class="data.bill.type === 'income' ? 'income-card' : 'expense-card'">
-				<view class="type-badge">
-					<text class="badge-icon">{{ data.bill.type === 'income' ? '💰' : '💸' }}</text>
-					<text class="badge-text">{{ data.bill.type === 'income' ? '收入' : '支出' }}</text>
-				</view>
 				<view class="amount-label">账单金额</view>
 				<view class="amount-value">{{ data.bill.type === 'income' ? '+' : '-' }}¥{{ data.bill.amount?.toFixed(2) || '0.00' }}</view>
 				<view class="amount-date">{{ formatDateTime(data.bill.createTime || data.bill.date) }}</view>
@@ -318,7 +314,7 @@ const deleteBill = async () => {
 	.container {
 		min-height: 100vh;
 		padding: $spacing-md;
-		padding-bottom: 100rpx;
+		padding-bottom: 140rpx;
 	}
 	
 	/* 金额卡片 */
@@ -496,51 +492,90 @@ const deleteBill = async () => {
 		word-break: break-all;
 	}
 	
-	/* 操作按钮 */
+	/* 操作按钮 - 极简精致版 */
 	.action-buttons {
 		display: flex;
-		gap: $spacing-lg;
-		padding: 0 $spacing-md;
+		gap: 20rpx;
+		padding: 0 $spacing-lg;
+		margin-top: 64rpx;
 	}
 	
 	.btn-secondary, .btn-danger {
 		flex: 1;
-		height: 88rpx;
-		border-radius: $radius-2xl;
-		font-size: $font-size-lg;
-		font-weight: $font-weight-bold;
+		height: 96rpx;
+		border-radius: 24rpx;
+		font-size: $font-size-base;
+		font-weight: 600;
 		border: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all $transition-fast;
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-		letter-spacing: 1rpx;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+		letter-spacing: 0.5rpx;
+		position: relative;
+		overflow: hidden;
 	}
 	
+	/* 编辑按钮 - 极简绿色 */
 	.btn-secondary {
-		background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
+		background: #FFFFFF;
 		color: $primary-color;
-		border: 2rpx solid rgba(82, 196, 26, 0.2);
+		border: 2rpx solid #E8E8E8;
+	}
+	
+	.btn-secondary::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg, rgba(82, 196, 26, 0.05) 0%, rgba(82, 196, 26, 0.02) 100%);
+		opacity: 0;
+		transition: opacity 0.3s ease;
 	}
 	
 	.btn-secondary:active {
-		background: $gradient-primary;
-		color: $text-white;
-		transform: scale(0.98);
-		border-color: transparent;
+		background: $primary-color;
+		color: #FFFFFF;
+		transform: scale(0.97);
+		border-color: $primary-color;
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.25);
 	}
 	
+	.btn-secondary:active::before {
+		opacity: 0;
+	}
+	
+	/* 删除按钮 - 极简红色 */
 	.btn-danger {
-		background: linear-gradient(135deg, #FFF1F0 0%, #FFFFFF 100%);
-		color: $error-color;
-		border: 2rpx solid rgba(245, 34, 45, 0.2);
+		background: #FFFFFF;
+		color: #FF4D4F;
+		border: 2rpx solid #E8E8E8;
+	}
+	
+	.btn-danger::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg, rgba(255, 77, 79, 0.05) 0%, rgba(255, 77, 79, 0.02) 100%);
+		opacity: 0;
+		transition: opacity 0.3s ease;
 	}
 	
 	.btn-danger:active {
-		background: linear-gradient(135deg, #FF4D4F 0%, #F5222D 100%);
-		color: $text-white;
-		transform: scale(0.98);
-		border-color: transparent;
+		background: #FF4D4F;
+		color: #FFFFFF;
+		transform: scale(0.97);
+		border-color: #FF4D4F;
+		box-shadow: 0 4rpx 16rpx rgba(255, 77, 79, 0.25);
+	}
+	
+	.btn-danger:active::before {
+		opacity: 0;
 	}
 </style>

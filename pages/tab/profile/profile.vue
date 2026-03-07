@@ -10,60 +10,147 @@
 		</view>
 		
 		<view class="container">
-			<!-- 用户信息区域 - 简洁版 -->
-			<view class="user-section">
+			<!-- 用户信息卡片 -->
+			<view class="user-card">
 				<!-- #ifdef APP-PLUS -->
 				<!-- APP端：未登录状态 -->
-				<view class="user-info-simple" v-if="!data.userInfo.isLogin" @click="goToLogin">
-					<image 
-						class="user-avatar" 
-						src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
-						mode="aspectFill"
-					></image>
-					<text class="user-name">未登录</text>
+				<view class="user-header" v-if="!data.userInfo.isLogin" @click="goToLogin">
+					<view class="avatar-wrapper">
+						<image 
+							class="avatar" 
+							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
+							mode="aspectFill"
+						></image>
+					</view>
+					<view class="user-info">
+						<view class="nickname-row">
+							<text class="nickname">未登录</text>
+							<text class="login-hint">点击登录</text>
+						</view>
+						<text class="user-tip">登录后可同步数据、查看积分等级</text>
+					</view>
 				</view>
 				<!-- #endif -->
 				
-				<!-- 已登录状态 -->
-				<view class="user-info-simple" v-if="data.userInfo.isLogin">
-					<image 
-						class="user-avatar" 
-						:src="data.userInfo.avatarUrl" 
-						mode="aspectFill"
-						@click="changeNickname"
-					></image>
-					<text class="user-name">{{ data.userInfo.nickName }}</text>
+				<!-- 已登录状态（小程序端始终显示此状态） -->
+				<view class="user-header" v-if="data.userInfo.isLogin">
+					<view class="avatar-wrapper">
+						<image 
+							class="avatar" 
+							:src="data.userInfo.avatarUrl" 
+							mode="aspectFill"
+							@click="changeAvatar"
+						></image>
+						<view class="level-badge" :style="{ background: data.memberLevel.gradient }">
+							<text class="level-icon">{{ data.memberLevel.icon }}</text>
+						</view>
+					</view>
+					<view class="user-info">
+						<view class="nickname-row" @click="changeNickname">
+							<text class="nickname">{{ data.userInfo.nickName }}</text>
+							<text class="edit-icon">✏️</text>
+						</view>
+						<view class="level-row" @click="showLevelDetail">
+							<text class="level-name">{{ data.memberLevel.name }}</text>
+							<text class="level-arrow">›</text>
+						</view>
+						<text class="user-tip">点击头像更换 · 点击等级查看详情</text>
+					</view>
 				</view>
 				
 				<!-- #ifdef MP-WEIXIN -->
-				<!-- 小程序端：未登录时显示默认 -->
-				<view class="user-info-simple" v-if="!data.userInfo.isLogin">
-					<image 
-						class="user-avatar" 
-						src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
-						mode="aspectFill"
-					></image>
-					<text class="user-name">微信用户</text>
+				<!-- 小程序端：未登录时也显示已登录状态（使用默认信息） -->
+				<view class="user-header" v-if="!data.userInfo.isLogin">
+					<view class="avatar-wrapper">
+						<image 
+							class="avatar" 
+							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
+							mode="aspectFill"
+						></image>
+						<view class="level-badge" :style="{ background: data.memberLevel.gradient }">
+							<text class="level-icon">{{ data.memberLevel.icon }}</text>
+						</view>
+					</view>
+					<view class="user-info">
+						<view class="nickname-row">
+							<text class="nickname">微信用户</text>
+						</view>
+						<view class="level-row" @click="showLevelDetail">
+							<text class="level-name">{{ data.memberLevel.name }}</text>
+							<text class="level-arrow">›</text>
+						</view>
+						<text class="user-tip">正在加载数据...</text>
+					</view>
 				</view>
 				<!-- #endif -->
 			</view>
 			
-			<!-- 功能列表 -->
-			<view class="function-list">
-				<!-- 记账成长 -->
-				<view class="function-item" @click="showLevelDetail">
-					<view class="function-left">
-						<view class="function-icon level-icon">
-							<text class="icon-text">🌱</text>
-						</view>
-						<text class="function-title">记账成长</text>
+			<!-- 记账成长卡片 - 独立卡片 -->
+			<view class="level-progress-card" @click="showLevelDetail">
+				<view class="progress-header">
+					<view class="progress-title">
+						<text class="title-icon">🌱</text>
+						<text class="title-text">记账成长</text>
 					</view>
-					<view class="function-right">
-						<text class="function-count">{{ data.userPoints }} 积分</text>
-						<text class="arrow">›</text>
+					<view class="progress-points">
+						<text class="points-number">{{ data.userPoints }}</text>
+						<text class="points-unit">积分</text>
 					</view>
 				</view>
 				
+				<!-- 进度条（小程序端始终显示） -->
+				<view class="progress-bar-wrapper">
+					<view class="progress-bar">
+						<view 
+							class="progress-fill" 
+							:style="{ 
+								width: (data.memberLevel.progress?.pointsProgress || 0) + '%',
+								background: data.memberLevel.gradient 
+							}"
+						>
+							<view class="progress-glow"></view>
+						</view>
+					</view>
+					<view class="progress-labels">
+						<text class="current-level">{{ data.memberLevel.name }}</text>
+						<text class="next-level" v-if="data.memberLevel.nextLevel">
+							{{ data.memberLevel.nextLevel.name }}
+						</text>
+						<text class="max-level" v-else>已满级</text>
+					</view>
+				</view>
+				
+				<!-- 进度提示 -->
+				<view class="progress-tip" v-if="data.memberLevel.nextLevel">
+					<text class="tip-text">再获得 {{ data.memberLevel.progress?.pointsNeeded || 0 }} 积分即可升级</text>
+					<text class="tip-icon">✨</text>
+				</view>
+				<view class="progress-tip max-tip" v-else>
+					<text class="tip-text">恭喜达到最高等级</text>
+					<text class="tip-icon">🎉</text>
+				</view>
+				
+				<!-- 记账统计 -->
+				<view class="stats-row-inner">
+					<view class="stat-item">
+						<text class="stat-value">{{ data.recordDays }}</text>
+						<text class="stat-label">连续打卡</text>
+					</view>
+					<view class="stat-divider"></view>
+					<view class="stat-item">
+						<text class="stat-value">{{ data.totalBills }}</text>
+						<text class="stat-label">记账笔数</text>
+					</view>
+					<view class="stat-divider"></view>
+					<view class="stat-item" @click.stop="showPointsDetail">
+						<text class="stat-value">{{ getTodayPoints() }}</text>
+						<text class="stat-label">今日积分</text>
+					</view>
+				</view>
+			</view>
+			
+			<!-- 功能列表 -->
+			<view class="function-list">
 				<!-- 记账提醒 -->
 				<view class="function-item" @click="goToReminderSettings">
 					<view class="function-left">
@@ -73,64 +160,8 @@
 						<text class="function-title">记账提醒</text>
 					</view>
 					<view class="function-right">
-						<text class="function-count" v-if="data.reminderTime">每天 {{ data.reminderTime }}</text>
-						<text class="function-count inactive" v-else>未开启</text>
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				
-				<!-- AI财务顾问 - 小程序端和APP端都可用 -->
-				<!-- #ifdef MP-WEIXIN -->
-				<view class="function-item" v-if="data.appConfig.show_ai_advisor_wechat" @click="goToAIChat">
-					<view class="function-left">
-						<view class="function-icon ai-icon">
-							<text class="icon-text">🤖</text>
-						</view>
-						<text class="function-title">财务顾问</text>
-					</view>
-					<view class="function-right">
-						<text class="function-count">智能分析</text>
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				<!-- #endif -->
-				<!-- #ifdef APP-PLUS -->
-				<view class="function-item" v-if="data.userInfo.isLogin" @click="goToAIChat">
-					<view class="function-left">
-						<view class="function-icon ai-icon">
-							<text class="icon-text">🤖</text>
-						</view>
-						<text class="function-title">财务顾问</text>
-					</view>
-					<view class="function-right">
-						<text class="function-count">智能分析</text>
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				<!-- #endif -->
-				
-				<!-- 意见反馈 -->
-				<view class="function-item" @click="goToFeedback">
-					<view class="function-left">
-						<view class="function-icon feedback-icon">
-							<text class="icon-text">📝</text>
-						</view>
-						<text class="function-title">意见反馈</text>
-					</view>
-					<view class="function-right">
-						<text class="arrow">›</text>
-					</view>
-				</view>
-				
-				<!-- 系统设置 -->
-				<view class="function-item" @click="goToSettings">
-					<view class="function-left">
-						<view class="function-icon settings-icon">
-							<text class="icon-text">⚙️</text>
-						</view>
-						<text class="function-title">系统设置</text>
-					</view>
-					<view class="function-right">
+						<text class="function-desc reminder-desc" v-if="data.reminderTime">每天 {{ data.reminderTime }}</text>
+						<text class="function-desc inactive" v-else>未开启</text>
 						<text class="arrow">›</text>
 					</view>
 				</view>
@@ -163,6 +194,49 @@
 					</view>
 				</button>
 				<!-- #endif -->
+				
+				<!-- AI财务顾问 - 小程序端和APP端都可用 -->
+				<!-- #ifdef MP-WEIXIN -->
+				<view class="function-item" v-if="data.appConfig.show_ai_advisor_wechat" @click="goToAIChat">
+					<view class="function-left">
+						<view class="function-icon ai-icon">
+							<text class="icon-text">🤖</text>
+						</view>
+						<text class="function-title">财务顾问</text>
+					</view>
+					<view class="function-right">
+						<text class="function-desc ai-desc">智能分析</text>
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				<!-- #endif -->
+				<!-- #ifdef APP-PLUS -->
+				<view class="function-item" v-if="data.userInfo.isLogin" @click="goToAIChat">
+					<view class="function-left">
+						<view class="function-icon ai-icon">
+							<text class="icon-text">🤖</text>
+						</view>
+						<text class="function-title">财务顾问</text>
+					</view>
+					<view class="function-right">
+						<text class="function-desc ai-desc">智能分析</text>
+						<text class="arrow">›</text>
+					</view>
+				</view>
+				<!-- #endif -->
+				
+				<!-- 系统设置 -->
+				<view class="function-item" @click="goToSettings">
+					<view class="function-left">
+						<view class="function-icon settings-icon">
+							<text class="icon-text">⚙️</text>
+						</view>
+						<text class="function-title">系统设置</text>
+					</view>
+					<view class="function-right">
+						<text class="arrow">›</text>
+					</view>
+				</view>
 			</view>
 			
 		</view>
@@ -190,11 +264,8 @@
 		<view class="level-modal" v-if="data.showLevelModal" @click="closeLevelModal">
 			<view class="level-modal-content" @click.stop>
 				<view class="modal-header">
-					<view class="modal-icon-wrapper">
-						<view class="modal-icon" :style="{ background: data.memberLevel.gradient }">
-							<text class="modal-icon-text">{{ data.memberLevel.icon }}</text>
-						</view>
-						<view class="icon-glow" :style="{ background: data.memberLevel.gradient, opacity: 0.3 }"></view>
+					<view class="modal-icon" :style="{ background: data.memberLevel.gradient }">
+						<text class="modal-icon-text">{{ data.memberLevel.icon }}</text>
 					</view>
 					<text class="modal-title">{{ data.memberLevel.name }}</text>
 					<text class="modal-desc">{{ data.memberLevel.desc }}</text>
@@ -216,7 +287,7 @@
 					
 					<!-- 下一等级 -->
 					<view class="next-level-card" v-if="data.memberLevel.nextLevel">
-						<view class="next-level-header">
+						<view class="next-level-info">
 							<view class="next-level-badge" :style="{ background: data.memberLevel.nextLevel.gradient }">
 								<text class="next-level-icon">{{ data.memberLevel.nextLevel.icon }}</text>
 							</view>
@@ -225,29 +296,12 @@
 								<text class="next-level-tip">还需 {{ data.memberLevel.progress?.pointsNeeded || 0 }} 积分</text>
 							</view>
 						</view>
-						
-						<!-- 进度条 -->
-						<view class="progress-section">
-							<view class="progress-bar">
-								<view 
-									class="progress-fill" 
-									:style="{ 
-										width: (data.memberLevel.progress?.percentage || 0) + '%',
-										background: data.memberLevel.gradient 
-									}"
-								>
-									<view class="progress-shine"></view>
-								</view>
-							</view>
-							<text class="progress-text">{{ data.memberLevel.progress?.percentage || 0 }}%</text>
-						</view>
 					</view>
 					
 					<!-- 满级提示 -->
 					<view class="max-level-card" v-else>
 						<text class="max-level-icon">🎉</text>
 						<text class="max-level-text">已达最高等级</text>
-						<text class="max-level-desc">继续记账，保持好习惯！</text>
 					</view>
 				</view>
 				
@@ -1042,43 +1096,6 @@ const showAbout = () => {
 	})
 }
 
-// 跳转到记账提醒
-const goToReminderSettings = () => {
-	// #ifdef APP-PLUS
-	// APP端：检查登录
-	const userInfo = uni.getStorageSync('userInfo')
-	if (!userInfo || !userInfo.isLogin) {
-		uni.showModal({
-			title: '需要登录',
-			content: '登录后可以设置记账提醒',
-			confirmText: '去登录',
-			cancelText: '稍后',
-			success: (res) => {
-				if (res.confirm) {
-					goToLogin()
-				}
-			}
-		})
-		return
-	}
-	// #endif
-	
-	// #ifdef MP-WEIXIN
-	// 小程序端：直接跳转（已自动登录）
-	// #endif
-	
-	uni.navigateTo({
-		url: '/pages/settings/reminder'
-	})
-}
-
-// 跳转到意见反馈
-const goToFeedback = () => {
-	uni.navigateTo({
-		url: '/pages/settings/feedback'
-	})
-}
-
 // 跳转到系统设置
 const goToSettings = () => {
 	uni.navigateTo({
@@ -1282,6 +1299,36 @@ const handleLogout = () => {
 				}
 			}
 		}
+	})
+}
+
+// 跳转到提醒设置
+const goToReminderSettings = () => {
+	// #ifdef APP-PLUS
+	// APP端：检查登录
+	const userInfo = uni.getStorageSync('userInfo')
+	if (!userInfo || !userInfo.isLogin) {
+		uni.showModal({
+			title: '需要登录',
+			content: '登录后可以设置记账提醒',
+			confirmText: '去登录',
+			cancelText: '稍后',
+			success: (res) => {
+				if (res.confirm) {
+					goToLogin()
+				}
+			}
+		})
+		return
+	}
+	// #endif
+	
+	// #ifdef MP-WEIXIN
+	// 小程序端：直接跳转（已自动登录）
+	// #endif
+	
+	uni.navigateTo({
+		url: '/pages/settings/reminder'
 	})
 }
 
@@ -1580,11 +1627,11 @@ const handleDownloadComplete = () => {
 .page {
 	width: 100%;
 	min-height: 100vh;
-	background: #F5F5F5; /* 浅灰色背景 */
+	background: linear-gradient(180deg, #E8F5E9 0%, #F5F7FA 50%, #FAFBFC 100%); /* 更柔和的三段渐变 */
 	--status-bar-height: 0px;
 }
 
-/* 自定义导航栏 - 透明 */
+/* 自定义导航栏 - 透明，让内容延伸上来 */
 .custom-navbar {
 	position: fixed;
 	top: 0;
@@ -1624,148 +1671,595 @@ const handleDownloadComplete = () => {
 	padding-bottom: 100rpx;
 }
 
-/* 用户信息区域 - 极简版 */
-.user-section {
+/* 用户信息卡片 - 优化渐变和层次感，移除底部圆角 */
+.user-card {
+	background: linear-gradient(135deg, #52C41A 0%, #66BB6A 50%, #73D13D 100%); /* 更柔和的品牌色渐变 */
+	border-radius: 0; /* 移除所有圆角 */
+	padding: $spacing-xl $spacing-lg;
+	padding-top: calc(var(--status-bar-height) + 44px + 60rpx); /* 增加顶部间距 */
+	padding-bottom: 140rpx; /* 进一步增加底部内边距，让绿色区域更高 */
+	margin: 0 0 $spacing-lg 0;
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.25);
+	position: relative;
+	overflow: hidden;
+}
+
+/* 添加波浪形底部装饰 - 增大弧度，添加流动动画 */
+.user-card::before {
+	content: '';
+	position: absolute;
+	bottom: -2rpx;
+	left: 0;
+	right: 0;
+	height: 60rpx; /* 增加高度，让弧度更明显 */
+	background: linear-gradient(180deg, #E8F5E9 0%, #F5F7FA 100%);
+	clip-path: ellipse(120% 100% at 50% 100%); /* 增大弧度 */
+	z-index: 2;
+	animation: wave-flow 8s ease-in-out infinite; /* 添加流动动画 */
+}
+
+@keyframes wave-flow {
+	0%, 100% {
+		clip-path: ellipse(120% 100% at 50% 100%);
+	}
+	50% {
+		clip-path: ellipse(130% 100% at 50% 100%);
+	}
+}
+
+.user-card::after {
+	content: '';
+	position: absolute;
+	top: -100rpx;
+	right: -100rpx;
+	width: 400rpx;
+	height: 400rpx;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+	border-radius: 50%;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.user-header {
+	display: flex;
+	align-items: center;
+	gap: 40rpx;
+	margin-bottom: 20rpx; /* 增加底部边距，让内容更协调 */
+	padding: 0;
+	position: relative;
+	z-index: 1;
+}
+
+.avatar-wrapper {
+	position: relative;
+	width: 140rpx; /* 稍微增大头像 */
+	height: 140rpx;
+}
+
+.avatar {
+	width: 140rpx; /* 稍微增大头像 */
+	height: 140rpx;
+	border-radius: 50%;
+	border: 4rpx solid rgba(255, 255, 255, 0.3); /* 半透明白色边框 */
+	box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15); /* 更明显的阴影 */
+}
+
+.level-badge {
+	position: absolute;
+	bottom: -8rpx;
+	right: -8rpx;
+	width: 48rpx; /* 稍微增大 */
+	height: 48rpx;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 3rpx solid #FFFFFF;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+	animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+	0%, 100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.1);
+	}
+}
+
+.level-icon {
+	font-size: 20rpx; /* 稍微增大 */
+	font-weight: 700;
+	color: #FFFFFF;
+	font-family: 'DIN Alternate', 'Arial', sans-serif;
+	letter-spacing: 0.5rpx;
+	text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.3);
+}
+
+.user-info {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 10rpx;
+}
+
+.nickname-row {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+}
+
+.nickname {
+	font-size: 44rpx; /* 进一步增大字号 */
+	font-weight: $font-weight-bold;
+	color: #FFFFFF; /* 白色文字 */
+	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1); /* 添加文字阴影 */
+}
+
+.edit-icon {
+	font-size: $font-size-base;
+	color: rgba(255, 255, 255, 0.8); /* 白色半透明图标 */
+	opacity: 0.8;
+}
+
+.login-hint {
+	font-size: $font-size-sm;
+	color: rgba(255, 255, 255, 0.9);
+	padding: 6rpx 20rpx;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: $radius-lg;
+	backdrop-filter: blur(10rpx);
+}
+
+.level-row {
+	display: flex;
+	align-items: center;
+	gap: $spacing-xs;
+	padding: 10rpx 24rpx; /* 增加内边距 */
+	background: rgba(255, 255, 255, 0.25); /* 半透明白色背景 */
+	border-radius: $radius-lg;
+	width: fit-content;
+	margin-top: 8rpx; /* 增加上边距 */
+	backdrop-filter: blur(10rpx);
+}
+
+.level-name {
+	font-size: 30rpx; /* 稍微增大字号 */
+	font-weight: $font-weight-semibold;
+	color: #FFFFFF; /* 白色文字 */
+}
+
+.level-arrow {
+	font-size: $font-size-lg;
+	color: rgba(255, 255, 255, 0.9);
+	font-weight: $font-weight-light;
+}
+
+.user-tip {
+	font-size: $font-size-xs;
+	color: rgba(255, 255, 255, 0.75); /* 半透明白色文字 */
+	margin-top: 6rpx;
+	line-height: 1.6;
+}
+
+/* 记账成长卡片 - 现代简洁风格 */
+.level-progress-card {
 	background: #FFFFFF;
-	padding: 40rpx 40rpx 50rpx;
-	padding-top: calc(var(--status-bar-height) + 44px + 40rpx); /* 顶部padding包含状态栏和导航栏高度 */
+	border-radius: 16rpx;
+	padding: 32rpx;
+	margin: 0 $spacing-lg $spacing-lg $spacing-lg;
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+	position: relative;
+	overflow: hidden;
+	border: 1rpx solid #F0F0F0;
+}
+
+.progress-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 24rpx;
+	position: relative;
+	z-index: 1;
+}
+
+.progress-title {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+}
+
+.title-icon {
+	font-size: 32rpx;
+}
+
+.title-text {
+	font-size: 32rpx;
+	font-weight: 600;
+	color: #262626;
+}
+
+.progress-points {
+	display: flex;
+	align-items: baseline;
+	gap: 4rpx;
+	padding: 8rpx 20rpx;
+	background: linear-gradient(135deg, #FFB800 0%, #FF8C00 100%);
+	border-radius: 20rpx;
+	box-shadow: 0 4rpx 12rpx rgba(255, 184, 0, 0.25);
+}
+
+.points-number {
+	font-size: 40rpx;
+	font-weight: 700;
+	color: #FFFFFF;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	line-height: 1;
+}
+
+.points-unit {
+	font-size: 24rpx;
+	color: rgba(255, 255, 255, 0.95);
+	font-weight: 500;
+}
+
+.progress-bar-wrapper {
+	position: relative;
+	z-index: 1;
 	margin-bottom: 20rpx;
 }
 
-.user-info-simple {
+.progress-bar {
+	height: 8rpx;
+	background: #F5F5F5;
+	border-radius: 8rpx;
+	overflow: hidden;
+	position: relative;
+}
+
+.progress-fill {
+	height: 100%;
+	border-radius: 8rpx;
+	transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+	position: relative;
+	overflow: hidden;
+}
+
+.progress-glow {
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+	animation: progress-shine 2.5s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+	0% {
+		left: -100%;
+	}
+	100% {
+		left: 200%;
+	}
+}
+
+.progress-labels {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 12rpx;
+}
+
+.current-level {
+	font-size: 24rpx;
+	color: #8C8C8C;
+	font-weight: 500;
+}
+
+.next-level {
+	font-size: 24rpx;
+	color: $primary-color;
+	font-weight: 600;
+}
+
+.max-level {
+	font-size: 24rpx;
+	color: #FF4D4F;
+	font-weight: 600;
+}
+
+.progress-tip {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8rpx;
+	padding: 16rpx 24rpx;
+	background: transparent;
+	border-radius: 12rpx;
+	border: none;
+	position: relative;
+	z-index: 1;
+}
+
+.progress-tip.max-tip {
+	background: transparent;
+	border: none;
+}
+
+.tip-text {
+	font-size: 24rpx;
+	color: #BFBFBF;
+	font-weight: 400;
+}
+
+.tip-icon {
+	font-size: 28rpx;
+}
+
+.stats-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.3) 100%);
+	padding: $spacing-xl $spacing-lg;
+	margin: 0 $spacing-md $spacing-xl $spacing-md;
+	border-radius: $radius-2xl;
+	backdrop-filter: blur(10rpx);
+	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+}
+
+/* 卡片内部的统计行 - 现代简洁风格 */
+.stats-row-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	background: #FAFAFA;
+	padding: 32rpx 24rpx;
+	margin-top: 24rpx;
+	border-radius: 12rpx;
+	border: 1rpx solid #F0F0F0;
+}
+
+.stat-item {
+	flex: 1;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 24rpx;
+	gap: 8rpx;
+	position: relative;
 }
 
-.user-avatar {
-	width: 120rpx;
-	height: 120rpx;
-	border-radius: 50%;
-	background: #F5F5F5;
+.stat-value {
+	font-size: 44rpx;
+	font-weight: $font-weight-bold;
+	color: #FFFFFF;
+	font-family: 'DIN Alternate', monospace;
+	text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+	line-height: 1;
 }
 
-.user-name {
-	font-size: 36rpx;
-	font-weight: 500;
-	color: #333333;
+/* 卡片内部的统计数值 - 使用主题色 */
+.stats-row-inner .stat-value {
+	color: $primary-color;
+	text-shadow: none;
+	font-weight: 700;
+	font-size: 48rpx;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-/* 功能列表 - 极简风格 */
+.stat-label {
+	font-size: $font-size-sm;
+	color: rgba(255, 255, 255, 0.95);
+	text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.2);
+	font-weight: $font-weight-medium;
+}
+
+/* 卡片内部的统计标签 - 简洁版 */
+.stats-row-inner .stat-label {
+	color: #8C8C8C;
+	text-shadow: none;
+	font-weight: 400;
+	font-size: 24rpx;
+}
+
+.stat-divider {
+	width: 2rpx;
+	height: 60rpx;
+	background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+}
+
+/* 卡片内部的分隔线 - 使用更柔和的渐变 */
+.stats-row-inner .stat-divider {
+	height: 56rpx;
+	background: linear-gradient(180deg, transparent 0%, #E0E0E0 50%, transparent 100%);
+}
+
+/* 功能列表 - 优化层次感和间距 */
 .function-list {
-	background: #FFFFFF;
+	background: $bg-white;
+	border-radius: 24rpx; /* 更大的圆角 */
+	padding: $spacing-md;
+	margin: $spacing-lg $spacing-lg $spacing-xl $spacing-lg; /* 增加左右边距 */
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06); /* 更柔和的阴影 */
 }
 
 .function-item {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 32rpx 40rpx;
-	border-bottom: 1rpx solid #F0F0F0;
-	transition: background 0.2s;
+	padding: $spacing-lg $spacing-md;
+	border-radius: 16rpx; /* 更大的圆角 */
+	transition: all $transition-fast;
+	margin-bottom: $spacing-sm;
+	position: relative;
+	overflow: hidden;
+}
+
+.function-item::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 0;
+	background: linear-gradient(90deg, rgba(82, 196, 26, 0.08) 0%, transparent 100%);
+	transition: width $transition-fast;
 }
 
 .function-item:active {
-	background: #F8F8F8;
+	background: linear-gradient(135deg, #F0FFF4 0%, #FAFAFA 100%);
+	transform: scale(0.98);
+}
+
+.function-item:active::before {
+	width: 100%;
 }
 
 .function-item:last-child {
-	border-bottom: none;
+	margin-bottom: 0;
 }
 
 /* 分享按钮样式重置 */
 .share-button {
 	background: transparent;
 	border: none;
-	padding: 32rpx 40rpx;
-	margin: 0;
+	padding: $spacing-lg $spacing-md;
+	margin: 0 0 $spacing-sm 0;
 	line-height: normal;
 	text-align: left;
 	width: 100%;
-	border-bottom: 1rpx solid #F0F0F0;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	border-radius: 16rpx;
+	position: relative;
+	overflow: hidden;
 }
 
 .share-button::after {
 	border: none;
 }
 
-.share-button:active {
-	background: #F8F8F8;
+.share-button::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 0;
+	background: linear-gradient(90deg, rgba(82, 196, 26, 0.08) 0%, transparent 100%);
+	transition: width $transition-fast;
+}
+
+.share-button:active::before {
+	width: 100%;
 }
 
 .function-left {
 	display: flex;
 	align-items: center;
-	gap: 24rpx;
+	gap: $spacing-lg;
+}
+
+.function-info {
+	display: flex;
+	flex-direction: column;
+	gap: 4rpx;
 }
 
 .function-icon {
-	width: 48rpx;
-	height: 48rpx;
+	width: 72rpx; /* 稍微增大 */
+	height: 72rpx;
+	border-radius: 18rpx; /* 更大的圆角 */
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08); /* 更明显的阴影 */
 	flex-shrink: 0;
+	position: relative;
+	overflow: hidden;
+}
+
+.function-icon::before {
+	content: '';
+	position: absolute;
+	top: -50%;
+	right: -50%;
+	width: 200%;
+	height: 200%;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+}
+
+.ai-icon {
+	background: linear-gradient(135deg, #FA8C16 0%, #FFA940 100%);
+}
+
+.phone-icon {
+	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+}
+
+.share-icon {
+	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+}
+
+.reminder-icon {
+	background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%); /* 使用主题色变量 */
+}
+
+.export-icon {
+	background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
+}
+
+.about-icon {
+	background: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
+}
+
+.settings-icon {
+	background: linear-gradient(135deg, #722ED1 0%, #9254DE 100%);
+}
+
+.update-icon {
+	background: linear-gradient(135deg, #FA8C16 0%, #FFA940 100%);
 }
 
 .icon-text {
-	font-size: 40rpx;
+	font-size: 32rpx; /* 美团风格：稍小的图标 */
 }
 
 .function-title {
-	font-size: 32rpx;
-	font-weight: 400;
-	color: #333333;
+	font-size: $font-size-lg;
+	font-weight: $font-weight-medium;
+	color: #595959; /* 使用更柔和的深灰色，不那么黑 */
+	letter-spacing: 0.3rpx;
 }
 
 .function-right {
 	display: flex;
 	align-items: center;
-	gap: 16rpx;
+	gap: $spacing-sm;
 }
 
-.function-count {
-	font-size: 28rpx;
-	color: #999999;
+.function-desc {
+	font-size: $font-size-base;
+	color: $primary-color; /* 使用主题色，更醒目 */
+	font-weight: $font-weight-medium;
 }
 
-.function-count.inactive {
-	color: #CCCCCC;
+.function-desc.reminder-desc {
+	color: #73D13D; /* 记账提醒用淡一点的绿色 */
+}
+
+.function-desc.ai-desc {
+	color: #FFA940; /* 财务顾问用柔和的橙色 */
+}
+
+.function-desc.inactive {
+	color: #BFBFBF; /* 未开启时使用更浅的灰色 */
 }
 
 .arrow {
-	font-size: 40rpx;
-	color: #CCCCCC;
-	font-weight: 300;
-}
-
-/* 图标颜色 */
-.level-icon {
-	/* 不需要背景色，只显示emoji */
-}
-
-.reminder-icon {
-	/* 不需要背景色，只显示emoji */
-}
-
-.ai-icon {
-	/* 不需要背景色，只显示emoji */
-}
-
-.feedback-icon {
-	/* 不需要背景色，只显示emoji */
-}
-
-.settings-icon {
-	/* 不需要背景色，只显示emoji */
-}
-
-.share-icon {
-	/* 不需要背景色，只显示emoji */
+	font-size: $font-size-3xl;
+	color: $text-tertiary;
+	font-weight: $font-weight-light;
 }
 
 /* 退出登录区域 */
@@ -1927,96 +2421,72 @@ const handleDownloadComplete = () => {
 
 .level-modal-content {
 	width: 100%;
-	max-width: 580rpx;
+	max-width: 560rpx;
 	background: #FFFFFF;
-	border-radius: 24rpx;
+	border-radius: $radius-xl; /* 美团风格：16rpx圆角 */
 	overflow: hidden;
-	animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-	box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
-	position: relative;
+	animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes scaleIn {
 	from {
-		transform: scale(0.9) translateY(20rpx);
+		transform: scale(0.8);
 		opacity: 0;
 	}
 	to {
-		transform: scale(1) translateY(0);
+		transform: scale(1);
 		opacity: 1;
 	}
 }
 
 .modal-header {
-	padding: 48rpx 32rpx 36rpx;
+	padding: 48rpx 32rpx 32rpx;
 	text-align: center;
-	background: #FFFFFF;
-	position: relative;
-}
-
-.modal-icon-wrapper {
-	position: relative;
-	display: inline-block;
-	margin-bottom: 24rpx;
+	background: linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%);
 }
 
 .modal-icon {
-	width: 88rpx;
+	width: 88rpx; /* 美团风格：稍小的图标 */
 	height: 88rpx;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin: 0 auto;
-	box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.12);
-	position: relative;
-	z-index: 2;
-}
-
-.icon-glow {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 110rpx;
-	height: 110rpx;
-	border-radius: 50%;
-	filter: blur(16rpx);
-	z-index: 1;
+	margin: 0 auto 20rpx;
+	box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
 }
 
 .modal-icon-text {
-	font-size: 44rpx;
+	font-size: 44rpx; /* 美团风格：稍小的字号 */
 	color: #FFFFFF;
 	font-weight: bold;
 }
 
 .modal-title {
 	display: block;
-	font-size: 34rpx;
-	font-weight: 700;
-	color: #1A1A1A;
+	font-size: 32rpx; /* 美团风格：稍小的字号 */
+	font-weight: bold;
+	color: #333;
 	margin-bottom: 12rpx;
-	letter-spacing: 0.5rpx;
 }
 
 .modal-desc {
 	display: block;
 	font-size: 26rpx;
 	color: #999;
-	line-height: 1.6;
+	line-height: 1.5;
 }
 
 .modal-body {
-	padding: 0 32rpx 32rpx;
+	padding: 32rpx;
 }
 
-/* 当前数据卡片 */
+/* 当前数据卡片 - 美团风格 */
 .data-card {
 	display: flex;
-	background: #F8F8F8;
-	border-radius: 16rpx;
-	padding: 28rpx 24rpx;
+	background: linear-gradient(135deg, #F8F8F8 0%, #FAFAFA 100%);
+	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	padding: 28rpx 20rpx; /* 美团风格：更紧凑 */
 	margin-bottom: 24rpx;
 }
 
@@ -2025,12 +2495,12 @@ const handleDownloadComplete = () => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 12rpx;
+	gap: 8rpx;
 }
 
 .data-value {
-	font-size: 44rpx;
-	font-weight: 700;
+	font-size: 40rpx; /* 美团风格：稍小的字号 */
+	font-weight: bold;
 	color: #333;
 	font-family: 'DIN Alternate', monospace;
 	line-height: 1;
@@ -2039,34 +2509,32 @@ const handleDownloadComplete = () => {
 .data-label {
 	font-size: 24rpx;
 	color: #999;
-	font-weight: 500;
 }
 
 .data-divider {
 	width: 2rpx;
-	background: linear-gradient(180deg, transparent 0%, #D9D9D9 50%, transparent 100%);
-	margin: 0 20rpx;
+	background: linear-gradient(180deg, transparent 0%, #E0E0E0 50%, transparent 100%);
+	margin: 0 16rpx;
 }
 
-/* 下一等级卡片 */
+/* 下一等级卡片 - 美团风格 */
 .next-level-card {
 	background: #FFFFFF;
 	border: 2rpx solid #F0F0F0;
-	border-radius: 16rpx;
-	padding: 24rpx;
+	border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+	padding: 20rpx; /* 美团风格：更紧凑 */
 	margin-bottom: 24rpx;
 }
 
-.next-level-header {
+.next-level-info {
 	display: flex;
 	align-items: center;
 	gap: 16rpx;
-	margin-bottom: 20rpx;
 }
 
 .next-level-badge {
-	width: 60rpx;
-	height: 60rpx;
+	width: 56rpx;
+	height: 56rpx;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -2076,7 +2544,7 @@ const handleDownloadComplete = () => {
 }
 
 .next-level-icon {
-	font-size: 30rpx;
+	font-size: 28rpx;
 	color: #FFFFFF;
 	font-weight: bold;
 }
@@ -2085,13 +2553,13 @@ const handleDownloadComplete = () => {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 6rpx;
+	gap: 4rpx;
 }
 
 .next-level-name {
 	font-size: 28rpx;
-	font-weight: 700;
-	color: #1A1A1A;
+	font-weight: bold;
+	color: #333;
 }
 
 .next-level-tip {
@@ -2099,84 +2567,26 @@ const handleDownloadComplete = () => {
 	color: #999;
 }
 
-/* 进度条区域 */
-.progress-section {
-	display: flex;
-	align-items: center;
-	gap: 16rpx;
-}
-
-.progress-bar {
-	flex: 1;
-	height: 10rpx;
-	background: #F0F0F0;
-	border-radius: 5rpx;
-	overflow: hidden;
-	position: relative;
-}
-
-.progress-fill {
-	height: 100%;
-	border-radius: 5rpx;
-	position: relative;
-	transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.progress-shine {
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-	animation: shine 2s ease-in-out infinite;
-}
-
-@keyframes shine {
-	0% {
-		left: -100%;
-	}
-	50%, 100% {
-		left: 100%;
-	}
-}
-
-.progress-text {
-	font-size: 24rpx;
-	font-weight: 700;
-	color: #52C41A;
-	font-family: 'DIN Alternate', monospace;
-	min-width: 60rpx;
-	text-align: right;
-}
-
 /* 满级卡片 */
 .max-level-card {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 12rpx;
-	padding: 36rpx 32rpx;
-	background: #FFF7E6;
-	border-radius: 16rpx;
+	padding: 32rpx;
+	background: linear-gradient(135deg, #FFF7E6 0%, #FFF1F0 100%);
+	border-radius: 20rpx;
 	margin-bottom: 24rpx;
 }
 
 .max-level-icon {
-	font-size: 52rpx;
+	font-size: 48rpx;
 }
 
 .max-level-text {
-	font-size: 30rpx;
-	font-weight: 700;
+	font-size: 28rpx;
+	font-weight: bold;
 	color: #FF4D4F;
-	letter-spacing: 0.5rpx;
-}
-
-.max-level-desc {
-	font-size: 24rpx;
-	color: #999;
 }
 
 /* 弹框底部 */
@@ -2187,11 +2597,11 @@ const handleDownloadComplete = () => {
 
 .modal-btn {
 	flex: 1;
-	padding: 20rpx;
-	border-radius: 12rpx;
+	padding: 24rpx;
+	border-radius: 24rpx;
 	text-align: center;
-	box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
-	transition: all 0.2s ease;
+	box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
+	transition: all 0.3s ease;
 }
 
 .modal-btn:active {
@@ -2199,10 +2609,9 @@ const handleDownloadComplete = () => {
 }
 
 .modal-btn-text {
-	font-size: 28rpx;
-	font-weight: 600;
+	font-size: 30rpx;
+	font-weight: bold;
 	color: #FFFFFF;
-	letter-spacing: 0.5rpx;
 }
 
 /* 昵称修改弹框 */
@@ -2388,12 +2797,12 @@ const handleDownloadComplete = () => {
 	justify-content: center;
 	z-index: 10000;
 	animation: fadeIn 0.3s ease;
-	padding: 80rpx;
+	padding: 80rpx 32rpx;
 }
 
 .points-modal-content {
 	width: 100%;
-	max-width: 600rpx;
+	max-width: 640rpx;
 	background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 	border-radius: 32rpx;
 	overflow: hidden;
@@ -2403,7 +2812,7 @@ const handleDownloadComplete = () => {
 
 .points-header {
 	position: relative;
-	padding: 32rpx 32rpx 20rpx;
+	padding: 24rpx 32rpx 16rpx;
 	text-align: center;
 	background: linear-gradient(135deg, #52C41A 0%, #66BB6A 50%, #73D13D 100%);
 	overflow: hidden;
@@ -2489,18 +2898,18 @@ const handleDownloadComplete = () => {
 }
 
 .points-body {
-	padding: 20rpx 28rpx;
+	padding: 16rpx 32rpx;
 }
 
 .points-stats {
 	display: flex;
 	align-items: center;
 	justify-content: space-around;
-	padding: 20rpx;
+	padding: 16rpx;
 	background: linear-gradient(135deg, #FFFFFF 0%, #F0FFF4 100%);
 	border-radius: 20rpx;
 	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-	margin-bottom: 16rpx;
+	margin-bottom: 12rpx;
 }
 
 .points-stat-item {
@@ -2535,7 +2944,7 @@ const handleDownloadComplete = () => {
 }
 
 .points-rules {
-	margin-bottom: 16rpx;
+	margin-bottom: 12rpx;
 }
 
 .rules-title {
@@ -2557,7 +2966,7 @@ const handleDownloadComplete = () => {
 .rule-item {
 	display: flex;
 	align-items: center;
-	padding: 14rpx 18rpx;
+	padding: 12rpx 16rpx;
 	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 	border-radius: 16rpx;
 	border: 2rpx solid rgba(0, 0, 0, 0.04);
@@ -2612,7 +3021,8 @@ const handleDownloadComplete = () => {
 }
 
 .points-footer {
-	padding: 0 28rpx 24rpx;
+	padding: 0 32rpx 24rpx;
+	box-sizing: border-box;
 }
 
 .points-btn {
@@ -2625,6 +3035,7 @@ const handleDownloadComplete = () => {
 	transition: all 0.2s ease;
 	position: relative;
 	overflow: hidden;
+	box-sizing: border-box;
 }
 
 .points-btn::before {

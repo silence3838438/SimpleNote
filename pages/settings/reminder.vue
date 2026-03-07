@@ -46,25 +46,6 @@
 			</view>
 		</view>
 		
-		<!-- #ifdef APP-PLUS -->
-		<!-- APP 端提示卡片 -->
-		<view class="tips-card">
-			<view class="tips-header">
-				<text class="tips-icon">💡</text>
-				<text class="tips-title">温馨提示</text>
-			</view>
-			<view class="tips-content">
-				<text class="tips-text">APP 端推送功能正在优化中，目前可能无法稳定接收提醒通知。</text>
-				<text class="tips-text">建议使用小程序版本开启记账提醒，推送更稳定可靠。</text>
-			</view>
-			<view class="tips-footer">
-				<text class="tips-note">* 服务端推送功能已集成，后续版本将持续优化</text>
-			</view>
-		</view>
-		<!-- #endif -->
-		
-
-		
 		<!-- 保存按钮 -->
 		<view class="save-btn-area">
 			<button class="save-btn" @click="saveAndSubscribe" :disabled="data.saving || data.selectedTime === '未设置'">
@@ -645,25 +626,44 @@ const saveSubscriptionToCloud = async (clientId = null) => {
 
 .save-btn-area {
 	position: fixed;
-	bottom: 40rpx;
+	bottom: 20rpx;
 	left: 0;
 	right: 0;
-	padding: $spacing-md $spacing-xl;
-	background: linear-gradient(180deg, rgba(247, 248, 250, 0) 0%, rgba(247, 248, 250, 0.6) 30%, rgba(247, 248, 250, 0.95) 100%);
-	backdrop-filter: blur(10rpx);
+	padding: $spacing-md $spacing-xl $spacing-xl;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.98) 15%, $bg-white 100%);
+	backdrop-filter: blur(20rpx);
+	z-index: 100;
 }
 
 .save-btn {
 	width: 100%;
 	height: 88rpx;
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	background: $gradient-primary;
 	color: $text-white;
-	border-radius: 25rpx;
+	border-radius: 35rpx;
 	font-size: $font-size-lg;
 	font-weight: $font-weight-bold;
 	border: none;
 	box-shadow: 0 6rpx 20rpx rgba(82, 196, 26, 0.3);
 	transition: all $transition-fast;
+	position: relative;
+	overflow: hidden;
+	letter-spacing: 2rpx;
+}
+
+.save-btn::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+	transition: left 0.6s;
+}
+
+.save-btn:active::before {
+	left: 100%;
 }
 
 .save-btn:active {

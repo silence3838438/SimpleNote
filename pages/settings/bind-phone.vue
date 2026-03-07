@@ -376,7 +376,7 @@ onLoad(async () => {
 .page {
 	width: 100%;
 	min-height: 100vh;
-	background: $bg-light;
+	background: #F7F8FA;
 }
 
 /* 自定义导航栏 */
@@ -385,8 +385,8 @@ onLoad(async () => {
 	top: 0;
 	left: 0;
 	right: 0;
-	background: $bg-white;
-	border-bottom: 1rpx solid $border-light;
+	background: #FFFFFF;
+	border-bottom: 1rpx solid #EBEDF0;
 	z-index: 1000;
 }
 
@@ -399,24 +399,22 @@ onLoad(async () => {
 }
 
 .navbar-left {
-	min-width: 120rpx; /* 增大点击区域 */
-	height: 100%; /* 占满导航栏高度 */
+	width: 80rpx;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	padding-right: 20rpx; /* 增加右侧内边距，扩大点击区域 */
 }
 
 .back-icon {
-	font-size: 56rpx; /* 增大箭头图标 */
+	font-size: 56rpx;
 	color: $text-primary;
 	font-weight: $font-weight-light;
-	line-height: 1;
 }
 
 .navbar-title {
 	font-size: $font-size-lg;
-	font-weight: $font-weight-bold;
+	font-weight: $font-weight-semibold;
 	color: $text-primary;
 }
 
@@ -426,98 +424,95 @@ onLoad(async () => {
 
 .container {
 	min-height: 100vh;
-	padding: 40rpx $spacing-lg 100rpx;
+	padding: 32rpx $spacing-lg 100rpx;
 }
 
 /* 绑定状态卡片 */
 .status-card {
-	background: $bg-white;
+	background: #FFFFFF;
 	border-radius: $radius-lg;
-	padding: 60rpx $spacing-xl;
+	padding: 48rpx $spacing-xl;
 	margin-bottom: $spacing-lg;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	box-shadow: $shadow-card;
 }
 
 .status-icon {
-	width: 120rpx;
-	height: 120rpx;
+	width: 96rpx;
+	height: 96rpx;
 	border-radius: 50%;
-	background: linear-gradient(135deg, #E8E8E8 0%, #F0F0F0 100%);
+	background: #F7F8FA;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-bottom: $spacing-lg;
+	margin-bottom: $spacing-md;
 }
 
 .status-icon.bound {
-	background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+	background: $primary-color;
 }
 
 .icon-text {
-	font-size: 60rpx;
+	font-size: 48rpx;
 }
 
 .status-title {
-	font-size: $font-size-xl;
-	font-weight: $font-weight-bold;
+	font-size: $font-size-lg;
+	font-weight: $font-weight-medium;
 	color: $text-primary;
-	margin-bottom: $spacing-sm;
+	margin-bottom: $spacing-xs;
 }
 
 .status-desc {
-	font-size: $font-size-base;
+	font-size: $font-size-sm;
 	color: $text-secondary;
 	text-align: center;
-	line-height: 1.6;
+	line-height: 1.5;
 }
 
 /* 表单卡片 */
 .form-card {
-	background: $bg-white;
+	background: #FFFFFF;
 	border-radius: $radius-lg;
-	padding: $spacing-xl;
-	box-shadow: $shadow-card;
+	padding: $spacing-lg;
 }
 
 .form-item {
-	margin-bottom: $spacing-xl;
+	margin-bottom: $spacing-lg;
 }
 
 .form-label {
 	display: flex;
 	align-items: center;
-	margin-bottom: $spacing-sm;
+	margin-bottom: 12rpx;
 }
 
 .label-text {
-	font-size: $font-size-base;
-	color: $text-primary;
-	font-weight: $font-weight-medium;
+	font-size: $font-size-sm;
+	color: $text-secondary;
+	font-weight: $font-weight-normal;
 }
 
 .label-required {
-	font-size: $font-size-base;
+	font-size: $font-size-sm;
 	color: #FF4D4F;
 	margin-left: 4rpx;
 }
 
 .form-input {
 	width: 100%;
-	height: 88rpx;
-	background: $bg-light;
+	height: 80rpx;
+	background: #F7F8FA;
 	border-radius: $radius-md;
 	padding: 0 $spacing-lg;
-	font-size: $font-size-lg;
+	font-size: $font-size-base;
 	color: $text-primary;
-	border: 2rpx solid transparent;
-	transition: all $transition-fast;
+	border: 1rpx solid #EBEDF0;
 }
 
 .form-input:focus {
-	background: $bg-white;
+	background: #FFFFFF;
 	border-color: $primary-color;
 }
 
@@ -537,28 +532,25 @@ onLoad(async () => {
 
 .send-code-btn {
 	flex-shrink: 0;
-	padding: 0 $spacing-lg;
-	height: 88rpx;
-	background: $gradient-primary;
+	padding: 0 24rpx;
+	height: 64rpx;
+	background: $primary-color;
 	border-radius: $radius-md;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: $shadow-sm;
-	transition: all $transition-fast;
 }
 
 .send-code-btn.disabled {
-	background: $bg-light;
-	box-shadow: none;
+	background: #F0F0F0;
 }
 
 .send-code-btn:active:not(.disabled) {
-	transform: scale(0.96);
+	opacity: 0.8;
 }
 
 .send-code-text {
-	font-size: $font-size-base;
+	font-size: 26rpx;
 	color: $text-white;
 	font-weight: $font-weight-medium;
 	white-space: nowrap;
@@ -569,72 +561,66 @@ onLoad(async () => {
 }
 
 .form-tips {
-	padding: $spacing-lg;
-	background: linear-gradient(135deg, #F0FFF4 0%, #F8FFF9 100%);
+	padding: $spacing-md $spacing-lg;
+	background: #F7F8FA;
 	border-radius: $radius-md;
-	border-left: 4rpx solid $primary-color;
-	margin-bottom: $spacing-xl;
+	margin-bottom: $spacing-lg;
 }
 
 .tip-item {
 	display: block;
-	font-size: $font-size-sm;
-	color: $text-secondary;
-	line-height: 2;
+	font-size: 24rpx;
+	color: $text-tertiary;
+	line-height: 1.8;
 }
 
 .submit-btn {
 	width: 100%;
-	height: 96rpx;
-	background: $gradient-primary;
-	border-radius: 48rpx;
+	height: 80rpx;
+	background: $primary-color;
+	border-radius: $radius-lg;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: $shadow-md;
-	transition: all $transition-fast;
 }
 
 .submit-btn:active {
-	transform: scale(0.98);
+	opacity: 0.8;
 }
 
 .submit-text {
-	font-size: $font-size-lg;
+	font-size: $font-size-base;
 	color: $text-white;
-	font-weight: $font-weight-bold;
+	font-weight: $font-weight-semibold;
 }
 
 /* 操作卡片 */
 .action-card {
-	background: $bg-white;
+	background: #FFFFFF;
 	border-radius: $radius-lg;
-	padding: $spacing-lg;
-	box-shadow: $shadow-card;
+	padding: 8rpx;
 }
 
 .action-item {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: $spacing-lg;
+	padding: $spacing-md $spacing-lg;
 	border-radius: $radius-md;
-	transition: all $transition-fast;
 }
 
 .action-item:active {
-	background: $bg-light;
-	transform: scale(0.98);
+	background: #F7F8FA;
 }
 
 .action-text {
-	font-size: $font-size-lg;
+	font-size: $font-size-sm;
 	color: #FF4D4F;
-	font-weight: $font-weight-medium;
+	font-weight: $font-weight-normal;
 }
 
 .action-arrow {
-	font-size: $font-size-3xl;
+	font-size: 32rpx;
 	color: $text-tertiary;
 	font-weight: $font-weight-light;
 }

@@ -1,29 +1,17 @@
 <template>
 	<view class="page">
-		<!-- 自定义导航栏（带风景图片背景） -->
-		<view class="custom-navbar-wrapper">
-			<!-- 风景图片背景 -->
-			<image 
-				class="navbar-bg-image" 
-				src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/homebg2.png" 
-				mode="aspectFill"
-			></image>
-			<!-- 渐变遮罩 -->
-			<view class="navbar-gradient-mask"></view>
-			
-			<!-- 导航栏内容 -->
-			<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-				<view class="navbar-content">
-					<view class="navbar-left"></view>
-					<view class="navbar-title">
-						<!-- 标题已移除 -->
-					</view>
-					<view class="navbar-right"></view>
+		<!-- 自定义导航栏（随手记风格） -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left"></view>
+				<view class="navbar-title">
+					<text class="title-text">统计</text>
 				</view>
+				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
-		<view class="container">
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 时间筛选 -->
 			<view class="filter-wrapper">
 				<view class="time-filter">
@@ -49,10 +37,7 @@
 		<!-- 收支总览 -->
 		<view class="overview-card">
 			<view class="overview-header">
-				<view class="overview-title-wrapper">
-					<text class="overview-title">收支总览</text>
-					<text class="overview-subtitle">{{ getFilterLabel() }}数据</text>
-				</view>
+				<text class="overview-title">收支总览</text>
 				<!-- 生成海报按钮 - 只在12月显示（年度账单） -->
 				<view class="poster-btn-mini" v-if="data.billCount > 0 && isDecember()" @click="generatePoster">
 					<text class="poster-icon-mini">📸</text>
@@ -194,61 +179,59 @@
 		</view>
 		
 		<!-- 自定义时间选择弹窗 -->
-		<view class="custom-time-modal" v-if="data.showCustomPicker" @click="closeCustomPicker">
-			<view class="calendar-picker" @click.stop>
-				<view class="calendar-header">
-					<view class="calendar-nav">
-						<text class="nav-arrow" @click="prevMonth">‹</text>
-						<text class="calendar-title">{{ data.calendarYear }}年{{ data.calendarMonth }}月</text>
-						<text class="nav-arrow" @click="nextMonth">›</text>
-					</view>
-					<text class="calendar-close" @click="closeCustomPicker">✕</text>
+		<view class="custom-picker-modal" v-if="data.showCustomPicker" @click="closeCustomPicker">
+			<view class="picker-content" @click.stop>
+				<view class="picker-header">
+					<text class="picker-cancel" @click="closeCustomPicker">取消</text>
+					<text class="picker-title">{{ data.selectingStart ? '选择开始日期' : '选择结束日期' }}</text>
+					<text class="picker-confirm" @click="confirmDateSelection">{{ data.selectingStart ? '下一步' : '完成' }}</text>
 				</view>
 				
+				<!-- 日期范围显示 -->
 				<view class="date-range-display">
-					<view class="date-input" :class="{ 'active': data.selectingStart }" @click="data.selectingStart = true">
-						<text class="input-label">开始日期</text>
-						<text class="input-value">{{ data.customStartDate || '请选择' }}</text>
+					<view class="date-display-item" :class="{ 'active': data.selectingStart }">
+						<text class="date-label">开始</text>
+						<text class="date-value">{{ data.customStartDate || '请选择' }}</text>
 					</view>
-					<text class="date-separator">-</text>
-					<view class="date-input" :class="{ 'active': !data.selectingStart }" @click="data.selectingStart = false">
-						<text class="input-label">结束日期</text>
-						<text class="input-value">{{ data.customEndDate || '请选择' }}</text>
-					</view>
-				</view>
-				
-				<view class="calendar-weekdays">
-					<text class="weekday">日</text>
-					<text class="weekday">一</text>
-					<text class="weekday">二</text>
-					<text class="weekday">三</text>
-					<text class="weekday">四</text>
-					<text class="weekday">五</text>
-					<text class="weekday">六</text>
-				</view>
-				
-				<view class="calendar-days">
-					<view 
-						v-for="(day, index) in data.calendarDays" 
-						:key="index"
-						class="calendar-day"
-						:class="{
-							'other-month': !day.isCurrentMonth,
-							'start-date': day.isStart,
-							'end-date': day.isEnd,
-							'in-range': day.inRange,
-							'today': day.isToday
-						}"
-						@click="selectDate(day)"
-					>
-						<text class="day-text">{{ day.day }}</text>
+					<text class="date-separator">至</text>
+					<view class="date-display-item" :class="{ 'active': !data.selectingStart }">
+						<text class="date-label">结束</text>
+						<text class="date-value">{{ data.customEndDate || '请选择' }}</text>
 					</view>
 				</view>
 				
-				<view class="calendar-footer">
-					<view class="footer-btn cancel-btn" @click="closeCustomPicker">取消</view>
-					<view class="footer-btn confirm-btn" @click="confirmCustomTime">确认</view>
-				</view>
+				<picker-view class="picker-view" :value="data.pickerValue" @change="onPickerChange" indicator-style="height: 50px">
+					<picker-view-column>
+						<view 
+							class="picker-item" 
+							:class="{ 'picker-item-selected': index === data.pickerValue[0] }"
+							v-for="(year, index) in data.years" 
+							:key="year"
+						>
+							{{ year }}年
+						</view>
+					</picker-view-column>
+					<picker-view-column>
+						<view 
+							class="picker-item" 
+							:class="{ 'picker-item-selected': index === data.pickerValue[1] }"
+							v-for="(month, index) in data.months" 
+							:key="month"
+						>
+							{{ month }}月
+						</view>
+					</picker-view-column>
+					<picker-view-column>
+						<view 
+							class="picker-item" 
+							:class="{ 'picker-item-selected': index === data.pickerValue[2] }"
+							v-for="(day, index) in data.days" 
+							:key="day"
+						>
+							{{ day }}日
+						</view>
+					</picker-view-column>
+				</picker-view>
 			</view>
 		</view>
 </view>
@@ -284,10 +267,15 @@ const data = reactive({
 	showCustomPicker: false,
 	customStartDate: null,
 	customEndDate: null,
-	calendarYear: new Date().getFullYear(),
-	calendarMonth: new Date().getMonth() + 1,
-	calendarDays: [],
 	selectingStart: true, // true表示正在选择开始日期，false表示选择结束日期
+	// picker-view 相关
+	years: [],
+	months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+	days: [],
+	pickerValue: [0, 0, 0],
+	tempYear: 0,
+	tempMonth: 0,
+	tempDay: 0,
 	// 隐藏金额状态
 	hideIncome: false,
 	hideExpense: false,
@@ -452,10 +440,40 @@ const filterBillsByTime = (bills) => {
 				return billYear === currentYear
 			case 'custom':
 				if (data.customStartDate && data.customEndDate) {
-					const startTime = new Date(data.customStartDate).getTime()
-					const endTime = new Date(data.customEndDate).getTime()
-					const billTime = billDate.getTime()
-					return billTime >= startTime && billTime <= endTime
+					// 使用日期字符串比较，避免时区问题
+					// 确保日期格式统一为 YYYY-MM-DD
+					let billDateStr = bill.date.split('T')[0] // 只取日期部分，去掉时间
+					
+					// 如果日期格式不是 YYYY-MM-DD，尝试转换
+					if (billDateStr.includes('/')) {
+						// 处理 YYYY/MM/DD 格式
+						billDateStr = billDateStr.replace(/\//g, '-')
+					}
+					
+					// 确保日期格式为 YYYY-MM-DD（补零）
+					const dateParts = billDateStr.split('-')
+					if (dateParts.length === 3) {
+						const year = dateParts[0]
+						const month = dateParts[1].padStart(2, '0')
+						const day = dateParts[2].padStart(2, '0')
+						billDateStr = `${year}-${month}-${day}`
+					}
+					
+					const isInRange = billDateStr >= data.customStartDate && billDateStr <= data.customEndDate
+					
+					// 调试日志：打印筛选信息
+					console.log('账单筛选:', {
+						type: bill.type || 'expense',
+						merchant: bill.merchant,
+						amount: bill.amount,
+						originalDate: bill.date,
+						billDateStr: billDateStr,
+						startDate: data.customStartDate,
+						endDate: data.customEndDate,
+						isInRange: isInRange
+					})
+					
+					return isInRange
 				}
 				return true
 			default:
@@ -891,6 +909,7 @@ const openCustomPicker = () => {
 // 关闭自定义时间选择器
 const closeCustomPicker = () => {
 	data.showCustomPicker = false
+	data.selectingStart = true // 重置为选择开始日期
 	// 显示 tabbar
 	uni.showTabBar()
 }
@@ -898,140 +917,133 @@ const closeCustomPicker = () => {
 // 初始化自定义时间选择器
 const initCustomPicker = () => {
 	const now = new Date()
-	data.calendarYear = now.getFullYear()
-	data.calendarMonth = now.getMonth() + 1
+	const year = now.getFullYear()
+	const month = now.getMonth() + 1
+	const day = now.getDate()
+	
+	// 初始化年份列表（前后5年）
+	data.years = []
+	for (let i = year - 5; i <= year + 5; i++) {
+		data.years.push(i)
+	}
 	
 	// 默认选择本月1号到今天
-	const firstDay = `${data.calendarYear}-${String(data.calendarMonth).padStart(2, '0')}-01`
-	const today = `${data.calendarYear}-${String(data.calendarMonth).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-	
-	data.customStartDate = firstDay
-	data.customEndDate = today
+	data.customStartDate = `${year}-${String(month).padStart(2, '0')}-01`
+	data.customEndDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 	data.selectingStart = true
 	
-	generateCalendar()
+	// 设置picker初始值为开始日期（本月1号），而不是今天
+	const yearIndex = data.years.indexOf(year)
+	const monthIndex = month - 1
+	updateDaysInMonth(year, month)
+	const dayIndex = 0 // 1号对应索引0
+	
+	data.pickerValue = [yearIndex, monthIndex, dayIndex]
+	data.tempYear = year
+	data.tempMonth = month
+	data.tempDay = 1 // 设置为1号
 }
 
-// 生成日历
-const generateCalendar = () => {
-	const year = data.calendarYear
-	const month = data.calendarMonth
-	
-	// 获取当月第一天是星期几（0-6）
-	const firstDay = new Date(year, month - 1, 1).getDay()
-	// 获取当月有多少天
+// 更新当月天数
+const updateDaysInMonth = (year, month) => {
 	const daysInMonth = new Date(year, month, 0).getDate()
-	// 获取上个月有多少天
-	const prevMonthDays = new Date(year, month - 1, 0).getDate()
-	
-	const days = []
-	const today = new Date()
-	const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-	
-	// 添加上个月的日期
-	for (let i = firstDay - 1; i >= 0; i--) {
-		const day = prevMonthDays - i
-		const dateStr = `${year}-${String(month - 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-		days.push({
-			day,
-			dateStr,
-			isCurrentMonth: false,
-			isToday: false,
-			isStart: false,
-			isEnd: false,
-			inRange: false
-		})
-	}
-	
-	// 添加当月的日期
+	data.days = []
 	for (let i = 1; i <= daysInMonth; i++) {
-		const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`
-		const isStart = dateStr === data.customStartDate
-		const isEnd = dateStr === data.customEndDate
-		const inRange = data.customStartDate && data.customEndDate && 
-			dateStr > data.customStartDate && dateStr < data.customEndDate
-		
-		days.push({
-			day: i,
-			dateStr,
-			isCurrentMonth: true,
-			isToday: dateStr === todayStr,
-			isStart,
-			isEnd,
-			inRange
-		})
+		data.days.push(i)
 	}
-	
-	// 添加下个月的日期，补齐到42个（6行7列）
-	const remainingDays = 42 - days.length
-	for (let i = 1; i <= remainingDays; i++) {
-		const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
-		days.push({
-			day: i,
-			dateStr,
-			isCurrentMonth: false,
-			isToday: false,
-			isStart: false,
-			isEnd: false,
-			inRange: false
-		})
-	}
-	
-	data.calendarDays = days
 }
 
-// 选择日期
-const selectDate = (day) => {
-	if (!day.isCurrentMonth) return
+// picker-view值改变
+const onPickerChange = (e) => {
+	const val = e.detail.value
+	data.pickerValue = val
+	
+	data.tempYear = data.years[val[0]]
+	data.tempMonth = data.months[val[1]]
+	
+	// 更新天数列表
+	updateDaysInMonth(data.tempYear, data.tempMonth)
+	
+	// 如果当前选择的天数超过了新月份的天数，调整到最后一天
+	if (val[2] >= data.days.length) {
+		data.pickerValue = [val[0], val[1], data.days.length - 1]
+		data.tempDay = data.days[data.days.length - 1]
+	} else {
+		data.tempDay = data.days[val[2]]
+	}
+}
+
+// 确认日期选择
+const confirmDateSelection = () => {
+	const dateStr = `${data.tempYear}-${String(data.tempMonth).padStart(2, '0')}-${String(data.tempDay).padStart(2, '0')}`
 	
 	if (data.selectingStart) {
-		data.customStartDate = day.dateStr
+		// 选择开始日期
+		data.customStartDate = dateStr
 		data.selectingStart = false
-		// 如果开始日期晚于结束日期，清空结束日期
-		if (data.customEndDate && day.dateStr > data.customEndDate) {
+		
+		// 如果已有结束日期且开始日期晚于结束日期，清空结束日期
+		if (data.customEndDate && dateStr > data.customEndDate) {
 			data.customEndDate = null
 		}
-	} else {
-		// 如果选择的结束日期早于开始日期，交换它们
-		if (data.customStartDate && day.dateStr < data.customStartDate) {
-			data.customEndDate = data.customStartDate
-			data.customStartDate = day.dateStr
+		
+		// 将picker跳转到结束日期（如果有的话），否则跳转到今天
+		if (data.customEndDate) {
+			const [endYear, endMonth, endDay] = data.customEndDate.split('-').map(Number)
+			const yearIndex = data.years.indexOf(endYear)
+			const monthIndex = endMonth - 1
+			updateDaysInMonth(endYear, endMonth)
+			const dayIndex = endDay - 1
+			
+			data.pickerValue = [yearIndex, monthIndex, dayIndex]
+			data.tempYear = endYear
+			data.tempMonth = endMonth
+			data.tempDay = endDay
 		} else {
-			data.customEndDate = day.dateStr
+			// 如果没有结束日期，跳转到今天
+			const now = new Date()
+			const year = now.getFullYear()
+			const month = now.getMonth() + 1
+			const day = now.getDate()
+			
+			const yearIndex = data.years.indexOf(year)
+			const monthIndex = month - 1
+			updateDaysInMonth(year, month)
+			const dayIndex = day - 1
+			
+			data.pickerValue = [yearIndex, monthIndex, dayIndex]
+			data.tempYear = year
+			data.tempMonth = month
+			data.tempDay = day
 		}
-	}
-	
-	generateCalendar()
-}
-
-// 上一个月
-const prevMonth = () => {
-	if (data.calendarMonth === 1) {
-		data.calendarMonth = 12
-		data.calendarYear--
 	} else {
-		data.calendarMonth--
+		// 选择结束日期
+		if (data.customStartDate && dateStr < data.customStartDate) {
+			// 如果结束日期早于开始日期，交换它们
+			data.customEndDate = data.customStartDate
+			data.customStartDate = dateStr
+		} else {
+			data.customEndDate = dateStr
+		}
+		
+		// 完成选择，应用筛选
+		confirmCustomTime()
 	}
-	generateCalendar()
-}
-
-// 下一个月
-const nextMonth = () => {
-	if (data.calendarMonth === 12) {
-		data.calendarMonth = 1
-		data.calendarYear++
-	} else {
-		data.calendarMonth++
-	}
-	generateCalendar()
 }
 
 // 确认自定义时间
 const confirmCustomTime = async () => {
 	data.currentFilter = 'custom'
 	data.showCustomPicker = false
+	data.selectingStart = true // 重置
 	// 显示 tabbar
 	uni.showTabBar()
+	
+	// 调试日志：打印选择的日期范围
+	console.log('自定义时间范围:', {
+		startDate: data.customStartDate,
+		endDate: data.customEndDate
+	})
 	
 	// 显示加载提示
 	uni.showLoading({ title: '加载中...' })
@@ -1041,6 +1053,12 @@ const confirmCustomTime = async () => {
 		const bills = await billStorage.getFromAPI()
 		// 确保返回的是数组
 		data.allBills = Array.isArray(bills) ? bills : []
+		
+		// 调试日志：打印所有账单数量
+		console.log('总账单数量:', data.allBills.length)
+		console.log('收入账单数量:', data.allBills.filter(b => b.type === 'income').length)
+		console.log('支出账单数量:', data.allBills.filter(b => (b.type || 'expense') === 'expense').length)
+		
 		recalculateData()
 	} catch (error) {
 		console.error('获取数据失败:', error)
@@ -1145,43 +1163,19 @@ onPullDownRefresh(async () => {
 		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%); /* 柔和的灰色渐变 */
 	}
 	
-	/* 自定义导航栏包装器 - 带风景图片 */
-	.custom-navbar-wrapper {
+	/* 自定义导航栏（随手记风格 - 纯白色） */
+	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
+		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-	}
-	
-	/* 风景图片背景 */
-	.navbar-bg-image {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 360rpx;
-		z-index: 1;
-	}
-	
-	/* 渐变遮罩 */
-	.navbar-gradient-mask {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 360rpx;
-		background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
-		z-index: 2;
-	}
-	
-	/* 自定义导航栏 */
-	.custom-navbar {
-		position: relative;
-		z-index: 3;
+		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 		
 		.navbar-content {
-			height: 44px;
+			height: 56px; /* 从44px增加到56px */
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
@@ -1190,7 +1184,7 @@ onPullDownRefresh(async () => {
 		
 		.navbar-left,
 		.navbar-right {
-			width: 60rpx;
+			width: 80rpx;
 			display: flex;
 			align-items: center;
 		}
@@ -1203,21 +1197,19 @@ onPullDownRefresh(async () => {
 			flex: 1;
 			display: flex;
 			justify-content: center;
-			
-			.title-text {
-				font-size: 32rpx;
-				font-weight: $font-weight-semibold;
-				color: #FFFFFF;
-				letter-spacing: 1rpx;
-				text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
-			}
+		}
+		
+		.title-text {
+			font-size: $font-size-lg; /* 使用统一的大字体 */
+			font-weight: $font-weight-semibold;
+			color: $text-primary; /* 深灰色文字 */
 		}
 	}
 	
 	.container {
 		min-height: 100vh;
 		background: transparent;
-		padding: 380rpx $spacing-xl $spacing-sm $spacing-xl;
+		padding: $spacing-sm $spacing-xl;
 		padding-bottom: 100rpx;
 		box-sizing: border-box;
 	}
@@ -1232,24 +1224,25 @@ onPullDownRefresh(async () => {
 
 	.time-filter {
 		display: flex;
-		gap: 12rpx;
-		background: $bg-white;
-		border-radius: $radius-lg;
-		padding: 6rpx;
-		border: 1rpx solid $border-color;
+		gap: $spacing-md; /* 增大按钮间距 */
+		background: transparent; /* 去掉白色背景 */
+		border-radius: 0; /* 去掉圆角 */
+		padding: 0; /* 去掉内边距 */
+		border: none; /* 去掉边框 */
 	}
 
 	.filter-item {
 		flex: 1;
 		text-align: center;
-		padding: 18rpx 16rpx;
-		font-size: $font-size-base;
+		padding: 14rpx 12rpx;
+		font-size: $font-size-sm;
 		color: $text-secondary;
-		background: linear-gradient(135deg, #F7F9FA 0%, #F0F2F5 100%);
-		border-radius: $radius-md;
+		background: #FFFFFF; /* 改为纯白色背景 */
+		border-radius: 12rpx; /* 增大圆角 */
 		transition: all $transition-fast;
 		font-weight: $font-weight-medium;
-		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 增强阴影 */
+		border: 1rpx solid #E8E8E8; /* 添加浅灰色边框 */
 	}
 	
 	.filter-item:active {
@@ -1258,12 +1251,11 @@ onPullDownRefresh(async () => {
 	}
 
 	.filter-item.active {
-		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
-		color: $text-white;
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+		color: $primary-color;
 		font-weight: $font-weight-semibold;
-		box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.3), 0 2rpx 8rpx rgba(7, 193, 96, 0.2);
-		transform: scale(1.02);
-		border-color: transparent;
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
+		border: 1rpx solid rgba(82, 196, 26, 0.2);
 	}
 	
 	.filter-item.active:active {
@@ -1271,367 +1263,244 @@ onPullDownRefresh(async () => {
 	}
 
 	.custom-filter {
-		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
-		border: 2rpx solid rgba(82, 196, 26, 0.2);
+		/* 继承 .filter-item 的样式，不需要额外覆盖 */
 	}
 	
 	.custom-filter.active {
-		background: $gradient-primary;
-		color: $text-white;
-		border-color: transparent;
-		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
+		color: $primary-color;
+		border: 1rpx solid rgba(82, 196, 26, 0.2);
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
 	}
 	
-	/* 自定义时间选择弹窗 */
-	.custom-time-modal {
+	/* 自定义时间选择弹窗 - 类似首页样式 */
+	.custom-picker-modal {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: rgba(0, 0, 0, 0.7);
+		background: rgba(0, 0, 0, 0.6);
+		z-index: 9999;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 99999;
-		animation: fadeIn 0.3s ease;
-		backdrop-filter: blur(8rpx);
+		align-items: flex-end;
+		backdrop-filter: blur(4rpx);
 	}
 	
-	.calendar-picker {
-		width: 92%;
-		max-width: 680rpx;
+	.picker-content {
+		width: 100%;
 		background: #FFFFFF;
-		border-radius: $radius-xl; /* 美团风格：16rpx圆角 */
-		animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-		box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2), 0 8rpx 24rpx rgba(0, 0, 0, 0.12); /* 美团风格：更轻的阴影 */
-		overflow: hidden;
-		position: relative;
-		z-index: 100000;
+		border-radius: 24rpx 24rpx 0 0;
+		animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+		box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.12);
 	}
 	
-	.calendar-header {
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+	
+	.picker-header {
 		display: flex;
+		align-items: center;
 		justify-content: space-between;
-		align-items: center;
-		padding: 32rpx 32rpx 24rpx;
-		background: $primary-gradient; /* 使用主题色渐变 */
-		position: relative;
-		overflow: hidden;
+		padding: 32rpx 40rpx;
+		border-bottom: 1rpx solid #F5F5F5;
+		background: linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%);
 	}
 	
-	.calendar-header::before {
-		content: '';
-		position: absolute;
-		top: -50%;
-		right: -20%;
-		width: 400rpx;
-		height: 400rpx;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-		border-radius: 50%;
+	.picker-cancel {
+		font-size: 30rpx;
+		color: #999999;
+		padding: 8rpx 16rpx;
+		transition: all 0.2s ease;
 	}
 	
-	.calendar-nav {
-		display: flex;
-		align-items: center;
-		gap: 24rpx;
-		position: relative;
-		z-index: 1;
+	.picker-cancel:active {
+		opacity: 0.6;
+		transform: scale(0.95);
 	}
 	
-	.nav-arrow {
-		width: 56rpx;
-		height: 56rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 40rpx;
-		color: rgba(255, 255, 255, 0.9);
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: 50%;
-		transition: all 0.2s;
-		backdrop-filter: blur(10rpx);
-	}
-	
-	.nav-arrow:active {
-		background: rgba(255, 255, 255, 0.3);
-		transform: scale(0.9);
-	}
-	
-	.calendar-title {
-		font-size: 36rpx;
-		font-weight: $font-weight-bold;
-		color: #FFFFFF;
-		letter-spacing: 1rpx;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-	}
-	
-	.calendar-close {
-		width: 56rpx;
-		height: 56rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.picker-title {
 		font-size: 32rpx;
-		color: rgba(255, 255, 255, 0.9);
-		background: rgba(255, 255, 255, 0.2);
-		border-radius: 50%;
-		transition: all 0.2s;
-		backdrop-filter: blur(10rpx);
-		position: relative;
-		z-index: 1;
+		font-weight: 600;
+		color: #333333;
+		letter-spacing: 0.5rpx;
 	}
 	
-	.calendar-close:active {
-		background: rgba(255, 255, 255, 0.3);
-		transform: scale(0.9) rotate(90deg);
+	.picker-confirm {
+		font-size: 30rpx;
+		color: $primary-color;
+		font-weight: 600;
+		padding: 8rpx 16rpx;
+		transition: all 0.2s ease;
 	}
 	
+	.picker-confirm:active {
+		opacity: 0.7;
+		transform: scale(0.95);
+	}
+	
+	/* 日期范围显示 - 精致优化版 */
 	.date-range-display {
 		display: flex;
 		align-items: center;
-		padding: 24rpx 32rpx;
-		gap: 16rpx;
-		background: #FFFFFF;
+		padding: 28rpx 40rpx 32rpx;
+		gap: 20rpx;
+		background: linear-gradient(180deg, #FAFBFC 0%, #F5F7FA 100%);
+		border-bottom: 1rpx solid #EBEDF0;
 	}
 	
-	.date-input {
+	.date-display-item {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 8rpx;
-		padding: 16rpx 20rpx; /* 美团风格：更紧凑 */
-		background: linear-gradient(135deg, #F6FFED 0%, #F0FFF4 100%);
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		border: 2rpx solid transparent;
+		gap: 10rpx;
+		padding: 20rpx 24rpx;
+		background: #FFFFFF;
+		border-radius: 12rpx;
+		border: 2rpx solid #F0F0F0;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		position: relative;
 		overflow: hidden;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
 	}
 	
-	.date-input::before {
+	/* 未激活状态的微妙渐变背景 */
+	.date-display-item::before {
 		content: '';
 		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(115, 209, 61, 0.05) 100%);
+		background: linear-gradient(135deg, #FAFBFC 0%, #FFFFFF 100%);
 		opacity: 0;
-		transition: opacity 0.3s;
+		transition: opacity 0.3s ease;
+		z-index: 0;
 	}
 	
-	.date-input.active {
-		border-color: $primary-color;
-		background: #FFFFFF;
-		box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.2), 0 0 0 4rpx rgba(82, 196, 26, 0.1);
-		transform: scale(1.02);
-	}
-	
-	.date-input.active::before {
-		opacity: 1;
-	}
-	
-	.input-label {
-		font-size: 24rpx;
-		color: $text-tertiary;
-		font-weight: $font-weight-medium;
-		letter-spacing: 0.5rpx;
-	}
-	
-	.input-value {
-		font-size: 28rpx;
-		color: $text-primary;
-		font-weight: $font-weight-bold;
-		letter-spacing: 0.5rpx;
-	}
-	
-	.date-input.active .input-value {
-		color: $primary-color;
-	}
-	
-	.date-separator {
-		font-size: 32rpx;
-		color: $text-tertiary;
-		font-weight: $font-weight-bold;
-	}
-	
-	.calendar-weekdays {
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		padding: 24rpx 32rpx 16rpx;
-		background: #FFFFFF;
-	}
-	
-	.weekday {
-		text-align: center;
-		font-size: 26rpx;
-		color: $text-tertiary;
-		font-weight: $font-weight-bold;
-		letter-spacing: 0.5rpx;
-	}
-	
-	.calendar-days {
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		padding: 8rpx 24rpx 32rpx;
-		gap: 8rpx;
-		background: #FFFFFF;
-	}
-	
-	.calendar-day {
-		aspect-ratio: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 50%;
+	.date-display-item .date-label,
+	.date-display-item .date-value {
 		position: relative;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		cursor: pointer;
+		z-index: 1;
 	}
 	
-	.calendar-day::before {
+	.date-display-item.active {
+		border-color: $primary-color;
+		background: linear-gradient(135deg, #F6FFED 0%, #F0FFF4 100%);
+		box-shadow: 0 6rpx 16rpx rgba(82, 196, 26, 0.2), 0 2rpx 8rpx rgba(82, 196, 26, 0.1);
+		transform: scale(1.03);
+	}
+	
+	/* 激活状态的光效 */
+	.date-display-item.active::after {
 		content: '';
 		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		background: transparent;
-		transition: all 0.2s;
+		top: -50%;
+		right: -50%;
+		width: 200%;
+		height: 200%;
+		background: radial-gradient(circle, rgba(82, 196, 26, 0.15) 0%, transparent 70%);
+		animation: pulse-glow 2s ease-in-out infinite;
 	}
 	
-	.calendar-day.other-month {
-		opacity: 0.25;
+	@keyframes pulse-glow {
+		0%, 100% {
+			opacity: 0.5;
+		}
+		50% {
+			opacity: 1;
+		}
 	}
 	
-	.calendar-day:not(.other-month):active {
-		transform: scale(0.85);
-	}
-	
-	.calendar-day:not(.other-month):active::before {
-		background: rgba(82, 196, 26, 0.1);
-	}
-	
-	.day-text {
-		font-size: 28rpx;
-		color: $text-primary;
+	.date-label {
+		font-size: 20rpx;
+		color: $text-tertiary;
 		font-weight: $font-weight-medium;
-		z-index: 1;
-		transition: all 0.2s;
+		text-transform: uppercase;
+		letter-spacing: 1rpx;
+		line-height: 1;
 	}
 	
-	.calendar-day.today {
-		background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(115, 209, 61, 0.1) 100%);
-		border: 2rpx solid rgba(82, 196, 26, 0.3);
-	}
-	
-	.calendar-day.today .day-text {
-		color: $primary-color;
-		font-weight: $font-weight-bold;
-	}
-	
-	.calendar-day.start-date,
-	.calendar-day.end-date {
-		background: $primary-gradient; /* 使用主题色渐变 */
-		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.4), 0 0 0 4rpx rgba(82, 196, 26, 0.15); /* 主题色阴影 */
-		transform: scale(1.05);
-	}
-	
-	.calendar-day.start-date .day-text,
-	.calendar-day.end-date .day-text {
-		color: #FFFFFF;
-		font-weight: $font-weight-bold;
-		text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-	}
-	
-	.calendar-day.in-range {
-		background: linear-gradient(135deg, rgba(82, 196, 26, 0.12) 0%, rgba(115, 209, 61, 0.08) 100%);
-		border-radius: 0;
-	}
-	
-	.calendar-day.in-range .day-text {
+	.date-display-item.active .date-label {
 		color: $primary-color;
 		font-weight: $font-weight-semibold;
 	}
 	
-	.calendar-footer {
-		display: flex;
-		gap: 20rpx;
-		padding: 24rpx 32rpx 32rpx;
-		background: #FFFFFF;
+	.date-value {
+		font-size: 28rpx;
+		color: $text-primary;
+		font-weight: $font-weight-semibold;
+		line-height: 1.3;
+		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 	}
 	
-	.footer-btn {
-		flex: 1;
-		text-align: center;
-		padding: 24rpx; /* 美团风格：更紧凑 */
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		font-size: 30rpx; /* 美团风格：稍小的字号 */
+	.date-display-item.active .date-value {
+		color: $primary-color;
 		font-weight: $font-weight-bold;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		letter-spacing: 2rpx;
-		position: relative;
-		overflow: hidden;
 	}
 	
-	.footer-btn::before {
+	/* 未选择状态的占位文字 */
+	.date-display-item .date-value:empty::before {
+		opacity: 0.4;
+	}
+	
+	.date-separator {
+		font-size: 24rpx;
+		color: $text-tertiary;
+		font-weight: $font-weight-medium;
+		opacity: 0.6;
+		position: relative;
+		padding: 0 4rpx;
+	}
+	
+	/* 分隔符装饰 */
+	.date-separator::before,
+	.date-separator::after {
 		content: '';
 		position: absolute;
 		top: 50%;
-		left: 50%;
-		width: 0;
-		height: 0;
+		width: 4rpx;
+		height: 4rpx;
+		background: $text-tertiary;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.3);
-		transform: translate(-50%, -50%);
-		transition: width 0.4s, height 0.4s;
+		opacity: 0.3;
 	}
 	
-	.footer-btn:active::before {
-		width: 200%;
-		height: 200%;
+	.date-separator::before {
+		left: -8rpx;
 	}
 	
-	.cancel-btn {
-		background: linear-gradient(135deg, #F5F5F5 0%, #E8E8E8 100%);
-		color: $text-secondary;
-		border: 2rpx solid $border-light;
+	.date-separator::after {
+		right: -8rpx;
 	}
 	
-	.cancel-btn:active {
-		transform: scale(0.96);
-		background: linear-gradient(135deg, #E8E8E8 0%, #D9D9D9 100%);
+	.picker-view {
+		height: 400rpx;
+		position: relative;
+		padding: 20rpx 0;
 	}
 	
-	.confirm-btn {
-		background: $primary-gradient; /* 使用主题色渐变 */
-		color: #FFFFFF;
-		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
-		border: 2rpx solid transparent;
+	.picker-item {
+		text-align: center;
+		font-size: 30rpx;
+		color: #999999;
+		transition: all 0.3s ease;
+		font-weight: 400;
 	}
 	
-	.confirm-btn:active {
-		transform: scale(0.96);
-		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.3), 0 2rpx 6rpx rgba(82, 196, 26, 0.15);
-	}
-	
-	@keyframes fadeIn {
-		from { 
-			opacity: 0;
-		}
-		to { 
-			opacity: 1;
-		}
-	}
-	
-	@keyframes scaleIn {
-		from { 
-			opacity: 0;
-			transform: scale(0.9) translateY(40rpx);
-		}
-		to { 
-			opacity: 1;
-			transform: scale(1) translateY(0);
-		}
+	/* 选中项文字颜色使用主题色 */
+	.picker-item-selected {
+		color: $primary-color !important;
+		font-weight: 600;
+		font-size: 34rpx;
 	}
 
 	/* 收支总览卡片 - 精致高端版 */
@@ -1668,23 +1537,10 @@ onPullDownRefresh(async () => {
 		z-index: 1;
 	}
 	
-	.overview-title-wrapper {
-		display: flex;
-		flex-direction: column;
-		gap: 6rpx;
-		padding: $spacing-lg 0 0 $spacing-lg; /* 增加顶部和左边内边距 */
-	}
-	
 	.overview-title {
-		font-size: $font-size-lg;
+		font-size: $font-size-base;
 		font-weight: 600;
 		color: $text-primary;
-		letter-spacing: 0.3rpx;
-	}
-	
-	.overview-subtitle {
-		font-size: 22rpx;
-		color: $text-tertiary;
 		letter-spacing: 0.3rpx;
 	}
 	
@@ -1797,7 +1653,7 @@ onPullDownRefresh(async () => {
 
 	.overview-amount {
 		font-size: 40rpx;
-		font-weight: $font-weight-bold;
+		font-weight: $font-weight-semibold;
 		color: $primary-color;
 		font-family: 'DIN Alternate', monospace;
 	}
@@ -1812,7 +1668,7 @@ onPullDownRefresh(async () => {
 
 	.overview-count {
 		font-size: 40rpx; /* 减小字号 */
-		font-weight: $font-weight-bold;
+		font-weight: $font-weight-semibold;
 		color: $text-primary;
 		font-family: 'DIN Alternate', monospace;
 	}
@@ -1896,18 +1752,18 @@ onPullDownRefresh(async () => {
 	.chart-card {
 		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
 		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: $spacing-xs $spacing-md $spacing-sm $spacing-md; /* 减小顶部内边距，让标题更靠上 */
+		padding: $spacing-lg $spacing-md $spacing-sm $spacing-md; /* 顶部内边距与财务分析保持一致 */
 		margin-bottom: $spacing-md; /* 减小底部间距，让下面的财务分析板块更靠近 */
 		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
 	}
 
 	.card-title {
-		font-size: $font-size-base; /* 与收支总览标题字体大小一致 */
-		font-weight: $font-weight-bold; /* 加粗标题 */
+		font-size: $font-size-base;
+		font-weight: 600;
 		color: $text-primary;
-		margin-bottom: 4rpx; /* 进一步减小底部间距 */
-		padding: $spacing-lg 0 0 $spacing-lg; /* 增加顶部和左边内边距 */
-		border-bottom: none; /* 移除分割线 */
+		margin-bottom: $spacing-lg;
+		padding: 0;
+		border-bottom: none;
 	}
 
 	/* 图表包装器 */
@@ -2040,71 +1896,115 @@ onPullDownRefresh(async () => {
 	
 	/* 消费分析卡片 - 美团风格 */
 	.analysis-card {
-		background: $bg-white;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: $spacing-lg;
+		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+		border-radius: 16rpx; /* 增大圆角 */
+		padding: $spacing-xl;
 		margin-bottom: $spacing-md;
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
-		border: 2rpx solid rgba(82, 196, 26, 0.08);
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+		border: 1rpx solid rgba(82, 196, 26, 0.12);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 卡片装饰光效 */
+	.analysis-card::before {
+		content: '';
+		position: absolute;
+		top: -40%;
+		right: -20%;
+		width: 180rpx;
+		height: 180rpx;
+		background: radial-gradient(circle, rgba(82, 196, 26, 0.05) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
 	.insights-list {
 		display: flex;
 		flex-direction: column;
-		gap: $spacing-sm;
+		gap: $spacing-md; /* 增大间距 */
+		position: relative;
+		z-index: 1;
 	}
 	
 	.insight-item {
 		display: flex;
 		align-items: flex-start;
-		padding: $spacing-md;
-		border-radius: $radius-lg;
-		background: linear-gradient(135deg, #FAFAFA 0%, #FFFFFF 100%);
-		border: 1rpx solid rgba(0, 0, 0, 0.06);
-		box-shadow: $shadow-sm;
+		padding: $spacing-lg;
+		border-radius: 12rpx;
+		background: #FFFFFF;
+		border: 1rpx solid #E8E8E8; /* 添加清晰边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+		transition: all 0.3s ease;
+	}
+	
+	.insight-item:active {
+		transform: scale(0.98);
+		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.03);
 	}
 	
 	.insight-content {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 4rpx;
+		gap: 6rpx; /* 增大间距 */
 		min-width: 0;
 	}
 	
 	.insight-text {
-		font-size: $font-size-base;
-		color: $text-primary;
-		font-weight: $font-weight-medium; /* 调整字重 */
-		line-height: 1.5;
+		font-size: 28rpx; /* 增大字号 */
+		color: #262626; /* 更深的主文字颜色 */
+		font-weight: 500;
+		line-height: 1.6;
 		letter-spacing: 0.3rpx;
 	}
 	
-	/* 不同类型的文字颜色优化 */
+	/* 不同类型的文字颜色优化 - 更精致的配色 */
 	.insight-item.danger .insight-text {
 		color: #FF4D4F;
-		font-weight: $font-weight-semibold;
+		font-weight: 600;
+	}
+	
+	.insight-item.danger {
+		background: linear-gradient(135deg, #FFF1F0 0%, #FFFFFF 100%);
+		border-color: rgba(255, 77, 79, 0.2);
 	}
 	
 	.insight-item.warning .insight-text {
 		color: #FA8C16;
-		font-weight: $font-weight-semibold;
+		font-weight: 600;
+	}
+	
+	.insight-item.warning {
+		background: linear-gradient(135deg, #FFF7E6 0%, #FFFFFF 100%);
+		border-color: rgba(250, 140, 22, 0.2);
 	}
 	
 	.insight-item.success .insight-text {
-		color: $primary-color; /* 使用主题色 */
-		font-weight: $font-weight-semibold;
+		color: #52C41A;
+		font-weight: 600;
+	}
+	
+	.insight-item.success {
+		background: linear-gradient(135deg, #F6FFED 0%, #FFFFFF 100%);
+		border-color: rgba(82, 196, 26, 0.2);
 	}
 	
 	.insight-item.info .insight-text {
 		color: #1890FF;
-		font-weight: $font-weight-semibold;
+		font-weight: 600;
+	}
+	
+	.insight-item.info {
+		background: linear-gradient(135deg, #E6F7FF 0%, #FFFFFF 100%);
+		border-color: rgba(24, 144, 255, 0.2);
 	}
 	
 	.insight-tip {
-		font-size: $font-size-sm;
-		color: $text-secondary; /* 优化颜色 */
-		line-height: 1.4;
+		font-size: 24rpx; /* 增大字号 */
+		color: #8C8C8C; /* 更柔和的辅助文字颜色 */
+		line-height: 1.5;
 		margin-top: 4rpx;
+		letter-spacing: 0.3rpx;
 	}
 </style>

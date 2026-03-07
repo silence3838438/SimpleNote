@@ -8,9 +8,7 @@
 					<text class="back-icon">‹</text>
 				</view>
 				<view class="navbar-title">财务顾问</view>
-				<view class="navbar-right" @click="clearHistory" v-if="messages.length > 0">
-					<text class="clear-icon">🗑️</text>
-				</view>
+				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
@@ -389,39 +387,34 @@ onLoad(async () => {
 }
 
 .navbar-left {
-	min-width: 120rpx; /* 增大点击区域 */
-	height: 100%; /* 占满导航栏高度 */
+	width: 80rpx;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	padding-right: 20rpx; /* 增加右侧内边距，扩大点击区域 */
 }
 
 .back-icon {
-	font-size: 56rpx; /* 增大箭头图标 */
-	color: $text-primary; /* 深灰色图标 */
+	font-size: 56rpx;
+	color: $text-primary;
 	font-weight: $font-weight-light;
 }
 
 .navbar-title {
 	flex: 1;
-	display: flex;
-	justify-content: center;
+	text-align: center;
 	font-size: $font-size-lg;
 	font-weight: $font-weight-semibold;
-	color: $text-primary; /* 深灰色文字 */
+	color: $text-primary;
 }
 
 .navbar-right {
 	width: 80rpx;
-	display: flex;
-	justify-content: flex-end;
-	align-items: center;
 }
 
 .clear-icon {
 	font-size: 32rpx;
-	color: $text-white;
+	color: $text-primary; /* 深灰色图标 */
 	padding: 8rpx;
 }
 
@@ -590,7 +583,7 @@ onLoad(async () => {
 }
 
 .quick-item {
-	padding: $spacing-md $spacing-lg;
+	padding: 24rpx $spacing-lg; /* 增加垂直内边距 */
 	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
 	border-radius: $radius-xl;
 	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
@@ -605,10 +598,11 @@ onLoad(async () => {
 }
 
 .quick-text {
-	font-size: 26rpx;
+	font-size: 28rpx; /* 增大字号 */
 	color: $text-secondary;
 	font-weight: $font-weight-medium;
 	letter-spacing: 0.3rpx;
+	line-height: 1.6; /* 增加行高 */
 }
 
 /* 输入区域 */

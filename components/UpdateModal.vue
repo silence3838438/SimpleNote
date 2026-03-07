@@ -572,7 +572,7 @@ const startDownload = () => {
 .button-group {
 	display: flex;
 	justify-content: center;
-	gap: 24rpx;
+	gap: 40rpx;
 	margin-top: 20rpx;
 	padding: 0 8rpx;
 }

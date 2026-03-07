@@ -107,7 +107,11 @@
                         "offline" : true,
                         "appid" : "32yYnvGJLC6lmw8W1Ga4S8",
                         "appkey" : "KChlP8PRJ46o22fX8NFS04",
-                        "appsecret" : "4kOWXlIrfi61gYuzGT9Ek3"
+                        "appsecret" : "4kOWXlIrfi61gYuzGT9Ek3",
+                        "hms" : {},
+                        "oppo" : {},
+                        "vivo" : {},
+                        "mi" : {}
                     }
                 },
                 "speech" : {

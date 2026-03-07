@@ -1,29 +1,17 @@
 <template>
 	<view class="page">
-		<!-- 自定义导航栏（带风景图片背景） -->
-		<view class="custom-navbar-wrapper">
-			<!-- 风景图片背景 -->
-			<image 
-				class="navbar-bg-image" 
-				src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/homebg2.png" 
-				mode="aspectFill"
-			></image>
-			<!-- 渐变遮罩 -->
-			<view class="navbar-gradient-mask"></view>
-			
-			<!-- 导航栏内容 -->
-			<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-				<view class="navbar-content">
-					<view class="navbar-left"></view>
-					<view class="navbar-title">
-						<!-- 标题已移除 -->
-					</view>
-					<view class="navbar-right"></view>
-				</view>
+		<!-- 自定义导航栏（随手记风格） -->
+		<view class="custom-navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
+			<view class="navbar-content">
+				<view class="navbar-left"></view>
+				<view class="navbar-title">
+				<text class="title-text">首页</text>
+			</view>
+				<view class="navbar-right"></view>
 			</view>
 		</view>
 		
-		<view class="container">
+		<view class="container" :style="{ paddingTop: (statusBarHeight + 56) + 'px' }">
 			<!-- 顶部月份选择器 -->
 			<view class="header">
 				<view class="month-picker" @click="showMonthPicker">
@@ -1278,57 +1266,33 @@ export default {
 	.page {
 		width: 100%;
 		min-height: 100vh;
-		background: #F7F8FA;
+		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%);
 		position: relative;
 		overflow: hidden;
 	}
 	
-	/* 自定义导航栏包装器 - 带风景图片 */
-	.custom-navbar-wrapper {
+	/* 自定义导航栏 - 随手记风格（纯白色） */
+	.custom-navbar {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
+		background: $bg-white; /* 随手记风格：纯白色导航栏 */
 		z-index: 1000;
-	}
-	
-	/* 风景图片背景 */
-	.navbar-bg-image {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 360rpx;
-		z-index: 1;
-	}
-	
-	/* 渐变遮罩 */
-	.navbar-gradient-mask {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 360rpx;
-		background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
-		z-index: 2;
-	}
-	
-	/* 自定义导航栏 */
-	.custom-navbar {
-		position: relative;
-		z-index: 3;
+		border-bottom: 1rpx solid $border-color; /* 浅灰色边框 */
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 轻微阴影 */
 		
 		.navbar-content {
-			height: 44px;
+			height: 56px; /* 专业高度 */
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 0 $spacing-lg;
+			padding: 0 $spacing-xl;
 		}
 		
 		.navbar-left,
 		.navbar-right {
-			width: 60rpx;
+			width: 80rpx;
 			display: flex;
 			align-items: center;
 		}
@@ -1343,51 +1307,51 @@ export default {
 			justify-content: center;
 			
 			.title-text {
-				font-size: 32rpx;
+				font-size: 32rpx; /* 专业字号 */
 				font-weight: $font-weight-semibold;
-				color: #FFFFFF;
-				letter-spacing: 1rpx;
-				text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+				color: $text-primary; /* 深灰色文字 */
+				letter-spacing: 1rpx; /* 增加字间距 */
 			}
 		}
 	}
 	
 	.container {
-		padding: 380rpx 24rpx 120rpx;
+		padding: $spacing-sm $spacing-xl;
+		padding-bottom: 100rpx;
 		box-sizing: border-box;
 		background: transparent;
-		min-height: 100vh;
 	}
 
 	.header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 32rpx;
+		margin-bottom: $spacing-lg;
+		padding-top: $spacing-lg;
 		position: relative;
 		z-index: 100;
 	}
 
 	.month-picker {
-		font-size: 28rpx;
-		font-weight: 500;
-		color: #333333;
+		font-size: 30rpx; /* 减小字号，更简洁 */
+		font-weight: $font-weight-semibold;
+		color: $text-primary;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
-		padding: 12rpx 20rpx;
-		background: transparent;
+		padding: $spacing-md $spacing-lg;
+		background: transparent; /* 透明背景，更简洁 */
 		border-radius: $radius-lg;
 		transition: all $transition-fast;
 	}
 	
 	.month-picker:active {
 		transform: scale(0.96);
-		background: $bg-hover;
+		background: $bg-hover; /* 点击时浅灰背景 */
 	}
 
 	.arrow {
-		font-size: 18rpx;
+		font-size: 20rpx;
 		margin-left: $spacing-xs;
 		color: $text-tertiary;
 	}
@@ -1680,21 +1644,21 @@ export default {
 	/* 紧凑版记账按钮 - 精致高端版 */
 	.action-buttons-compact {
 		display: flex;
-		gap: 16rpx;
-		margin-bottom: 20rpx;
+		gap: $spacing-sm;
+		margin-bottom: $spacing-2xl;
 	}
 	
 	.action-btn-compact {
 		flex: 1;
-		height: 96rpx;
-		border-radius: 16rpx;
+		height: 98rpx;
+		border-radius: 14rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: $spacing-sm;
 		transition: all $transition-fast;
 		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
 		border: 1rpx solid rgba(0, 0, 0, 0.04);
 		position: relative;
 		overflow: hidden;
@@ -1703,8 +1667,8 @@ export default {
 	/* 拍照按钮 - 浅绿色纯色 */
 	.photo-btn-compact {
 		background: #E8F5E9;
-		border: 1rpx solid rgba(82, 196, 26, 0.15);
-		box-shadow: 0 2rpx 12rpx rgba(82, 196, 26, 0.08);
+		border: 1rpx solid rgba(82, 196, 26, 0.2);
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08), 0 2rpx 8rpx rgba(82, 196, 26, 0.05);
 	}
 	
 	.photo-btn-compact .btn-text-compact {
@@ -1737,7 +1701,7 @@ export default {
 	
 	.action-btn-compact:active {
 		transform: scale(0.98);
-		box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.06);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
 	}
 	
 	.action-btn-compact:active::before {
@@ -1745,25 +1709,40 @@ export default {
 	}
 	
 	.btn-icon-compact {
-		font-size: 40rpx;
+		font-size: 42rpx;
 		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.08));
 	}
 	
 	.btn-text-compact {
 		font-size: $font-size-base;
-		color: #333333;
+		color: $text-primary;
 		font-weight: 500;
 		letter-spacing: 0.5rpx;
 	}
 	
-	/* 收支结余合并卡片 - 极简风格 */
+	/* 收支结余合并卡片 - 精致高端版 */
 	.finance-summary-card {
-		background: #FFFFFF;
-		border-radius: 16rpx;
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%); /* 更柔和的渐变 */
+		border-radius: 16rpx; /* 更大的圆角 */
 		padding: 32rpx 28rpx;
-		margin-bottom: 20rpx;
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		margin-bottom: $spacing-2xl;
+		box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02); /* 双层阴影 */
+		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 卡片装饰光效 */
+	.finance-summary-card::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		right: -30%;
+		width: 200rpx;
+		height: 200rpx;
+		background: radial-gradient(circle, rgba(7, 193, 96, 0.08) 0%, transparent 70%);
+		border-radius: 50%;
+		pointer-events: none;
 	}
 	
 	.finance-data {
@@ -1771,7 +1750,9 @@ export default {
 		align-items: center;
 		margin-bottom: 24rpx;
 		padding-bottom: 24rpx;
-		border-bottom: 1rpx solid #F0F0F0;
+		border-bottom: 1rpx solid rgba(0, 0, 0, 0.04);
+		position: relative;
+		z-index: 1;
 	}
 	
 	.finance-item {
@@ -1792,15 +1773,16 @@ export default {
 	
 	.finance-divider {
 		width: 1rpx;
-		height: 52rpx;
-		background: #E0E0E0;
+		height: 56rpx;
+		background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.06), transparent); /* 渐变分隔线 */
 		flex-shrink: 0;
 	}
 	
 	.finance-label {
-		font-size: 24rpx;
-		color: #999999;
-		font-weight: 400;
+		font-size: 22rpx;
+		color: $text-tertiary;
+		font-weight: $font-weight-normal;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.finance-label-row {
@@ -1810,23 +1792,25 @@ export default {
 	}
 	
 	.finance-amount {
-		font-size: 40rpx;
-		font-weight: 500;
+		font-size: 38rpx; /* 稍大的字号 */
+		font-weight: 600; /* 更粗的字重 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		line-height: 1.2;
+		letter-spacing: -0.5rpx; /* 紧凑的字间距 */
 	}
 	
 	.eye-icon-img {
-		width: 24rpx;
-		height: 24rpx;
+		width: 26rpx;
+		height: 26rpx;
 		display: block;
 		cursor: pointer;
 		transition: all $transition-fast;
 		opacity: 0.35;
+		filter: grayscale(0.3);
 	}
 	
 	.eye-icon-img:active {
-		opacity: 0.7;
+		opacity: 0.6;
 		transform: scale(1.1);
 	}
 	
@@ -1841,6 +1825,8 @@ export default {
 	.balance-section {
 		text-align: center;
 		padding: 20rpx 0 8rpx;
+		position: relative;
+		z-index: 1;
 	}
 	
 	.balance-label-row {
@@ -1852,17 +1838,21 @@ export default {
 	}
 	
 	.balance-label {
-		font-size: 24rpx;
-		color: #999999;
-		font-weight: 400;
+		font-size: 22rpx;
+		color: $text-tertiary;
+		font-weight: $font-weight-normal;
+		letter-spacing: 0.5rpx;
+		line-height: 1;
 	}
 	
 	.balance-section .balance-amount {
-		font-size: 36rpx;
-		font-weight: 500;
+		font-size: 34rpx;
+		font-weight: 600;
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		line-height: 1.2;
+		margin-top: 4rpx;
 		margin-bottom: 10rpx;
+		letter-spacing: -0.5rpx;
 	}
 	
 	.eye-icon-img-large:active {
@@ -1880,7 +1870,7 @@ export default {
 	
 	.balance-section .balance-tip {
 		font-size: $font-size-xs;
-		color: #999999;
+		color: $text-tertiary;
 	}
 
 	.budget-card {
@@ -2086,13 +2076,13 @@ export default {
 	/* 简化版预算卡片 - 美团风格优化 */
 	.budget-card-compact {
 		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-		border-radius: 16rpx;
-		padding: 32rpx 28rpx;
-		margin-bottom: 20rpx;
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+		padding: 32rpx 28rpx; /* 增加内边距，从24rpx增加到32rpx 28rpx */
+		margin-bottom: $spacing-xl;
+		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
 		transition: all $transition-fast;
 		cursor: pointer;
-		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		border: 1rpx solid $border-light;
 	}
 	
 	.budget-card-compact:active {
@@ -2156,7 +2146,7 @@ export default {
 	.budget-percent-compact {
 		font-size: 44rpx; /* 增加字体大小，从36rpx改为44rpx */
 		color: $primary-color;
-		font-weight: 500;
+		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 	}
 	
@@ -2232,15 +2222,15 @@ export default {
 	
 	.budget-amount-compact {
 		font-size: $font-size-base; /* 美团风格：标准字号 */
-		color: #333333;
-		font-weight: 500;
+		color: $text-primary;
+		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 	}
 	
 	.budget-used-compact {
 		font-size: $font-size-base;
 		color: $primary-color;
-		font-weight: 500;
+		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 	}
 	
@@ -2251,7 +2241,7 @@ export default {
 	.budget-remaining-compact {
 		font-size: $font-size-base;
 		color: $success-color;
-		font-weight: 500;
+		font-weight: $font-weight-bold;
 		font-family: 'DIN Alternate', monospace;
 	}
 	
@@ -2481,20 +2471,20 @@ export default {
 	/* 账单卡片 - 美团风格优化 */
 	.bills-card {
 		background: $bg-white;
-		border-radius: 16rpx;
-		padding: 24rpx 20rpx;
+		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
+		padding: 20rpx; /* 减小内边距，从24rpx改为20rpx */
 		margin-bottom: $spacing-xl;
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-		border: 1rpx solid rgba(0, 0, 0, 0.04);
+		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
+		border: 1rpx solid $border-light;
 	}
 
 	.card-title {
-		font-size: 30rpx;
-		font-weight: 500;
-		color: #333333;
-		margin-bottom: 20rpx;
-		padding-bottom: 16rpx;
-		border-bottom: 1rpx solid #F0F0F0;
+		font-size: $font-size-base; /* 美团风格：标准字号 */
+		font-weight: $font-weight-semibold;
+		color: $text-primary;
+		margin-bottom: $spacing-sm; /* 减小底部间距，从md改为sm */
+		padding-bottom: $spacing-xs; /* 减小底部内边距，从sm改为xs */
+		border-bottom: 1rpx solid $border-light;
 	}
 
 	.view-all {
@@ -2540,15 +2530,15 @@ export default {
 		border-radius: 12rpx;
 		transition: all $transition-fast;
 		position: relative;
-		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.03);
-		border: 1rpx solid #F5F5F5;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+		border: 1rpx solid #F0F0F0;
 		overflow: hidden;
 	}
 	
 	.bill-item:active {
 		background: #FAFAFA;
 		transform: scale(0.98);
-		box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.04);
+		box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.06);
 	}
 
 	.bill-left {
@@ -2559,15 +2549,15 @@ export default {
 	}
 
 	.bill-icon {
-		font-size: 36rpx;
-		margin-right: 16rpx;
-		width: 56rpx;
+		font-size: 36rpx; /* 减小图标大小，从40rpx改为36rpx */
+		margin-right: $spacing-sm; /* 减小右边距，从md改为sm */
+		width: 56rpx; /* 减小图标容器，从64rpx改为56rpx */
 		height: 56rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #F7F8FA;
-		border-radius: 12rpx;
+		background: $bg-light;
+		border-radius: $radius-md; /* 美团风格：更小的圆角 */
 		flex-shrink: 0;
 	}
 	
@@ -2642,7 +2632,7 @@ export default {
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 80rpx 0;
+		padding: 60rpx 0; /* 从100rpx减少到60rpx，让空状态往上移动 */
 		text-align: center;
 		background: $bg-white;
 		border-radius: $radius-lg;
@@ -2650,13 +2640,13 @@ export default {
 	}
 	
 	.empty-icon {
-		font-size: 100rpx;
+		font-size: 120rpx;
 		margin-bottom: $spacing-lg;
-		opacity: 0.25;
+		opacity: 0.3;
 	}
 	
 	.empty-text {
-		font-size: 28rpx;
+		font-size: $font-size-lg;
 		color: $text-secondary;
 		font-weight: $font-weight-medium;
 		margin-bottom: $spacing-xs;

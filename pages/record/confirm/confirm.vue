@@ -2,6 +2,7 @@
 	<view class="container">
 		<!-- 顶部标题 -->
 		<view class="header-section">
+			<view class="header-icon">✓</view>
 			<view class="header-title">确认账单信息</view>
 			<view class="header-subtitle">请核对并完善账单详情</view>
 		</view>
@@ -15,6 +16,7 @@
 					:class="{ 'active': data.billData.type === 'expense' }"
 					@click="switchType('expense')"
 				>
+					<text class="type-icon">💸</text>
 					<text class="type-text">支出</text>
 				</view>
 				<view 
@@ -22,6 +24,7 @@
 					:class="{ 'active': data.billData.type === 'income' }"
 					@click="switchType('income')"
 				>
+					<text class="type-icon">💰</text>
 					<text class="type-text">收入</text>
 				</view>
 			</view>
@@ -39,6 +42,7 @@
 			<!-- 金额 -->
 			<view class="form-item amount-item">
 				<view class="item-label">
+					<text class="label-icon">💰</text>
 					<text class="label-text">金额</text>
 				</view>
 				<view class="item-content amount-content">
@@ -67,6 +71,7 @@
 			<!-- 分类 -->
 			<view class="form-item" @click="data.showCategoryPicker = true">
 				<view class="item-label">
+					<text class="label-icon">📂</text>
 					<text class="label-text">分类</text>
 				</view>
 				<view class="item-content">
@@ -82,6 +87,7 @@
 			<!-- 日期 -->
 			<view class="form-item" @click="openDatePicker">
 				<view class="item-label">
+					<text class="label-icon">📅</text>
 					<text class="label-text">日期</text>
 				</view>
 				<view class="item-content">
@@ -95,6 +101,7 @@
 			<!-- 商家/来源 -->
 			<view class="form-item" v-if="data.billData.type === 'expense' || data.billData.type === 'income'">
 				<view class="item-label">
+					<text class="label-icon">{{ data.billData.type === 'income' ? '💼' : '🏪' }}</text>
 					<text class="label-text">{{ data.billData.type === 'income' ? '来源' : '商家' }}</text>
 					<text class="label-optional">（可选）</text>
 				</view>
@@ -104,6 +111,7 @@
 						:class="{ 'fade-in': data.merchantUpdated }"
 						v-model="data.billData.merchant"
 						:placeholder="data.billData.type === 'income' ? '请输入具体来源，如：公司月薪、兼职收入' : '请输入商家名称，如：星巴克、麦当劳'"
+						placeholder-style="color: #BFBFBF; font-size: 30rpx;"
 					/>
 				</view>
 				<!-- 历史商家/来源快速选择 -->
@@ -125,6 +133,7 @@
 			<!-- 备注 -->
 			<view class="form-item remark-item">
 				<view class="item-label">
+					<text class="label-icon">📝</text>
 					<text class="label-text">备注</text>
 					<text class="label-optional">（可选）</text>
 				</view>
@@ -134,6 +143,7 @@
 						:class="{ 'fade-in': data.remarkUpdated }"
 						v-model="data.billData.remark"
 						placeholder="添加备注信息"
+						placeholder-style="color: #BFBFBF; font-size: 28rpx;"
 					/>
 				</view>
 			</view>
@@ -1105,7 +1115,7 @@ export default {
 	
 	.container {
 		min-height: 100vh;
-		background: linear-gradient(180deg, #E8F5E9 0%, #F5F7FA 50%, #FAFBFC 100%);
+		background: linear-gradient(180deg, #F0FFF4 0%, #FAFAFA 100%);
 		padding: $spacing-lg $spacing-md;
 		padding-bottom: 180rpx;
 	}
@@ -1118,42 +1128,60 @@ export default {
 		position: relative;
 	}
 	
-	.header-title {
-		font-size: $font-size-2xl;
-		font-weight: $font-weight-bold;
-		color: $text-primary;
-		margin-bottom: 4rpx;
-		letter-spacing: 1rpx;
-	}
-	
-	.header-subtitle {
-		font-size: $font-size-sm;
-		color: $text-tertiary;
-		font-weight: $font-weight-normal;
-	}
-
-	/* 表单卡片 */
-	.form-card {
-		background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+	.header-icon {
+		width: 88rpx;
+		height: 88rpx;
+		background: $gradient-primary;
+		color: $text-white;
+		font-size: 48rpx;
 		border-radius: $radius-2xl;
-		padding: $spacing-xl;
-		box-shadow: 
-			0 2rpx 8rpx rgba(0, 0, 0, 0.04),
-			0 8rpx 24rpx rgba(0, 0, 0, 0.06),
-			inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
-		border: 1rpx solid rgba(255, 255, 255, 0.8);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: $spacing-md;
+		box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
 		position: relative;
 		overflow: hidden;
 	}
 	
-	.form-card::before {
+	.header-icon::before {
 		content: '';
 		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 1rpx;
-		background: linear-gradient(90deg, transparent, rgba(82, 196, 26, 0.15), transparent);
+		top: -50%;
+		right: -50%;
+		width: 100rpx;
+		height: 100rpx;
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+		animation: rotate 3s linear infinite;
+	}
+	
+	@keyframes rotate {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
+	}
+	
+	.header-title {
+		font-size: 38rpx;
+		font-weight: 600;
+		color: #1A1A1A;
+		margin-bottom: 8rpx;
+		letter-spacing: 0.5rpx;
+	}
+	
+	.header-subtitle {
+		font-size: 26rpx;
+		color: #8C8C8C;
+		font-weight: 400;
+		letter-spacing: 0.3rpx;
+	}
+
+	/* 表单卡片 */
+	.form-card {
+		background: $bg-white;
+		border-radius: $radius-2xl;
+		padding: $spacing-xl;
+		box-shadow: 0 4rpx 20rpx rgba(82, 196, 26, 0.08);
+		border: 1rpx solid rgba(82, 196, 26, 0.08);
 	}
 	
 	/* 分组分隔线 */
@@ -1188,10 +1216,9 @@ export default {
 		display: flex;
 		gap: $spacing-md;
 		margin-bottom: $spacing-lg;
-		padding: $spacing-sm 8rpx;
-		background: linear-gradient(135deg, #F5F7FA 0%, #E8EAED 100%);
+		padding: 6rpx;
+		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
 		border-radius: $radius-2xl;
-		box-shadow: inset 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 	}
 	
 	.type-btn {
@@ -1221,8 +1248,8 @@ export default {
 	}
 	
 	.type-btn.active {
-		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+		background: $bg-white;
+		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.15);
 	}
 	
 	.type-btn.active::before {
@@ -1233,16 +1260,22 @@ export default {
 		transform: scale(0.98);
 	}
 	
+	.type-icon {
+		font-size: $font-size-2xl;
+		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
+	}
+	
 	.type-text {
-		font-size: $font-size-lg;
-		color: $text-secondary;
-		font-weight: $font-weight-medium;
+		font-size: 30rpx;
+		color: #595959;
+		font-weight: 500;
 		transition: all $transition-fast;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.type-btn.active .type-text {
 		color: $primary-color;
-		font-weight: $font-weight-bold;
+		font-weight: 600;
 	}
 	
 	/* 调试信息 */
@@ -1302,14 +1335,13 @@ export default {
 	}
 	
 	.form-item.amount-item {
-		background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 50%, #FFE082 100%);
+		background: linear-gradient(135deg, #FFF9E6 0%, #FFF3E0 100%);
 		margin: 0 -#{$spacing-xl} $spacing-lg;
 		padding: $spacing-2xl $spacing-xl;
 		border-radius: $radius-xl;
 		border-bottom: none;
 		position: relative;
 		overflow: hidden;
-		box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.12);
 	}
 	
 	.form-item.amount-item::before {
@@ -1333,49 +1365,50 @@ export default {
 	
 	.quick-amount-btn {
 		height: 56rpx;
-		background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E1 100%);
+		background: rgba(255, 255, 255, 0.9);
 		border-radius: $radius-lg;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: $font-size-base;
+		font-size: 26rpx;
 		color: #FF6F00;
-		font-weight: $font-weight-semibold;
-		border: 2rpx solid rgba(255, 152, 0, 0.2);
+		font-weight: 500;
+		border: 2rpx solid rgba(255, 111, 0, 0.2);
 		transition: all $transition-fast;
-		box-shadow: 0 2rpx 8rpx rgba(255, 152, 0, 0.08);
+		box-shadow: 0 2rpx 8rpx rgba(255, 152, 0, 0.1);
+		font-family: $font-family-number;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.quick-amount-btn:active {
-		background: linear-gradient(135deg, #FF6F00 0%, #FF8F00 100%);
+		background: #FF6F00;
 		color: $text-white;
 		transform: scale(0.95);
-		box-shadow: 0 4rpx 12rpx rgba(255, 111, 0, 0.25);
+		box-shadow: 0 4rpx 12rpx rgba(255, 111, 0, 0.3);
 	}
 	
 	/* 历史商家 */
 	.recent-merchants {
 		margin-top: $spacing-lg;
 		padding: $spacing-lg;
-		background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
 		border-radius: $radius-xl;
-		border: 2rpx solid rgba(76, 175, 80, 0.2);
-		box-shadow: 0 2rpx 12rpx rgba(76, 175, 80, 0.08);
+		border: 2rpx solid rgba(82, 196, 26, 0.15);
 	}
 	
 	.recent-label {
-		font-size: $font-size-xs;
+		font-size: 22rpx;
 		color: #52C41A;
 		display: flex;
 		align-items: center;
 		margin-bottom: $spacing-md;
-		font-weight: $font-weight-semibold;
-		letter-spacing: 0.5rpx;
+		font-weight: 500;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.recent-label::before {
 		content: '⚡';
-		font-size: $font-size-base;
+		font-size: 24rpx;
 		margin-right: $spacing-xs;
 		animation: pulse-icon 2s ease-in-out infinite;
 	}
@@ -1393,16 +1426,17 @@ export default {
 	
 	.merchant-tag {
 		padding: $spacing-sm $spacing-lg;
-		background: linear-gradient(135deg, #FFFFFF 0%, #F1F8E9 100%);
+		background: $bg-white;
 		border-radius: $radius-2xl;
-		font-size: $font-size-sm;
-		color: #4CAF50;
-		border: 2rpx solid rgba(76, 175, 80, 0.25);
+		font-size: 26rpx;
+		color: #52C41A;
+		border: 2rpx solid rgba(82, 196, 26, 0.2);
 		transition: all $transition-fast;
-		font-weight: $font-weight-medium;
-		box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.1);
+		font-weight: 400;
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.08);
 		position: relative;
 		overflow: hidden;
+		letter-spacing: 0.3rpx;
 	}
 	
 	.merchant-tag::before {
@@ -1421,11 +1455,11 @@ export default {
 	}
 	
 	.merchant-tag:active {
-		background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+		background: $gradient-primary;
 		color: $text-white;
 		transform: translateY(-2rpx);
-		box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
-		border-color: #4CAF50;
+		box-shadow: 0 8rpx 16rpx rgba(82, 196, 26, 0.3);
+		border-color: $primary-color;
 	}
 	
 	.form-item.remark-item {
@@ -1441,22 +1475,30 @@ export default {
 	}
 
 	.item-label {
-		font-size: $font-size-base;
-		color: $text-secondary;
+		font-size: 28rpx;
+		color: #595959;
 		margin-bottom: $spacing-md;
 		display: flex;
 		align-items: center;
-		font-weight: $font-weight-semibold;
+		font-weight: 500;
+		letter-spacing: 0.3rpx;
+	}
+	
+	.label-icon {
+		font-size: 36rpx;
+		margin-right: $spacing-md;
+		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.08));
 	}
 	
 	.label-text {
-		font-weight: $font-weight-medium;
+		font-weight: 500;
 	}
 	
 	.label-optional {
-		font-size: $font-size-sm;
-		color: $text-tertiary;
+		font-size: 24rpx;
+		color: #BFBFBF;
 		margin-left: $spacing-xs;
+		font-weight: 400;
 	}
 
 	.item-content {
@@ -1519,13 +1561,15 @@ export default {
 
 	.text-input {
 		flex: 1;
-		font-size: $font-size-lg;
-		color: $text-primary;
+		font-size: 30rpx;
+		color: #262626;
+		font-weight: 400;
+		letter-spacing: 0.3rpx;
 	}
 
 	.text-input.full {
 		width: calc(100% - 0rpx);
-		background: linear-gradient(135deg, #F5F7FA 0%, #E8EAED 100%);
+		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
 		border-radius: $radius-xl;
 		padding: $spacing-lg $spacing-md;
 		margin-top: $spacing-xs;
@@ -1533,14 +1577,13 @@ export default {
 		min-height: 100rpx;
 		border: 2rpx solid transparent;
 		transition: all $transition-fast;
-		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
 		box-sizing: border-box;
 	}
 	
 	.text-input.full:focus {
-		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-		border-color: rgba(76, 175, 80, 0.3);
-		box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.12);
+		background: $bg-white;
+		border-color: rgba(82, 196, 26, 0.3);
+		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.1);
 	}
 
 	.item-value {
@@ -1551,27 +1594,30 @@ export default {
 	
 	.item-value.placeholder {
 		color: #BFBFBF;
+		font-size: 30rpx;
 		font-weight: $font-weight-normal;
 	}
 	
 	.item-arrow {
-		font-size: 40rpx;
-		color: $text-tertiary;
+		font-size: 36rpx;
+		color: #D9D9D9;
 		margin-left: $spacing-md;
 		font-weight: 300;
 	}
 
 	.category-value {
 		flex: 1;
-		font-size: $font-size-lg;
-		color: $text-primary;
+		font-size: 30rpx;
+		color: #262626;
 		display: flex;
 		align-items: center;
+		font-weight: 400;
+		letter-spacing: 0.3rpx;
 	}
 
 	.category-icon {
-		font-size: $font-size-2xl;
-		margin-right: $spacing-sm;
+		font-size: 36rpx;
+		margin-right: $spacing-md;
 	}
 
 	/* 保存按钮区域 */
@@ -1673,9 +1719,10 @@ export default {
 	}
 
 	.picker-title {
-		font-size: $font-size-xl;
-		font-weight: $font-weight-bold;
-		color: $text-primary;
+		font-size: 34rpx;
+		font-weight: 600;
+		color: #1A1A1A;
+		letter-spacing: 0.5rpx;
 	}
 
 	.picker-close {
@@ -1684,8 +1731,8 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 48rpx;
-		color: $text-tertiary;
+		font-size: 44rpx;
+		color: #BFBFBF;
 		font-weight: 300;
 	}
 
@@ -1719,18 +1766,18 @@ export default {
 	}
 	
 	.category-item.recommended {
-		background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
-		border: 2rpx solid #FFA726;
-		box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.18);
+		background: linear-gradient(135deg, #FFF9E6 0%, #FFF3E0 100%);
+		border: 2rpx solid #FFB74D;
+		box-shadow: 0 4rpx 12rpx rgba(255, 152, 0, 0.2);
 		animation: recommend-pulse 2s ease-in-out infinite;
 	}
 	
 	@keyframes recommend-pulse {
 		0%, 100% {
-			box-shadow: 0 4rpx 16rpx rgba(255, 152, 0, 0.18);
+			box-shadow: 0 4rpx 12rpx rgba(255, 152, 0, 0.2);
 		}
 		50% {
-			box-shadow: 0 6rpx 20rpx rgba(255, 152, 0, 0.3);
+			box-shadow: 0 8rpx 20rpx rgba(255, 152, 0, 0.4);
 		}
 	}
 	
@@ -1747,24 +1794,26 @@ export default {
 	.badge-text {
 		font-size: 20rpx;
 		color: $text-white;
-		font-weight: $font-weight-bold;
+		font-weight: 600;
 		line-height: 1;
 	}
 
 	.category-item-icon {
-		font-size: 48rpx;
+		font-size: 44rpx;
 		margin-bottom: $spacing-xs;
 	}
 
 	.category-item-name {
-		font-size: $font-size-sm;
-		color: $text-secondary;
+		font-size: 24rpx;
+		color: #595959;
 		text-align: center;
+		font-weight: 400;
+		letter-spacing: 0.3rpx;
 	}
 
 	.category-item.active .category-item-name {
 		color: $primary-color;
-		font-weight: $font-weight-semibold;
+		font-weight: 500;
 	}
 	
 	/* 日期选择器 */
@@ -1795,7 +1844,7 @@ export default {
 		justify-content: space-between;
 		align-items: center;
 		padding: $spacing-xl $spacing-xl $spacing-md;
-		border-bottom: 1rpx solid $border-light;
+		border-bottom: 1rpx solid #F0F0F0;
 		position: relative;
 	}
 	
@@ -1807,36 +1856,47 @@ export default {
 		transform: translateX(-50%);
 		width: 60rpx;
 		height: 6rpx;
-		background: $border-light;
+		background: #E8E8E8;
 		border-radius: 3rpx;
 	}
 	
+	.date-picker-modal .picker-title {
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #333333;
+		letter-spacing: 0.5rpx;
+	}
+	
 	.picker-cancel {
-		font-size: $font-size-lg;
-		color: $text-tertiary;
+		font-size: 30rpx;
+		color: #999999;
 		padding: 8rpx 16rpx;
-		transition: opacity 0.2s;
+		transition: all 0.2s ease;
+		font-weight: 400;
 	}
 	
 	.picker-cancel:active {
 		opacity: 0.6;
+		transform: scale(0.95);
 	}
 	
 	.picker-confirm {
-		font-size: $font-size-lg;
+		font-size: 30rpx;
 		color: $primary-color;
-		font-weight: $font-weight-bold;
+		font-weight: 600;
 		padding: 8rpx 16rpx;
-		transition: opacity 0.2s;
+		transition: all 0.2s ease;
 	}
 	
 	.picker-confirm:active {
-		opacity: 0.6;
+		opacity: 0.7;
+		transform: scale(0.95);
 	}
 	
 	.picker-view {
 		height: 400rpx;
-		padding: $spacing-md 0;
+		padding: 20rpx 0;
+		position: relative;
 	}
 	
 	.picker-item {
@@ -1844,15 +1904,17 @@ export default {
 		align-items: center;
 		justify-content: center;
 		height: 80rpx;
-		font-size: $font-size-md;
-		color: $text-tertiary;
-		transition: all 0.2s;
+		font-size: 30rpx;
+		color: #999999;
+		transition: all 0.3s ease;
+		font-weight: 400;
 	}
 	
 	.picker-item-selected {
-		font-size: $font-size-xl;
-		color: $text-primary;
-		font-weight: $font-weight-bold;
+		font-size: 34rpx;
+		color: $primary-color !important;
+		font-weight: 600;
+		letter-spacing: 0.5rpx;
 	}
 	
 	/* 淡入动画 */
@@ -1949,13 +2011,15 @@ export default {
 	}
 	
 	.loading-title {
-		font-size: $font-size-xl;
-		color: $text-primary;
-		font-weight: $font-weight-bold;
+		font-size: 32rpx;
+		color: #1A1A1A;
+		font-weight: 600;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.loading-text {
-		font-size: $font-size-sm;
-		color: $text-tertiary;
+		font-size: 26rpx;
+		color: #8C8C8C;
+		font-weight: 400;
 	}
 </style>
