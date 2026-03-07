@@ -161,9 +161,9 @@
 		</view>
 		
 		<!-- 消费分析 -->
-		<view class="analysis-card" v-if="data.insights.length > 0">
+		<view class="analysis-card">
 			<view class="card-title">财务分析</view>
-			<view class="insights-list">
+			<view class="insights-list" v-if="data.insights.length > 0">
 				<view 
 					class="insight-item" 
 					v-for="(insight, index) in data.insights" 
@@ -175,6 +175,10 @@
 						<text class="insight-tip" v-if="insight.tip">{{ insight.tip }}</text>
 					</view>
 				</view>
+			</view>
+			<view class="analysis-empty" v-else>
+				<text class="empty-text">暂无财务分析数据</text>
+				<text class="empty-tip">记录账单后查看财务分析</text>
 			</view>
 		</view>
 		
@@ -585,13 +589,13 @@ const isDecember = () => {
 const generateInsights = (bills) => {
 	const insights = []
 	
-	// 如果没有账单，显示提示信息
+	// 如果完全没有账单，显示提示信息
 	if (data.billCount === 0) {
 		insights.push({
-			type: 'info',
-			icon: '📝',
-			text: '还没有账单记录',
-			tip: '快去记录第一笔账单吧'
+			type: 'empty',
+			icon: '📊',
+			text: '暂无账单数据',
+			tip: '记录第一笔账单，开启财务管理之旅'
 		})
 		data.insights = insights
 		return
@@ -607,6 +611,16 @@ const generateInsights = (bills) => {
 	} else {
 		// 收入分析模式：显示收入相关的重点
 		generateIncomeDetailAnalysis(insights)
+	}
+	
+	// 确保至少有一条洞察（如果insights为空，添加默认提示）
+	if (insights.length === 0) {
+		insights.push({
+			type: 'info',
+			icon: '📊',
+			text: '暂无数据',
+			tip: '开始记账，查看财务分析'
+		})
 	}
 	
 	// 最多显示3条洞察
@@ -1862,36 +1876,88 @@ onPullDownRefresh(async () => {
 		line-height: 1;
 	}
 	
+	/* 支出构成空状态 - 居中显示、精致专业 */
 	.chart-empty {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 80rpx 0;
+		padding: 100rpx 40rpx;
+		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+		border-radius: 12rpx;
+		margin: 20rpx 0;
 	}
 	
 	.empty-text {
-		font-size: $font-size-lg;
-		color: $text-secondary;
-		margin-bottom: $spacing-xl;
-		font-weight: $font-weight-medium;
+		font-size: 32rpx;
+		color: #8C8C8C;
+		margin-bottom: 32rpx;
+		font-weight: 500;
+		text-align: center;
+		line-height: 1.5;
 	}
 	
 	.empty-action {
-		padding: $spacing-md $spacing-2xl;
-		background: $gradient-primary;
-		color: $text-white;
-		font-size: $font-size-base;
-		font-weight: $font-weight-bold;
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		box-shadow: $shadow-md; /* 美团风格：更轻的阴影 */
+		padding: 20rpx 48rpx;
+		background: linear-gradient(135deg, $primary-color 0%, #45B015 100%);
+		color: #FFFFFF;
+		font-size: 28rpx;
+		font-weight: 600;
+		border-radius: 35rpx;
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.25);
 		transition: all $transition-fast;
 		letter-spacing: 0.5rpx;
+		position: relative;
+		overflow: hidden;
+	}
+	
+	/* 按钮光泽效果 */
+	.empty-action::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+		transition: left 0.5s ease;
 	}
 	
 	.empty-action:active {
-		opacity: 0.9;
 		transform: scale(0.96);
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.2);
+	}
+	
+	.empty-action:active::before {
+		left: 100%;
+	}
+	
+	/* 财务分析空状态 - 与支出构成空状态保持一致 */
+	.analysis-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 100rpx 40rpx;
+		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+		border-radius: 12rpx;
+		margin: 20rpx 0;
+	}
+	
+	.analysis-empty .empty-text {
+		font-size: 32rpx;
+		color: #8C8C8C;
+		margin-bottom: 12rpx;
+		font-weight: 500;
+		text-align: center;
+		line-height: 1.5;
+	}
+	
+	.analysis-empty .empty-tip {
+		font-size: 26rpx;
+		color: #BFBFBF;
+		text-align: center;
+		line-height: 1.5;
 	}
 	
 	/* 消费分析卡片 - 美团风格 */
@@ -1998,6 +2064,33 @@ onPullDownRefresh(async () => {
 	.insight-item.info {
 		background: linear-gradient(135deg, #E6F7FF 0%, #FFFFFF 100%);
 		border-color: rgba(24, 144, 255, 0.2);
+	}
+	
+	/* 空状态样式 - 居中显示、精致专业 */
+	.insight-item.empty {
+		background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+		border: 1rpx solid #E8E8E8;
+		padding: 60rpx 32rpx;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+	}
+	
+	.insight-item.empty .insight-content {
+		align-items: center;
+		gap: 12rpx;
+	}
+	
+	.insight-item.empty .insight-text {
+		font-size: 32rpx;
+		color: #8C8C8C;
+		font-weight: 500;
+	}
+	
+	.insight-item.empty .insight-tip {
+		font-size: 26rpx;
+		color: #BFBFBF;
+		text-align: center;
 	}
 	
 	.insight-tip {
