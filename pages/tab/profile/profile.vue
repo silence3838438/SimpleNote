@@ -18,7 +18,7 @@
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
-							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png" 
+							src="https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132" 
 							mode="aspectFill"
 						></image>
 					</view>
@@ -37,7 +37,7 @@
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
-							:src="data.userInfo.avatarUrl || 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png'" 
+							:src="data.userInfo.avatarUrl || 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132'" 
 							mode="aspectFill"
 							@click="changeAvatar"
 						></image>
@@ -64,7 +64,7 @@
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
-							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png" 
+							src="https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132" 
 							mode="aspectFill"
 						></image>
 						<view class="level-badge" :style="{ background: data.memberLevel.gradient }">
@@ -445,7 +445,7 @@ import { checkUpdate } from '@/utils/appUpdate.js'
 
 const data = reactive({
 	userInfo: {
-		avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
+		avatarUrl: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
 		nickName: '未登录',
 		isLogin: false
 	},
@@ -1238,7 +1238,7 @@ const handleLogout = () => {
 					
 					// 4. 更新本地状态
 					data.userInfo = {
-						avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
+						avatarUrl: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
 						nickName: '未登录',
 						isLogin: false
 					}
@@ -1270,7 +1270,7 @@ const handleLogout = () => {
 					uni.removeStorageSync('pendingLevelUp')
 					
 					data.userInfo = {
-						avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
+						avatarUrl: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
 						nickName: '未登录',
 						isLogin: false
 					}
@@ -1489,7 +1489,7 @@ onShow(() => {
 	} else {
 		// 未登录状态
 		data.userInfo = {
-			avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
+			avatarUrl: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
 			nickName: '未登录',
 			isLogin: false
 		}
