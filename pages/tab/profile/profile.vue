@@ -18,7 +18,7 @@
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
-							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
+							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png" 
 							mode="aspectFill"
 						></image>
 					</view>
@@ -37,7 +37,7 @@
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
-							:src="data.userInfo.avatarUrl" 
+							:src="data.userInfo.avatarUrl || 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png'" 
 							mode="aspectFill"
 							@click="changeAvatar"
 						></image>
@@ -64,7 +64,7 @@
 					<view class="avatar-wrapper">
 						<image 
 							class="avatar" 
-							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png" 
+							src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png" 
 							mode="aspectFill"
 						></image>
 						<view class="level-badge" :style="{ background: data.memberLevel.gradient }">
@@ -364,28 +364,25 @@
 		<!-- 积分详情弹框 -->
 		<view class="points-modal" v-if="data.showPointsModal" @click="closePointsModal">
 			<view class="points-modal-content" @click.stop>
-				<view class="points-header">
-					<view class="points-icon-wrapper">
-						<text class="points-icon">💰</text>
-						<view class="points-glow"></view>
+				<view class="modal-header">
+					<view class="modal-icon" style="background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);">
+						<text class="modal-icon-text">💰</text>
 					</view>
-					<text class="points-title">我的积分</text>
-					<view class="points-close" @click="closePointsModal">
-						<text class="close-icon">✕</text>
-					</view>
+					<text class="modal-title">我的积分</text>
+					<text class="modal-desc">积分越高，等级越高，成就感满满！</text>
 				</view>
 				
-				<view class="points-body">
+				<view class="modal-body">
 					<!-- 积分统计 -->
-					<view class="points-stats">
-						<view class="points-stat-item">
-							<text class="stat-number">{{ data.userPoints }}</text>
-							<text class="stat-text">总积分</text>
+					<view class="data-card">
+						<view class="data-item">
+							<text class="data-value" style="color: #52C41A;">{{ data.userPoints }}</text>
+							<text class="data-label">总积分</text>
 						</view>
-						<view class="points-divider"></view>
-						<view class="points-stat-item">
-							<text class="stat-number highlight">+{{ getTodayPoints() }}</text>
-							<text class="stat-text">今日获得</text>
+						<view class="data-divider"></view>
+						<view class="data-item">
+							<text class="data-value" style="color: #52C41A;">+{{ getTodayPoints() }}</text>
+							<text class="data-label">今日获得</text>
 						</view>
 					</view>
 					
@@ -420,17 +417,11 @@
 							</view>
 						</view>
 					</view>
-					
-					<!-- 提示 -->
-					<view class="points-tip">
-						<text class="tip-icon">✨</text>
-						<text class="tip-text">积分越高，等级越高，成就感满满！</text>
-					</view>
 				</view>
 				
-				<view class="points-footer">
-					<view class="points-btn" @click="closePointsModal">
-						<text class="points-btn-text">继续加油</text>
+				<view class="modal-footer">
+					<view class="modal-btn" style="background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);" @click="closePointsModal">
+						<text class="modal-btn-text">继续加油</text>
 					</view>
 				</view>
 			</view>
@@ -454,7 +445,7 @@ import { checkUpdate } from '@/utils/appUpdate.js'
 
 const data = reactive({
 	userInfo: {
-		avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png',
+		avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
 		nickName: '未登录',
 		isLogin: false
 	},
@@ -1247,7 +1238,7 @@ const handleLogout = () => {
 					
 					// 4. 更新本地状态
 					data.userInfo = {
-						avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png',
+						avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
 						nickName: '未登录',
 						isLogin: false
 					}
@@ -1279,7 +1270,7 @@ const handleLogout = () => {
 					uni.removeStorageSync('pendingLevelUp')
 					
 					data.userInfo = {
-						avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png',
+						avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
 						nickName: '未登录',
 						isLogin: false
 					}
@@ -1498,7 +1489,7 @@ onShow(() => {
 	} else {
 		// 未登录状态
 		data.userInfo = {
-			avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/dataIcon17.png',
+			avatarUrl: 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/default_logo.png',
 			nickName: '未登录',
 			isLogin: false
 		}
@@ -3065,3 +3056,60 @@ const handleDownloadComplete = () => {
 	letter-spacing: 1rpx;
 }
 </style>
+
+
+/* 积分详情弹框样式补充 */
+.points-rules {
+	margin-top: 24rpx;
+}
+
+.rules-title {
+	display: block;
+	font-size: 26rpx;
+	font-weight: 600;
+	color: #333;
+	margin-bottom: 16rpx;
+	padding-left: 12rpx;
+	border-left: 4rpx solid #FF6F00;
+}
+
+.rule-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.rule-item {
+	display: flex;
+	align-items: center;
+	padding: 16rpx 20rpx;
+	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+	border-radius: 16rpx;
+	border: 1rpx solid rgba(0, 0, 0, 0.04);
+	transition: all 0.2s ease;
+}
+
+.rule-item:active {
+	transform: translateX(4rpx);
+	box-shadow: 0 2rpx 8rpx rgba(255, 111, 0, 0.1);
+}
+
+.rule-icon {
+	font-size: 32rpx;
+	margin-right: 16rpx;
+	filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
+}
+
+.rule-text {
+	flex: 1;
+	font-size: 26rpx;
+	color: #666;
+	font-weight: 500;
+}
+
+.rule-points {
+	font-size: 26rpx;
+	color: #FF6F00;
+	font-weight: 700;
+	font-family: 'DIN Alternate', monospace;
+}

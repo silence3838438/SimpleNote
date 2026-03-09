@@ -149,18 +149,22 @@ const openPrivacyPolicy = () => {
 
 const goToDownloadPage = () => {
 	// #ifdef MP-WEIXIN
+	const apkUrl = 'https://api.qiannaqule.top/uploads/apk/qiannaqule-1772867480114.apk'
+	
 	uni.showModal({
 		title: '下载APP',
-		content: '请访问官网下载APP，获得更好的使用体验',
+		content: '请在浏览器中打开下载链接，获得更好的使用体验',
 		confirmText: '复制链接',
+		cancelText: '取消',
 		success: (res) => {
 			if (res.confirm) {
 				uni.setClipboardData({
-					data: 'https://api.qiannaqule.top',
+					data: apkUrl,
 					success: () => {
 						uni.showToast({
-							title: '链接已复制',
-							icon: 'success'
+							title: '链接已复制，请在浏览器中打开',
+							icon: 'success',
+							duration: 2500
 						})
 					}
 				})
