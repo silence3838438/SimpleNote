@@ -1248,15 +1248,16 @@ onPullDownRefresh(async () => {
 	.filter-item {
 		flex: 1;
 		text-align: center;
-		padding: 14rpx 12rpx;
-		font-size: $font-size-sm;
+		padding: 16rpx 26rpx; /* 调整为 16rpx 26rpx，与账单页面一致 */
+		font-size: 28rpx; /* 从 $font-size-sm 增大到 28rpx */
 		color: $text-secondary;
-		background: #FFFFFF; /* 改为纯白色背景 */
-		border-radius: 12rpx; /* 增大圆角 */
+		background: #FFFFFF; /* 纯白色背景 */
+		border-radius: 16rpx; /* 从 12rpx 增大到 16rpx，更圆润 */
 		transition: all $transition-fast;
 		font-weight: $font-weight-medium;
-		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 增强阴影 */
-		border: 1rpx solid #E8E8E8; /* 添加浅灰色边框 */
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06); /* 增强阴影 */
+		border: 1rpx solid #F0F0F0; /* 边框颜色稍微浅一点 */
+		letter-spacing: 0.5rpx; /* 增加字间距 */
 	}
 	
 	.filter-item:active {
@@ -1267,9 +1268,10 @@ onPullDownRefresh(async () => {
 	.filter-item.active {
 		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
 		color: $primary-color;
-		font-weight: $font-weight-semibold;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
-		border: 1rpx solid rgba(82, 196, 26, 0.2);
+		font-weight: $font-weight-bold; /* 从 semibold 改为 bold，更突出 */
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.2); /* 增强阴影 */
+		border: 1rpx solid rgba(82, 196, 26, 0.3); /* 边框更明显 */
+		transform: translateY(-2rpx); /* 添加轻微上浮效果 */
 	}
 	
 	.filter-item.active:active {
@@ -1283,8 +1285,10 @@ onPullDownRefresh(async () => {
 	.custom-filter.active {
 		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
 		color: $primary-color;
-		border: 1rpx solid rgba(82, 196, 26, 0.2);
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
+		font-weight: $font-weight-bold; /* 从 semibold 改为 bold */
+		border: 1rpx solid rgba(82, 196, 26, 0.3); /* 边框更明显 */
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.2); /* 增强阴影 */
+		transform: translateY(-2rpx); /* 添加轻微上浮效果 */
 	}
 	
 	/* 自定义时间选择弹窗 - 类似首页样式 */

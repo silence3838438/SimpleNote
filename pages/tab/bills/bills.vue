@@ -1053,18 +1053,19 @@ onPullDownRefresh(async () => {
 	
 	.filter-tag {
 		flex: 0 0 auto;
-		min-width: 100rpx; /* 改为 100rpx */
+		min-width: 110rpx; /* 从 100rpx 增加到 110rpx */
 		text-align: center;
-		padding: 14rpx 24rpx; /* 从 20rpx 增大到 24rpx */
-		font-size: $font-size-sm;
+		padding: 16rpx 26rpx; /* 调整为 16rpx 26rpx */
+		font-size: 28rpx; /* 从 $font-size-sm 增大到 28rpx */
 		color: $text-secondary;
-		background: #FFFFFF; /* 改为纯白色背景 */
-		border-radius: 12rpx; /* 增大圆角 */
+		background: #FFFFFF; /* 纯白色背景 */
+		border-radius: 16rpx; /* 从 12rpx 增大到 16rpx，更圆润 */
 		transition: all $transition-fast;
 		font-weight: $font-weight-medium;
-		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04); /* 增强阴影 */
-		border: 1rpx solid #E8E8E8; /* 添加浅灰色边框 */
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06); /* 增强阴影，从 0 2rpx 8rpx 改为 0 4rpx 12rpx */
+		border: 1rpx solid #F0F0F0; /* 边框颜色稍微浅一点 */
 		white-space: nowrap;
+		letter-spacing: 0.5rpx; /* 增加字间距 */
 	}
 	
 	.filter-tag:active {
@@ -1075,9 +1076,10 @@ onPullDownRefresh(async () => {
 	.filter-tag.active {
 		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
 		color: $primary-color;
-		font-weight: $font-weight-semibold;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
-		border: 1rpx solid rgba(82, 196, 26, 0.2);
+		font-weight: $font-weight-bold; /* 从 semibold 改为 bold，更突出 */
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.2); /* 增强阴影 */
+		border: 1rpx solid rgba(82, 196, 26, 0.3); /* 边框更明显 */
+		transform: translateY(-2rpx); /* 添加轻微上浮效果 */
 	}
 	
 	.filter-tag.active:active {
@@ -1085,16 +1087,17 @@ onPullDownRefresh(async () => {
 	}
 	
 	.tag-text {
-		font-size: $font-size-sm;
+		font-size: 28rpx; /* 从 $font-size-sm 增大到 28rpx */
 		color: inherit;
 		font-weight: inherit;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.export-tag {
 		background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
 		color: #FFFFFF;
-		font-weight: 600;
-		box-shadow: 0 2rpx 8rpx rgba(19, 194, 194, 0.25);
+		font-weight: $font-weight-bold; /* 从 600 改为 bold */
+		box-shadow: 0 4rpx 16rpx rgba(19, 194, 194, 0.3); /* 增强阴影 */
 		border: none;
 	}
 	

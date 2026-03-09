@@ -638,18 +638,20 @@ const shouldUseAI = (quickResult, ocrText) => {
 	}
 	
 	.tip-card {
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(20rpx);
-		border-radius: $radius-2xl;
-		padding: $spacing-lg $spacing-xl;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+		backdrop-filter: blur(30rpx);
+		border-radius: 20rpx;
+		padding: 20rpx 24rpx;
 		display: flex;
 		align-items: center;
-		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.3);
+		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.25), 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+		border: 1rpx solid rgba(255, 255, 255, 0.8);
 	}
 	
 	.tip-icon {
-		font-size: 48rpx;
-		margin-right: $spacing-md;
+		font-size: 52rpx;
+		margin-right: 16rpx;
+		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
 	}
 	
 	.tip-content {
@@ -659,15 +661,18 @@ const shouldUseAI = (quickResult, ocrText) => {
 	}
 	
 	.tip-title {
-		font-size: $font-size-lg;
-		font-weight: $font-weight-bold;
-		color: $text-primary;
-		margin-bottom: 4rpx;
+		font-size: 30rpx;
+		font-weight: 600;
+		color: #1a1a1a;
+		margin-bottom: 6rpx;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.tip-desc {
-		font-size: $font-size-sm;
-		color: $text-secondary;
+		font-size: 24rpx;
+		color: #666666;
+		line-height: 1.5;
+		letter-spacing: 0.3rpx;
 	}
 
 	/* 扫描区域 */
@@ -691,9 +696,10 @@ const shouldUseAI = (quickResult, ocrText) => {
 	/* 四个角 */
 	.corner {
 		position: absolute;
-		width: 60rpx;
-		height: 60rpx;
-		border: 6rpx solid $primary-color;
+		width: 70rpx;
+		height: 70rpx;
+		border: 7rpx solid $primary-color;
+		filter: drop-shadow(0 0 12rpx rgba(82, 196, 26, 0.6));
 	}
 	
 	.corner-tl {
@@ -734,10 +740,10 @@ const shouldUseAI = (quickResult, ocrText) => {
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 4rpx;
-		background: linear-gradient(90deg, transparent 0%, $primary-color 50%, transparent 100%);
-		animation: scan 2s linear infinite;
-		box-shadow: 0 0 20rpx $primary-color;
+		height: 6rpx;
+		background: linear-gradient(90deg, transparent 0%, rgba(82, 196, 26, 0.3) 20%, $primary-color 50%, rgba(82, 196, 26, 0.3) 80%, transparent 100%);
+		animation: scan 2.5s ease-in-out infinite;
+		box-shadow: 0 0 24rpx rgba(82, 196, 26, 0.8), 0 0 12rpx rgba(82, 196, 26, 0.6);
 	}
 	
 	@keyframes scan {
@@ -788,78 +794,81 @@ const shouldUseAI = (quickResult, ocrText) => {
 	}
 	
 	.action-btn {
-		width: 110rpx;
-		height: 110rpx;
-		border-radius: $radius-2xl;
+		width: 120rpx;
+		height: 120rpx;
+		border-radius: 24rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.3s;
-		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.25), 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
 	}
 	
 	.album-btn {
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(20rpx);
-		border: 2rpx solid rgba(255, 255, 255, 0.5);
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+		backdrop-filter: blur(30rpx);
+		border: 2rpx solid rgba(255, 255, 255, 0.6);
 	}
 	
 	.album-btn:active {
-		transform: scale(0.92);
-		background: rgba(255, 255, 255, 1);
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.25);
+		transform: scale(0.90);
+		background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.98) 100%);
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.3), 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 	}
 	
 	.action-icon-img {
-		width: 56rpx;
-		height: 56rpx;
+		width: 60rpx;
+		height: 60rpx;
+		filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
 	}
 
 	.action-label {
-		font-size: $font-size-lg;
-		color: $text-white;
-		font-weight: $font-weight-semibold;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+		font-size: 26rpx;
+		color: rgba(255, 255, 255, 0.95);
+		font-weight: 500;
+		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.4);
+		letter-spacing: 0.5rpx;
 	}
 	
 	.action-label.main {
-		font-size: $font-size-xl;
-		font-weight: $font-weight-bold;
+		font-size: 30rpx;
+		font-weight: 600;
+		text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.5);
 	}
 
 	/* 拍照按钮 */
 	.capture-btn {
-		width: 140rpx;
-		height: 140rpx;
+		width: 150rpx;
+		height: 150rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.2s;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	
 	.capture-btn:active {
-		transform: scale(0.92);
+		transform: scale(0.88);
 	}
 	
 	.capture-outer {
-		width: 140rpx;
-		height: 140rpx;
-		border-radius: $radius-round;
-		background: rgba(255, 255, 255, 0.25);
-		border: 6rpx solid rgba(255, 255, 255, 0.95);
+		width: 150rpx;
+		height: 150rpx;
+		border-radius: 75rpx; /* 使用固定值确保是圆形 */
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+		border: 7rpx solid rgba(255, 255, 255, 0.98);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.3);
-		backdrop-filter: blur(10rpx);
+		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.35), 0 4rpx 12rpx rgba(0, 0, 0, 0.25);
+		backdrop-filter: blur(15rpx);
 	}
 
 	.capture-inner {
-		width: 104rpx;
-		height: 104rpx;
-		border-radius: $radius-round;
-		background: linear-gradient(135deg, #FFFFFF 0%, rgba(255, 255, 255, 0.9) 100%);
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+		width: 112rpx;
+		height: 112rpx;
+		border-radius: 56rpx; /* 使用固定值确保是圆形 */
+		background: linear-gradient(135deg, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 100%);
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.25), inset 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
 	}
 
 	/* 预览容器 */
