@@ -318,10 +318,10 @@
 	})
 	
 	onShow(() => {
-		// 延迟检查，确保云端数据已加载
-		setTimeout(() => {
-			checkReminderAndNotify()
-		}, 500)
+		// 弹框提醒已移除，改为使用系统推送通知
+		// setTimeout(() => {
+		// 	checkReminderAndNotify()
+		// }, 500)
 	})
 	
 	onHide(() => {

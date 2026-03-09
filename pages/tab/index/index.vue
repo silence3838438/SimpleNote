@@ -1119,31 +1119,14 @@ onLoad((options) => {
 	// 监听账单保存事件
 	uni.$on('billSaved', handleBillSaved)
 	
-	// 监听显示提醒弹框事件
-	uni.$on('showReminderModal', () => {
-		// 使用 nextTick 确保组件已经挂载
-		nextTick(() => {
-			if (reminderModalRef.value && typeof reminderModalRef.value.showModal === 'function') {
-				reminderModalRef.value.showModal()
-			} else {
-				console.error('reminderModalRef 未准备好或 showModal 方法不存在')
-				// 降级方案：使用系统弹框
-				uni.showModal({
-					title: '记账提醒',
-					content: '今天还没记账哦~\n养成每天记账的好习惯，让收支更清晰！',
-					confirmText: '去记账',
-					cancelText: '稍后',
-					success: (res) => {
-						if (res.confirm) {
-							// 用户点击去记账，不做任何操作（已在首页）
-						} else {
-							// 用户点击稍后，不做任何操作
-						}
-					}
-				})
-			}
-		})
-	})
+	// 弹框提醒已移除
+	// uni.$on('showReminderModal', () => {
+	// 	nextTick(() => {
+	// 		if (reminderModalRef.value && typeof reminderModalRef.value.showModal === 'function') {
+	// 			reminderModalRef.value.showModal()
+	// 		}
+	// 	})
+	// })
 	
 	// 首次加载后，后台静默同步一次云端数据
 	setTimeout(() => {
@@ -1235,7 +1218,7 @@ onHide(() => {
 onUnload(() => {
 	// 移除事件监听
 	uni.$off('billSaved', handleBillSaved)
-	uni.$off('showReminderModal')
+	// uni.$off('showReminderModal') // 已移除
 })
 
 </script>
