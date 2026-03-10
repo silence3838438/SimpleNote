@@ -1035,7 +1035,7 @@ onPullDownRefresh(async () => {
 	
 	/* 筛选标签 - 横向滚动（统一样式） */
 	.filter-scroll {
-		padding: 0;
+		padding: 4rpx 0; /* 增加上下内边距，防止按钮上浮时被截断 */
 		margin-top: $spacing-md;
 		margin-bottom: $spacing-xl;
 		white-space: nowrap;
@@ -1079,7 +1079,7 @@ onPullDownRefresh(async () => {
 		font-weight: $font-weight-bold; /* 从 semibold 改为 bold，更突出 */
 		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.2); /* 增强阴影 */
 		border: 1rpx solid rgba(82, 196, 26, 0.3); /* 边框更明显 */
-		transform: translateY(-2rpx); /* 添加轻微上浮效果 */
+		/* 移除上浮效果，避免顶部被截断 */
 	}
 	
 	.filter-tag.active:active {
