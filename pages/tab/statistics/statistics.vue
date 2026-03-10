@@ -194,6 +194,7 @@
 							@touchstart="handleChartTouch"
 						></canvas>
 						<!-- 柱状图 -->
+						<!-- #ifdef MP-WEIXIN -->
 						<canvas 
 							v-if="!data.showCustomPicker && data.chartType === 'bar'"
 							canvas-id="barChart" 
@@ -202,6 +203,16 @@
 							class="bar-line-canvas"
 							@touchstart="handleChartTouch"
 						></canvas>
+						<!-- #endif -->
+						<!-- #ifdef APP-PLUS -->
+						<canvas 
+							v-if="!data.showCustomPicker && data.chartType === 'bar'"
+							canvas-id="barChart" 
+							id="barChart"
+							class="bar-line-canvas"
+							@touchstart="handleChartTouch"
+						></canvas>
+						<!-- #endif -->
 					</view>
 				</template>
 			</view>
@@ -746,103 +757,79 @@ const renderChart = () => {
 const drawLineChart = () => {
 	console.log('drawLineChart 开始执行')
 	
-	// 获取时间趋势数据
 	const trendData = calculateTrendData()
 	console.log('趋势数据:', trendData)
 	
-	if (trendData.length === 0) {
-		console.log('没有趋势数据')
-		return
-	}
+	if (trendData.length === 0) return
 	
 	const canvasId = 'lineChart'
 	const ctx = uni.createCanvasContext(canvasId)
 	const width = 335
 	const height = 220
-	const padding = { top: 30, right: 15, bottom: 35, left: 50 }
+	const padding = { top: 25, right: 20, bottom: 40, left: 45 }
 	const chartWidth = width - padding.left - padding.right
 	const chartHeight = height - padding.top - padding.bottom
 	
 	// 清空画布
 	ctx.clearRect(0, 0, width, height)
 	
-	// 获取数据（根据数据量决定显示多少个点）
-	const maxPoints = 12
+	const maxPoints = 10
 	const step = Math.ceil(trendData.length / maxPoints)
 	const dataPoints = trendData.filter((_, index) => index % step === 0 || index === trendData.length - 1)
 	
 	if (dataPoints.length === 0) return
 	
 	const maxValue = Math.max(...dataPoints.map(d => d.amount))
-	const minValue = 0
 	const stepX = dataPoints.length > 1 ? chartWidth / (dataPoints.length - 1) : chartWidth / 2
 	
-	// 计算Y轴刻度（5个刻度）
-	const ySteps = 5
-	const yStepValue = maxValue / (ySteps - 1)
-	
-	// 绘制Y轴单位标识
-	ctx.setFontSize(10)
-	ctx.setFillStyle('#666666')
-	ctx.setTextAlign('right')
-	ctx.fillText('￥', padding.left - 5, padding.top - 10)
-	
-	// 绘制Y轴刻度线和刻度值
-	ctx.setStrokeStyle('#F0F0F0')
+	// 绘制坐标轴
+	ctx.setStrokeStyle('#E8E8E8')
 	ctx.setLineWidth(1)
+	
+	// Y轴
+	ctx.beginPath()
+	ctx.moveTo(padding.left, padding.top)
+	ctx.lineTo(padding.left, padding.top + chartHeight)
+	ctx.stroke()
+	
+	// X轴
+	ctx.beginPath()
+	ctx.moveTo(padding.left, padding.top + chartHeight)
+	ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight)
+	ctx.stroke()
+	
+	// Y轴刻度
+	const ySteps = 4
 	ctx.setFontSize(10)
-	ctx.setFillStyle('#999999')
+	ctx.setFillStyle('#999')
 	ctx.setTextAlign('right')
 	
-	for (let i = 0; i < ySteps; i++) {
-		const y = padding.top + (chartHeight / (ySteps - 1)) * i
-		const value = maxValue - (yStepValue * i)
+	for (let i = 0; i <= ySteps; i++) {
+		const y = padding.top + chartHeight - (chartHeight / ySteps) * i
+		const value = (maxValue / ySteps) * i
 		
-		// 绘制横向网格线
-		ctx.beginPath()
-		ctx.moveTo(padding.left, y)
-		ctx.lineTo(width - padding.right, y)
-		ctx.stroke()
+		// 网格线
+		if (i > 0) {
+			ctx.setStrokeStyle('#F5F5F5')
+			ctx.beginPath()
+			ctx.moveTo(padding.left, y)
+			ctx.lineTo(padding.left + chartWidth, y)
+			ctx.stroke()
+		}
 		
-		// 绘制Y轴刻度值
+		// 刻度值
 		const displayValue = value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value.toFixed(0)
 		ctx.fillText(displayValue, padding.left - 5, y + 3)
 	}
 	
-	// 绘制图表背景（浅色）
-	ctx.setFillStyle('#FAFBFC')
-	ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight)
-	
-	// 绘制渐变填充区域
-	const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom)
-	gradient.addColorStop(0, 'rgba(82, 196, 26, 0.2)')
-	gradient.addColorStop(1, 'rgba(82, 196, 26, 0.02)')
-	
-	ctx.beginPath()
-	ctx.moveTo(padding.left, height - padding.bottom)
-	dataPoints.forEach((point, index) => {
-		const x = padding.left + stepX * index
-		const y = padding.top + chartHeight - ((point.amount - minValue) / (maxValue - minValue)) * chartHeight
-		if (index === 0) {
-			ctx.lineTo(x, y)
-		} else {
-			ctx.lineTo(x, y)
-		}
-	})
-	ctx.lineTo(padding.left + stepX * (dataPoints.length - 1), height - padding.bottom)
-	ctx.closePath()
-	ctx.setFillStyle(gradient)
-	ctx.fill()
-	
 	// 绘制折线
 	ctx.setStrokeStyle('#52C41A')
-	ctx.setLineWidth(2.5)
-	ctx.setLineCap('round')
-	ctx.setLineJoin('round')
+	ctx.setLineWidth(2)
 	ctx.beginPath()
 	dataPoints.forEach((point, index) => {
 		const x = padding.left + stepX * index
-		const y = padding.top + chartHeight - ((point.amount - minValue) / (maxValue - minValue)) * chartHeight
+		const y = padding.top + chartHeight - (point.amount / maxValue) * chartHeight
+		
 		if (index === 0) {
 			ctx.moveTo(x, y)
 		} else {
@@ -851,51 +838,32 @@ const drawLineChart = () => {
 	})
 	ctx.stroke()
 	
-	// 绘制数据点和数值
+	// 绘制数据点
 	dataPoints.forEach((point, index) => {
 		const x = padding.left + stepX * index
-		const y = padding.top + chartHeight - ((point.amount - minValue) / (maxValue - minValue)) * chartHeight
+		const y = padding.top + chartHeight - (point.amount / maxValue) * chartHeight
 		
-		// 外圈
-		ctx.beginPath()
-		ctx.arc(x, y, 5, 0, 2 * Math.PI)
+		// 数据点
 		ctx.setFillStyle('#52C41A')
-		ctx.fill()
-		
-		// 内圈
 		ctx.beginPath()
 		ctx.arc(x, y, 3, 0, 2 * Math.PI)
-		ctx.setFillStyle('#FFFFFF')
 		ctx.fill()
 		
-		// 绘制数值（在点上方，间隔显示避免拥挤）
-		if (dataPoints.length <= 6 || index % 2 === 0) {
-			ctx.setFontSize(9)
-			ctx.setFillStyle('#52C41A')
-			ctx.setTextAlign('center')
-			const displayValue = point.amount >= 1000 ? (point.amount / 1000).toFixed(1) + 'k' : point.amount.toFixed(0)
-			ctx.fillText('¥' + displayValue, x, y - 10)
-		}
-		
-		// 绘制X轴标签（日期）
+		// X轴标签
 		ctx.setFontSize(9)
-		ctx.setFillStyle('#666666')
+		ctx.setFillStyle('#666')
 		ctx.setTextAlign('center')
 		
-		// 根据数据类型显示不同的标签
 		let labelText = ''
 		if (point.label) {
-			// 月份或周数
 			labelText = point.label
 		} else {
-			// 日期：显示 MM/DD
 			const dateParts = point.date.split('-')
 			labelText = dateParts[1] + '/' + dateParts[2]
 		}
 		
-		// 间隔显示标签避免拥挤
-		if (dataPoints.length <= 8 || index % 2 === 0) {
-			ctx.fillText(labelText, x, height - padding.bottom + 20)
+		if (dataPoints.length <= 6 || index % 2 === 0) {
+			ctx.fillText(labelText, x, padding.top + chartHeight + 15)
 		}
 	})
 	
@@ -908,9 +876,10 @@ const drawBarChart = () => {
 	
 	if (data.chartData.length === 0) return
 	
+	// #ifdef MP-WEIXIN
+	// 小程序端使用新版 Canvas 2D API
 	const canvasId = 'barChart'
 	
-	// 使用新版 Canvas 2D API（真机兼容性更好）
 	uni.createSelectorQuery()
 		.select('#' + canvasId)
 		.fields({ node: true, size: true })
@@ -1042,6 +1011,12 @@ const drawBarChart = () => {
 				ctx.fillText(labelText, x + barWidth / 2, height - padding.bottom + 20)
 			})
 		})
+	// #endif
+	
+	// #ifdef APP-PLUS
+	// APP端直接使用旧版API
+	drawBarChartLegacy()
+	// #endif
 }
 
 // 降级方案：使用旧版API
@@ -1054,114 +1029,86 @@ const drawBarChartLegacy = () => {
 	const ctx = uni.createCanvasContext(canvasId)
 	const width = 335
 	const height = 220
-	const padding = { top: 30, right: 15, bottom: 35, left: 50 }
+	const padding = { top: 25, right: 20, bottom: 40, left: 45 }
 	const chartWidth = width - padding.left - padding.right
 	const chartHeight = height - padding.top - padding.bottom
 	
 	// 清空画布
 	ctx.clearRect(0, 0, width, height)
 	
-	// 获取数据（最多显示前8个分类）
-	const dataPoints = data.chartData.slice(0, 8)
+	// 获取数据
+	const dataPoints = data.chartData.slice(0, 6)
 	if (dataPoints.length === 0) return
 	
 	const maxValue = Math.max(...dataPoints.map(d => d.amount))
+	const barWidth = Math.min(chartWidth / dataPoints.length * 0.6, 35)
+	const barGap = (chartWidth - barWidth * dataPoints.length) / (dataPoints.length + 1)
 	
-	// 计算柱子宽度，设置最大宽度避免数据少时柱子太宽
-	const maxBarWidth = 45 // 最大柱子宽度（进一步缩小）
-	const calculatedBarWidth = (chartWidth / dataPoints.length) * 0.65
-	const barWidth = Math.min(calculatedBarWidth, maxBarWidth)
-	
-	// 根据实际柱子宽度计算间隙，保持居中
-	const totalBarsWidth = barWidth * dataPoints.length
-	const totalGapWidth = chartWidth - totalBarsWidth
-	const barGap = totalGapWidth / (dataPoints.length + 1)
-	
-	// 计算Y轴刻度（5个刻度）
-	const ySteps = 5
-	const yStepValue = maxValue / (ySteps - 1)
-	
-	// 绘制Y轴单位标识
-	ctx.setFontSize(10)
-	ctx.setFillStyle('#666666')
-	ctx.setTextAlign('right')
-	ctx.fillText('￥', padding.left - 5, padding.top - 10)
-	
-	// 绘制Y轴刻度线和刻度值
-	ctx.setStrokeStyle('#F0F0F0')
+	// 绘制坐标轴
+	ctx.setStrokeStyle('#E8E8E8')
 	ctx.setLineWidth(1)
+	
+	// Y轴
+	ctx.beginPath()
+	ctx.moveTo(padding.left, padding.top)
+	ctx.lineTo(padding.left, padding.top + chartHeight)
+	ctx.stroke()
+	
+	// X轴
+	ctx.beginPath()
+	ctx.moveTo(padding.left, padding.top + chartHeight)
+	ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight)
+	ctx.stroke()
+	
+	// Y轴刻度
+	const ySteps = 4
 	ctx.setFontSize(10)
-	ctx.setFillStyle('#999999')
+	ctx.setFillStyle('#999')
 	ctx.setTextAlign('right')
 	
-	for (let i = 0; i < ySteps; i++) {
-		const y = padding.top + (chartHeight / (ySteps - 1)) * i
-		const value = maxValue - (yStepValue * i)
+	for (let i = 0; i <= ySteps; i++) {
+		const y = padding.top + chartHeight - (chartHeight / ySteps) * i
+		const value = (maxValue / ySteps) * i
 		
-		// 绘制横向网格线
-		ctx.beginPath()
-		ctx.moveTo(padding.left, y)
-		ctx.lineTo(width - padding.right, y)
-		ctx.stroke()
+		// 网格线
+		if (i > 0) {
+			ctx.setStrokeStyle('#F5F5F5')
+			ctx.beginPath()
+			ctx.moveTo(padding.left, y)
+			ctx.lineTo(padding.left + chartWidth, y)
+			ctx.stroke()
+		}
 		
-		// 绘制Y轴刻度值
+		// 刻度值
 		const displayValue = value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value.toFixed(0)
 		ctx.fillText(displayValue, padding.left - 5, y + 3)
 	}
-	
-	// 绘制图表背景（浅色）
-	ctx.setFillStyle('#FAFBFC')
-	ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight)
 	
 	// 绘制柱子
 	dataPoints.forEach((point, index) => {
 		const x = padding.left + barGap + (barWidth + barGap) * index
 		const barHeight = (point.amount / maxValue) * chartHeight
 		const y = padding.top + chartHeight - barHeight
-		const cornerRadius = 4 // 圆角半径
 		
-		// 绘制柱子底部背景（浅灰色，显示最大值）
-		ctx.setFillStyle('#F0F0F0')
-		ctx.fillRect(x, padding.top, barWidth, chartHeight)
-		
-		// 绘制柱子阴影（更柔和）
-		ctx.setFillStyle('rgba(0, 0, 0, 0.03)')
-		ctx.fillRect(x + 1, y + 1, barWidth, barHeight)
-		
-		// 渐变色柱子（更鲜艳的渐变）
-		const gradient = ctx.createLinearGradient(x, y, x, y + barHeight)
-		gradient.addColorStop(0, point.color || '#52C41A')
-		gradient.addColorStop(0.5, point.color || '#52C41A')
-		gradient.addColorStop(1, (point.color || '#52C41A') + 'CC')
-		
-		ctx.setFillStyle(gradient)
+		// 柱子
+		ctx.setFillStyle(point.color || '#52C41A')
 		ctx.fillRect(x, y, barWidth, barHeight)
 		
-		// 柱子顶部圆角高亮效果
-		if (barHeight > 8) {
-			ctx.setFillStyle('rgba(255, 255, 255, 0.4)')
-			ctx.fillRect(x, y, barWidth, Math.min(barHeight * 0.25, 6))
-		}
-		
-		// 绘制数值（在柱子上方，带背景）
-		if (barHeight > 15) {
+		// 数值标签
+		if (barHeight > 20) {
 			ctx.setFontSize(9)
-			ctx.setFillStyle('#333333')
+			ctx.setFillStyle(point.color || '#52C41A')
 			ctx.setTextAlign('center')
 			const displayValue = point.amount >= 1000 ? (point.amount / 1000).toFixed(1) + 'k' : point.amount.toFixed(0)
-			
-			// 数值文字（直接显示，无背景）
-			ctx.setFillStyle(point.color || '#52C41A')
-			ctx.setFontSize(9)
 			ctx.fillText('¥' + displayValue, x + barWidth / 2, y - 8)
 		}
 		
-		// 绘制X轴标签（分类名称）
+		// X轴标签
 		ctx.setFontSize(10)
-		ctx.setFillStyle('#666666')
+		ctx.setFillStyle('#666')
 		ctx.setTextAlign('center')
-		const labelText = point.name.length > 3 ? point.name.substring(0, 3) : point.name
-		ctx.fillText(labelText, x + barWidth / 2, height - padding.bottom + 20)
+		const labelText = point.name.length > 4 ? point.name.substring(0, 4) : point.name
+		ctx.fillText(labelText, x + barWidth / 2, padding.top + chartHeight + 15)
 	})
 	
 	ctx.draw()

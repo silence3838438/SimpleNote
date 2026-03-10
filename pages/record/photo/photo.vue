@@ -527,7 +527,7 @@ const shouldUseAI = (quickResult, ocrText) => {
 	.app-camera-placeholder {
 		width: 100%;
 		height: 100%;
-		background: linear-gradient(180deg, #52C41A 0%, #73D13D 50%, #95DE64 100%);
+		background: #000000;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
