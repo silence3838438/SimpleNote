@@ -1407,7 +1407,7 @@ const loadReminderTime = async () => {
 		})
 		
 		if (res.success && res.reminder) {
-			const reminderTime = res.reminder.reminder_time || res.reminder.time || ''
+			const reminderTime = res.reminder.time || ''
 			
 			// 如果云端数据与本地不同，更新本地和显示
 			if (reminderTime && reminderTime !== data.reminderTime) {

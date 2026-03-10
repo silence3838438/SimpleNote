@@ -167,8 +167,8 @@ const loadReminderFromCloud = async () => {
 		uni.hideLoading()
 		
 		if (res.success && res.reminder) {
-			// 后端返回的是 reminder 对象，可能包含 time 或 reminder_time 字段
-			const savedTime = res.reminder.reminder_time || res.reminder.time || ''
+			// 后端返回的是 reminder 对象，使用 time 字段
+			const savedTime = res.reminder.time || ''
 			
 			if (savedTime) {
 				// 云端有设置，使用云端数据

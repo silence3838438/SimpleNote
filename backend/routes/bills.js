@@ -320,7 +320,7 @@ async function getReminder(req, res, userId) {
   if (userResult.length === 0) {
     return res.json({
       success: true,
-      reminder: { enabled: false, time: '21:00', reminder_time: '21:00' }
+      reminder: { enabled: false, time: '21:00' }
     });
   }
   
@@ -329,17 +329,14 @@ async function getReminder(req, res, userId) {
   const result = await db.query('SELECT * FROM reminders WHERE user_id = ?', [reminderUserId]);
   
   if (result.length > 0) {
-    // 确保返回的数据包含 time 和 reminder_time 两个字段（兼容性）
-    const reminder = result[0];
-    reminder.reminder_time = reminder.time || reminder.reminder_time || '21:00';
     res.json({
       success: true,
-      reminder: reminder
+      reminder: result[0]
     });
   } else {
     res.json({
       success: true,
-      reminder: { enabled: false, time: '21:00', reminder_time: '21:00' }
+      reminder: { enabled: false, time: '21:00' }
     });
   }
 }

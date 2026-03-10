@@ -67,14 +67,14 @@ async function sendReminders() {
           
           // 判断是小程序用户还是APP用户
           let result;
-          if (reminder.push_client_id) {
+          if (reminder.openid && reminder.template_id) {
+            // 小程序用户：优先使用订阅消息（到达率更高）
+            console.log(`   📲 小程序用户，使用订阅消息推送`);
+            result = await sendReminderMessage(reminder);
+          } else if (reminder.push_client_id) {
             // APP用户：使用 UniPush 2.0
             console.log(`   📱 APP用户，使用 UniPush 2.0 推送`);
             result = await sendAppPushMessage(reminder);
-          } else if (reminder.openid && reminder.template_id) {
-            // 小程序用户：使用订阅消息
-            console.log(`   📲 小程序用户，使用订阅消息推送`);
-            result = await sendReminderMessage(reminder);
           } else {
             console.log(`   ⚠️  用户无有效推送渠道，跳过`);
             skipCount++;
@@ -212,7 +212,7 @@ async function sendAppPushMessage(reminder) {
     // 调用 uniCloud 云函数发送推送
     // 注意：这里需要配置 uniCloud 的 HTTP 访问地址
     // 在 uniCloud 控制台 -> 云函数 -> send-reminder -> 详情 -> 云函数URL化
-    const cloudFunctionUrl = process.env.UNICLOUD_PUSH_URL || 'https://fc-mp-xxxxxxxx.next.bspapp.com/send-reminder';
+    const cloudFunctionUrl = process.env.UNICLOUD_PUSH_URL || 'https://fc-mp-15dbe83d-4164-48c2-8f42-ae207c4d3b38.next.bspapp.com/send-reminder';
     
     const response = await axios.post(cloudFunctionUrl, message, {
       headers: {
