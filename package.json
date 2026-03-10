@@ -10,6 +10,7 @@
     "@cloudbase/adapter-uni-app": "^1.0.0-beta.4",
     "@cloudbase/js-sdk": "^1.8.4",
     "@cloudbase/node-sdk": "^3.18.0",
+    "@qiun/ucharts": "^2.5.0-20230101",
     "axios": "^1.13.5",
     "form-data": "^4.0.5",
     "vue-i18n": "^9.2.2"

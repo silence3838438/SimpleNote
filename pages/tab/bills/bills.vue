@@ -37,20 +37,32 @@
 				</view>
 				<view class="summary-amounts">
 					<view class="amount-item">
-						<text class="amount-label">收入</text>
-						<text class="amount-value income">{{ formatAmount(data.totalIncome) }}</text>
+						<view class="amount-label-row">
+							<text class="amount-label">收入</text>
+							<image class="eye-icon-img" :src="data.hideIncome ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
+						</view>
+						<text class="amount-value income" v-if="!data.hideIncome">{{ formatAmount(data.totalIncome) }}</text>
+						<text class="amount-value income" v-else>****</text>
 					</view>
 					<view class="amount-divider"></view>
 					<view class="amount-item">
-						<text class="amount-label">支出</text>
-						<text class="amount-value expense">-{{ formatAmount(data.totalExpense) }}</text>
+						<view class="amount-label-row">
+							<text class="amount-label">支出</text>
+							<image class="eye-icon-img" :src="data.hideExpense ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
+						</view>
+						<text class="amount-value expense" v-if="!data.hideExpense">-{{ formatAmount(data.totalExpense) }}</text>
+						<text class="amount-value expense" v-else>****</text>
 					</view>
 					<view class="amount-divider"></view>
 					<view class="amount-item">
-						<text class="amount-label">结余</text>
-						<text class="amount-value" :class="data.balance >= 0 ? 'income' : 'expense'">
+						<view class="amount-label-row">
+							<text class="amount-label">结余</text>
+							<image class="eye-icon-img" :src="data.hideBalance ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
+						</view>
+						<text class="amount-value" :class="data.balance >= 0 ? 'income' : 'expense'" v-if="!data.hideBalance">
 							{{ data.balance >= 0 ? '+' : '-' }}{{ formatAmount(data.balance) }}
 						</text>
+						<text class="amount-value" :class="data.balance >= 0 ? 'income' : 'expense'" v-else>****</text>
 					</view>
 				</view>
 			</view>
@@ -150,8 +162,7 @@
 				
 				<!-- 空状态 -->
 				<view class="empty-state" v-if="data.filteredBills.length === 0">
-					<text class="empty-icon">📝</text>
-					<text class="empty-text">暂无账单记录</text>
+					<image class="empty-image" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/emptyIcon.png" mode="aspectFit"></image>
 					<text class="empty-tip">快去记一笔吧~</text>
 				</view>
 			</view>
@@ -194,10 +205,19 @@ const data = reactive({
 	tempYear: '',
 	tempMonth: 0,
 	// 防止点击穿透的标志
-	isPickerClosing: false
+	isPickerClosing: false,
+	// 隐藏金额状态
+	hideIncome: false,
+	hideExpense: false,
+	hideBalance: false
 })
 
 const loadData = async () => {
+	// 读取金额隐藏状态
+	data.hideIncome = uni.getStorageSync('hideIncomeBills') || false
+	data.hideExpense = uni.getStorageSync('hideExpenseBills') || false
+	data.hideBalance = uni.getStorageSync('hideBalanceBills') || false
+	
 	// 检查登录状态
 	if (!checkLogin()) {
 		// 未登录时显示空状态
@@ -777,6 +797,24 @@ const deleteBill = async (bill) => {
 	}
 }
 
+// 切换收入显示/隐藏
+const toggleIncome = () => {
+	data.hideIncome = !data.hideIncome
+	uni.setStorageSync('hideIncomeBills', data.hideIncome)
+}
+
+// 切换支出显示/隐藏
+const toggleExpense = () => {
+	data.hideExpense = !data.hideExpense
+	uni.setStorageSync('hideExpenseBills', data.hideExpense)
+}
+
+// 切换结余显示/隐藏
+const toggleBalance = () => {
+	data.hideBalance = !data.hideBalance
+	uni.setStorageSync('hideBalanceBills', data.hideBalance)
+}
+
 onLoad(() => {
 	loadData()
 })
@@ -1004,11 +1042,29 @@ onPullDownRefresh(async () => {
 		gap: 12rpx;
 	}
 	
+	.amount-label-row {
+		display: flex;
+		align-items: center;
+		gap: 8rpx;
+	}
+	
 	.amount-label {
 		font-size: 22rpx;
 		color: $text-tertiary;
 		font-weight: $font-weight-normal;
 		letter-spacing: 0.5rpx;
+	}
+	
+	.eye-icon-img {
+		width: 24rpx;
+		height: 24rpx;
+		opacity: 0.6;
+		transition: all $transition-fast;
+	}
+	
+	.eye-icon-img:active {
+		opacity: 1;
+		transform: scale(0.9);
 	}
 	
 	.amount-value {
@@ -1335,11 +1391,10 @@ onPullDownRefresh(async () => {
 		pointer-events: none;
 	}
 	
-	.empty-icon {
-		font-size: 100rpx;
+	.empty-image {
+		width: 200rpx;
+		height: 200rpx;
 		margin-bottom: $spacing-xl;
-		opacity: 0.25;
-		filter: grayscale(0.3);
 	}
 	
 	.empty-text {

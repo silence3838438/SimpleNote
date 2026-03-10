@@ -158,8 +158,31 @@ async function testBills(token) {
   
   let billId = null;
   
-  // 2.1 创建账单
-  logTest('创建账单');
+  // 2.1 获取当前积分（记录初始值）
+  logTest('获取当前积分');
+  let initialPoints = 0;
+  try {
+    const response = await axios.post(`${CONFIG.API_BASE}/billManager`, {
+      action: 'getPoints'
+    }, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.data.success) {
+      initialPoints = response.data.points || 0;
+      logPass(`当前积分: ${initialPoints}`);
+      STATS.results.push({ test: '获取当前积分', status: 'passed', points: initialPoints });
+    } else {
+      logFail('获取积分失败');
+      STATS.results.push({ test: '获取当前积分', status: 'failed' });
+    }
+  } catch (error) {
+    logFail('请求失败', error);
+    STATS.results.push({ test: '获取当前积分', status: 'failed', error: error.message });
+  }
+  
+  // 2.2 创建账单（测试积分自动发放）
+  logTest('创建账单（测试积分自动发放）');
   try {
     const response = await axios.post(`${CONFIG.API_BASE}/billManager`, {
       action: 'add',
@@ -178,8 +201,16 @@ async function testBills(token) {
     
     if (response.data.success && response.data._id) {
       billId = response.data._id;
-      logPass(`创建成功，ID: ${billId}`);
-      STATS.results.push({ test: '创建账单', status: 'passed', billId });
+      const pointsAwarded = response.data.pointsAwarded || 0;
+      const isDailyFirst = response.data.isDailyFirst || false;
+      logPass(`创建成功，ID: ${billId}, 获得积分: ${pointsAwarded}${isDailyFirst ? '（今日首次+5）' : ''}`);
+      STATS.results.push({ 
+        test: '创建账单', 
+        status: 'passed', 
+        billId,
+        pointsAwarded,
+        isDailyFirst
+      });
     } else {
       logFail('创建失败');
       STATS.results.push({ test: '创建账单', status: 'failed' });
@@ -189,7 +220,46 @@ async function testBills(token) {
     STATS.results.push({ test: '创建账单', status: 'failed', error: error.message });
   }
   
-  // 2.2 查询账单列表
+  // 2.3 验证积分是否正确增加
+  logTest('验证积分是否正确增加');
+  try {
+    const response = await axios.post(`${CONFIG.API_BASE}/billManager`, {
+      action: 'getPoints'
+    }, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.data.success) {
+      const currentPoints = response.data.points || 0;
+      const pointsIncrease = currentPoints - initialPoints;
+      
+      if (pointsIncrease >= 2 && pointsIncrease <= 7) {
+        logPass(`积分增加: ${pointsIncrease}（初始${initialPoints} → 当前${currentPoints}）`);
+        STATS.results.push({ 
+          test: '验证积分增加', 
+          status: 'passed', 
+          increase: pointsIncrease,
+          expected: '2-7'
+        });
+      } else {
+        logFail(`积分增加异常: ${pointsIncrease}（预期2-7）`);
+        STATS.results.push({ 
+          test: '验证积分增加', 
+          status: 'failed', 
+          increase: pointsIncrease,
+          expected: '2-7'
+        });
+      }
+    } else {
+      logFail('获取积分失败');
+      STATS.results.push({ test: '验证积分增加', status: 'failed' });
+    }
+  } catch (error) {
+    logFail('请求失败', error);
+    STATS.results.push({ test: '验证积分增加', status: 'failed', error: error.message });
+  }
+  
+  // 2.4 查询账单列表
   logTest('查询账单列表');
   try {
     const response = await axios.post(`${CONFIG.API_BASE}/billManager`, {
@@ -211,7 +281,7 @@ async function testBills(token) {
     STATS.results.push({ test: '查询账单列表', status: 'failed', error: error.message });
   }
   
-  // 2.3 更新账单
+  // 2.5 更新账单
   if (billId) {
     logTest('更新账单');
     try {
@@ -239,7 +309,7 @@ async function testBills(token) {
     }
   }
   
-  // 2.4 删除账单
+  // 2.6 删除账单
   if (billId) {
     logTest('删除账单');
     try {

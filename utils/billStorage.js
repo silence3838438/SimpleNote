@@ -36,6 +36,35 @@ class BillStorage {
           newBill._id = res._id
           newBill.synced = true
           uni.setStorageSync(this.localKey, localBills)
+          
+          // 3. 处理后端返回的积分信息
+          if (res.pointsAwarded && res.pointsAwarded > 0) {
+            // 更新本地积分
+            let currentPoints = uni.getStorageSync('userPoints') || 0
+            currentPoints += res.pointsAwarded
+            uni.setStorageSync('userPoints', currentPoints)
+            
+            // 记录本地积分历史
+            let pointsHistory = uni.getStorageSync('pointsHistory') || []
+            const reason = res.isDailyFirst ? '记账（今日首次+5）' : '记账'
+            pointsHistory.unshift({
+              points: res.pointsAwarded,
+              reason: reason,
+              timestamp: Date.now(),
+              totalPoints: currentPoints
+            })
+            if (pointsHistory.length > 100) {
+              pointsHistory = pointsHistory.slice(0, 100)
+            }
+            uni.setStorageSync('pointsHistory', pointsHistory)
+            
+            // 显示积分提示
+            uni.showToast({
+              title: `记账成功 +${res.pointsAwarded}积分`,
+              icon: 'success',
+              duration: 2000
+            })
+          }
         }
       } catch (cloudError) {
         console.log('云端保存失败，仅保存到本地:', cloudError)

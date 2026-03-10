@@ -82,16 +82,51 @@ async function addBill(req, res, userId, billData) {
   // 使用前端传来的时间戳,如果没有则使用当前时间
   const createTime = billData.createTime || Date.now();
   
+  // 在保存账单之前，检查是否为今日首次记账
+  const todayBills = await db.query(
+    `SELECT COUNT(*) as count FROM bills 
+     WHERE user_id = ? AND DATE(date) = CURDATE()`,
+    [userId]
+  );
+  const isDailyFirst = todayBills[0].count === 0;
+  
+  // 保存账单
   const result = await db.query(
     'INSERT INTO bills (user_id, type, amount, merchant, date, category_id, category_name, note, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [userId, type, amount, merchant, date, categoryId, categoryName, note, createTime]
+  );
+  
+  // 自动给予记账积分：每笔2积分 + 今日首次额外5积分
+  const recordPoints = 2;
+  const bonusPoints = isDailyFirst ? 5 : 0;
+  const totalPoints = recordPoints + bonusPoints;
+  const reason = isDailyFirst ? '记账（今日首次+5）' : '记账';
+  
+  // 获取当前积分
+  const current = await db.query('SELECT points FROM user_points WHERE user_id = ?', [userId]);
+  const currentPoints = current.length > 0 ? (parseInt(current[0].points) || 0) : 0;
+  const newPoints = currentPoints + totalPoints;
+  
+  // 更新积分
+  if (current.length > 0) {
+    await db.query('UPDATE user_points SET points = ?, update_time = NOW() WHERE user_id = ?', [newPoints, userId]);
+  } else {
+    await db.query('INSERT INTO user_points (user_id, points, create_time) VALUES (?, ?, NOW())', [userId, newPoints]);
+  }
+  
+  // 记录积分历史
+  await db.query(
+    'INSERT INTO points_history (user_id, points, reason, metadata, create_time) VALUES (?, ?, ?, ?, NOW())',
+    [userId, totalPoints, reason, JSON.stringify({ type: 'record', isDailyFirst })]
   );
   
   res.json({
     success: true,
     _id: result.insertId,
     id: result.insertId,
-    message: '添加成功'
+    message: '添加成功',
+    pointsAwarded: totalPoints, // 返回获得的积分
+    isDailyFirst: isDailyFirst // 返回是否为今日首次
   });
 }
 
@@ -225,7 +260,22 @@ async function syncBills(req, res, userId, data) {
 
 // 获取预算
 async function getBudget(req, res, userId) {
-  const result = await db.query('SELECT amount FROM budgets WHERE user_id = ?', [userId]);
+  // 获取用户信息，确定正确的用户标识
+  let budgetUserId = userId;
+  
+  // 如果是数字类型的userId，需要获取用户信息来确定使用哪个标识
+  if (typeof userId === 'number' || !isNaN(userId)) {
+    const userResult = await db.query('SELECT id, openid FROM users WHERE id = ?', [userId]);
+    if (userResult.length > 0 && userResult[0].openid) {
+      // 小程序用户使用openid作为预算表的user_id
+      budgetUserId = userResult[0].openid;
+    } else {
+      // APP用户使用数字ID
+      budgetUserId = userId.toString();
+    }
+  }
+  
+  const result = await db.query('SELECT amount FROM budgets WHERE user_id = ?', [budgetUserId]);
   
   res.json({
     success: true,
@@ -236,12 +286,28 @@ async function getBudget(req, res, userId) {
 // 设置预算
 async function setBudget(req, res, userId, data) {
   const amount = parseFloat(data.amount) || 0;
-  const existing = await db.query('SELECT id FROM budgets WHERE user_id = ?', [userId]);
+  
+  // 获取用户信息，确定正确的用户标识
+  let budgetUserId = userId;
+  
+  // 如果是数字类型的userId，需要获取用户信息来确定使用哪个标识
+  if (typeof userId === 'number' || !isNaN(userId)) {
+    const userResult = await db.query('SELECT id, openid FROM users WHERE id = ?', [userId]);
+    if (userResult.length > 0 && userResult[0].openid) {
+      // 小程序用户使用openid作为预算表的user_id
+      budgetUserId = userResult[0].openid;
+    } else {
+      // APP用户使用数字ID
+      budgetUserId = userId.toString();
+    }
+  }
+  
+  const existing = await db.query('SELECT id FROM budgets WHERE user_id = ?', [budgetUserId]);
   
   if (existing.length > 0) {
-    await db.query('UPDATE budgets SET amount = ?, update_time = NOW() WHERE user_id = ?', [amount, userId]);
+    await db.query('UPDATE budgets SET amount = ?, update_time = NOW() WHERE user_id = ?', [amount, budgetUserId]);
   } else {
-    await db.query('INSERT INTO budgets (user_id, amount, create_time) VALUES (?, ?, NOW())', [userId, amount]);
+    await db.query('INSERT INTO budgets (user_id, amount, create_time) VALUES (?, ?, NOW())', [budgetUserId, amount]);
   }
   
   res.json({ success: true, message: '预算设置成功' });

@@ -101,58 +101,109 @@
 		
 		<!-- 环形图 -->
 		<view class="chart-card">
-			<view class="card-title">{{ data.currentType === 'income' ? '收入' : '支出' }}构成</view>
-			<view class="chart-wrapper" v-if="data.chartData.length > 0">
-				<!-- 顶部标签 -->
-				<view class="label-top" v-if="data.chartData[0]">
-					<view class="label-dot" :style="{ backgroundColor: data.chartData[0].color }"></view>
-					<view class="label-info">
-						<text class="label-text">{{ data.chartData[0].name }}</text>
-						<text class="label-value">¥{{ data.chartData[0].amount.toFixed(0) }} ({{ data.chartData[0].percent }}%)</text>
+			<view class="card-header">
+				<view class="card-title">{{ data.currentType === 'income' ? '收入' : '支出' }}构成</view>
+				<view class="chart-type-switcher">
+					<view 
+						class="chart-type-btn" 
+						:class="{ 'active': data.chartType === 'pie' }"
+						@click="switchChartType('pie')"
+					>
+						<text class="chart-type-text">饼状图</text>
+					</view>
+					<view 
+						class="chart-type-btn" 
+						:class="{ 'active': data.chartType === 'line' }"
+						@click="switchChartType('line')"
+					>
+						<text class="chart-type-text">折线图</text>
+					</view>
+					<view 
+						class="chart-type-btn" 
+						:class="{ 'active': data.chartType === 'bar' }"
+						@click="switchChartType('bar')"
+					>
+						<text class="chart-type-text">柱状图</text>
 					</view>
 				</view>
-				
-				<view class="chart-row">
-					<!-- 左侧标签 -->
-					<view class="label-left" v-if="data.chartData[3]">
-						<view class="label-dot" :style="{ backgroundColor: data.chartData[3].color }"></view>
+			</view>
+			<view class="chart-wrapper" v-if="data.chartData.length > 0">
+				<!-- 饼状图布局 -->
+				<template v-if="data.chartType === 'pie'">
+					<!-- 顶部标签 -->
+					<view class="label-top" v-if="data.chartData[0]">
+						<view class="label-dot" :style="{ backgroundColor: data.chartData[0].color }"></view>
 						<view class="label-info">
-							<text class="label-text">{{ data.chartData[3].name }}</text>
-							<text class="label-value">¥{{ data.chartData[3].amount.toFixed(0) }}</text>
-							<text class="label-percent">{{ data.chartData[3].percent }}%</text>
+							<text class="label-text">{{ data.chartData[0].name }}</text>
+							<text class="label-value">¥{{ data.chartData[0].amount.toFixed(0) }} ({{ data.chartData[0].percent }}%)</text>
 						</view>
 					</view>
 					
-					<!-- 中间图表 -->
-					<view class="chart-center">
+					<view class="chart-row">
+						<!-- 左侧标签 -->
+						<view class="label-left" v-if="data.chartData[3]">
+							<view class="label-dot" :style="{ backgroundColor: data.chartData[3].color }"></view>
+							<view class="label-info">
+								<text class="label-text">{{ data.chartData[3].name }}</text>
+								<text class="label-value">¥{{ data.chartData[3].amount.toFixed(0) }}</text>
+								<text class="label-percent">{{ data.chartData[3].percent }}%</text>
+							</view>
+						</view>
+						
+						<!-- 中间图表 -->
+						<view class="chart-center">
+							<canvas 
+								v-if="!data.showCustomPicker"
+								canvas-id="pieChart" 
+								id="pieChart"
+								class="chart-canvas"
+								@touchstart="handleChartTouch"
+							></canvas>
+						</view>
+						
+						<!-- 右侧标签 -->
+						<view class="label-right" v-if="data.chartData[1]">
+							<view class="label-info">
+								<text class="label-text">{{ data.chartData[1].name }}</text>
+								<text class="label-value">¥{{ data.chartData[1].amount.toFixed(0) }}</text>
+								<text class="label-percent">{{ data.chartData[1].percent }}%</text>
+							</view>
+							<view class="label-dot" :style="{ backgroundColor: data.chartData[1].color }"></view>
+						</view>
+					</view>
+					
+					<!-- 底部标签 -->
+					<view class="label-bottom" v-if="data.chartData[2]">
+						<view class="label-dot" :style="{ backgroundColor: data.chartData[2].color }"></view>
+						<view class="label-info">
+							<text class="label-text">{{ data.chartData[2].name }}</text>
+							<text class="label-value">¥{{ data.chartData[2].amount.toFixed(0) }} ({{ data.chartData[2].percent }}%)</text>
+						</view>
+					</view>
+				</template>
+				
+				<!-- 折线图/柱状图布局 -->
+				<template v-else>
+					<view class="bar-line-chart-container">
+						<!-- 折线图 -->
 						<canvas 
-							v-if="!data.showCustomPicker"
-							canvas-id="pieChart" 
-							id="pieChart"
-							class="chart-canvas"
+							v-if="!data.showCustomPicker && data.chartType === 'line'"
+							canvas-id="lineChart" 
+							id="lineChart"
+							class="bar-line-canvas"
+							@touchstart="handleChartTouch"
+						></canvas>
+						<!-- 柱状图 -->
+						<canvas 
+							v-if="!data.showCustomPicker && data.chartType === 'bar'"
+							canvas-id="barChart" 
+							id="barChart"
+							type="2d"
+							class="bar-line-canvas"
 							@touchstart="handleChartTouch"
 						></canvas>
 					</view>
-					
-					<!-- 右侧标签 -->
-					<view class="label-right" v-if="data.chartData[1]">
-						<view class="label-info">
-							<text class="label-text">{{ data.chartData[1].name }}</text>
-							<text class="label-value">¥{{ data.chartData[1].amount.toFixed(0) }}</text>
-							<text class="label-percent">{{ data.chartData[1].percent }}%</text>
-						</view>
-						<view class="label-dot" :style="{ backgroundColor: data.chartData[1].color }"></view>
-					</view>
-				</view>
-				
-				<!-- 底部标签 -->
-				<view class="label-bottom" v-if="data.chartData[2]">
-					<view class="label-dot" :style="{ backgroundColor: data.chartData[2].color }"></view>
-					<view class="label-info">
-						<text class="label-text">{{ data.chartData[2].name }}</text>
-						<text class="label-value">¥{{ data.chartData[2].amount.toFixed(0) }} ({{ data.chartData[2].percent }}%)</text>
-					</view>
-				</view>
+				</template>
 			</view>
 			<view class="chart-empty" v-else>
 				<text class="empty-text">暂无{{ data.currentType === 'income' ? '收入' : '支出' }}数据</text>
@@ -254,6 +305,7 @@ const statusBarHeight = systemInfo.statusBarHeight || 0
 const data = reactive({
 	currentFilter: 'month',
 	currentType: 'expense', // 当前查看的类型：expense 或 income
+	chartType: 'pie', // 图表类型：pie（饼状图）、line（折线图）、bar（柱状图）
 	timeFilters: [
 		{ label: '本月', value: 'month' },
 		{ label: '本季', value: 'quarter' },
@@ -317,6 +369,22 @@ const switchType = (type) => {
 	if (data.currentType === type) return
 	data.currentType = type
 	recalculateData()
+	uni.vibrateShort()
+}
+
+// 切换图表类型
+const switchChartType = (type) => {
+	if (data.chartType === type) return
+	
+	console.log('切换图表类型:', type)
+	data.chartType = type
+	
+	// 使用 setTimeout 确保 DOM 更新完成后再渲染
+	setTimeout(() => {
+		console.log('开始渲染图表:', type)
+		renderChart()
+	}, 100)
+	
 	uni.vibrateShort()
 }
 
@@ -419,8 +487,97 @@ const recalculateData = () => {
 	generateInsights(targetBills)
 	
 	nextTick(() => {
-		drawPieChart()
+		renderChart()
 	})
+}
+
+// 计算时间趋势数据（用于折线图）
+const calculateTrendData = () => {
+	const filteredBills = filterBillsByTime(data.allBills)
+	const targetBills = filteredBills.filter(bill => {
+		const billType = bill.type || 'expense'
+		return data.currentType === 'income' ? billType === 'income' : billType === 'expense'
+	})
+	
+	if (targetBills.length === 0) return []
+	
+	// 按日期分组
+	const dateMap = {}
+	targetBills.forEach(bill => {
+		const dateStr = bill.date.split('T')[0] // 只取日期部分 YYYY-MM-DD
+		if (!dateMap[dateStr]) {
+			dateMap[dateStr] = 0
+		}
+		dateMap[dateStr] += bill.amount
+	})
+	
+	// 转换为数组并排序
+	const trendData = Object.keys(dateMap).map(date => ({
+		date: date,
+		amount: dateMap[date]
+	})).sort((a, b) => a.date.localeCompare(b.date))
+	
+	// 根据时间范围决定显示粒度
+	if (data.currentFilter === 'year') {
+		// 年度：按月聚合
+		return aggregateByMonth(trendData)
+	} else if (data.currentFilter === 'quarter') {
+		// 季度：按周聚合
+		return aggregateByWeek(trendData)
+	} else {
+		// 月度或自定义：按日显示（最多显示31天）
+		return trendData.slice(-31)
+	}
+}
+
+// 按月聚合
+const aggregateByMonth = (trendData) => {
+	const monthMap = {}
+	trendData.forEach(item => {
+		const month = item.date.substring(0, 7) // YYYY-MM
+		if (!monthMap[month]) {
+			monthMap[month] = 0
+		}
+		monthMap[month] += item.amount
+	})
+	
+	return Object.keys(monthMap).map(month => ({
+		date: month,
+		label: month.substring(5) + '月', // 显示"01月"
+		amount: monthMap[month]
+	})).sort((a, b) => a.date.localeCompare(b.date))
+}
+
+// 按周聚合
+const aggregateByWeek = (trendData) => {
+	const weekMap = {}
+	trendData.forEach(item => {
+		const date = new Date(item.date)
+		const weekNum = getWeekNumber(date)
+		const weekKey = `${date.getFullYear()}-W${weekNum}`
+		if (!weekMap[weekKey]) {
+			weekMap[weekKey] = {
+				amount: 0,
+				startDate: item.date
+			}
+		}
+		weekMap[weekKey].amount += item.amount
+	})
+	
+	return Object.keys(weekMap).map(week => ({
+		date: weekMap[week].startDate,
+		label: week.split('-W')[1] + '周',
+		amount: weekMap[week].amount
+	})).sort((a, b) => a.date.localeCompare(b.date))
+}
+
+// 获取周数
+const getWeekNumber = (date) => {
+	const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+	const dayNum = d.getUTCDay() || 7
+	d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+	return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
 }
 
 const filterBillsByTime = (bills) => {
@@ -560,6 +717,452 @@ const drawPieChart = () => {
 	ctx.setFillStyle('#1A1A1A')
 	const amount = data.currentType === 'income' ? data.totalIncome : data.totalExpense
 	ctx.fillText(`¥${amount.toFixed(0)}`, centerX, centerY + 8)
+	
+	ctx.draw()
+}
+
+// 统一的图表渲染方法
+const renderChart = () => {
+	console.log('renderChart 被调用，当前类型:', data.chartType)
+	
+	if (data.chartData.length === 0) {
+		console.log('没有图表数据，跳过渲染')
+		return
+	}
+	
+	if (data.chartType === 'pie') {
+		console.log('绘制饼图')
+		drawPieChart()
+	} else if (data.chartType === 'line') {
+		console.log('绘制折线图')
+		drawLineChart()
+	} else if (data.chartType === 'bar') {
+		console.log('绘制柱状图')
+		drawBarChart()
+	}
+}
+
+// 绘制折线图 - 优化版（显示时间趋势）
+const drawLineChart = () => {
+	console.log('drawLineChart 开始执行')
+	
+	// 获取时间趋势数据
+	const trendData = calculateTrendData()
+	console.log('趋势数据:', trendData)
+	
+	if (trendData.length === 0) {
+		console.log('没有趋势数据')
+		return
+	}
+	
+	const canvasId = 'lineChart'
+	const ctx = uni.createCanvasContext(canvasId)
+	const width = 335
+	const height = 220
+	const padding = { top: 30, right: 15, bottom: 35, left: 50 }
+	const chartWidth = width - padding.left - padding.right
+	const chartHeight = height - padding.top - padding.bottom
+	
+	// 清空画布
+	ctx.clearRect(0, 0, width, height)
+	
+	// 获取数据（根据数据量决定显示多少个点）
+	const maxPoints = 12
+	const step = Math.ceil(trendData.length / maxPoints)
+	const dataPoints = trendData.filter((_, index) => index % step === 0 || index === trendData.length - 1)
+	
+	if (dataPoints.length === 0) return
+	
+	const maxValue = Math.max(...dataPoints.map(d => d.amount))
+	const minValue = 0
+	const stepX = dataPoints.length > 1 ? chartWidth / (dataPoints.length - 1) : chartWidth / 2
+	
+	// 计算Y轴刻度（5个刻度）
+	const ySteps = 5
+	const yStepValue = maxValue / (ySteps - 1)
+	
+	// 绘制Y轴单位标识
+	ctx.setFontSize(10)
+	ctx.setFillStyle('#666666')
+	ctx.setTextAlign('right')
+	ctx.fillText('￥', padding.left - 5, padding.top - 10)
+	
+	// 绘制Y轴刻度线和刻度值
+	ctx.setStrokeStyle('#F0F0F0')
+	ctx.setLineWidth(1)
+	ctx.setFontSize(10)
+	ctx.setFillStyle('#999999')
+	ctx.setTextAlign('right')
+	
+	for (let i = 0; i < ySteps; i++) {
+		const y = padding.top + (chartHeight / (ySteps - 1)) * i
+		const value = maxValue - (yStepValue * i)
+		
+		// 绘制横向网格线
+		ctx.beginPath()
+		ctx.moveTo(padding.left, y)
+		ctx.lineTo(width - padding.right, y)
+		ctx.stroke()
+		
+		// 绘制Y轴刻度值
+		const displayValue = value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value.toFixed(0)
+		ctx.fillText(displayValue, padding.left - 5, y + 3)
+	}
+	
+	// 绘制图表背景（浅色）
+	ctx.setFillStyle('#FAFBFC')
+	ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight)
+	
+	// 绘制渐变填充区域
+	const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom)
+	gradient.addColorStop(0, 'rgba(82, 196, 26, 0.2)')
+	gradient.addColorStop(1, 'rgba(82, 196, 26, 0.02)')
+	
+	ctx.beginPath()
+	ctx.moveTo(padding.left, height - padding.bottom)
+	dataPoints.forEach((point, index) => {
+		const x = padding.left + stepX * index
+		const y = padding.top + chartHeight - ((point.amount - minValue) / (maxValue - minValue)) * chartHeight
+		if (index === 0) {
+			ctx.lineTo(x, y)
+		} else {
+			ctx.lineTo(x, y)
+		}
+	})
+	ctx.lineTo(padding.left + stepX * (dataPoints.length - 1), height - padding.bottom)
+	ctx.closePath()
+	ctx.setFillStyle(gradient)
+	ctx.fill()
+	
+	// 绘制折线
+	ctx.setStrokeStyle('#52C41A')
+	ctx.setLineWidth(2.5)
+	ctx.setLineCap('round')
+	ctx.setLineJoin('round')
+	ctx.beginPath()
+	dataPoints.forEach((point, index) => {
+		const x = padding.left + stepX * index
+		const y = padding.top + chartHeight - ((point.amount - minValue) / (maxValue - minValue)) * chartHeight
+		if (index === 0) {
+			ctx.moveTo(x, y)
+		} else {
+			ctx.lineTo(x, y)
+		}
+	})
+	ctx.stroke()
+	
+	// 绘制数据点和数值
+	dataPoints.forEach((point, index) => {
+		const x = padding.left + stepX * index
+		const y = padding.top + chartHeight - ((point.amount - minValue) / (maxValue - minValue)) * chartHeight
+		
+		// 外圈
+		ctx.beginPath()
+		ctx.arc(x, y, 5, 0, 2 * Math.PI)
+		ctx.setFillStyle('#52C41A')
+		ctx.fill()
+		
+		// 内圈
+		ctx.beginPath()
+		ctx.arc(x, y, 3, 0, 2 * Math.PI)
+		ctx.setFillStyle('#FFFFFF')
+		ctx.fill()
+		
+		// 绘制数值（在点上方，间隔显示避免拥挤）
+		if (dataPoints.length <= 6 || index % 2 === 0) {
+			ctx.setFontSize(9)
+			ctx.setFillStyle('#52C41A')
+			ctx.setTextAlign('center')
+			const displayValue = point.amount >= 1000 ? (point.amount / 1000).toFixed(1) + 'k' : point.amount.toFixed(0)
+			ctx.fillText('¥' + displayValue, x, y - 10)
+		}
+		
+		// 绘制X轴标签（日期）
+		ctx.setFontSize(9)
+		ctx.setFillStyle('#666666')
+		ctx.setTextAlign('center')
+		
+		// 根据数据类型显示不同的标签
+		let labelText = ''
+		if (point.label) {
+			// 月份或周数
+			labelText = point.label
+		} else {
+			// 日期：显示 MM/DD
+			const dateParts = point.date.split('-')
+			labelText = dateParts[1] + '/' + dateParts[2]
+		}
+		
+		// 间隔显示标签避免拥挤
+		if (dataPoints.length <= 8 || index % 2 === 0) {
+			ctx.fillText(labelText, x, height - padding.bottom + 20)
+		}
+	})
+	
+	ctx.draw()
+}
+
+// 绘制柱状图 - 优化版
+const drawBarChart = () => {
+	console.log('drawBarChart 开始执行，数据长度:', data.chartData.length)
+	
+	if (data.chartData.length === 0) return
+	
+	const canvasId = 'barChart'
+	
+	// 使用新版 Canvas 2D API（真机兼容性更好）
+	uni.createSelectorQuery()
+		.select('#' + canvasId)
+		.fields({ node: true, size: true })
+		.exec((res) => {
+			if (!res || !res[0]) {
+				console.error('Canvas节点获取失败')
+				// 降级到旧版API
+				drawBarChartLegacy()
+				return
+			}
+			
+			const canvas = res[0].node
+			const ctx = canvas.getContext('2d')
+			
+			// 设置canvas实际大小（考虑设备像素比）
+			const dpr = uni.getSystemInfoSync().pixelRatio || 1
+			const width = 335
+			const height = 220
+			canvas.width = width * dpr
+			canvas.height = height * dpr
+			ctx.scale(dpr, dpr)
+			
+			const padding = { top: 30, right: 15, bottom: 35, left: 50 }
+			const chartWidth = width - padding.left - padding.right
+			const chartHeight = height - padding.top - padding.bottom
+			
+			// 清空画布
+			ctx.clearRect(0, 0, width, height)
+			
+			// 获取数据（最多显示前8个分类）
+			const dataPoints = data.chartData.slice(0, 8)
+			if (dataPoints.length === 0) return
+			
+			const maxValue = Math.max(...dataPoints.map(d => d.amount))
+			
+			// 计算柱子宽度，设置最大宽度避免数据少时柱子太宽
+			const maxBarWidth = 45 // 最大柱子宽度（进一步缩小）
+			const calculatedBarWidth = (chartWidth / dataPoints.length) * 0.65
+			const barWidth = Math.min(calculatedBarWidth, maxBarWidth)
+			
+			// 根据实际柱子宽度计算间隙，保持居中
+			const totalBarsWidth = barWidth * dataPoints.length
+			const totalGapWidth = chartWidth - totalBarsWidth
+			const barGap = totalGapWidth / (dataPoints.length + 1)
+			
+			// 计算Y轴刻度（5个刻度）
+			const ySteps = 5
+			const yStepValue = maxValue / (ySteps - 1)
+			
+			// 绘制Y轴单位标识
+			ctx.font = '10px sans-serif'
+			ctx.fillStyle = '#666666'
+			ctx.textAlign = 'right'
+			ctx.fillText('￥', padding.left - 5, padding.top - 10)
+			
+			// 绘制Y轴刻度线和刻度值
+			ctx.strokeStyle = '#F0F0F0'
+			ctx.lineWidth = 1
+			ctx.font = '10px sans-serif'
+			ctx.fillStyle = '#999999'
+			ctx.textAlign = 'right'
+			
+			for (let i = 0; i < ySteps; i++) {
+				const y = padding.top + (chartHeight / (ySteps - 1)) * i
+				const value = maxValue - (yStepValue * i)
+				
+				// 绘制横向网格线
+				ctx.beginPath()
+				ctx.moveTo(padding.left, y)
+				ctx.lineTo(width - padding.right, y)
+				ctx.stroke()
+				
+				// 绘制Y轴刻度值
+				const displayValue = value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value.toFixed(0)
+				ctx.fillText(displayValue, padding.left - 5, y + 3)
+			}
+			
+			// 绘制图表背景（浅色）
+			ctx.fillStyle = '#FAFBFC'
+			ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight)
+			
+			// 绘制柱子
+			dataPoints.forEach((point, index) => {
+				const x = padding.left + barGap + (barWidth + barGap) * index
+				const barHeight = (point.amount / maxValue) * chartHeight
+				const y = padding.top + chartHeight - barHeight
+				
+				// 绘制柱子底部背景（浅灰色，显示最大值）
+				ctx.fillStyle = '#F0F0F0'
+				ctx.fillRect(x, padding.top, barWidth, chartHeight)
+				
+				// 绘制柱子阴影（更柔和）
+				ctx.fillStyle = 'rgba(0, 0, 0, 0.03)'
+				ctx.fillRect(x + 1, y + 1, barWidth, barHeight)
+				
+				// 渐变色柱子（更鲜艳的渐变）
+				const gradient = ctx.createLinearGradient(x, y, x, y + barHeight)
+				gradient.addColorStop(0, point.color || '#52C41A')
+				gradient.addColorStop(0.5, point.color || '#52C41A')
+				gradient.addColorStop(1, (point.color || '#52C41A') + 'CC')
+				
+				ctx.fillStyle = gradient
+				ctx.fillRect(x, y, barWidth, barHeight)
+				
+				// 柱子顶部圆角高亮效果
+				if (barHeight > 8) {
+					ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
+					ctx.fillRect(x, y, barWidth, Math.min(barHeight * 0.25, 6))
+				}
+				
+				// 绘制数值（在柱子上方，带背景）
+				if (barHeight > 15) {
+					ctx.font = '9px sans-serif'
+					ctx.fillStyle = '#333333'
+					ctx.textAlign = 'center'
+					const displayValue = point.amount >= 1000 ? (point.amount / 1000).toFixed(1) + 'k' : point.amount.toFixed(0)
+					
+					// 数值文字（直接显示，无背景）
+					ctx.fillStyle = point.color || '#52C41A'
+					ctx.font = '9px sans-serif'
+					ctx.fillText('¥' + displayValue, x + barWidth / 2, y - 8)
+				}
+				
+				// 绘制X轴标签（分类名称）
+				ctx.font = '10px sans-serif'
+				ctx.fillStyle = '#666666'
+				ctx.textAlign = 'center'
+				const labelText = point.name.length > 3 ? point.name.substring(0, 3) : point.name
+				ctx.fillText(labelText, x + barWidth / 2, height - padding.bottom + 20)
+			})
+		})
+}
+
+// 降级方案：使用旧版API
+const drawBarChartLegacy = () => {
+	console.log('使用旧版Canvas API绘制柱状图')
+	
+	if (data.chartData.length === 0) return
+	
+	const canvasId = 'barChart'
+	const ctx = uni.createCanvasContext(canvasId)
+	const width = 335
+	const height = 220
+	const padding = { top: 30, right: 15, bottom: 35, left: 50 }
+	const chartWidth = width - padding.left - padding.right
+	const chartHeight = height - padding.top - padding.bottom
+	
+	// 清空画布
+	ctx.clearRect(0, 0, width, height)
+	
+	// 获取数据（最多显示前8个分类）
+	const dataPoints = data.chartData.slice(0, 8)
+	if (dataPoints.length === 0) return
+	
+	const maxValue = Math.max(...dataPoints.map(d => d.amount))
+	
+	// 计算柱子宽度，设置最大宽度避免数据少时柱子太宽
+	const maxBarWidth = 45 // 最大柱子宽度（进一步缩小）
+	const calculatedBarWidth = (chartWidth / dataPoints.length) * 0.65
+	const barWidth = Math.min(calculatedBarWidth, maxBarWidth)
+	
+	// 根据实际柱子宽度计算间隙，保持居中
+	const totalBarsWidth = barWidth * dataPoints.length
+	const totalGapWidth = chartWidth - totalBarsWidth
+	const barGap = totalGapWidth / (dataPoints.length + 1)
+	
+	// 计算Y轴刻度（5个刻度）
+	const ySteps = 5
+	const yStepValue = maxValue / (ySteps - 1)
+	
+	// 绘制Y轴单位标识
+	ctx.setFontSize(10)
+	ctx.setFillStyle('#666666')
+	ctx.setTextAlign('right')
+	ctx.fillText('￥', padding.left - 5, padding.top - 10)
+	
+	// 绘制Y轴刻度线和刻度值
+	ctx.setStrokeStyle('#F0F0F0')
+	ctx.setLineWidth(1)
+	ctx.setFontSize(10)
+	ctx.setFillStyle('#999999')
+	ctx.setTextAlign('right')
+	
+	for (let i = 0; i < ySteps; i++) {
+		const y = padding.top + (chartHeight / (ySteps - 1)) * i
+		const value = maxValue - (yStepValue * i)
+		
+		// 绘制横向网格线
+		ctx.beginPath()
+		ctx.moveTo(padding.left, y)
+		ctx.lineTo(width - padding.right, y)
+		ctx.stroke()
+		
+		// 绘制Y轴刻度值
+		const displayValue = value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value.toFixed(0)
+		ctx.fillText(displayValue, padding.left - 5, y + 3)
+	}
+	
+	// 绘制图表背景（浅色）
+	ctx.setFillStyle('#FAFBFC')
+	ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight)
+	
+	// 绘制柱子
+	dataPoints.forEach((point, index) => {
+		const x = padding.left + barGap + (barWidth + barGap) * index
+		const barHeight = (point.amount / maxValue) * chartHeight
+		const y = padding.top + chartHeight - barHeight
+		const cornerRadius = 4 // 圆角半径
+		
+		// 绘制柱子底部背景（浅灰色，显示最大值）
+		ctx.setFillStyle('#F0F0F0')
+		ctx.fillRect(x, padding.top, barWidth, chartHeight)
+		
+		// 绘制柱子阴影（更柔和）
+		ctx.setFillStyle('rgba(0, 0, 0, 0.03)')
+		ctx.fillRect(x + 1, y + 1, barWidth, barHeight)
+		
+		// 渐变色柱子（更鲜艳的渐变）
+		const gradient = ctx.createLinearGradient(x, y, x, y + barHeight)
+		gradient.addColorStop(0, point.color || '#52C41A')
+		gradient.addColorStop(0.5, point.color || '#52C41A')
+		gradient.addColorStop(1, (point.color || '#52C41A') + 'CC')
+		
+		ctx.setFillStyle(gradient)
+		ctx.fillRect(x, y, barWidth, barHeight)
+		
+		// 柱子顶部圆角高亮效果
+		if (barHeight > 8) {
+			ctx.setFillStyle('rgba(255, 255, 255, 0.4)')
+			ctx.fillRect(x, y, barWidth, Math.min(barHeight * 0.25, 6))
+		}
+		
+		// 绘制数值（在柱子上方，带背景）
+		if (barHeight > 15) {
+			ctx.setFontSize(9)
+			ctx.setFillStyle('#333333')
+			ctx.setTextAlign('center')
+			const displayValue = point.amount >= 1000 ? (point.amount / 1000).toFixed(1) + 'k' : point.amount.toFixed(0)
+			
+			// 数值文字（直接显示，无背景）
+			ctx.setFillStyle(point.color || '#52C41A')
+			ctx.setFontSize(9)
+			ctx.fillText('¥' + displayValue, x + barWidth / 2, y - 8)
+		}
+		
+		// 绘制X轴标签（分类名称）
+		ctx.setFontSize(10)
+		ctx.setFillStyle('#666666')
+		ctx.setTextAlign('center')
+		const labelText = point.name.length > 3 ? point.name.substring(0, 3) : point.name
+		ctx.fillText(labelText, x + barWidth / 2, height - padding.bottom + 20)
+	})
 	
 	ctx.draw()
 }
@@ -1783,6 +2386,50 @@ onPullDownRefresh(async () => {
 		padding: 0;
 		border-bottom: none;
 	}
+	
+	/* 卡片头部 - 标题和切换按钮 */
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: $spacing-lg;
+	}
+	
+	/* 图表类型切换器 */
+	.chart-type-switcher {
+		display: flex;
+		gap: 0;
+		background: #F5F5F5;
+		border-radius: 20rpx;
+		padding: 4rpx;
+	}
+	
+	.chart-type-btn {
+		padding: 8rpx 20rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 16rpx;
+		transition: all 0.3s ease;
+		background: transparent;
+	}
+	
+	.chart-type-btn.active {
+		background: linear-gradient(135deg, #E8F5E9 0%, #F0FFF4 100%); /* 浅绿色渐变 */
+		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
+	}
+	
+	.chart-type-text {
+		font-size: 24rpx;
+		color: #666666;
+		transition: all 0.3s ease;
+		font-weight: 400;
+	}
+	
+	.chart-type-btn.active .chart-type-text {
+		color: #52C41A; /* 绿色文字 */
+		font-weight: 500;
+	}
 
 	/* 图表包装器 */
 	.chart-wrapper {
@@ -1810,6 +2457,19 @@ onPullDownRefresh(async () => {
 	.chart-canvas {
 		width: 140px; /* 增大图表尺寸 */
 		height: 140px;
+	}
+	
+	/* 折线图/柱状图容器 */
+	.bar-line-chart-container {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		padding: 20rpx 0;
+	}
+	
+	.bar-line-canvas {
+		width: 335px;
+		height: 220px;
 	}
 	
 	/* 标签样式 - 优化视觉层次 */

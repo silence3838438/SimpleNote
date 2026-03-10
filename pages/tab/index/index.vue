@@ -217,8 +217,7 @@
 			
 			<!-- 空状态 - 参考账单页面样式 -->
 			<view class="empty-state" v-if="data.recentBills.length === 0">
-				<text class="empty-icon">📝</text>
-				<text class="empty-text">暂无账单记录</text>
+				<image class="empty-image" src="https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/emptyIcon.png" mode="aspectFit"></image>
 				<text class="empty-tip">快去记一笔吧~</text>
 			</view>
 			
@@ -272,7 +271,7 @@ import billStorage from '@/utils/billStorage.js'
 import { checkUpdate } from '@/utils/appUpdate.js'
 import UpdateModal from '@/components/UpdateModal.vue'
 import { checkLevelUp } from '@/utils/memberLevel.js'
-import { rewardRecord, checkRecordAchievements, checkContinuousAchievements, rewardSetBudget } from '@/utils/pointsRules.js'
+import { checkRecordAchievements, checkContinuousAchievements, rewardSetBudget } from '@/utils/pointsRules.js'
 import { addPointsHybrid } from '@/utils/pointsSync.js'
 import { getExpenseCategories, getIncomeCategories } from '@/utils/category.js'
 import ReminderModal from '@/components/ReminderModal.vue'
@@ -486,12 +485,12 @@ const handleBillSaved = async () => {
 		recalculateData()
 		await nextTick()
 		
-		// 并行执行奖励检查（静默）
+		// 并行执行成就检查（静默）
+		// 注意：记账积分已由后端自动处理，前端不需要再调用rewardRecord
 		Promise.all([
-			rewardRecord(),
 			checkRecordAchievements(bills.length),
 			checkContinuousAchievements(new Set(bills.map(b => new Date(b.date).toDateString())).size)
-		]).catch(err => console.error('奖励检查失败:', err))
+		]).catch(err => console.error('成就检查失败:', err))
 		
 	} catch (error) {
 		console.error('静默刷新失败:', error)
@@ -2622,17 +2621,10 @@ export default {
 		margin: $spacing-md 0;
 	}
 	
-	.empty-icon {
-		font-size: 120rpx;
-		margin-bottom: $spacing-lg;
-		opacity: 0.3;
-	}
-	
-	.empty-text {
-		font-size: $font-size-lg;
-		color: $text-secondary;
-		font-weight: $font-weight-medium;
-		margin-bottom: $spacing-xs;
+	.empty-image {
+		width: 200rpx;
+		height: 200rpx;
+		margin-bottom: $spacing-xl;
 	}
 	
 	.empty-tip {

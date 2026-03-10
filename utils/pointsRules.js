@@ -5,7 +5,8 @@ const POINTS_RULES = {
 	// 记账换算规则
 	recordConversion: {
 		pointsPerRecord: 2, // 每记一笔账获得2积分
-		desc: '每记一笔账可获得2积分'
+		dailyFirstBonus: 5, // 每日首次记账额外获得5积分
+		desc: '每记一笔账可获得2积分，每日首次记账额外获得5积分'
 	},
 	
 	// 春节活动
@@ -121,12 +122,17 @@ const addPoints = async (points, reason = '') => {
 }
 
 /**
- * 记账奖励（每笔2积分）
+ * 记账奖励（每笔2积分 + 每日首次额外5积分）
+ * @param {boolean} isDailyFirst - 是否为今日首次记账
  * @returns {Promise<object>}
  */
-export const rewardRecord = async () => {
+export const rewardRecord = async (isDailyFirst = false) => {
 	const recordPoints = POINTS_RULES.recordConversion.pointsPerRecord
-	return await addPoints(recordPoints, '记账')
+	const bonusPoints = isDailyFirst ? POINTS_RULES.recordConversion.dailyFirstBonus : 0
+	const totalPoints = recordPoints + bonusPoints
+	
+	const reason = isDailyFirst ? '记账（今日首次+5）' : '记账'
+	return await addPoints(totalPoints, reason)
 }
 
 /**
