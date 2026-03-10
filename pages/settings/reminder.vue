@@ -46,6 +46,21 @@
 			</view>
 		</view>
 		
+		<!-- APP端推送条件提示 -->
+		<!-- #ifdef APP-PLUS -->
+		<view class="tips-card">
+			<view class="tips-header">
+				<text class="tips-icon">💡</text>
+				<text class="tips-title">推送条件</text>
+			</view>
+			<view class="tips-content">
+				<text class="tips-item">1. APP处于在线或者后台状态</text>
+				<text class="tips-item">2. 开启应用通知权限</text>
+				<text class="tips-item">3. 允许应用自启动</text>
+			</view>
+		</view>
+		<!-- #endif -->
+		
 		<!-- 保存按钮 -->
 		<view class="save-btn-area">
 			<button class="save-btn" @click="saveAndSubscribe" :disabled="data.saving || data.selectedTime === '未设置'">
@@ -591,11 +606,11 @@ const saveSubscriptionToCloud = async (clientId = null) => {
 }
 
 .tips-icon {
-	font-size: 32rpx;
+	font-size: 28rpx;
 }
 
 .tips-title {
-	font-size: $font-size-lg;
+	font-size: $font-size-base;
 	font-weight: $font-weight-bold;
 	color: #D46B08;
 }
@@ -603,25 +618,13 @@ const saveSubscriptionToCloud = async (clientId = null) => {
 .tips-content {
 	display: flex;
 	flex-direction: column;
-	gap: $spacing-sm;
-	margin-bottom: $spacing-md;
+	gap: $spacing-xs;
 }
 
-.tips-text {
-	font-size: $font-size-base;
-	color: #AD6800;
-	line-height: 1.6;
-}
-
-.tips-footer {
-	padding-top: $spacing-sm;
-	border-top: 1rpx solid rgba(255, 213, 145, 0.5);
-}
-
-.tips-note {
+.tips-item {
 	font-size: $font-size-sm;
-	color: #D46B08;
-	opacity: 0.8;
+	color: #AD6800;
+	line-height: 1.4;
 }
 
 .save-btn-area {

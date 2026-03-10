@@ -64,12 +64,35 @@
 			<!-- #endif -->
 			
 			<!-- #ifdef APP-PLUS -->
-			<!-- APP端使用简化界面，直接调用系统相机 -->
-			<view class="app-camera-placeholder">
+			<!-- APP端使用和小程序一样的界面 -->
+			<view class="camera-placeholder" v-if="!data.cameraReady">
 				<view class="placeholder-content">
 					<view class="placeholder-icon">📷</view>
-					<text class="placeholder-title">拍照记账</text>
-					<text class="placeholder-desc">拍照后自动识别小票信息</text>
+					<text class="placeholder-text">正在启动相机...</text>
+				</view>
+			</view>
+			
+			<view v-if="data.cameraReady" class="app-camera-view">
+				<!-- 顶部提示区域 -->
+				<view class="top-tips">
+					<view class="tip-card">
+						<text class="tip-icon">💡</text>
+						<view class="tip-content">
+							<text class="tip-title">智能识别小票</text>
+							<text class="tip-desc">拍照后自动识别，长小票可拍摄关键部分</text>
+						</view>
+					</view>
+				</view>
+				
+				<!-- 中央扫描框 -->
+				<view class="scan-area">
+					<view class="scan-frame">
+						<view class="corner corner-tl"></view>
+						<view class="corner corner-tr"></view>
+						<view class="corner corner-bl"></view>
+						<view class="corner corner-br"></view>
+						<view class="scan-line"></view>
+					</view>
 				</view>
 				
 				<!-- 底部操作栏 -->
@@ -513,6 +536,14 @@ const shouldUseAI = (quickResult, ocrText) => {
 		height: 100%;
 	}
 	
+	/* APP端相机视图 */
+	.app-camera-view {
+		width: 100%;
+		height: 100%;
+		background: #000000;
+		position: relative;
+	}
+	
 	/* 相机占位界面 */
 	.camera-placeholder {
 		width: 100%;
@@ -523,108 +554,22 @@ const shouldUseAI = (quickResult, ocrText) => {
 		justify-content: center;
 	}
 	
-	/* APP端相机占位界面 */
-	.app-camera-placeholder {
-		width: 100%;
-		height: 100%;
-		background: #000000;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: space-between;
-		position: relative;
-		overflow: hidden;
-	}
-	
-	/* 添加装饰元素 - 圆形光晕 */
-	.app-camera-placeholder::before {
-		content: '';
-		position: absolute;
-		width: 800rpx;
-		height: 800rpx;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-		border-radius: 50%;
-		top: -300rpx;
-		right: -200rpx;
-		animation: float 6s ease-in-out infinite;
-	}
-	
-	.app-camera-placeholder::after {
-		content: '';
-		position: absolute;
-		width: 600rpx;
-		height: 600rpx;
-		background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-		border-radius: 50%;
-		bottom: -200rpx;
-		left: -150rpx;
-		animation: float 8s ease-in-out infinite reverse;
-	}
-	
-	@keyframes float {
-		0%, 100% {
-			transform: translate(0, 0) scale(1);
-		}
-		50% {
-			transform: translate(30rpx, -30rpx) scale(1.1);
-		}
-	}
-	
 	.placeholder-content {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: $spacing-xl;
-		z-index: 1;
-		padding: 0 $spacing-2xl;
-		flex: 1;
-		justify-content: center;
-		padding-bottom: 280rpx;
 	}
 	
 	.placeholder-icon {
 		font-size: 160rpx;
 		filter: drop-shadow(0 8rpx 24rpx rgba(0, 0, 0, 0.15));
-		animation: pulse-icon 2s ease-in-out infinite;
-	}
-	
-	@keyframes pulse-icon {
-		0%, 100% {
-			transform: scale(1);
-			filter: drop-shadow(0 8rpx 24rpx rgba(0, 0, 0, 0.15));
-		}
-		50% {
-			transform: scale(1.08);
-			filter: drop-shadow(0 12rpx 32rpx rgba(0, 0, 0, 0.2));
-		}
-	}
-	
-	.placeholder-title {
-		font-size: 56rpx;
-		color: $text-white;
-		font-weight: $font-weight-bold;
-		text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-		letter-spacing: 2rpx;
 	}
 	
 	.placeholder-text {
 		font-size: $font-size-lg;
 		color: rgba(255, 255, 255, 0.8);
 		font-weight: $font-weight-medium;
-	}
-	
-	.placeholder-desc {
-		font-size: $font-size-lg;
-		color: rgba(255, 255, 255, 0.85);
-		text-align: center;
-		padding: 0 $spacing-3xl;
-		line-height: 1.8;
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(10rpx);
-		border-radius: $radius-2xl;
-		padding: $spacing-lg $spacing-2xl;
-		border: 1rpx solid rgba(255, 255, 255, 0.2);
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
 	}
 	
 	/* 顶部提示 */
