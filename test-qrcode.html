@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试二维码生成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .qr-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        #qrcode {
+            margin: 20px 0;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>测试安卓APK二维码生成</h1>
+    
+    <div class="qr-container">
+        <h2>API 响应</h2>
+        <div id="apiResponse" class="info">加载中...</div>
+        
+        <h2>生成的二维码</h2>
+        <div id="qrcode"></div>
+        
+        <div id="status"></div>
+    </div>
+
+    <!-- 引入二维码生成库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+    
+    <script>
+        // 测试API和二维码生成
+        fetch('https://api.qiannaqule.top/api/config/latest-android-apk')
+            .then(response => response.json())
+            .then(data => {
+                const apiResponseDiv = document.getElementById('apiResponse');
+                const statusDiv = document.getElementById('status');
+                
+                // 显示API响应
+                apiResponseDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success && data.data.downloadUrl) {
+                    statusDiv.innerHTML = '<p class="success">✅ API 调用成功，开始生成二维码...</p>';
+                    
+                    // 生成二维码
+                    try {
+                        new QRCode(document.getElementById('qrcode'), {
+                            text: data.data.downloadUrl,
+                            width: 200,
+                            height: 200,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                        
+                        statusDiv.innerHTML += '<p class="success">✅ 二维码生成成功！</p>';
+                        statusDiv.innerHTML += '<p>下载地址: ' + data.data.downloadUrl + '</p>';
+                    } catch (error) {
+                        statusDiv.innerHTML += '<p class="error">❌ 二维码生成失败: ' + error.message + '</p>';
+                    }
+                } else {
+                    statusDiv.innerHTML = '<p class="error">❌ 未找到APK下载地址</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('apiResponse').innerHTML = '<p class="error">API 调用失败: ' + error.message + '</p>';
+                document.getElementById('status').innerHTML = '<p class="error">❌ 测试失败</p>';
+            });
+    </script>
+</body>
+</html>
