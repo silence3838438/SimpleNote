@@ -156,6 +156,8 @@
             font-size: 14px;
             color: #666;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
         
         .download-text {
@@ -455,7 +457,7 @@
                 
                 <!-- 安卓应用 -->
                 <div class="download-item">
-                    <div class="qr-code">
+                    <div class="qr-code" id="androidQrcodeContainer">
                         <img id="androidQrcode" src="androidCode.jpg" alt="安卓应用下载二维码" style="width: 100%; height: 100%; border-radius: 10px;">
                     </div>
                     <p class="download-text">扫码下载安卓应用</p>
@@ -484,20 +486,114 @@
         </footer>
     </div>
     
+    <!-- 引入二维码生成库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+    
     <script>
-        // 加载安卓二维码
-        fetch('https://api.qiannaqule.top/api/admin/android-qrcode')
+        // 动态生成安卓APK下载二维码（带logo）
+        function generateQRCodeWithLogo(container, text, logoUrl) {
+            // 创建临时容器生成二维码
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            document.body.appendChild(tempDiv);
+            
+            // 生成二维码
+            const qr = new QRCode(tempDiv, {
+                text: text,
+                width: 160,
+                height: 160,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // 等待二维码生成完成
+            setTimeout(() => {
+                const qrImg = tempDiv.querySelector('img');
+                if (qrImg && qrImg.complete) {
+                    drawQRCodeWithLogo(container, qrImg, logoUrl);
+                    document.body.removeChild(tempDiv);
+                } else if (qrImg) {
+                    qrImg.onload = function() {
+                        drawQRCodeWithLogo(container, qrImg, logoUrl);
+                        document.body.removeChild(tempDiv);
+                    };
+                }
+            }, 100);
+        }
+        
+        function drawQRCodeWithLogo(container, qrImg, logoUrl) {
+            // 创建 canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            
+            // 绘制二维码
+            ctx.drawImage(qrImg, 0, 0, 160, 160);
+            
+            // 加载并绘制 logo
+            const logo = new Image();
+            logo.crossOrigin = 'anonymous';
+            logo.onload = function() {
+                // 在中心绘制白色圆形背景
+                const centerX = 80;
+                const centerY = 80;
+                const logoSize = 40;
+                const bgSize = 45;
+                
+                // 绘制白色圆形背景
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, bgSize / 2, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 绘制 logo
+                ctx.drawImage(logo, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+                
+                // 将 canvas 转换为图片并显示
+                const finalImg = document.createElement('img');
+                finalImg.src = canvas.toDataURL();
+                finalImg.style.width = '100%';
+                finalImg.style.height = '100%';
+                finalImg.style.borderRadius = '10px';
+                
+                container.innerHTML = '';
+                container.appendChild(finalImg);
+            };
+            
+            logo.onerror = function() {
+                // logo 加载失败，只显示二维码
+                const finalImg = document.createElement('img');
+                finalImg.src = canvas.toDataURL();
+                finalImg.style.width = '100%';
+                finalImg.style.height = '100%';
+                finalImg.style.borderRadius = '10px';
+                
+                container.innerHTML = '';
+                container.appendChild(finalImg);
+            };
+            
+            logo.src = logoUrl;
+        }
+        
+        // 获取最新 APK 下载地址并生成二维码
+        fetch('https://api.qiannaqule.top/api/config/latest-android-apk')
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.data.qrcodeUrl) {
-                    const androidQrcode = document.getElementById('androidQrcode');
-                    if (androidQrcode) {
-                        androidQrcode.src = data.data.qrcodeUrl;
-                    }
+                if (data.success && data.data.downloadUrl) {
+                    const androidQrcodeContainer = document.getElementById('androidQrcodeContainer');
+                    generateQRCodeWithLogo(
+                        androidQrcodeContainer,
+                        data.data.downloadUrl,
+                        'logo.png'
+                    );
+                } else {
+                    console.log('未找到最新APK下载地址，使用默认二维码');
                 }
             })
             .catch(error => {
-                console.log('使用默认二维码');
+                console.log('获取APK下载地址失败，使用默认二维码:', error);
             });
     </script>
 </body>
