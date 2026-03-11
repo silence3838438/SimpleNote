@@ -406,11 +406,11 @@ const openUserAgreement = () => {
 // 注册卡片 - 添加白色背景增加层次感
 .register-card {
 	width: 100%;
-	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
-	border-radius: 28rpx;
-	padding: 52rpx 44rpx;
-	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
-	border: 1rpx solid rgba(255, 255, 255, 0.8);
+	background: #FFFFFF;
+	border-radius: 24rpx;
+	padding: 56rpx 40rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+	border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
 .form-item {
@@ -419,7 +419,8 @@ const openUserAgreement = () => {
 
 // 表单内隐私协议
 .privacy-section-inline {
-	margin-bottom: 16rpx;
+	margin-bottom: 28rpx;
+	padding-left: 0rpx;
 }
 
 .checkbox-label-inline {
@@ -457,7 +458,7 @@ const openUserAgreement = () => {
 	align-items: center;
 	background: linear-gradient(135deg, #F8F9FA 0%, #FAFBFC 100%);
 	border-radius: 16rpx;
-	padding: 0 28rpx;
+	padding: 0 0rpx;
 	height: 96rpx;
 	border: 2rpx solid transparent;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

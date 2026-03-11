@@ -657,11 +657,11 @@ const goBack = () => {
 // 登录卡片 - 添加白色背景增加层次感
 .login-card {
 	width: 100%;
-	background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
-	border-radius: 28rpx;
-	padding: 52rpx 44rpx;
-	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
-	border: 1rpx solid rgba(255, 255, 255, 0.8);
+	background: #FFFFFF;
+	border-radius: 24rpx;
+	padding: 64rpx 40rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04), 0 1rpx 4rpx rgba(0, 0, 0, 0.02);
+	border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
 .card-title {
@@ -744,23 +744,27 @@ const goBack = () => {
 
 // 表单内隐私协议
 .privacy-section-inline {
-	margin-bottom: 16rpx;
+	margin-bottom: 32rpx;
+	padding-left: 0rpx;
 }
 
 // 记住密码
 .remember-section {
-	margin-bottom: 24rpx;
-	margin-top: -8rpx;
+	margin-bottom: 36rpx;
+	margin-top: 8rpx;
+	padding-left: 0rpx;
 }
 
 .remember-label {
 	display: flex;
 	align-items: center;
 	gap: 8rpx;
+	margin-left: 0rpx;
 }
 
 .remember-checkbox {
 	transform: scale(0.85);
+	margin: 0;
 }
 
 .remember-text {
@@ -772,11 +776,13 @@ const goBack = () => {
 	display: flex;
 	align-items: center;
 	gap: 8rpx;
+	margin-left: 0rpx;
 }
 
 .custom-checkbox-inline {
 	flex-shrink: 0;
 	transform: scale(0.85);
+	margin: 0;
 }
 
 .privacy-text-inline {
@@ -803,7 +809,7 @@ const goBack = () => {
 	align-items: center;
 	background: linear-gradient(135deg, #F8F9FA 0%, #FAFBFC 100%);
 	border-radius: 16rpx;
-	padding: 0 28rpx;
+	padding: 0 0rpx;
 	height: 96rpx;
 	border: 2rpx solid transparent;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -859,8 +865,9 @@ const goBack = () => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 48rpx;
+	margin-bottom: 52rpx;
 	margin-top: 8rpx;
+	padding-left: 0rpx;
 }
 
 .action-link {
