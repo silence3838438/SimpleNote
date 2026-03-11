@@ -56,7 +56,22 @@
 			<view class="tips-content">
 				<text class="tips-item">1. APP处于在线或者后台状态</text>
 				<text class="tips-item">2. 开启应用通知权限</text>
-				<text class="tips-item">3. 允许应用自启动</text>
+			</view>
+		</view>
+		
+		<!-- 底部横幅提示 -->
+		<view class="notification-banner" v-if="!data.bannerClosed">
+			<view class="banner-content">
+				<view class="banner-left">
+					<text class="banner-icon">🔔</text>
+					<text class="banner-text">打开消息提醒，避免错过重要消息哦~</text>
+				</view>
+				<view class="banner-right">
+					<text class="banner-close" @click="closeBanner">✕</text>
+					<view class="banner-btn" @click="openNotificationSettings">
+						<text class="banner-btn-text">去开启</text>
+					</view>
+				</view>
 			</view>
 		</view>
 		<!-- #endif -->
@@ -125,6 +140,7 @@ const data = reactive({
 	showPicker: false,
 	saving: false,
 	fromBillSuccess: false,  // 是否来自记账成功
+	bannerClosed: false,  // 横幅是否已关闭
 	// 时间选择器数据
 	hours: [],
 	minutes: [],
@@ -153,6 +169,9 @@ onLoad((options) => {
 	
 	// 从云端获取提醒设置
 	loadReminderFromCloud()
+	
+	// 读取横幅关闭状态
+	data.bannerClosed = uni.getStorageSync('reminderBannerClosed') || false
 })
 
 const initTimePicker = () => {
@@ -402,6 +421,31 @@ const saveSubscriptionToCloud = async (clientId = null) => {
 		console.error('❌ 订阅信息保存失败:', res.message)
 		throw new Error(res.message)
 	}
+}
+
+// 关闭横幅
+const closeBanner = () => {
+	data.bannerClosed = true
+	uni.setStorageSync('reminderBannerClosed', true)
+}
+
+// 打开通知设置
+const openNotificationSettings = () => {
+	// #ifdef APP-PLUS
+	uni.openAppAuthorizeSetting({
+		success: (res) => {
+			console.log('打开设置成功')
+		},
+		fail: (err) => {
+			console.log('打开设置失败:', err)
+			uni.showToast({
+				title: '请手动到设置中开启通知权限',
+				icon: 'none',
+				duration: 3000
+			});
+		}
+	})
+	// #endif
 }
 
 </script>
@@ -765,6 +809,82 @@ const saveSubscriptionToCloud = async (clientId = null) => {
 .picker-item-selected {
 	font-size: 48rpx;
 	color: #52C41A;
+	font-weight: $font-weight-bold;
+}
+
+/* 底部横幅提示 */
+.notification-banner {
+	background: linear-gradient(135deg, #E6F7FF 0%, #BAE7FF 100%);
+	border-radius: $radius-2xl;
+	padding: $spacing-lg $spacing-xl;
+	margin-bottom: $spacing-lg;
+	border: 2rpx solid #91D5FF;
+	box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.1);
+}
+
+.banner-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: $spacing-md;
+}
+
+.banner-left {
+	display: flex;
+	align-items: center;
+	gap: $spacing-md;
+	flex: 1;
+}
+
+.banner-icon {
+	font-size: 32rpx;
+}
+
+.banner-text {
+	font-size: $font-size-sm;
+	color: #1890FF;
+	line-height: 1.4;
+	font-weight: $font-weight-medium;
+}
+
+.banner-right {
+	display: flex;
+	align-items: center;
+	gap: $spacing-md;
+}
+
+.banner-close {
+	font-size: 24rpx;
+	color: #8CC8FF;
+	padding: $spacing-xs;
+	opacity: 0.7;
+	transition: all $transition-fast;
+}
+
+.banner-close:active {
+	opacity: 1;
+	transform: scale(0.9);
+}
+
+.banner-btn {
+	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+	color: #FFFFFF;
+	padding: 12rpx 24rpx;
+	border-radius: 20rpx;
+	font-size: $font-size-sm;
+	font-weight: $font-weight-bold;
+	transition: all $transition-fast;
+	box-shadow: 0 2rpx 8rpx rgba(24, 144, 255, 0.3);
+}
+
+.banner-btn:active {
+	transform: scale(0.96);
+	box-shadow: 0 1rpx 4rpx rgba(24, 144, 255, 0.2);
+}
+
+.banner-btn-text {
+	color: #FFFFFF;
+	font-size: $font-size-sm;
 	font-weight: $font-weight-bold;
 }
 
