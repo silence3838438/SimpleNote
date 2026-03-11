@@ -712,13 +712,26 @@ async function exportExcel(req, res, userId, data) {
       }
     ]);
     
-    // 将buffer转换为base64返回给前端
-    const base64 = buffer.toString('base64');
-    const fileName = `账单_${new Date().toISOString().split('T')[0]}.xlsx`;
+    // 保存文件到服务器
+    const fs = require('fs');
+    const path = require('path');
+    const fileName = `账单_${userId}_${Date.now()}.xlsx`;
+    const uploadsDir = path.join(__dirname, '../uploads');
+    
+    // 确保uploads目录存在
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const filePath = path.join(uploadsDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+    
+    // 返回下载URL
+    const downloadUrl = `${req.protocol}://${req.get('host')}/uploads/${fileName}`;
     
     res.json({
       success: true,
-      data: base64,
+      downloadUrl: downloadUrl,
       fileName: fileName
     });
     

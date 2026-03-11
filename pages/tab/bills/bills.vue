@@ -613,59 +613,38 @@ const exportBills = async () => {
 		
 		uni.hideLoading()
 		
-		if (res.success) {
-			// #ifdef MP-WEIXIN
-			// 将base64转换为文件
-			const base64 = res.data
-			const fileName = res.fileName
-			const fs = uni.getFileSystemManager()
-			const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`
-			
-			// 写入文件
-			fs.writeFile({
-				filePath: filePath,
-				data: base64,
-				encoding: 'base64',
-				success: () => {
-					uni.showModal({
-						title: '导出成功',
-						content: `已导出${billsToExport.length}笔账单，是否打开？`,
-						confirmText: '打开',
-						success: (modalRes) => {
-							if (modalRes.confirm) {
-								uni.openDocument({
-									filePath: filePath,
-									fileType: 'xlsx',
-									success: () => {
-									},
-									fail: (err) => {
-										console.error('打开文档失败:', err)
-										uni.showToast({
-											title: '打开失败',
-											icon: 'none'
-										})
-									}
+		if (res.success && res.downloadUrl) {
+			// 使用uni.downloadFile下载文件
+			uni.downloadFile({
+				url: res.downloadUrl,
+				success: (downloadRes) => {
+					if (downloadRes.statusCode === 200) {
+						// 下载成功，直接打开文件
+						uni.openDocument({
+							filePath: downloadRes.tempFilePath,
+							fileType: 'xlsx',
+							success: () => {
+								console.log('打开文档成功')
+							},
+							fail: (err) => {
+								console.error('打开文档失败:', err)
+								uni.showToast({
+									title: '请安装WPS或Excel应用',
+									icon: 'none',
+									duration: 3000
 								})
 							}
-						}
-					})
+						})
+					}
 				},
 				fail: (err) => {
-					console.error('保存文件失败:', err)
+					console.error('下载失败:', err)
 					uni.showToast({
-						title: '保存失败',
+						title: '下载失败',
 						icon: 'none'
 					})
 				}
 			})
-			// #endif
-			
-			// #ifndef MP-WEIXIN
-			uni.showToast({
-				title: '导出成功',
-				icon: 'success'
-			})
-			// #endif
 		} else {
 			uni.showToast({
 				title: '导出失败: ' + (res.message || '未知错误'),
