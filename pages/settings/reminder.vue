@@ -46,30 +46,18 @@
 			</view>
 		</view>
 		
-		<!-- APP端推送条件提示 -->
+		<!-- APP端底部横幅提示 -->
 		<!-- #ifdef APP-PLUS -->
-		<view class="tips-card">
-			<view class="tips-header">
-				<text class="tips-icon">💡</text>
-				<text class="tips-title">推送条件</text>
-			</view>
-			<view class="tips-content">
-				<text class="tips-item">1. APP处于在线或者后台状态</text>
-				<text class="tips-item">2. 开启应用通知权限</text>
-			</view>
-		</view>
-		
-		<!-- 底部横幅提示 -->
 		<view class="notification-banner" v-if="!data.bannerClosed">
 			<view class="banner-content">
 				<view class="banner-left">
 					<text class="banner-icon">🔔</text>
-					<text class="banner-text">打开消息提醒，避免错过重要消息哦~</text>
+					<text class="banner-text">开启自启动和通知权限，确保定时提醒正常工作</text>
 				</view>
 				<view class="banner-right">
 					<text class="banner-close" @click="closeBanner">✕</text>
 					<view class="banner-btn" @click="openNotificationSettings">
-						<text class="banner-btn-text">去开启</text>
+						<text class="banner-btn-text">去设置</text>
 					</view>
 				</view>
 			</view>
@@ -633,42 +621,84 @@ const openNotificationSettings = () => {
 	line-height: 1.2;
 }
 
-/* APP 端提示卡片 */
-.tips-card {
-	background: linear-gradient(135deg, #FFF7E6 0%, #FFE7BA 100%);
+/* 底部横幅提示 */
+.notification-banner {
+	position: fixed;
+	bottom: 160rpx; /* 在保存按钮上方 */
+	left: $spacing-lg;
+	right: $spacing-lg;
+	background: linear-gradient(135deg, #FFF2E8 0%, #FFE7D3 100%);
 	border-radius: $radius-2xl;
-	padding: $spacing-xl;
-	margin-bottom: $spacing-lg;
-	border: 2rpx solid #FFD591;
+	padding: $spacing-lg $spacing-xl;
+	border: 2rpx solid #FFBB96;
+	box-shadow: 0 4rpx 12rpx rgba(255, 140, 0, 0.1);
+	z-index: 99;
 }
 
-.tips-header {
+.banner-content {
 	display: flex;
 	align-items: center;
-	gap: $spacing-sm;
-	margin-bottom: $spacing-md;
+	justify-content: space-between;
+	gap: $spacing-md;
 }
 
-.tips-icon {
-	font-size: 28rpx;
-}
-
-.tips-title {
-	font-size: $font-size-base;
-	font-weight: $font-weight-bold;
-	color: #D46B08;
-}
-
-.tips-content {
+.banner-left {
 	display: flex;
-	flex-direction: column;
-	gap: $spacing-xs;
+	align-items: center;
+	gap: $spacing-md;
+	flex: 1;
 }
 
-.tips-item {
+.banner-icon {
+	font-size: 32rpx;
+}
+
+.banner-text {
 	font-size: $font-size-sm;
-	color: #AD6800;
+	color: #D2691E;
 	line-height: 1.4;
+	font-weight: $font-weight-medium;
+}
+
+.banner-right {
+	display: flex;
+	align-items: center;
+	gap: $spacing-md;
+}
+
+.banner-close {
+	font-size: 24rpx;
+	color: #FFBB96;
+	padding: $spacing-xs;
+	opacity: 0.7;
+	transition: all $transition-fast;
+}
+
+.banner-close:active {
+	opacity: 1;
+	transform: scale(0.9);
+}
+
+.banner-btn {
+	background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%);
+	color: #FFFFFF;
+	padding: 12rpx 24rpx;
+	border-radius: 20rpx;
+	font-size: $font-size-sm;
+	font-weight: $font-weight-bold;
+	transition: all $transition-fast;
+	box-shadow: 0 2rpx 8rpx rgba(255, 140, 0, 0.3);
+}
+
+.banner-btn:active {
+	transform: scale(0.96);
+	box-shadow: 0 1rpx 4rpx rgba(255, 140, 0, 0.2);
+}
+
+.banner-btn-text {
+	color: #FFFFFF;
+	font-size: $font-size-sm;
+	font-weight: $font-weight-bold;
 }
 
 .save-btn-area {
@@ -809,82 +839,6 @@ const openNotificationSettings = () => {
 .picker-item-selected {
 	font-size: 48rpx;
 	color: #52C41A;
-	font-weight: $font-weight-bold;
-}
-
-/* 底部横幅提示 */
-.notification-banner {
-	background: linear-gradient(135deg, #E6F7FF 0%, #BAE7FF 100%);
-	border-radius: $radius-2xl;
-	padding: $spacing-lg $spacing-xl;
-	margin-bottom: $spacing-lg;
-	border: 2rpx solid #91D5FF;
-	box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.1);
-}
-
-.banner-content {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: $spacing-md;
-}
-
-.banner-left {
-	display: flex;
-	align-items: center;
-	gap: $spacing-md;
-	flex: 1;
-}
-
-.banner-icon {
-	font-size: 32rpx;
-}
-
-.banner-text {
-	font-size: $font-size-sm;
-	color: #1890FF;
-	line-height: 1.4;
-	font-weight: $font-weight-medium;
-}
-
-.banner-right {
-	display: flex;
-	align-items: center;
-	gap: $spacing-md;
-}
-
-.banner-close {
-	font-size: 24rpx;
-	color: #8CC8FF;
-	padding: $spacing-xs;
-	opacity: 0.7;
-	transition: all $transition-fast;
-}
-
-.banner-close:active {
-	opacity: 1;
-	transform: scale(0.9);
-}
-
-.banner-btn {
-	background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
-	color: #FFFFFF;
-	padding: 12rpx 24rpx;
-	border-radius: 20rpx;
-	font-size: $font-size-sm;
-	font-weight: $font-weight-bold;
-	transition: all $transition-fast;
-	box-shadow: 0 2rpx 8rpx rgba(24, 144, 255, 0.3);
-}
-
-.banner-btn:active {
-	transform: scale(0.96);
-	box-shadow: 0 1rpx 4rpx rgba(24, 144, 255, 0.2);
-}
-
-.banner-btn-text {
-	color: #FFFFFF;
-	font-size: $font-size-sm;
 	font-weight: $font-weight-bold;
 }
 
