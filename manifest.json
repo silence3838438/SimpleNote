@@ -2,8 +2,8 @@
     "name" : "小獭记账",
     "appid" : "__UNI__1BF73C1",
     "description" : "小獭记账 - 可爱治愈的智能记账工具，像小水獭一样聪明灵活。支持拍照识别、语音记账等多种便捷方式，智能分类餐饮交通购物，可视化统计消费去向，让记账变得简单有趣。",
-    "versionName" : "1.2.0",
-    "versionCode" : 260235,
+    "versionName" : "1.2.1",
+    "versionCode" : 260236,
     "transformPx" : false,
     // "permission" : {
     //     "network" : {
