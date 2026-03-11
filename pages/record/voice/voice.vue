@@ -3,7 +3,9 @@
 		<!-- 顶部标题区域 -->
 		<view class="header-section">
 			<view class="header-icon-wrapper">
-				<text class="header-icon">🎙️</text>
+				<view class="header-icon-svg">
+					<view class="mic-icon"></view>
+				</view>
 			</view>
 			<view class="header-title">语音记账</view>
 			<view class="header-subtitle">说出你的消费，自动帮你记下来</view>
@@ -20,7 +22,10 @@
 					@touchcancel="cancelRecord"
 				>
 					<view class="record-icon-wrapper">
-						<text class="record-icon">🎤</text>
+						<view class="record-icon-svg">
+							<view class="mic-body"></view>
+							<view class="mic-stand"></view>
+						</view>
 					</view>
 					<view class="record-wave" v-if="data.isRecording">
 						<view class="wave wave-1"></view>
@@ -32,7 +37,7 @@
 				
 				<view class="record-status">
 					<text v-if="!data.isRecording" class="status-normal">
-						<text class="status-icon">👆</text>
+						<view class="hand-icon"></view>
 						长按开始录音
 					</text>
 					<text v-else class="status-recording">
@@ -42,7 +47,7 @@
 				</view>
 				
 				<view class="record-tip">
-					<text class="tip-icon">⏱️</text>
+					<view class="clock-icon"></view>
 					最长支持 60 秒录音
 				</view>
 			</view>
@@ -61,7 +66,7 @@
 		<view class="input-card">
 			<view class="input-header">
 				<view class="input-title-wrapper">
-					<text class="input-icon">✍️</text>
+					<view class="edit-icon"></view>
 					<text class="input-title">文字输入</text>
 				</view>
 				<text class="input-subtitle">直接输入消费信息</text>
@@ -76,7 +81,7 @@
 				/>
 			</view>
 			<button class="parse-btn" @click="parseText" :disabled="!data.inputText">
-				<text class="btn-icon" v-if="!data.parsing">✨</text>
+				<view class="sparkle-icon" v-if="!data.parsing"></view>
 				<text v-if="!data.parsing">立即解析</text>
 				<text v-else>智能识别中...</text>
 			</button>
@@ -85,7 +90,7 @@
 		<!-- 示例区域 -->
 		<view class="examples-card">
 			<view class="examples-header">
-				<text class="examples-icon">💡</text>
+				<view class="bulb-icon"></view>
 				<view class="examples-title-wrapper">
 					<text class="examples-title">试试这些示例</text>
 					<text class="examples-subtitle">点击快速填入</text>
@@ -102,7 +107,7 @@
 						<text class="example-number">{{ index + 1 }}</text>
 						<text class="example-text">{{ example }}</text>
 					</view>
-					<text class="example-arrow">→</text>
+					<view class="arrow-icon"></view>
 				</view>
 			</view>
 		</view>
@@ -1412,76 +1417,108 @@ const extractBillInfo = (text) => {
 	
 	.container {
 		min-height: 100vh;
-		background: linear-gradient(180deg, #F0FFF4 0%, #F6FFED 50%, #FAFAFA 100%);
-		padding: $spacing-md $spacing-md;
+		background: linear-gradient(180deg, #F8F9FA 0%, #F5F7FA 50%, #FAFBFC 100%);
+		padding: $spacing-md $spacing-xl;
 		padding-bottom: 80rpx;
 	}
 	
 	/* 顶部标题 */
 	.header-section {
 		text-align: center;
-		/* 增加顶部间距，让图标距离顶部更远 */
-		padding: $spacing-2xl 0 $spacing-lg;
-		margin-bottom: 0;
+		padding: $spacing-xl 0 $spacing-lg;
+		margin-bottom: $spacing-sm;
 		position: relative;
 	}
 	
 	.header-icon-wrapper {
-		/* 增大图标尺寸 */
-		width: 88rpx;
-		height: 88rpx;
+		width: 80rpx;
+		height: 80rpx;
 		background: $gradient-primary;
-		border-radius: 20rpx;
+		border-radius: 18rpx;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		margin-bottom: $spacing-md;
-		box-shadow: 0 6rpx 20rpx rgba(82, 196, 26, 0.25);
-		transform: rotate(-5deg);
+		margin-bottom: $spacing-sm;
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.2);
+		transform: rotate(-3deg);
 		animation: float 3s ease-in-out infinite;
 	}
 	
 	@keyframes float {
 		0%, 100% {
-			transform: rotate(-5deg) translateY(0);
+			transform: rotate(-3deg) translateY(0);
 		}
 		50% {
-			transform: rotate(-5deg) translateY(-8rpx);
+			transform: rotate(-3deg) translateY(-6rpx);
 		}
 	}
 	
-	.header-icon {
-		/* 增大图标字号 */
-		font-size: 52rpx;
-		filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.1));
+	/* 顶部麦克风图标 */
+	.header-icon-svg {
+		width: 44rpx;
+		height: 44rpx;
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.mic-icon {
+		width: 20rpx;
+		height: 28rpx;
+		background: white;
+		border-radius: 10rpx 10rpx 0 0;
+		position: relative;
+		box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+	}
+	
+	.mic-icon::after {
+		content: '';
+		position: absolute;
+		bottom: -8rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 28rpx;
+		height: 12rpx;
+		border: 3rpx solid white;
+		border-top: none;
+		border-radius: 0 0 14rpx 14rpx;
+	}
+	
+	.mic-icon::before {
+		content: '';
+		position: absolute;
+		bottom: -16rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 2rpx;
+		height: 8rpx;
+		background: white;
 	}
 	
 	.header-title {
-		font-size: $font-size-2xl;
+		font-size: 40rpx;
 		font-weight: $font-weight-bold;
 		color: $text-primary;
-		margin-bottom: $spacing-sm;
-		background: $gradient-primary;
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		margin-bottom: 8rpx;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.header-subtitle {
 		font-size: $font-size-sm;
 		color: $text-tertiary;
-		/* 增加副标题与下方卡片的距离 */
 		margin-bottom: $spacing-lg;
+		line-height: 1.6;
 	}
 	
 	/* 语音录制卡片 */
 	.voice-card {
 		background: $bg-white;
-		border-radius: 20rpx;
-		/* 增加内边距，让卡片高度更大 */
-		padding: $spacing-2xl $spacing-lg;
-		margin-bottom: $spacing-sm;
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+		border-radius: 24rpx;
+		padding: 48rpx $spacing-lg;
+		margin-bottom: $spacing-lg;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 
 	.voice-area {
@@ -1491,32 +1528,31 @@ const extractBillInfo = (text) => {
 	}
 
 	.record-btn {
-		/* 增大录音按钮尺寸 */
-		width: 180rpx;
-		height: 180rpx;
+		width: 160rpx;
+		height: 160rpx;
 		border-radius: $radius-round;
 		background: $gradient-primary;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 8rpx 28rpx rgba(82, 196, 26, 0.3);
+		box-shadow: 0 6rpx 24rpx rgba(82, 196, 26, 0.25);
 		position: relative;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		margin-bottom: $spacing-xl;
+		margin-bottom: $spacing-lg;
 	}
 
 	.record-btn.recording {
-		transform: scale(1.1);
-		box-shadow: 0 12rpx 36rpx rgba(82, 196, 26, 0.45);
+		transform: scale(1.08);
+		box-shadow: 0 10rpx 32rpx rgba(82, 196, 26, 0.4);
 		animation: pulse 1.5s ease-in-out infinite;
 	}
 	
 	@keyframes pulse {
 		0%, 100% {
-			transform: scale(1.1);
+			transform: scale(1.08);
 		}
 		50% {
-			transform: scale(1.14);
+			transform: scale(1.12);
 		}
 	}
 	
@@ -1524,10 +1560,58 @@ const extractBillInfo = (text) => {
 		z-index: 2;
 	}
 
-	.record-icon {
-		/* 增大图标尺寸 */
-		font-size: 80rpx;
-		filter: drop-shadow(0 4rpx 12rpx rgba(0, 0, 0, 0.2));
+	/* 录音按钮麦克风图标 */
+	.record-icon-svg {
+		width: 72rpx;
+		height: 72rpx;
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		filter: drop-shadow(0 2rpx 8rpx rgba(0, 0, 0, 0.15));
+	}
+	
+	.mic-body {
+		width: 28rpx;
+		height: 40rpx;
+		background: white;
+		border-radius: 14rpx 14rpx 0 0;
+		position: relative;
+	}
+	
+	.mic-body::after {
+		content: '';
+		position: absolute;
+		bottom: -12rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 40rpx;
+		height: 18rpx;
+		border: 4rpx solid white;
+		border-top: none;
+		border-radius: 0 0 20rpx 20rpx;
+	}
+	
+	.mic-stand {
+		position: absolute;
+		bottom: 8rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 3rpx;
+		height: 12rpx;
+		background: white;
+	}
+	
+	.mic-stand::after {
+		content: '';
+		position: absolute;
+		bottom: -3rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 20rpx;
+		height: 3rpx;
+		background: white;
+		border-radius: 2rpx;
 	}
 	
 	.record-glow {
@@ -1588,8 +1672,8 @@ const extractBillInfo = (text) => {
 	}
 
 	.record-status {
-		font-size: $font-size-lg;
-		margin-bottom: $spacing-sm;
+		font-size: $font-size-base;
+		margin-bottom: $spacing-xs;
 	}
 	
 	.status-normal {
@@ -1597,12 +1681,29 @@ const extractBillInfo = (text) => {
 		font-weight: $font-weight-medium;
 		display: flex;
 		align-items: center;
-		gap: $spacing-xs;
+		gap: 8rpx;
 	}
 	
-	.status-icon {
-		font-size: $font-size-2xl;
+	/* 手指图标 */
+	.hand-icon {
+		width: 24rpx;
+		height: 24rpx;
+		background: $text-secondary;
+		border-radius: 12rpx 12rpx 4rpx 4rpx;
+		position: relative;
 		animation: bounce 2s ease-in-out infinite;
+	}
+	
+	.hand-icon::before {
+		content: '';
+		position: absolute;
+		top: -6rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 8rpx;
+		height: 10rpx;
+		background: $text-secondary;
+		border-radius: 4rpx 4rpx 0 0;
 	}
 	
 	@keyframes bounce {
@@ -1610,7 +1711,7 @@ const extractBillInfo = (text) => {
 			transform: translateY(0);
 		}
 		50% {
-			transform: translateY(-8rpx);
+			transform: translateY(-6rpx);
 		}
 	}
 	
@@ -1637,55 +1738,81 @@ const extractBillInfo = (text) => {
 	}
 	
 	.record-tip {
-		font-size: $font-size-sm;
+		font-size: $font-size-xs;
 		color: $text-tertiary;
 		display: flex;
 		align-items: center;
-		gap: $spacing-xs;
-		background: $bg-light;
-		padding: $spacing-sm $spacing-lg;
-		border-radius: $radius-2xl;
+		gap: 6rpx;
+		background: #F7F8FA;
+		padding: 12rpx 20rpx;
+		border-radius: 20rpx;
 	}
 	
-	.tip-icon {
-		font-size: $font-size-base;
+	/* 时钟图标 */
+	.clock-icon {
+		width: 20rpx;
+		height: 20rpx;
+		border: 2rpx solid $text-tertiary;
+		border-radius: 50%;
+		position: relative;
+	}
+	
+	.clock-icon::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 2rpx;
+		height: 6rpx;
+		background: $text-tertiary;
+		transform-origin: bottom center;
+	}
+	
+	.clock-icon::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%) rotate(90deg);
+		width: 2rpx;
+		height: 8rpx;
+		background: $text-tertiary;
+		transform-origin: bottom center;
 	}
 	
 	/* 分隔线 */
 	.divider {
 		display: flex;
 		align-items: center;
-		margin: $spacing-lg 0;
+		margin: $spacing-xl 0;
 		position: relative;
 	}
 	
 	.divider-line {
 		flex: 1;
-		height: 2rpx;
-		background: linear-gradient(90deg, transparent 0%, $border-color 50%, transparent 100%);
+		height: 1rpx;
+		background: linear-gradient(90deg, transparent 0%, #E5E7EB 50%, transparent 100%);
 	}
 	
 	.divider-text-wrapper {
-		padding: 0 $spacing-xl;
+		padding: 0 $spacing-lg;
 	}
 	
 	.divider-text {
-		font-size: $font-size-lg;
+		font-size: $font-size-sm;
 		color: $text-tertiary;
 		font-weight: $font-weight-medium;
-		background: $gradient-primary;
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
 	}
 	
 	/* 输入卡片 */
 	.input-card {
 		background: $bg-white;
-		border-radius: 20rpx;
+		border-radius: 24rpx;
 		padding: $spacing-lg;
-		margin-bottom: $spacing-sm;
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+		margin-bottom: $spacing-lg;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 	
 	.input-header {
@@ -1695,24 +1822,51 @@ const extractBillInfo = (text) => {
 	.input-title-wrapper {
 		display: flex;
 		align-items: center;
-		gap: $spacing-sm;
-		margin-bottom: $spacing-xs;
+		gap: 10rpx;
+		margin-bottom: 6rpx;
 	}
 	
-	.input-icon {
-		font-size: $font-size-2xl;
+	/* 编辑图标 */
+	.edit-icon {
+		width: 32rpx;
+		height: 32rpx;
+		position: relative;
+	}
+	
+	.edit-icon::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 18rpx;
+		height: 18rpx;
+		background: $primary-color;
+		transform: rotate(45deg);
+		border-radius: 2rpx 2rpx 2rpx 8rpx;
+	}
+	
+	.edit-icon::after {
+		content: '';
+		position: absolute;
+		bottom: 2rpx;
+		left: 2rpx;
+		width: 20rpx;
+		height: 16rpx;
+		border: 2rpx solid $primary-color;
+		border-top: none;
+		border-radius: 0 0 4rpx 4rpx;
 	}
 	
 	.input-title {
-		font-size: $font-size-2xl;
+		font-size: 32rpx;
 		font-weight: $font-weight-bold;
 		color: $text-primary;
 	}
 	
 	.input-subtitle {
-		font-size: $font-size-sm;
+		font-size: $font-size-xs;
 		color: $text-tertiary;
-		margin-left: 56rpx;
+		margin-left: 42rpx;
 	}
 	
 	.input-wrapper {
@@ -1721,12 +1875,10 @@ const extractBillInfo = (text) => {
 
 	.text-input {
 		width: 100%;
-		/* 减小输入框高度 */
-		min-height: 80rpx;
-		background: #FAFAFA;
+		min-height: 88rpx;
+		background: #F7F8FA;
 		border-radius: 16rpx;
-		/* 减小内边距 */
-		padding: $spacing-sm $spacing-lg;
+		padding: $spacing-md $spacing-lg;
 		font-size: $font-size-base;
 		color: $text-primary;
 		line-height: $line-height-relaxed;
@@ -1737,7 +1889,7 @@ const extractBillInfo = (text) => {
 	.text-input:focus {
 		border-color: $primary-color;
 		background: $bg-white;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.1);
+		box-shadow: 0 0 0 4rpx rgba(82, 196, 26, 0.08);
 	}
 	
 	.input-placeholder {
@@ -1746,58 +1898,111 @@ const extractBillInfo = (text) => {
 
 	.parse-btn {
 		width: 100%;
-		height: 88rpx;
-		/* 改为渐变背景，去掉灰色 */
+		height: 92rpx;
 		background: $gradient-primary;
 		color: $text-white;
-		border-radius: 18rpx;
+		border-radius: 16rpx;
 		font-size: $font-size-lg;
 		font-weight: $font-weight-bold;
 		border: none;
-		box-shadow: 0 6rpx 20rpx rgba(82, 196, 26, 0.3);
+		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.25);
 		transition: all $transition-fast;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: $spacing-sm;
-		letter-spacing: 1rpx;
+		gap: 8rpx;
+		letter-spacing: 0.5rpx;
 	}
 	
 	.parse-btn:active {
 		transform: scale(0.98);
-		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.25);
+		box-shadow: 0 2rpx 10rpx rgba(82, 196, 26, 0.2);
 	}
 
 	.parse-btn[disabled] {
-		/* 禁用状态改为半透明 */
-		background: linear-gradient(135deg, rgba(82, 196, 26, 0.4) 0%, rgba(115, 209, 61, 0.4) 100%);
+		background: linear-gradient(135deg, rgba(82, 196, 26, 0.35) 0%, rgba(115, 209, 61, 0.35) 100%);
 		color: rgba(255, 255, 255, 0.7);
 		box-shadow: none;
 		opacity: 0.6;
 	}
 	
-	.btn-icon {
-		font-size: $font-size-2xl;
+	/* 闪光图标 */
+	.sparkle-icon {
+		width: 28rpx;
+		height: 28rpx;
+		position: relative;
+	}
+	
+	.sparkle-icon::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 4rpx;
+		height: 20rpx;
+		background: white;
+		border-radius: 2rpx;
+	}
+	
+	.sparkle-icon::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%) rotate(90deg);
+		width: 4rpx;
+		height: 20rpx;
+		background: white;
+		border-radius: 2rpx;
 	}
 	
 	/* 示例卡片 */
 	.examples-card {
 		background: $bg-white;
-		border-radius: 20rpx;
+		border-radius: 24rpx;
 		padding: $spacing-lg;
 		margin-bottom: $spacing-md;
-		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+		border: 1rpx solid rgba(0, 0, 0, 0.04);
 	}
 	
 	.examples-header {
 		display: flex;
 		align-items: center;
 		margin-bottom: $spacing-md;
-		gap: $spacing-sm;
+		gap: 10rpx;
 	}
 	
-	.examples-icon {
-		font-size: 40rpx;
+	/* 灯泡图标 */
+	.bulb-icon {
+		width: 32rpx;
+		height: 32rpx;
+		position: relative;
+	}
+	
+	.bulb-icon::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 20rpx;
+		height: 20rpx;
+		background: $warning-color;
+		border-radius: 50% 50% 40% 40%;
+	}
+	
+	.bulb-icon::after {
+		content: '';
+		position: absolute;
+		bottom: 2rpx;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 12rpx;
+		height: 8rpx;
+		background: $warning-color;
+		border-radius: 0 0 6rpx 6rpx;
 	}
 	
 	.examples-title-wrapper {
@@ -1805,7 +2010,7 @@ const extractBillInfo = (text) => {
 	}
 
 	.examples-title {
-		font-size: $font-size-lg;
+		font-size: 32rpx;
 		font-weight: $font-weight-bold;
 		color: $text-primary;
 		display: block;
@@ -1824,8 +2029,8 @@ const extractBillInfo = (text) => {
 	}
 
 	.example-item {
-		background: #FAFAFA;
-		border-radius: 14rpx;
+		background: #F7F8FA;
+		border-radius: 16rpx;
 		padding: $spacing-md $spacing-lg;
 		display: flex;
 		align-items: center;
@@ -1835,9 +2040,9 @@ const extractBillInfo = (text) => {
 	}
 	
 	.example-item:active {
-		background: #F0F0F0;
+		background: #ECEEF1;
 		transform: scale(0.98);
-		border-color: $primary-color;
+		border-color: rgba(82, 196, 26, 0.3);
 	}
 	
 	.example-content {
@@ -1848,15 +2053,15 @@ const extractBillInfo = (text) => {
 	}
 	
 	.example-number {
-		width: 40rpx;
-		height: 40rpx;
+		width: 36rpx;
+		height: 36rpx;
 		background: $gradient-primary;
 		color: $text-white;
 		border-radius: $radius-round;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: $font-size-xs;
+		font-size: 22rpx;
 		font-weight: $font-weight-bold;
 		flex-shrink: 0;
 	}
@@ -1867,11 +2072,35 @@ const extractBillInfo = (text) => {
 		flex: 1;
 	}
 	
-	.example-arrow {
-		font-size: $font-size-xl;
-		color: $primary-color;
+	/* 箭头图标 */
+	.arrow-icon {
+		width: 24rpx;
+		height: 24rpx;
+		position: relative;
 		margin-left: $spacing-sm;
-		font-weight: 300;
+	}
+	
+	.arrow-icon::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 0;
+		transform: translateY(-50%);
+		width: 16rpx;
+		height: 2rpx;
+		background: $primary-color;
+	}
+	
+	.arrow-icon::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		right: 0;
+		transform: translateY(-50%) rotate(45deg);
+		width: 8rpx;
+		height: 8rpx;
+		border-top: 2rpx solid $primary-color;
+		border-right: 2rpx solid $primary-color;
 	}
 	
 	/* 加载遮罩 */
@@ -1881,29 +2110,29 @@ const extractBillInfo = (text) => {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: rgba(0, 0, 0, 0.4);
+		background-color: rgba(0, 0, 0, 0.5);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 9999;
-		backdrop-filter: blur(4rpx);
+		backdrop-filter: blur(8rpx);
 	}
 
 	.loading-content {
 		background: $bg-white;
-		border-radius: $radius-2xl;
-		padding: 60rpx 80rpx;
+		border-radius: 24rpx;
+		padding: 56rpx 72rpx;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: $spacing-xl;
-		box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+		gap: $spacing-lg;
+		box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.25);
 	}
 
 	.loading-spinner {
-		width: 80rpx;
-		height: 80rpx;
-		border: 6rpx solid $bg-light;
+		width: 72rpx;
+		height: 72rpx;
+		border: 5rpx solid #F0F0F0;
 		border-top-color: $primary-color;
 		border-radius: $radius-round;
 		animation: spin 0.8s linear infinite;
@@ -1914,7 +2143,7 @@ const extractBillInfo = (text) => {
 	}
 
 	.loading-text {
-		font-size: $font-size-lg;
+		font-size: $font-size-base;
 		color: $text-primary;
 		font-weight: $font-weight-medium;
 	}

@@ -352,6 +352,14 @@
 		</view>
 		
 		
+		<!-- 头像选择弹框 -->
+		<AvatarModal 
+			:visible="data.showAvatarModal"
+			@close="closeAvatarModal"
+			@chooseFromAlbum="handleChooseFromAlbum"
+			@takePhoto="handleTakePhoto"
+		/>
+		
 		<!-- #ifdef APP-PLUS -->
 		<!-- 分享弹框 -->
 		<ShareModal 
@@ -437,6 +445,7 @@ import { getMemberLevel } from '@/utils/memberLevel.js'
 import { rewardShareToFriend, rewardShareToTimeline } from '@/utils/pointsRules.js'
 import { pullPointsFromCloud } from '@/utils/pointsSync.js'
 import request from '@/utils/request.js'
+import AvatarModal from '@/components/AvatarModal.vue'
 // #ifdef APP-PLUS
 import ShareModal from '@/components/ShareModal.vue'
 import UpdateModal from '@/components/UpdateModal.vue'
@@ -457,6 +466,7 @@ const data = reactive({
 	showLevelModal: false, // 是否显示等级详情弹框
 	showPointsModal: false, // 是否显示积分详情弹框
 	showShareModal: false, // 是否显示分享弹框
+	showAvatarModal: false, // 是否显示头像选择弹框
 	showNicknameModal: false, // 是否显示昵称修改弹框
 	tempNickname: '', // 临时昵称
 	reminderTime: '', // 提醒时间
@@ -572,98 +582,118 @@ const getUserInfo = () => {
 
 // 更换头像
 const changeAvatar = () => {
-	uni.showActionSheet({
-		itemList: ['从相册选择', '拍照'],
-		success: (res) => {
-			if (res.tapIndex === 0) {
-				// 从相册选择
-				uni.chooseImage({
-					count: 1,
-					sizeType: ['compressed'],
-					sourceType: ['album'],
-					success: async (res) => {
-						const tempFilePath = res.tempFilePaths[0]
-						
-						// 显示加载提示
-						uni.showLoading({ title: '上传中...' })
-						
-						try {
-							// 上传到服务器
-							const uploadResult = await request.uploadFile(tempFilePath)
-							
-							if (uploadResult.success) {
-								const avatarUrl = uploadResult.url
-								
-								// 更新到云端
-								await updateUserInfoToCloud(data.userInfo.nickName, avatarUrl)
-								
-								// 更新本地
-								data.userInfo.avatarUrl = avatarUrl
-								uni.setStorageSync('userInfo', data.userInfo)
-								
-								uni.hideLoading()
-								uni.showToast({
-									title: '头像更换成功',
-									icon: 'success'
-								})
-							} else {
-								throw new Error(uploadResult.message || '上传失败')
-							}
-						} catch (error) {
-							uni.hideLoading()
-							console.error('上传头像失败:', error)
-							uni.showToast({
-								title: error.message || '上传失败',
-								icon: 'none'
-							})
-						}
-					}
-				})
-			} else if (res.tapIndex === 1) {
-				// 拍照
-				uni.chooseImage({
-					count: 1,
-					sizeType: ['compressed'],
-					sourceType: ['camera'],
-					success: async (res) => {
-						const tempFilePath = res.tempFilePaths[0]
-						
-						// 显示加载提示
-						uni.showLoading({ title: '上传中...' })
-						
-						try {
-							// 上传到服务器
-							const uploadResult = await request.uploadFile(tempFilePath)
-							
-							if (uploadResult.success) {
-								const avatarUrl = uploadResult.url
-								
-								// 更新到云端
-								await updateUserInfoToCloud(data.userInfo.nickName, avatarUrl)
-								
-								// 更新本地
-								data.userInfo.avatarUrl = avatarUrl
-								uni.setStorageSync('userInfo', data.userInfo)
-								
-								uni.hideLoading()
-								uni.showToast({
-									title: '头像更换成功',
-									icon: 'success'
-								})
-							} else {
-								throw new Error(uploadResult.message || '上传失败')
-							}
-						} catch (error) {
-							uni.hideLoading()
-							console.error('上传头像失败:', error)
-							uni.showToast({
-								title: error.message || '上传失败',
-								icon: 'none'
-							})
-						}
-					}
+	data.showAvatarModal = true
+	// 隐藏tabbar（APP端和小程序端都需要）
+	uni.hideTabBar()
+}
+
+// 关闭头像选择弹框
+const closeAvatarModal = () => {
+	data.showAvatarModal = false
+	// 显示tabbar（APP端和小程序端都需要）
+	uni.showTabBar()
+}
+
+// 从相册选择头像
+const handleChooseFromAlbum = () => {
+	closeAvatarModal()
+	
+	uni.chooseImage({
+		count: 1,
+		sizeType: ['compressed'],
+		sourceType: ['album'],
+		success: async (res) => {
+			const tempFilePath = res.tempFilePaths[0]
+			
+			// 显示加载提示
+			uni.showLoading({ title: '上传中...' })
+			
+			try {
+				// 上传到服务器
+				const uploadResult = await request.uploadFile(tempFilePath)
+				
+				if (uploadResult.success) {
+					const avatarUrl = uploadResult.url
+					
+					// 更新到云端
+					await updateUserInfoToCloud(data.userInfo.nickName, avatarUrl)
+					
+					// 更新本地
+					data.userInfo.avatarUrl = avatarUrl
+					uni.setStorageSync('userInfo', data.userInfo)
+					
+					uni.hideLoading()
+					uni.showToast({
+						title: '头像更换成功',
+						icon: 'success'
+					})
+				} else {
+					throw new Error(uploadResult.message || '上传失败')
+				}
+			} catch (error) {
+				uni.hideLoading()
+				console.error('上传头像失败:', error)
+				uni.showToast({
+					title: error.message || '上传失败',
+					icon: 'none'
 				})
 			}
+		},
+		fail: () => {
+			// 选择失败或取消时也要显示tabbar（APP端和小程序端都需要）
+			uni.showTabBar()
+		}
+	})
+}
+
+// 拍照上传头像
+const handleTakePhoto = () => {
+	closeAvatarModal()
+	
+	uni.chooseImage({
+		count: 1,
+		sizeType: ['compressed'],
+		sourceType: ['camera'],
+		success: async (res) => {
+			const tempFilePath = res.tempFilePaths[0]
+			
+			// 显示加载提示
+			uni.showLoading({ title: '上传中...' })
+			
+			try {
+				// 上传到服务器
+				const uploadResult = await request.uploadFile(tempFilePath)
+				
+				if (uploadResult.success) {
+					const avatarUrl = uploadResult.url
+					
+					// 更新到云端
+					await updateUserInfoToCloud(data.userInfo.nickName, avatarUrl)
+					
+					// 更新本地
+					data.userInfo.avatarUrl = avatarUrl
+					uni.setStorageSync('userInfo', data.userInfo)
+					
+					uni.hideLoading()
+					uni.showToast({
+						title: '头像更换成功',
+						icon: 'success'
+					})
+				} else {
+					throw new Error(uploadResult.message || '上传失败')
+				}
+			} catch (error) {
+				uni.hideLoading()
+				console.error('上传头像失败:', error)
+				uni.showToast({
+					title: error.message || '上传失败',
+					icon: 'none'
+				})
+			}
+		},
+		fail: () => {
+			// 拍照失败或取消时也要显示tabbar（APP端和小程序端都需要）
+			uni.showTabBar()
 		}
 	})
 }
@@ -1733,7 +1763,7 @@ const handleDownloadComplete = () => {
 	border-radius: 50%;
 	border: 4rpx solid rgba(255, 255, 255, 0.3); /* 半透明白色边框 */
 	box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15); /* 更明显的阴影 */
-	background: transparent; /* 透明背景 */
+	// background: transparent; /* 透明背景 */
 }
 
 .level-badge {
