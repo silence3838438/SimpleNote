@@ -37,7 +37,6 @@
 				
 				<view class="record-status">
 					<text v-if="!data.isRecording" class="status-normal">
-						<view class="hand-icon"></view>
 						长按开始录音
 					</text>
 					<text v-else class="status-recording">
