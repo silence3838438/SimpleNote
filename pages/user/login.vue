@@ -821,6 +821,11 @@ const goBack = () => {
 	font-size: 40rpx;
 	margin-right: 16rpx;
 	opacity: 0.6;
+	flex-shrink: 0;
+	width: 40rpx;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
 }
 
 .form-input {
@@ -828,6 +833,7 @@ const goBack = () => {
 	font-size: 30rpx;
 	color: #1A1A1A;
 	height: 100%;
+	text-align: left;
 }
 
 .input-placeholder {
@@ -838,6 +844,7 @@ const goBack = () => {
 	font-size: 36rpx;
 	padding: 0 8rpx;
 	cursor: pointer;
+	flex-shrink: 0;
 }
 
 .eye-icon-img {
@@ -845,6 +852,7 @@ const goBack = () => {
 	height: 40rpx;
 	padding: 0 8rpx;
 	cursor: pointer;
+	flex-shrink: 0;
 }
 
 .form-actions {

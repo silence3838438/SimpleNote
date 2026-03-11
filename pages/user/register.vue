@@ -475,6 +475,11 @@ const openUserAgreement = () => {
 	font-size: 40rpx;
 	margin-right: 16rpx;
 	opacity: 0.6;
+	flex-shrink: 0;
+	width: 40rpx;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
 }
 
 .input-icon-img {
@@ -491,8 +496,7 @@ const openUserAgreement = () => {
 	font-size: 30rpx;
 	color: #1A1A1A;
 	height: 100%;
-	display: flex;
-	align-items: center;
+	text-align: left;
 }
 
 .input-placeholder {
@@ -502,9 +506,9 @@ const openUserAgreement = () => {
 .eye-icon {
 	font-size: 40rpx;
 	padding: 0 8rpx;
-	flex-shrink: 0; /* 防止图标被压缩 */
+	flex-shrink: 0;
 	display: flex;
-	align-items: center; /* 确保垂直居中 */
+	align-items: center;
 }
 
 .eye-icon-img {
@@ -512,8 +516,8 @@ const openUserAgreement = () => {
 	height: 40rpx;
 	padding: 0 8rpx;
 	cursor: pointer;
-	flex-shrink: 0; /* 防止图标被压缩 */
-	display: block; /* 移除图片底部空隙 */
+	flex-shrink: 0;
+	display: block;
 }
 
 .code-btn {

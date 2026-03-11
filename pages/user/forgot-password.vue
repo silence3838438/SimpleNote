@@ -361,6 +361,11 @@ const goBack = () => {
 	font-size: 40rpx;
 	margin-right: 16rpx;
 	opacity: 0.6;
+	flex-shrink: 0;
+	width: 40rpx;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
 }
 
 .input-icon-small {
@@ -381,6 +386,7 @@ const goBack = () => {
 	font-size: 30rpx;
 	color: #1A1A1A;
 	height: 100%;
+	text-align: left;
 }
 
 .input-placeholder {
