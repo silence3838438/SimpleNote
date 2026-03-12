@@ -1051,7 +1051,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.amount-value {
-		font-size: 44rpx; /* 从38rpx调大到44rpx */
+		font-size: 40rpx; /* 从38rpx调整到40rpx */
 		font-weight: 700; /* 加粗字体 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		margin-top: 4rpx;

@@ -2230,7 +2230,7 @@ onPullDownRefresh(async () => {
 	}
 
 	.overview-amount {
-		font-size: 44rpx;
+		font-size: 40rpx; /* 从44rpx调整到40rpx */
 		font-weight: 700; /* 加粗字体 */
 		color: $primary-color;
 		font-family: 'DIN Alternate', monospace;

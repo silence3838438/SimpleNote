@@ -172,6 +172,7 @@
 								type="digit" 
 								v-model="data.tempBudget" 
 								placeholder="请输入预算金额"
+								placeholder-style="color: #BFBFBF; font-size: 32rpx;"
 								:focus="data.showBudgetModal"
 							/>
 						</view>
@@ -1788,7 +1789,7 @@ export default {
 	}
 	
 	.finance-amount {
-		font-size: 44rpx; /* 从38rpx调大到44rpx */
+		font-size: 40rpx; /* 从38rpx调整到40rpx */
 		font-weight: 700; /* 加粗字体 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		line-height: 1.2;
@@ -1849,7 +1850,7 @@ export default {
 	}
 	
 	.balance-section .balance-amount {
-		font-size: 44rpx; /* 与收入支出字体大小保持一致 */
+		font-size: 40rpx; /* 从44rpx调整为40rpx，与收入支出字体大小保持一致 */
 		font-weight: 700; /* 加粗字体 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		line-height: 1.2;
@@ -2260,7 +2261,7 @@ export default {
 	}
 	
 	.modal-content {
-		width: 580rpx;
+		width: 640rpx; /* 从580rpx增加到640rpx，增大弹框宽度 */
 		background: #ffffff;
 		border-radius: 24rpx;
 		box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.1);
@@ -2453,13 +2454,16 @@ export default {
 	}
 	
 	.confirm-btn {
-		background: #52c41a;
-		color: #ffffff;
+		background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%); /* 使用与账单页面选中按钮相同的浅绿色渐变背景 */
+		color: #52C41A; /* 绿色文字 */
+		border: 1rpx solid rgba(82, 196, 26, 0.3); /* 浅绿色边框 */
 		font-weight: 600;
 	}
 	
 	.confirm-btn:active {
-		background: #389e0d;
+		background: #52C41A; /* 按下时使用绿色背景 */
+		color: #ffffff; /* 按下时文字变白色 */
+		border-color: #52C41A;
 		transform: scale(0.98);
 	}
 
