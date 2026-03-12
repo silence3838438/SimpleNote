@@ -61,7 +61,9 @@
 						<view class="finance-label">本月收入</view>
 						<image class="eye-icon-img" :src="data.hideIncome ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
 					</view>
-					<view class="finance-amount income-color" v-if="!data.hideIncome">¥{{ formatAmount(data.totalIncome) }}</view>
+					<view class="finance-amount income-color" v-if="!data.hideIncome">
+						<text class="currency-symbol">¥</text>{{ formatAmount(data.totalIncome) }}
+					</view>
 					<view class="finance-amount income-color" v-else>****</view>
 				</view>
 				<view class="finance-divider"></view>
@@ -70,7 +72,9 @@
 						<view class="finance-label">本月支出</view>
 						<image class="eye-icon-img" :src="data.hideExpense ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
 					</view>
-					<view class="finance-amount expense-color" v-if="!data.hideExpense">-¥{{ formatAmount(data.totalExpense) }}</view>
+					<view class="finance-amount expense-color" v-if="!data.hideExpense">
+						-<text class="currency-symbol">¥</text>{{ formatAmount(data.totalExpense) }}
+					</view>
 					<view class="finance-amount expense-color" v-else>****</view>
 				</view>
 			</view>
@@ -81,7 +85,9 @@
 					<text class="balance-label">本月结余</text>
 					<image class="eye-icon-img balance-eye-icon" :src="data.hideBalance ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
 				</view>
-				<view class="balance-amount" v-if="!data.hideBalance">{{ data.balance >= 0 ? '+' : '-' }}¥{{ formatAmount(Math.abs(data.balance)) }}</view>
+				<view class="balance-amount" v-if="!data.hideBalance">
+					{{ data.balance >= 0 ? '' : '-' }}<text class="currency-symbol">¥</text>{{ formatAmount(Math.abs(data.balance)) }}
+				</view>
 				<view class="balance-amount" v-else>****</view>
 				<view class="balance-tip">{{ data.balance >= 0 ? '收入大于支出，继续保持！' : '支出大于收入，注意控制！' }}</view>
 			</view>
@@ -108,45 +114,43 @@
 			<!-- #endif -->
 		</view>
 
-		<!-- 预算进度（简化版） -->
-		<view class="budget-card-compact" :class="getBudgetCardClass()" @click="toggleBudgetDetail">
-			<view class="budget-header-compact">
-				<view class="budget-title-wrapper">
-					<text class="budget-title-compact">预算使用率</text>
-					<view class="budget-warning-compact" v-if="data.budgetPercent >= 80">
-						<text class="warning-icon-compact">{{ data.budgetPercent >= 100 ? '⚠️' : '⚡' }}</text>
-						<text class="warning-text-compact">{{ getBudgetWarningText() }}</text>
+		<!-- 预算进度卡片 - 主流记账应用风格 -->
+		<view class="budget-card-modern" :class="getBudgetCardClass()">
+			<!-- 卡片头部 -->
+			<view class="budget-header-modern">
+				<view class="budget-title-section">
+					<text class="budget-title-modern">本月预算</text>
+					<view class="budget-amount-section">
+						<text class="budget-amount-modern">
+							<text class="currency-symbol">¥</text>{{ data.budget.toFixed(0) }}
+						</text>
+						<view class="budget-edit-trigger" @click.stop="openBudgetModal">
+							<text class="edit-icon-modern">✏️</text>
+						</view>
 					</view>
 				</view>
-				<text class="budget-percent-compact" :class="getBudgetPercentClass()">{{ data.budgetPercent }}%</text>
-			</view>
-			<view class="budget-bar-compact">
-				<view class="budget-progress-compact" :class="getBudgetProgressClass()" :style="{ width: Math.min(data.budgetPercent, 100) + '%' }"></view>
-			</view>
-			
-			<!-- 详细信息（可展开） -->
-			<view class="budget-detail" v-if="data.showBudgetDetail">
-				<view class="budget-footer-compact">
-					<view class="budget-info-compact">
-						<text class="budget-label-compact">本月预算</text>
-						<text class="budget-amount-compact">¥{{ data.budget.toFixed(0) }}</text>
-					</view>
-					<view class="budget-info-compact">
-						<text class="budget-label-compact">已使用</text>
-						<text class="budget-used-compact" :class="{ 'over-budget': data.budgetPercent >= 100 }">¥{{ data.totalExpense.toFixed(0) }}</text>
-					</view>
-					<view class="budget-info-compact">
-						<text class="budget-label-compact">剩余</text>
-						<text class="budget-remaining-compact" :class="{ 'negative': data.budgetPercent >= 100 }">¥{{ (data.budget - data.totalExpense).toFixed(0) }}</text>
-					</view>
+				<view class="budget-usage-section">
+					<text class="usage-label">已用 <text class="currency-symbol">¥</text>{{ data.totalExpense.toFixed(0) }}</text>
+					<text class="usage-percent" :class="getBudgetPercentClass()">{{ data.budgetPercent }}%</text>
 				</view>
-				<text class="budget-edit-compact" @click.stop="openBudgetModal">点击修改预算</text>
 			</view>
 			
-			<!-- 展开/收起提示 -->
-			<view class="budget-toggle-hint">
-				<text class="toggle-text">{{ data.showBudgetDetail ? '收起' : '展开详情' }}</text>
-				<text class="toggle-arrow" :class="{ 'arrow-up': data.showBudgetDetail }">▼</text>
+			<!-- 进度条 -->
+			<view class="budget-progress-section">
+				<view class="progress-bar-modern">
+					<view class="progress-fill-modern" :class="getBudgetProgressClass()" :style="{ width: Math.min(data.budgetPercent, 100) + '%' }"></view>
+				</view>
+				<view class="progress-info">
+					<text class="remaining-amount" :class="{ 'negative': data.budgetPercent >= 100 }">
+						{{ data.budgetPercent >= 100 ? '超支 ¥' + (data.totalExpense - data.budget).toFixed(0) : '剩余 ¥' + (data.budget - data.totalExpense).toFixed(0) }}
+					</text>
+				</view>
+			</view>
+			
+			<!-- 预警提示 -->
+			<view class="budget-warning-modern" v-if="data.budgetPercent >= 80">
+				<text class="warning-icon-modern">{{ data.budgetPercent >= 100 ? '⚠️' : '⚡' }}</text>
+				<text class="warning-text-modern">{{ getBudgetWarningText() }}</text>
 			</view>
 		</view>
 		
@@ -155,13 +159,14 @@
 			<view class="modal-content" @click.stop>
 				<view class="modal-header">
 					<text class="modal-title">设置月预算</text>
-					<text class="modal-close" @click="closeBudgetModal">✕</text>
+					<view class="modal-close" @click="closeBudgetModal">
+						<text class="close-icon">×</text>
+					</view>
 				</view>
 				<view class="modal-body">
-					<view class="input-group">
-						<text class="input-label">预算金额</text>
+					<view class="input-section">
 						<view class="input-wrapper">
-							<text class="input-prefix">¥</text>
+							<text class="currency-symbol">¥</text>
 							<input 
 								class="budget-input" 
 								type="digit" 
@@ -170,21 +175,28 @@
 								:focus="data.showBudgetModal"
 							/>
 						</view>
+						<text class="input-hint">设置合理的月度预算，帮助控制支出</text>
 					</view>
 					<view class="quick-amounts">
-						<view 
-							class="amount-btn" 
-							v-for="amount in data.quickAmounts" 
-							:key="amount"
-							@click="data.tempBudget = amount"
-						>
-							{{ amount }}
+						<text class="quick-title">快速选择</text>
+						<view class="amounts-grid">
+							<view 
+								class="amount-chip" 
+								v-for="amount in data.quickAmounts" 
+								:key="amount"
+								:class="{ 'active': data.tempBudget == amount }"
+								@click="data.tempBudget = amount"
+							>
+								{{ amount }}
+							</view>
 						</view>
 					</view>
 				</view>
 				<view class="modal-footer">
-					<view class="modal-btn cancel-btn" @click="closeBudgetModal">取消</view>
-					<view class="modal-btn confirm-btn" @click="confirmBudget">确定</view>
+					<view class="footer-buttons">
+						<view class="modal-btn cancel-btn" @click="closeBudgetModal">取消</view>
+						<view class="modal-btn confirm-btn" @click="confirmBudget">确定</view>
+					</view>
 				</view>
 			</view>
 		</view>
@@ -197,18 +209,20 @@
 			<view class="bills-list" v-if="data.recentBills.length > 0">
 				<view class="bill-item" v-for="(bill, index) in data.recentBills" :key="bill._id || index" @click="goToBillDetail(bill)">
 					<view class="bill-left">
-						<text class="bill-icon">{{ bill.categoryIcon }}</text>
 						<view class="bill-info">
-							<text class="bill-merchant">{{ bill.merchant }}</text>
-							<view class="bill-category">
-								<text class="bill-category-dot"></text>
-								<text>{{ bill.categoryName }}</text>
+							<text class="bill-icon">{{ bill.categoryIcon }}</text>
+							<view class="bill-text-info">
+								<text class="bill-merchant">{{ bill.merchant }}</text>
+								<view class="bill-category">
+									<text class="bill-category-dot"></text>
+									<text>{{ bill.categoryName }}</text>
+								</view>
 							</view>
 						</view>
 					</view>
 					<view class="bill-right">
 						<text class="bill-amount" :class="bill.type === 'income' ? 'income' : 'expense'">
-							{{ bill.type === 'expense' ? '-' : '+' }}¥{{ bill.amount.toFixed(2) }}
+							{{ bill.type === 'expense' ? '-' : '' }}<text class="currency-symbol">¥</text>{{ bill.amount.toFixed(2) }}
 						</text>
 						<text class="bill-date">{{ bill.dateText }}</text>
 					</view>
@@ -1774,8 +1788,8 @@ export default {
 	}
 	
 	.finance-amount {
-		font-size: 38rpx; /* 稍大的字号 */
-		font-weight: 600; /* 更粗的字重 */
+		font-size: 44rpx; /* 从38rpx调大到44rpx */
+		font-weight: 700; /* 加粗字体 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		line-height: 1.2;
 		letter-spacing: -0.5rpx; /* 紧凑的字间距 */
@@ -1804,6 +1818,13 @@ export default {
 		color: $error-color;
 	}
 	
+	/* 货币符号样式 - 比数字小一些 */
+	.currency-symbol {
+		font-size: 0.8em; /* 相对于父元素字体大小的80% */
+		opacity: 0.9;
+		color: inherit; /* 继承父元素的颜色 */
+	}
+	
 	.balance-section {
 		text-align: center;
 		padding: 20rpx 0 8rpx;
@@ -1828,8 +1849,8 @@ export default {
 	}
 	
 	.balance-section .balance-amount {
-		font-size: 34rpx;
-		font-weight: 600;
+		font-size: 44rpx; /* 与收入支出字体大小保持一致 */
+		font-weight: 700; /* 加粗字体 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		line-height: 1.2;
 		margin-top: 4rpx;
@@ -2055,216 +2076,174 @@ export default {
 		font-weight: $font-weight-medium;
 	}
 	
-	/* 简化版预算卡片 - 美团风格优化 */
-	.budget-card-compact {
-		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
-		border-radius: $radius-lg; /* 美团风格：12rpx圆角 */
-		padding: 32rpx 28rpx; /* 增加内边距，从24rpx增加到32rpx 28rpx */
-		margin-bottom: $spacing-xl;
-		box-shadow: $shadow-card; /* 美团风格：更轻的阴影 */
-		transition: all $transition-fast;
-		cursor: pointer;
-		border: 1rpx solid $border-light;
+	/* 现代预算卡片 - 主流记账应用风格 */
+	.budget-card-modern {
+		background: #ffffff;
+		border-radius: 16rpx;
+		padding: 32rpx;
+		margin-bottom: 32rpx;
+		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+		border: 1rpx solid #f0f0f0;
+		transition: all 0.2s ease;
 	}
 	
-	.budget-card-compact:active {
-		transform: scale(0.99);
-		box-shadow: $shadow-md;
+	.budget-card-modern.budget-warning {
+		border-color: #faad14;
+		background: linear-gradient(135deg, #fffbe6 0%, #ffffff 100%);
 	}
 	
-	.budget-card-compact.budget-warning {
-		background: linear-gradient(135deg, #FFF9E6 0%, #F8F9FA 100%);
-		border-color: rgba(250, 173, 20, 0.2);
-		box-shadow: $shadow-card;
+	.budget-card-modern.budget-danger {
+		border-color: #ff4d4f;
+		background: linear-gradient(135deg, #fff1f0 0%, #ffffff 100%);
 	}
 	
-	.budget-card-compact.budget-danger {
-		background: linear-gradient(135deg, #FFF1F0 0%, #F8F9FA 100%);
-		border-color: rgba(245, 34, 45, 0.2);
-		box-shadow: $shadow-card;
+	.budget-header-modern {
+		margin-bottom: 24rpx;
 	}
 	
-	.budget-header-compact {
+	.budget-title-section {
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
-		margin-bottom: $spacing-lg; /* 增加底部间距，从md改为lg */
+		align-items: center;
+		margin-bottom: 16rpx;
 	}
 	
-	.budget-title-compact {
-		font-size: $font-size-lg; /* 增加字体大小，从base改为lg */
-		color: $text-primary;
-		font-weight: $font-weight-semibold;
+	.budget-title-modern {
+		font-size: 28rpx;
+		color: #262626;
+		font-weight: 600;
 	}
 	
-	.budget-warning-compact {
+	.budget-amount-section {
 		display: flex;
 		align-items: center;
-		gap: 4rpx;
-		padding: 4rpx 12rpx;
-		background: rgba(250, 173, 20, 0.1);
-		border-radius: $radius-md; /* 美团风格：更小的圆角 */
-		margin-top: 4rpx;
+		gap: 12rpx;
 	}
 	
-	.budget-card-compact.budget-danger .budget-warning-compact {
-		background: rgba(245, 34, 45, 0.1);
+	.budget-amount-modern {
+		font-size: 32rpx;
+		color: #595959;
+		font-weight: 600;
+		font-family: 'DIN Alternate', -apple-system, sans-serif;
 	}
 	
-	.warning-icon-compact {
-		font-size: $font-size-sm;
-	}
-	
-	.warning-text-compact {
-		font-size: $font-size-xs;
-		color: $warning-color;
-		font-weight: $font-weight-medium;
-	}
-	
-	.budget-card-compact.budget-danger .warning-text-compact {
-		color: $error-color;
-	}
-	
-	.budget-percent-compact {
-		font-size: 44rpx; /* 增加字体大小，从36rpx改为44rpx */
-		color: $primary-color;
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
-	}
-	
-	.budget-percent-compact.percent-warning {
-		color: $warning-color;
-	}
-	
-	.budget-percent-compact.percent-danger {
-		color: $error-color;
-	}
-	
-	.budget-bar-compact {
-		height: 16rpx; /* 增加进度条高度，从12rpx改为16rpx */
-		background: $bg-light;
-		border-radius: $radius-sm; /* 美团风格：更小的圆角 */
-		overflow: hidden;
-		margin-bottom: $spacing-md;
-	}
-	
-	.budget-progress-compact {
-		height: 100%;
-		background: $gradient-primary;
-		border-radius: $radius-sm;
-		transition: width $transition-base ease;
-		box-shadow: none; /* 美团风格：去掉发光效果 */
-	}
-	
-	.budget-progress-compact.progress-warning {
-		background: linear-gradient(90deg, #FAAD14 0%, #FA8C16 100%);
-		box-shadow: none;
-	}
-	
-	.budget-progress-compact.progress-danger {
-		background: linear-gradient(90deg, #FF4D4F 0%, #F5222D 100%);
-		box-shadow: none;
-	}
-	
-	.budget-detail {
-		animation: slideDown 0.3s ease;
-		overflow: hidden;
-	}
-	
-	@keyframes slideDown {
-		from {
-			max-height: 0;
-			opacity: 0;
-		}
-		to {
-			max-height: 300rpx;
-			opacity: 1;
-		}
-	}
-	
-	.budget-footer-compact {
-		display: flex;
-		justify-content: space-between;
-		padding: $spacing-md 0;
-		border-top: 1rpx solid $border-light;
-		margin-bottom: $spacing-sm;
-	}
-	
-	.budget-info-compact {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 4rpx;
-	}
-	
-	.budget-label-compact {
-		font-size: $font-size-xs;
-		color: $text-tertiary;
-	}
-	
-	.budget-amount-compact {
-		font-size: $font-size-base; /* 美团风格：标准字号 */
-		color: $text-primary;
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
-	}
-	
-	.budget-used-compact {
-		font-size: $font-size-base;
-		color: $primary-color;
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
-	}
-	
-	.budget-used-compact.over-budget {
-		color: $error-color;
-	}
-	
-	.budget-remaining-compact {
-		font-size: $font-size-base;
-		color: $success-color;
-		font-weight: $font-weight-bold;
-		font-family: 'DIN Alternate', monospace;
-	}
-	
-	.budget-remaining-compact.negative {
-		color: #F5222D;
-	}
-	
-	.budget-edit-compact {
-		font-size: $font-size-xs;
-		color: $primary-color;
-		text-align: center;
-		display: block;
-		font-weight: $font-weight-medium;
-		padding: $spacing-xs 0;
-	}
-	
-	.budget-toggle-hint {
+	.budget-edit-trigger {
+		width: 48rpx;
+		height: 48rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		background: #f5f5f5;
+		border-radius: 24rpx;
+		transition: all 0.2s ease;
+	}
+	
+	.budget-edit-trigger:active {
+		background: #e6e6e6;
+		transform: scale(0.95);
+	}
+	
+	.edit-icon-modern {
+		font-size: 24rpx;
+	}
+	
+	.budget-usage-section {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	
+	.usage-label {
+		font-size: 24rpx;
+		color: #8c8c8c;
+	}
+	
+	.usage-percent {
+		font-size: 28rpx;
+		color: #52c41a;
+		font-weight: 600;
+		font-family: 'DIN Alternate', -apple-system, sans-serif;
+	}
+	
+	.usage-percent.percent-warning {
+		color: #faad14;
+	}
+	
+	.usage-percent.percent-danger {
+		color: #ff4d4f;
+	}
+	
+	.budget-progress-section {
+		margin-bottom: 20rpx;
+	}
+	
+	.progress-bar-modern {
+		height: 12rpx;
+		background: #f5f5f5;
+		border-radius: 6rpx;
+		overflow: hidden;
+		margin-bottom: 12rpx;
+	}
+	
+	.progress-fill-modern {
+		height: 100%;
+		background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
+		border-radius: 6rpx;
+		transition: width 0.3s ease;
+	}
+	
+	.progress-fill-modern.progress-warning {
+		background: linear-gradient(90deg, #faad14 0%, #ffc53d 100%);
+	}
+	
+	.progress-fill-modern.progress-danger {
+		background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
+	}
+	
+	.progress-info {
+		display: flex;
+		justify-content: flex-end;
+	}
+	
+	.remaining-amount {
+		font-size: 24rpx;
+		color: #52c41a;
+		font-weight: 500;
+	}
+	
+	.remaining-amount.negative {
+		color: #ff4d4f;
+	}
+	
+	.budget-warning-modern {
+		display: flex;
+		align-items: center;
 		gap: 8rpx;
-		padding-top: $spacing-xs;
-		border-top: 1rpx solid $border-light;
+		padding: 12rpx 16rpx;
+		background: rgba(250, 173, 20, 0.1);
+		border-radius: 8rpx;
+		margin-top: 16rpx;
 	}
 	
-	.toggle-text {
-		font-size: $font-size-xs;
-		color: $text-tertiary;
+	.budget-card-modern.budget-danger .budget-warning-modern {
+		background: rgba(255, 77, 79, 0.1);
 	}
 	
-	.toggle-arrow {
-		font-size: $font-size-xs;
-		color: $text-tertiary;
-		transition: transform $transition-fast;
+	.warning-icon-modern {
+		font-size: 28rpx;
 	}
 	
-	.toggle-arrow.arrow-up {
-		transform: rotate(180deg);
+	.warning-text-modern {
+		font-size: 24rpx;
+		color: #faad14;
+		font-weight: 500;
 	}
 	
-	/* 预算设置弹窗 */
+	.budget-card-modern.budget-danger .warning-text-modern {
+		color: #ff4d4f;
+	}
+	
+	/* 预算设置弹窗 - 极简现代风格 */
 	.budget-modal {
 		position: fixed;
 		top: 0;
@@ -2276,145 +2255,178 @@ export default {
 		align-items: center;
 		justify-content: center;
 		z-index: 10000;
-		animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		padding-top: 0;
-		overflow-y: auto;
+		animation: fadeIn 0.2s ease-out;
+		backdrop-filter: blur(10rpx);
 	}
 	
 	.modal-content {
-		width: 640rpx;
-		background: linear-gradient(135deg, #ffffff 0%, $primary-lightest 100%); /* 使用主题色的极浅背景 */
-		border-radius: 32rpx;
-		box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.15);
-		animation: scaleInModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+		width: 580rpx;
+		background: #ffffff;
+		border-radius: 24rpx;
+		box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.1);
+		animation: slideUp 0.25s ease-out;
 		overflow: hidden;
-		margin: -10vh auto 0;
 	}
 	
-	@keyframes scaleInModal {
+	@keyframes slideUp {
 		from {
-			transform: scale(0.9);
+			transform: translateY(40rpx);
 			opacity: 0;
 		}
 		to {
-			transform: scale(1);
+			transform: translateY(0);
 			opacity: 1;
 		}
 	}
 	
 	.modal-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 40rpx 32rpx 24rpx;
-		background: $gradient-primary;
+		text-align: center;
+		padding: 48rpx 40rpx 32rpx;
+		border-bottom: none;
+		position: relative;
+	}
+	
+	/* 顶部图标 */
+	.modal-header::before {
+		content: '💰';
+		font-size: 64rpx;
+		display: block;
+		margin-bottom: 16rpx;
 	}
 	
 	.modal-title {
 		font-size: 32rpx;
 		font-weight: 600;
-		color: #ffffff;
-		text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+		color: #1a1a1a;
+		margin: 0;
 	}
 	
 	.modal-close {
-		font-size: 40rpx;
-		color: rgba(255, 255, 255, 0.9);
-		width: 56rpx;
-		height: 56rpx;
+		position: absolute;
+		top: 24rpx;
+		right: 24rpx;
+		width: 48rpx;
+		height: 48rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		border-radius: 24rpx;
+		background: #f5f5f5;
 		transition: all 0.2s;
 	}
 	
+	.close-icon {
+		font-size: 28rpx;
+		color: #999;
+		line-height: 1;
+	}
+	
 	.modal-close:active {
+		background: #e8e8e8;
 		transform: scale(0.9);
-		opacity: 0.7;
 	}
 	
 	.modal-body {
-		padding: 32rpx;
+		padding: 0 40rpx 40rpx;
 	}
 	
-	.input-group {
-		margin-bottom: 24rpx;
-	}
-	
-	.input-label {
-		font-size: 24rpx;
-		color: #666;
-		margin-bottom: 12rpx;
-		display: block;
-		font-weight: 500;
+	.input-section {
+		margin-bottom: 40rpx;
+		text-align: center;
 	}
 	
 	.input-wrapper {
 		display: flex;
 		align-items: center;
-		background: #ffffff;
-		border-radius: 20rpx;
-		padding: 16rpx 24rpx;
-		min-height: 100rpx;
-		box-shadow: 0 4rpx 16rpx rgba(82, 196, 26, 0.08);
+		justify-content: center;
+		background: #f8f9fa;
 		border: 2rpx solid transparent;
-		transition: all 0.3s;
+		border-radius: 16rpx;
+		padding: 20rpx 24rpx;
+		transition: all 0.2s;
+		margin-bottom: 16rpx;
 	}
 	
 	.input-wrapper:focus-within {
-		border-color: $primary-color;
-		box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.15);
-	}
-	
-	.input-prefix {
-		font-size: 36rpx;
-		color: $primary-color;
-		font-weight: 600;
-		margin-right: 8rpx;
-		line-height: 1;
+		border-color: #52c41a;
+		background: #ffffff;
+		box-shadow: 0 0 0 4rpx rgba(82, 196, 26, 0.1);
 	}
 	
 	.budget-input {
 		flex: 1;
 		font-size: 32rpx;
-		color: #333;
+		color: #1a1a1a;
 		font-weight: 500;
-		line-height: 1.2;
-		height: 60rpx;
+		text-align: center;
+		height: 44rpx;
+		line-height: 44rpx;
+	}
+	
+	/* 预算弹框中的货币符号 */
+	.modal-content .currency-symbol {
+		font-size: 32rpx;
+		color: #52c41a;
+		font-weight: 600;
+		margin-right: 8rpx;
+	}
+	
+	.input-hint {
+		font-size: 24rpx;
+		color: #999;
+		line-height: 1.4;
 	}
 	
 	.quick-amounts {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 16rpx;
+		margin-bottom: 20rpx;
 	}
 	
-	.amount-btn {
-		height: 76rpx;
-		background: linear-gradient(135deg, $primary-lightest 0%, #ffffff 100%); /* 使用主题色的极浅背景 */
-		border-radius: 16rpx;
+	.quick-title {
+		font-size: 26rpx;
+		color: #666;
+		font-weight: 500;
+		margin-bottom: 20rpx;
+		display: block;
+		text-align: center;
+	}
+	
+	.amounts-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 12rpx;
+	}
+	
+	.amount-chip {
+		height: 72rpx;
+		background: #f8f9fa;
+		border: 1rpx solid #e8e8e8;
+		border-radius: 12rpx;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-size: 26rpx;
-		color: $primary-color;
+		color: #666;
 		font-weight: 500;
-		transition: all 0.2s;
-		box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.06);
-		border: 2rpx solid #d9f7be;
+		transition: all 0.15s;
 	}
 	
-	.amount-btn:active {
-		background: $gradient-primary;
+	.amount-chip:active {
+		transform: scale(0.95);
+	}
+	
+	.amount-chip.active {
+		background: #52c41a;
+		border-color: #52c41a;
 		color: #ffffff;
-		transform: scale(0.96);
-		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
 	}
 	
 	.modal-footer {
+		padding: 0 40rpx 40rpx;
+	}
+	
+	.footer-buttons {
 		display: flex;
-		padding: 0 32rpx 32rpx;
-		gap: 16rpx;
+		gap: 12rpx;
 	}
 	
 	.modal-btn {
@@ -2423,31 +2435,32 @@ export default {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 30rpx;
-		border-radius: 44rpx;
+		font-size: 28rpx;
+		border-radius: 16rpx;
 		font-weight: 500;
 		transition: all 0.2s;
+		border: none;
 	}
 	
 	.cancel-btn {
-		background: #f5f7fa;
+		background: #f5f5f5;
 		color: #666;
 	}
 	
 	.cancel-btn:active {
-		background: #e8ecf0;
+		background: #e8e8e8;
 		transform: scale(0.98);
 	}
 	
 	.confirm-btn {
-		background: $primary-gradient; /* 使用主题色渐变变量 */
+		background: #52c41a;
 		color: #ffffff;
-		box-shadow: 0 8rpx 20rpx rgba(82, 196, 26, 0.3); /* 使用主题色的阴影 */
+		font-weight: 600;
 	}
 	
 	.confirm-btn:active {
+		background: #389e0d;
 		transform: scale(0.98);
-		box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.3);
 	}
 
 	/* 账单卡片 - 美团风格优化 */
@@ -2530,20 +2543,25 @@ export default {
 		min-width: 0;
 	}
 
-	.bill-icon {
-		font-size: 36rpx; /* 减小图标大小，从40rpx改为36rpx */
-		margin-right: $spacing-sm; /* 减小右边距，从md改为sm */
-		width: 56rpx; /* 减小图标容器，从64rpx改为56rpx */
-		height: 56rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: $bg-light;
-		border-radius: $radius-md; /* 美团风格：更小的圆角 */
-		flex-shrink: 0;
-	}
+
 	
 	.bill-info {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: flex-start;
+		gap: $spacing-lg; /* 从 $spacing-sm 增大到 $spacing-lg，增加emoji和商家名称的距离 */
+	}
+	
+	.bill-icon {
+		font-size: 32rpx;
+		flex-shrink: 0;
+		width: 32rpx;
+		text-align: center;
+		margin-top: 2rpx; /* 微调垂直对齐 */
+	}
+	
+	.bill-text-info {
 		flex: 1;
 		min-width: 0;
 		display: flex;

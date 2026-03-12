@@ -50,7 +50,7 @@
 						<text class="overview-label">总收入</text>
 						<image class="eye-icon-img" :src="data.hideIncome ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
 					</view>
-					<text class="overview-amount income-color" v-if="!data.hideIncome">+¥{{ formatAmount(data.totalIncome) }}</text>
+					<text class="overview-amount income-color" v-if="!data.hideIncome"><text class="currency-symbol">¥</text>{{ formatAmount(data.totalIncome) }}</text>
 					<text class="overview-amount income-color" v-else>****</text>
 				</view>
 				<view class="overview-item expense-item">
@@ -58,7 +58,7 @@
 						<text class="overview-label">总支出</text>
 						<image class="eye-icon-img" :src="data.hideExpense ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
 					</view>
-					<text class="overview-amount expense-color" v-if="!data.hideExpense">-¥{{ formatAmount(data.totalExpense) }}</text>
+					<text class="overview-amount expense-color" v-if="!data.hideExpense">-<text class="currency-symbol">¥</text>{{ formatAmount(data.totalExpense) }}</text>
 					<text class="overview-amount expense-color" v-else>****</text>
 				</view>
 			</view>
@@ -70,7 +70,7 @@
 						<image class="eye-icon-img" :src="data.hideBalance ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
 					</view>
 					<text class="overview-amount" :class="data.balance >= 0 ? 'income-color' : 'expense-color'" v-if="!data.hideBalance">
-						{{ data.balance >= 0 ? '+' : '-' }}¥{{ formatAmount(data.balance) }}
+						{{ data.balance >= 0 ? '' : '-' }}<text class="currency-symbol">¥</text>{{ formatAmount(Math.abs(data.balance)) }}
 					</text>
 					<text class="overview-amount" :class="data.balance >= 0 ? 'income-color' : 'expense-color'" v-else>****</text>
 				</view>
@@ -223,8 +223,11 @@
 		</view>
 		
 		<!-- 消费分析 -->
-		<view class="analysis-card">
-			<view class="card-title">财务分析</view>
+		<view class="analysis-card" @click="goToFinancialAdvisor">
+			<view class="card-title">
+				<text>财务分析</text>
+				<text class="arrow-icon">→</text>
+			</view>
 			<view class="insights-list" v-if="data.insights.length > 0">
 				<view 
 					class="insight-item" 
@@ -1126,6 +1129,13 @@ const getLegendColor = (index) => {
 const goToHome = () => {
 	uni.switchTab({
 		url: '/pages/tab/index/index'
+	})
+}
+
+// 跳转到财务顾问页面
+const goToFinancialAdvisor = () => {
+	uni.navigateTo({
+		url: '/pages/ai-chat/ai-chat'
 	})
 }
 
@@ -2220,10 +2230,16 @@ onPullDownRefresh(async () => {
 	}
 
 	.overview-amount {
-		font-size: 40rpx;
-		font-weight: $font-weight-semibold;
+		font-size: 44rpx;
+		font-weight: 700; /* 加粗字体 */
 		color: $primary-color;
 		font-family: 'DIN Alternate', monospace;
+	}
+	
+	/* 货币符号样式 - 比数字小一些 */
+	.currency-symbol {
+		font-size: 0.8em; /* 相对于父元素字体大小的80% */
+		color: inherit; /* 继承父元素颜色 */
 	}
 	
 	.income-color {
@@ -2235,8 +2251,8 @@ onPullDownRefresh(async () => {
 	}
 
 	.overview-count {
-		font-size: 40rpx; /* 减小字号 */
-		font-weight: $font-weight-semibold;
+		font-size: 44rpx; /* 与总收入字体大小保持一致 */
+		font-weight: 700; /* 加粗字体 */
 		color: $text-primary;
 		font-family: 'DIN Alternate', monospace;
 	}
@@ -2332,6 +2348,21 @@ onPullDownRefresh(async () => {
 		margin-bottom: $spacing-lg;
 		padding: 0;
 		border-bottom: none;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	
+	.arrow-icon {
+		font-size: 24rpx;
+		color: #999;
+		opacity: 0.7;
+		transition: all 0.3s ease;
+	}
+	
+	.analysis-card:active .arrow-icon {
+		opacity: 1;
+		transform: translateX(4rpx);
 	}
 	
 	/* 卡片头部 - 标题和切换按钮 */
@@ -2581,6 +2612,14 @@ onPullDownRefresh(async () => {
 		border: 1rpx solid rgba(82, 196, 26, 0.12);
 		position: relative;
 		overflow: hidden;
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+	
+	/* 点击效果 */
+	.analysis-card:active {
+		transform: scale(0.98);
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
 	}
 	
 	/* 卡片装饰光效 */

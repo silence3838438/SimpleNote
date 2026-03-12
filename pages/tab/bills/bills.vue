@@ -41,7 +41,9 @@
 							<text class="amount-label">收入</text>
 							<image class="eye-icon-img" :src="data.hideIncome ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleIncome" mode="aspectFit"></image>
 						</view>
-						<text class="amount-value income" v-if="!data.hideIncome">{{ formatAmount(data.totalIncome) }}</text>
+						<text class="amount-value income" v-if="!data.hideIncome">
+							<text class="currency-symbol">¥</text>{{ formatAmount(data.totalIncome) }}
+						</text>
 						<text class="amount-value income" v-else>****</text>
 					</view>
 					<view class="amount-divider"></view>
@@ -50,7 +52,9 @@
 							<text class="amount-label">支出</text>
 							<image class="eye-icon-img" :src="data.hideExpense ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleExpense" mode="aspectFit"></image>
 						</view>
-						<text class="amount-value expense" v-if="!data.hideExpense">-{{ formatAmount(data.totalExpense) }}</text>
+						<text class="amount-value expense" v-if="!data.hideExpense">
+							-<text class="currency-symbol">¥</text>{{ formatAmount(data.totalExpense) }}
+						</text>
 						<text class="amount-value expense" v-else>****</text>
 					</view>
 					<view class="amount-divider"></view>
@@ -60,7 +64,7 @@
 							<image class="eye-icon-img" :src="data.hideBalance ? 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/miwen.png' : 'https://hdkc-oss-core.oss-cn-hangzhou.aliyuncs.com/avatar/20251212/mingwen.png'" @click="toggleBalance" mode="aspectFit"></image>
 						</view>
 						<text class="amount-value" :class="data.balance >= 0 ? 'income' : 'expense'" v-if="!data.hideBalance">
-							{{ data.balance >= 0 ? '+' : '-' }}{{ formatAmount(data.balance) }}
+							{{ data.balance >= 0 ? '' : '-' }}<text class="currency-symbol">¥</text>{{ formatAmount(data.balance) }}
 						</text>
 						<text class="amount-value" :class="data.balance >= 0 ? 'income' : 'expense'" v-else>****</text>
 					</view>
@@ -138,11 +142,9 @@
 							:key="bill.id"
 							@click="goToDetail(bill)"
 						>
-							<view class="bill-icon-wrapper">
-								<text class="bill-icon">{{ bill.categoryIcon }}</text>
-							</view>
 							<view class="bill-content">
 								<view class="bill-main">
+									<text class="bill-icon">{{ bill.categoryIcon }}</text>
 									<text class="bill-merchant">{{ bill.merchant }}</text>
 									<text class="bill-category">{{ bill.categoryName }}</text>
 								</view>
@@ -150,11 +152,13 @@
 							</view>
 							<view class="bill-amount-wrapper">
 								<text class="bill-amount" :class="bill.type === 'income' ? 'income' : 'expense'">
-									{{ bill.type === 'income' ? '+' : '-' }}¥{{ bill.amount.toFixed(2) }}
+									{{ bill.type === 'income' ? '' : '-' }}<text class="currency-symbol">¥</text>{{ bill.amount.toFixed(2) }}
 								</text>
 							</view>
 							<view class="bill-delete-icon" @click.stop="confirmDeleteBill(bill)">
-								<text class="delete-icon">🗑️</text>
+								<view class="delete-icon-wrapper">
+									<text class="delete-icon">−</text>
+								</view>
 							</view>
 						</view>
 					</view>
@@ -1047,8 +1051,8 @@ onPullDownRefresh(async () => {
 	}
 	
 	.amount-value {
-		font-size: 38rpx;
-		font-weight: 600;
+		font-size: 44rpx; /* 从38rpx调大到44rpx */
+		font-weight: 700; /* 加粗字体 */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		margin-top: 4rpx;
 		letter-spacing: -0.5rpx;
@@ -1183,9 +1187,9 @@ onPullDownRefresh(async () => {
 	.date-summary {
 		display: flex;
 		gap: $spacing-md;
-		font-size: 22rpx;
+		font-size: 28rpx; /* 从22rpx调大到28rpx */
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
-		font-weight: 500;
+		font-weight: 600; /* 从500调整为600，稍微加粗 */
 	}
 	
 	.date-income {
@@ -1226,22 +1230,7 @@ onPullDownRefresh(async () => {
 		border-bottom: none;
 	}
 	
-	.bill-icon-wrapper {
-		width: 52rpx;
-		height: 52rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(135deg, #F7F8FA 0%, #FAFBFC 100%);
-		border-radius: 12rpx;
-		margin-right: $spacing-lg;
-		flex-shrink: 0;
-		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
-	}
-	
-	.bill-icon {
-		font-size: 36rpx;
-	}
+
 	
 	.bill-content {
 		flex: 1;
@@ -1254,8 +1243,15 @@ onPullDownRefresh(async () => {
 	.bill-main {
 		display: flex;
 		align-items: center;
-		gap: $spacing-sm;
+		gap: $spacing-lg; /* 从 $spacing-sm 增大到 $spacing-lg，增加emoji和商家名称的距离 */
 		width: 100%;
+	}
+	
+	.bill-icon {
+		font-size: 32rpx;
+		flex-shrink: 0;
+		width: 32rpx;
+		text-align: center;
 	}
 	
 	.bill-merchant {
@@ -1296,7 +1292,7 @@ onPullDownRefresh(async () => {
 	}
 	
 	.bill-amount {
-		font-size: 32rpx; /* 更大的金额字号 */
+		font-size: 36rpx; /* 从32rpx调大到36rpx */
 		font-weight: 600;
 		font-family: 'DIN Alternate', 'Helvetica Neue', monospace;
 		letter-spacing: -0.5rpx;
@@ -1311,6 +1307,13 @@ onPullDownRefresh(async () => {
 		color: $error-color;
 	}
 	
+	/* 货币符号样式 - 比数字小一些 */
+	.currency-symbol {
+		font-size: 0.8em; /* 相对于父元素字体大小的80% */
+		opacity: 0.9;
+		color: inherit; /* 继承父元素的颜色 */
+	}
+	
 	.bill-delete-icon {
 		width: 40rpx;
 		height: 40rpx;
@@ -1318,26 +1321,48 @@ onPullDownRefresh(async () => {
 		align-items: center;
 		justify-content: center;
 		margin-left: $spacing-md;
-		background: rgba(238, 10, 36, 0.06);
-		border-radius: 10rpx;
-		transition: all $transition-fast;
+		border-radius: 50%;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 		flex-shrink: 0;
-		opacity: 0.7;
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.delete-icon-wrapper {
+		width: 28rpx;
+		height: 28rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+		border: 1rpx solid rgba(0, 0, 0, 0.08);
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1), 0 1rpx 2rpx rgba(0, 0, 0, 0.06);
 	}
 	
 	.bill-delete-icon:active {
-		background: rgba(238, 10, 36, 0.12);
-		transform: scale(0.92);
-		opacity: 1;
+		transform: scale(0.95);
+	}
+	
+	.bill-delete-icon:active .delete-icon-wrapper {
+		background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+		border-color: #ff4d4f;
+		box-shadow: 0 2rpx 8rpx rgba(255, 77, 79, 0.3), 0 1rpx 3rpx rgba(255, 77, 79, 0.2);
+		transform: scale(1.05);
 	}
 	
 	.bill-delete-icon .delete-icon {
-		font-size: 22rpx;
-		transition: transform $transition-fast;
+		font-size: 24rpx;
+		color: #666;
+		font-weight: 400;
+		line-height: 1;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	
 	.bill-delete-icon:active .delete-icon {
-		transform: rotate(12deg);
+		color: #fff;
+		font-weight: 600;
 	}
 	
 	/* 空状态 - 精致版 */
