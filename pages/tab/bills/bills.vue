@@ -104,6 +104,41 @@
 				</view>
 			</view>
 			
+			<!-- 导出提示弹框 -->
+			<view class="export-tip-modal" v-if="data.showExportTip" @click="closeExportTip">
+				<view class="export-tip-content" @click.stop>
+					<view class="export-tip-icon">
+						<text class="icon-check">✓</text>
+					</view>
+					<text class="export-tip-title">导出成功</text>
+					<text class="export-tip-desc">文件已准备好，点击下方按钮打开预览</text>
+					<view class="export-tip-steps">
+						<view class="step-item">
+							<view class="step-number">1</view>
+							<text class="step-text">打开文件预览</text>
+						</view>
+						<view class="step-arrow">→</view>
+						<view class="step-item">
+							<view class="step-number">2</view>
+							<text class="step-text">点击右上角"..."</text>
+						</view>
+						<view class="step-arrow">→</view>
+						<view class="step-item">
+							<view class="step-number">3</view>
+							<text class="step-text">选择保存或分享</text>
+						</view>
+					</view>
+					<view class="export-tip-buttons">
+						<view class="export-btn export-btn-primary" @click="openExportFile">
+							<text class="btn-text">打开文件</text>
+						</view>
+						<view class="export-btn export-btn-secondary" @click="closeExportTip">
+							<text class="btn-text">稍后查看</text>
+						</view>
+					</view>
+				</view>
+			</view>
+			
 			<!-- 筛选标签 - 横向滚动 -->
 			<scroll-view class="filter-scroll" scroll-x show-scrollbar="false">
 				<view class="filter-tags">
@@ -213,7 +248,10 @@ const data = reactive({
 	// 隐藏金额状态
 	hideIncome: false,
 	hideExpense: false,
-	hideBalance: false
+	hideBalance: false,
+	// 导出提示弹框
+	showExportTip: false,
+	exportFilePath: ''
 })
 
 const loadData = async () => {
@@ -618,15 +656,44 @@ const exportBills = async () => {
 		uni.hideLoading()
 		
 		if (res.success && res.downloadUrl) {
-			// 使用uni.downloadFile下载文件
+			// #ifdef MP-WEIXIN
+			// 微信小程序：下载文件
+			uni.downloadFile({
+				url: res.downloadUrl,
+				success: (downloadRes) => {
+					console.log('下载成功，文件路径:', downloadRes.tempFilePath)
+					
+					if (downloadRes.statusCode === 200 && downloadRes.tempFilePath) {
+						// 保存文件路径并显示自定义提示弹框
+						data.exportFilePath = downloadRes.tempFilePath
+						data.showExportTip = true
+					} else {
+						uni.showToast({
+							title: '文件下载失败',
+							icon: 'none'
+						})
+					}
+				},
+				fail: (err) => {
+					console.error('下载失败:', err)
+					uni.showToast({
+						title: '下载失败，请检查网络',
+						icon: 'none'
+					})
+				}
+			})
+			// #endif
+			
+			// #ifndef MP-WEIXIN
+			// 非微信小程序：下载并打开文件
 			uni.downloadFile({
 				url: res.downloadUrl,
 				success: (downloadRes) => {
 					if (downloadRes.statusCode === 200) {
-						// 下载成功，直接打开文件
 						uni.openDocument({
 							filePath: downloadRes.tempFilePath,
 							fileType: 'xlsx',
+							showMenu: true,
 							success: () => {
 								console.log('打开文档成功')
 							},
@@ -649,6 +716,7 @@ const exportBills = async () => {
 					})
 				}
 			})
+			// #endif
 		} else {
 			uni.showToast({
 				title: '导出失败: ' + (res.message || '未知错误'),
@@ -796,6 +864,65 @@ const toggleExpense = () => {
 const toggleBalance = () => {
 	data.hideBalance = !data.hideBalance
 	uni.setStorageSync('hideBalanceBills', data.hideBalance)
+}
+
+// 关闭导出提示弹框
+const closeExportTip = () => {
+	data.showExportTip = false
+	data.exportFilePath = ''
+}
+
+// 打开导出的文件
+const openExportFile = () => {
+	if (!data.exportFilePath) {
+		uni.showToast({
+			title: '文件路径无效',
+			icon: 'none'
+		})
+		return
+	}
+	
+	// 关闭弹框
+	data.showExportTip = false
+	
+	// 打开文档
+	uni.openDocument({
+		filePath: data.exportFilePath,
+		fileType: 'xlsx',
+		showMenu: true,
+		success: () => {
+			console.log('打开文档成功')
+		},
+		fail: (err) => {
+			console.error('打开文档失败:', err)
+			// 如果打开失败，尝试使用 saveFileToDisk
+			if (wx.saveFileToDisk) {
+				wx.saveFileToDisk({
+					filePath: data.exportFilePath,
+					success: () => {
+						uni.showToast({
+							title: '已保存到手机',
+							icon: 'success'
+						})
+					},
+					fail: (saveErr) => {
+						console.error('保存失败:', saveErr)
+						uni.showToast({
+							title: '请安装WPS或Excel应用后重试',
+							icon: 'none',
+							duration: 3000
+						})
+					}
+				})
+			} else {
+				uni.showToast({
+					title: '请安装WPS或Excel应用',
+					icon: 'none',
+					duration: 3000
+				})
+			}
+		}
+	})
 }
 
 onLoad(() => {
@@ -1508,5 +1635,209 @@ onPullDownRefresh(async () => {
 		color: $primary-color !important;
 		font-weight: 600;
 		font-size: 34rpx;
+	}
+	
+	/* 导出提示弹框 */
+	.export-tip-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.6);
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(4rpx);
+		animation: fadeIn 0.3s ease;
+	}
+	
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	
+	.export-tip-content {
+		width: 600rpx;
+		background: #FFFFFF;
+		border-radius: 24rpx;
+		padding: 48rpx 40rpx 40rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		animation: slideInUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+		box-shadow: 0 12rpx 48rpx rgba(0, 0, 0, 0.15);
+	}
+	
+	@keyframes slideInUp {
+		from {
+			transform: translateY(100rpx);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+	
+	.export-tip-icon {
+		width: 96rpx;
+		height: 96rpx;
+		background: linear-gradient(135deg, #52C41A 0%, #73D13D 100%);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 32rpx;
+		box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
+	}
+	
+	.icon-check {
+		font-size: 56rpx;
+		color: #FFFFFF;
+		font-weight: bold;
+		line-height: 1;
+	}
+	
+	.export-tip-title {
+		font-size: 36rpx;
+		font-weight: 600;
+		color: #333333;
+		margin-bottom: 16rpx;
+		letter-spacing: 0.5rpx;
+	}
+	
+	.export-tip-desc {
+		font-size: 26rpx;
+		color: #666666;
+		margin-bottom: 40rpx;
+		text-align: center;
+		line-height: 1.6;
+	}
+	
+	.export-tip-steps {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 48rpx;
+		padding: 0 20rpx;
+	}
+	
+	.step-item {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12rpx;
+	}
+	
+	.step-number {
+		width: 48rpx;
+		height: 48rpx;
+		background: linear-gradient(135deg, #E6F7FF 0%, #BAE7FF 100%);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 24rpx;
+		font-weight: 600;
+		color: #1890FF;
+		border: 2rpx solid #91D5FF;
+	}
+	
+	.step-text {
+		font-size: 20rpx;
+		color: #666666;
+		text-align: center;
+		line-height: 1.4;
+		max-width: 120rpx;
+	}
+	
+	.step-arrow {
+		font-size: 28rpx;
+		color: #D9D9D9;
+		margin: 0 8rpx;
+		flex-shrink: 0;
+		margin-bottom: 36rpx;
+	}
+	
+	.export-tip-buttons {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 16rpx;
+	}
+	
+	.export-btn {
+		width: 100%;
+		height: 88rpx;
+		border-radius: 16rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.3s ease;
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.export-btn::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 0;
+		height: 0;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.3);
+		transform: translate(-50%, -50%);
+		transition: width 0.6s, height 0.6s;
+	}
+	
+	.export-btn:active::before {
+		width: 600rpx;
+		height: 600rpx;
+	}
+	
+	.export-btn-primary {
+		background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
+		box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.3);
+	}
+	
+	.export-btn-primary:active {
+		transform: scale(0.98);
+		box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.2);
+	}
+	
+	.export-btn-secondary {
+		background: #F5F5F5;
+		border: 1rpx solid #E8E8E8;
+	}
+	
+	.export-btn-secondary:active {
+		transform: scale(0.98);
+		background: #E8E8E8;
+	}
+	
+	.export-btn-primary .btn-text {
+		color: #FFFFFF;
+		font-size: 30rpx;
+		font-weight: 600;
+		letter-spacing: 1rpx;
+		position: relative;
+		z-index: 1;
+	}
+	
+	.export-btn-secondary .btn-text {
+		color: #666666;
+		font-size: 28rpx;
+		font-weight: 500;
+		position: relative;
+		z-index: 1;
 	}
 </style>

@@ -114,43 +114,50 @@
 			<!-- #endif -->
 		</view>
 
-		<!-- 预算进度卡片 - 主流记账应用风格 -->
-		<view class="budget-card-modern" :class="getBudgetCardClass()">
-			<!-- 卡片头部 -->
-			<view class="budget-header-modern">
-				<view class="budget-title-section">
-					<text class="budget-title-modern">本月预算</text>
-					<view class="budget-amount-section">
-						<text class="budget-amount-modern">
-							<text class="currency-symbol">¥</text>{{ data.budget.toFixed(0) }}
-						</text>
-						<view class="budget-edit-trigger" @click.stop="openBudgetModal">
-							<text class="edit-icon-modern">✏️</text>
-						</view>
+		<!-- 预算进度（简化版） -->
+		<view class="budget-card-compact" :class="getBudgetCardClass()">
+			<view class="budget-header-compact" @click="toggleBudgetDetail">
+				<view class="budget-title-wrapper">
+					<text class="budget-title-compact">预算使用率</text>
+					<view class="budget-warning-compact" v-if="data.budgetPercent >= 80">
+						<text class="warning-icon-compact">{{ data.budgetPercent >= 100 ? '⚠️' : '⚡' }}</text>
+						<text class="warning-text-compact">{{ getBudgetWarningText() }}</text>
 					</view>
 				</view>
-				<view class="budget-usage-section">
-					<text class="usage-label">已用 <text class="currency-symbol">¥</text>{{ data.totalExpense.toFixed(0) }}</text>
-					<text class="usage-percent" :class="getBudgetPercentClass()">{{ data.budgetPercent }}%</text>
+				<text class="budget-percent-compact" :class="getBudgetPercentClass()">{{ data.budgetPercent }}%</text>
+			</view>
+			<view class="budget-bar-compact" @click="toggleBudgetDetail">
+				<view class="budget-progress-compact" :class="getBudgetProgressClass()" :style="{ width: Math.min(data.budgetPercent, 100) + '%' }"></view>
+			</view>
+			
+			<!-- 详细信息（可展开） -->
+			<view class="budget-detail" v-if="data.showBudgetDetail">
+				<view class="budget-footer-compact">
+					<view class="budget-info-compact">
+						<text class="budget-label-compact">本月预算</text>
+						<text class="budget-amount-compact">¥{{ data.budget.toFixed(0) }}</text>
+					</view>
+					<view class="budget-info-compact">
+						<text class="budget-label-compact">已使用</text>
+						<text class="budget-used-compact" :class="{ 'over-budget': data.budgetPercent >= 100 }">¥{{ data.totalExpense.toFixed(0) }}</text>
+					</view>
+					<view class="budget-info-compact">
+						<text class="budget-label-compact">剩余</text>
+						<text class="budget-remaining-compact" :class="{ 'negative': data.budgetPercent >= 100 }">¥{{ (data.budget - data.totalExpense).toFixed(0) }}</text>
+					</view>
+				</view>
+				<view class="budget-actions-row">
+					<view class="budget-edit-btn" @click.stop="openBudgetModal">
+						<text class="edit-icon">✏️</text>
+						<text class="edit-text">修改预算</text>
+					</view>
 				</view>
 			</view>
 			
-			<!-- 进度条 -->
-			<view class="budget-progress-section">
-				<view class="progress-bar-modern">
-					<view class="progress-fill-modern" :class="getBudgetProgressClass()" :style="{ width: Math.min(data.budgetPercent, 100) + '%' }"></view>
-				</view>
-				<view class="progress-info">
-					<text class="remaining-amount" :class="{ 'negative': data.budgetPercent >= 100 }">
-						{{ data.budgetPercent >= 100 ? '超支 ¥' + (data.totalExpense - data.budget).toFixed(0) : '剩余 ¥' + (data.budget - data.totalExpense).toFixed(0) }}
-					</text>
-				</view>
-			</view>
-			
-			<!-- 预警提示 -->
-			<view class="budget-warning-modern" v-if="data.budgetPercent >= 80">
-				<text class="warning-icon-modern">{{ data.budgetPercent >= 100 ? '⚠️' : '⚡' }}</text>
-				<text class="warning-text-modern">{{ getBudgetWarningText() }}</text>
+			<!-- 展开/收起提示 -->
+			<view class="budget-toggle-hint" @click="toggleBudgetDetail">
+				<text class="toggle-text">{{ data.showBudgetDetail ? '收起' : '展开详情' }}</text>
+				<text class="toggle-arrow" :class="{ 'arrow-up': data.showBudgetDetail }">▼</text>
 			</view>
 		</view>
 		
@@ -179,7 +186,6 @@
 						<text class="input-hint">设置合理的月度预算，帮助控制支出</text>
 					</view>
 					<view class="quick-amounts">
-						<text class="quick-title">快速选择</text>
 						<view class="amounts-grid">
 							<view 
 								class="amount-chip" 
@@ -2077,171 +2083,249 @@ export default {
 		font-weight: $font-weight-medium;
 	}
 	
-	/* 现代预算卡片 - 主流记账应用风格 */
-	.budget-card-modern {
-		background: #ffffff;
-		border-radius: 16rpx;
-		padding: 32rpx;
-		margin-bottom: 32rpx;
-		box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-		border: 1rpx solid #f0f0f0;
-		transition: all 0.2s ease;
+	/* 预算卡片 - 简化版（可折叠） */
+	.budget-card-compact {
+		background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+		border-radius: $radius-lg;
+		padding: 32rpx 28rpx;
+		margin-bottom: $spacing-xl;
+		box-shadow: $shadow-card;
+		transition: all $transition-fast;
+		border: 1rpx solid $border-light;
 	}
 	
-	.budget-card-modern.budget-warning {
-		border-color: #faad14;
-		background: linear-gradient(135deg, #fffbe6 0%, #ffffff 100%);
+	.budget-card-compact.budget-warning {
+		background: linear-gradient(135deg, #FFF9E6 0%, #F8F9FA 100%);
+		border-color: rgba(250, 173, 20, 0.2);
+		box-shadow: $shadow-card;
 	}
 	
-	.budget-card-modern.budget-danger {
-		border-color: #ff4d4f;
-		background: linear-gradient(135deg, #fff1f0 0%, #ffffff 100%);
+	.budget-card-compact.budget-danger {
+		background: linear-gradient(135deg, #FFF1F0 0%, #F8F9FA 100%);
+		border-color: rgba(245, 34, 45, 0.2);
+		box-shadow: $shadow-card;
 	}
 	
-	.budget-header-modern {
-		margin-bottom: 24rpx;
-	}
-	
-	.budget-title-section {
+	.budget-header-compact {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 16rpx;
+		align-items: flex-start;
+		margin-bottom: $spacing-lg;
+		cursor: pointer;
 	}
 	
-	.budget-title-modern {
-		font-size: 28rpx;
-		color: #262626;
-		font-weight: 600;
+	.budget-header-compact:active {
+		opacity: 0.8;
 	}
 	
-	.budget-amount-section {
+	.budget-title-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 8rpx;
+	}
+	
+	.budget-title-compact {
+		font-size: $font-size-lg;
+		color: $text-primary;
+		font-weight: $font-weight-semibold;
+	}
+	
+	.budget-warning-compact {
 		display: flex;
 		align-items: center;
-		gap: 12rpx;
+		gap: 4rpx;
+		padding: 4rpx 12rpx;
+		background: rgba(250, 173, 20, 0.1);
+		border-radius: $radius-md;
+		margin-top: 4rpx;
 	}
 	
-	.budget-amount-modern {
-		font-size: 32rpx;
-		color: #595959;
-		font-weight: 600;
-		font-family: 'DIN Alternate', -apple-system, sans-serif;
+	.budget-card-compact.budget-danger .budget-warning-compact {
+		background: rgba(245, 34, 45, 0.1);
 	}
 	
-	.budget-edit-trigger {
-		width: 48rpx;
-		height: 48rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: #f5f5f5;
-		border-radius: 24rpx;
-		transition: all 0.2s ease;
+	.warning-icon-compact {
+		font-size: $font-size-sm;
 	}
 	
-	.budget-edit-trigger:active {
-		background: #e6e6e6;
-		transform: scale(0.95);
+	.warning-text-compact {
+		font-size: $font-size-xs;
+		color: $warning-color;
+		font-weight: $font-weight-medium;
 	}
 	
-	.edit-icon-modern {
-		font-size: 24rpx;
+	.budget-card-compact.budget-danger .warning-text-compact {
+		color: $error-color;
 	}
 	
-	.budget-usage-section {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+	.budget-percent-compact {
+		font-size: 44rpx;
+		color: $primary-color;
+		font-weight: $font-weight-bold;
+		font-family: 'DIN Alternate', monospace;
 	}
 	
-	.usage-label {
-		font-size: 24rpx;
-		color: #8c8c8c;
+	.budget-percent-compact.percent-warning {
+		color: $warning-color;
 	}
 	
-	.usage-percent {
-		font-size: 28rpx;
-		color: #52c41a;
-		font-weight: 600;
-		font-family: 'DIN Alternate', -apple-system, sans-serif;
+	.budget-percent-compact.percent-danger {
+		color: $error-color;
 	}
 	
-	.usage-percent.percent-warning {
-		color: #faad14;
-	}
-	
-	.usage-percent.percent-danger {
-		color: #ff4d4f;
-	}
-	
-	.budget-progress-section {
-		margin-bottom: 20rpx;
-	}
-	
-	.progress-bar-modern {
-		height: 12rpx;
-		background: #f5f5f5;
-		border-radius: 6rpx;
+	.budget-bar-compact {
+		height: 16rpx;
+		background: $bg-light;
+		border-radius: $radius-sm;
 		overflow: hidden;
-		margin-bottom: 12rpx;
+		margin-bottom: $spacing-md;
+		cursor: pointer;
 	}
 	
-	.progress-fill-modern {
+	.budget-bar-compact:active {
+		opacity: 0.8;
+	}
+	
+	.budget-progress-compact {
 		height: 100%;
-		background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
-		border-radius: 6rpx;
-		transition: width 0.3s ease;
+		background: $gradient-primary;
+		border-radius: $radius-sm;
+		transition: width $transition-base ease;
+		box-shadow: none;
 	}
 	
-	.progress-fill-modern.progress-warning {
-		background: linear-gradient(90deg, #faad14 0%, #ffc53d 100%);
+	.budget-progress-compact.progress-warning {
+		background: linear-gradient(90deg, #FAAD14 0%, #FA8C16 100%);
+		box-shadow: none;
 	}
 	
-	.progress-fill-modern.progress-danger {
-		background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
+	.budget-progress-compact.progress-danger {
+		background: linear-gradient(90deg, #FF4D4F 0%, #F5222D 100%);
+		box-shadow: none;
 	}
 	
-	.progress-info {
+	.budget-detail {
+		animation: slideDown 0.3s ease;
+		overflow: hidden;
+	}
+	
+	@keyframes slideDown {
+		from {
+			max-height: 0;
+			opacity: 0;
+		}
+		to {
+			max-height: 300rpx;
+			opacity: 1;
+		}
+	}
+	
+	.budget-footer-compact {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: space-between;
+		padding: $spacing-md 0;
+		border-top: 1rpx solid $border-light;
+		margin-bottom: $spacing-md;
 	}
 	
-	.remaining-amount {
-		font-size: 24rpx;
-		color: #52c41a;
-		font-weight: 500;
+	.budget-info-compact {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4rpx;
 	}
 	
-	.remaining-amount.negative {
-		color: #ff4d4f;
+	.budget-label-compact {
+		font-size: $font-size-xs;
+		color: $text-tertiary;
 	}
 	
-	.budget-warning-modern {
+	.budget-amount-compact {
+		font-size: $font-size-base;
+		color: $text-primary;
+		font-weight: $font-weight-bold;
+		font-family: 'DIN Alternate', monospace;
+	}
+	
+	.budget-used-compact {
+		font-size: $font-size-base;
+		color: $primary-color;
+		font-weight: $font-weight-bold;
+		font-family: 'DIN Alternate', monospace;
+	}
+	
+	.budget-used-compact.over-budget {
+		color: $error-color;
+	}
+	
+	.budget-remaining-compact {
+		font-size: $font-size-base;
+		color: $success-color;
+		font-weight: $font-weight-bold;
+		font-family: 'DIN Alternate', monospace;
+	}
+	
+	.budget-remaining-compact.negative {
+		color: #F5222D;
+	}
+	
+	.budget-actions-row {
+		display: flex;
+		justify-content: center;
+		padding-bottom: $spacing-sm;
+	}
+	
+	.budget-edit-btn {
 		display: flex;
 		align-items: center;
 		gap: 8rpx;
-		padding: 12rpx 16rpx;
-		background: rgba(250, 173, 20, 0.1);
-		border-radius: 8rpx;
-		margin-top: 16rpx;
+		padding: 12rpx 24rpx;
+		background: transparent;
+		border-radius: 24rpx;
+		transition: all $transition-fast;
 	}
 	
-	.budget-card-modern.budget-danger .budget-warning-modern {
-		background: rgba(255, 77, 79, 0.1);
+	.budget-edit-btn:active {
+		opacity: 0.6;
 	}
 	
-	.warning-icon-modern {
-		font-size: 28rpx;
-	}
-	
-	.warning-text-modern {
+	.edit-icon {
 		font-size: 24rpx;
-		color: #faad14;
-		font-weight: 500;
 	}
 	
-	.budget-card-modern.budget-danger .warning-text-modern {
-		color: #ff4d4f;
+	.edit-text {
+		font-size: $font-size-sm;
+		color: $primary-color;
+		font-weight: $font-weight-medium;
+	}
+	
+	.budget-toggle-hint {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8rpx;
+		padding-top: $spacing-xs;
+		border-top: 1rpx solid $border-light;
+		cursor: pointer;
+	}
+	
+	.budget-toggle-hint:active {
+		opacity: 0.7;
+	}
+	
+	.toggle-text {
+		font-size: $font-size-xs;
+		color: $text-tertiary;
+	}
+	
+	.toggle-arrow {
+		font-size: $font-size-xs;
+		color: $text-tertiary;
+		transition: transform $transition-fast;
+	}
+	
+	.toggle-arrow.arrow-up {
+		transform: rotate(180deg);
 	}
 	
 	/* 预算设置弹窗 - 极简现代风格 */
@@ -2416,9 +2500,10 @@ export default {
 	}
 	
 	.amount-chip.active {
-		background: #52c41a;
-		border-color: #52c41a;
-		color: #ffffff;
+		background: #E8F5E9 !important;
+		border-color: #52c41a !important;
+		color: #52c41a !important;
+		font-weight: 600;
 	}
 	
 	.modal-footer {
